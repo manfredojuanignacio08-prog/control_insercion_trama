@@ -20,7 +20,10 @@
   <div class="modal-sheet">
     <div class="modal-drag"></div>
     <div class="modal-h">¿Cuántas pasadas?</div>
-    <input class="modal-in" id="modal-reps-in" type="number" placeholder="Número de pasadas..." value="1" min="1" max="999">
+    <input class="modal-in" id="modal-reps-in" type="number" placeholder="Número de pasadas..." value="1" min="1" max="999"
+      inputmode="numeric"
+      onkeydown="if(['-','+','e','E','.',','].includes(event.key))event.preventDefault()"
+      oninput="this.value=this.value.replace(/[^0-9]/g,'')">
     <div class="modal-btns">
       <button class="modal-btn modal-cancel" onclick="closeRepsModal()">Cancelar</button>
       <button class="modal-btn modal-ok" id="modal-reps-ok">Confirmar</button>
