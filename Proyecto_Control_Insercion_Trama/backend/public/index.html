@@ -147,11 +147,11 @@
     <div class="editor-cfg">
       <div class="cfg-grp">
         <span class="cfg-lbl">Fil.</span>
-        <input class="cfg-in" id="in-rows" type="number" value="8" min="2" max="32" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <input class="cfg-in" id="in-rows" type="number" value="8" min="2" max="32" inputmode="numeric" onkeydown="if(['-','+','e','E','.',','].includes(event.key))event.preventDefault()" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
       </div>
       <div class="cfg-grp">
         <span class="cfg-lbl">Col.</span>
-        <input class="cfg-in" id="in-cols" type="number" value="8" min="2" max="32" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <input class="cfg-in" id="in-cols" type="number" value="8" min="2" max="32" inputmode="numeric" onkeydown="if(['-','+','e','E','.',','].includes(event.key))event.preventDefault()" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
       </div>
       <button class="cfg-apply" onclick="applySize()">Aplicar</button>
     </div>
@@ -523,8 +523,21 @@ function closeRepsModal() {
 }
 
 function applySize() {
-  const r = Math.min(32, Math.max(2, +document.getElementById('in-rows').value||8));
-  const c = Math.min(32, Math.max(2, +document.getElementById('in-cols').value||8));
+  const rawR = document.getElementById('in-rows').value;
+  const rawC = document.getElementById('in-cols').value;
+  const rNum = parseInt(rawR, 10);
+  const cNum = parseInt(rawC, 10);
+
+  // Si quedó vacío o fuera del rango permitido (2 a 32), avisar en vez de
+  // corregir en silencio — así el usuario entiende por qué cambió el número.
+  const rInvalido = !Number.isInteger(rNum) || rNum < 2 || rNum > 32;
+  const cInvalido = !Number.isInteger(cNum) || cNum < 2 || cNum > 32;
+  if (rInvalido || cInvalido) {
+    toast('Las filas y columnas deben ser un número entre 2 y 32');
+  }
+
+  const r = Math.min(32, Math.max(2, rNum || 8));
+  const c = Math.min(32, Math.max(2, cNum || 8));
   document.getElementById('in-rows').value = r;
   document.getElementById('in-cols').value = c;
   stopPlay();
