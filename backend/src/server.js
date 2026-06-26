@@ -31,13 +31,20 @@ if (process.env.TRUST_PROXY === 'true') {
 }
 
 // Cabeceras de seguridad HTTP. CSP configurado a mano porque index.html
-// todavía usa <script> inline y carga Google Fonts.
+// todavía usa <script> inline, onclick="..." inline, y carga Google Fonts.
+//
+// IMPORTANTE: helmet, si no se le dice explícitamente lo contrario, pone
+// "script-src-attr: 'none'" por defecto (parte de su set de directivas
+// recomendadas) — eso bloquea TODOS los onclick="..." escritos en el HTML,
+// aunque scriptSrc sí permita 'unsafe-inline'. Por eso hace falta declarar
+// scriptSrcAttr explícitamente acá.
 app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrcAttr: ["'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:'],
