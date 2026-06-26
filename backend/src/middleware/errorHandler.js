@@ -15,6 +15,24 @@ export function errorHandler(err, req, res, next) {
     });
   }
 
+  // Una consulta (o una espera de bloqueo FOR UPDATE) superó el
+  // statement_timeout configurado en db.js. En vez de un 500 genérico,
+  // devolvemos un 503 claro: "probá de nuevo", porque normalmente se
+  // resuelve solo apenas se libera lo que estaba bloqueando.
+  if (err.code === '57014') {
+    return res.status(503).json({
+      error: 'El telar está ocupado en este momento (timeout). Probá de nuevo en unos segundos.',
+    });
+  }
+
+  // La transacción quedó "a mitad de camino" demasiado tiempo y Postgres
+  // la cerró sola (idle_in_transaction_session_timeout).
+  if (err.code === '25P03') {
+    return res.status(503).json({
+      error: 'La operación anterior quedó inconclusa y se canceló sola. Probá de nuevo.',
+    });
+  }
+
   // Para errores con status conocido (404/400/409 que lanzamos nosotros),
   // el mensaje es seguro y útil. Para un 500 inesperado en producción, no
   // exponemos el mensaje interno (podría filtrar nombres de tablas, rutas,

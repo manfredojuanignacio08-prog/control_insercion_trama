@@ -67,12 +67,15 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' })); // las matrices grandes pueden pesar; damos margen
 app.use(morgan(isProd ? 'combined' : 'dev'));
 
-// Limita abuso de la API (ajustable por .env). No aplica a los archivos estáticos.
+// Limita abuso de la API (ajustable por .env). No aplica a los archivos estáticos
+// ni a avanzar/retroceder (esas dos tienen su propio límite, mucho más
+// generoso, en telares.routes.js — se llaman en cada paso de la animación).
 const apiLimiter = rateLimit({
   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
   max: Number(process.env.RATE_LIMIT_MAX) || 300,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => /\/telares\/[^/]+\/(avanzar|retroceder)$/.test(req.path),
   message: { error: 'Demasiadas solicitudes, intentá de nuevo más tarde.' },
 });
 app.use('/api', apiLimiter);
