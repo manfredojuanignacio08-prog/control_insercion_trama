@@ -25,12 +25,34 @@ import { pool } from '../db.js';
  */
 
 // ─── Configuración del "Relying Party" (el sitio) ─────────────────────
-// rpID = el dominio del sitio (sin protocolo ni puerto). En desarrollo es
-// "localhost"; en producción sería el dominio real, ej "trama.miempresa.com".
-// origin = la URL completa desde donde se sirve la web.
+// WebAuthn exige que el "RP ID" coincida con el dominio DESDE EL QUE SE ABRE
+// la página. Si lo dejáramos fijo en "localhost", fallaría apenas se accede
+// desde el celular por IP (ej. 192.168.1.50) o desde un dominio real — que
+// es justo el error "The RP ID localhost is invalid for this domain".
+//
+// Por eso lo derivamos del propio pedido (del header Origin/Host que manda
+// el navegador). Así funciona igual por localhost, por IP en la red local, o
+// por un dominio con HTTPS, sin tener que configurar nada a mano.
+//
+// Si se quiere forzar un valor fijo (producción con dominio conocido), se
+// puede definir WEBAUTHN_RP_ID / WEBAUTHN_ORIGIN en el .env y tienen
+// prioridad.
 const RP_NAME = 'Control de Inserción de Trama';
-const RP_ID = process.env.WEBAUTHN_RP_ID || 'localhost';
-const ORIGIN = process.env.WEBAUTHN_ORIGIN || `http://localhost:${process.env.PORT || 3000}`;
+
+function datosRP(req) {
+  // 1) Si están seteadas por env, mandan esas (producción con dominio fijo).
+  if (process.env.WEBAUTHN_RP_ID && process.env.WEBAUTHN_ORIGIN) {
+    return { rpID: process.env.WEBAUTHN_RP_ID, origin: process.env.WEBAUTHN_ORIGIN };
+  }
+  // 2) Si no, se derivan del pedido. El "Origin" es la URL completa desde la
+  //    que el navegador abrió la página (ej "http://192.168.1.50:3000").
+  const origin = req.get('origin') || `${req.protocol}://${req.get('host')}`;
+  let rpID = 'localhost';
+  try {
+    rpID = new URL(origin).hostname; // el dominio/IP sin protocolo ni puerto
+  } catch { /* deja localhost */ }
+  return { rpID, origin };
+}
 
 const CHALLENGE_TTL_MIN = 5; // los desafíos vencen a los 5 minutos
 
@@ -54,6 +76,7 @@ async function limpiarDesafiosVencidos() {
  */
 export async function iniciarRegistro(req, res, next) {
   try {
+    const { rpID, origin } = datosRP(req);
     const { usuario, nombre } = req.body || {};
     if (!usuario || typeof usuario !== 'string' || usuario.trim().length < 3) {
       return res.status(400).json({ error: 'El usuario debe tener al menos 3 caracteres.' });
@@ -80,7 +103,7 @@ export async function iniciarRegistro(req, res, next) {
 
     const options = await generateRegistrationOptions({
       rpName: RP_NAME,
-      rpID: RP_ID,
+      rpID,
       userID: deB64(user.webauthn_id),
       userName: user.usuario,
       userDisplayName: user.nombre || user.usuario,
@@ -109,6 +132,7 @@ export async function iniciarRegistro(req, res, next) {
  */
 export async function verificarRegistro(req, res, next) {
   try {
+    const { rpID, origin } = datosRP(req);
     const { usuario, respuesta } = req.body || {};
     if (!usuario || !respuesta) {
       return res.status(400).json({ error: 'Faltan datos (usuario y respuesta).' });
@@ -126,8 +150,8 @@ export async function verificarRegistro(req, res, next) {
       verification = await verifyRegistrationResponse({
         response: respuesta,
         expectedChallenge: challenge,
-        expectedOrigin: ORIGIN,
-        expectedRPID: RP_ID,
+        expectedOrigin: origin,
+        expectedRPID: rpID,
         requireUserVerification: true,
       });
     } catch (err) {
@@ -167,6 +191,7 @@ export async function verificarRegistro(req, res, next) {
  */
 export async function iniciarLogin(req, res, next) {
   try {
+    const { rpID, origin } = datosRP(req);
     const { usuario } = req.body || {};
     if (!usuario) return res.status(400).json({ error: 'Falta el usuario.' });
 
@@ -183,7 +208,7 @@ export async function iniciarLogin(req, res, next) {
     }
 
     const options = await generateAuthenticationOptions({
-      rpID: RP_ID,
+      rpID,
       allowCredentials: creds.map((c) => ({ id: c.credential_id })),
       userVerification: 'required',
     });
@@ -201,6 +226,7 @@ export async function iniciarLogin(req, res, next) {
  */
 export async function verificarLogin(req, res, next) {
   try {
+    const { rpID, origin } = datosRP(req);
     const { usuario, respuesta } = req.body || {};
     if (!usuario || !respuesta) {
       return res.status(400).json({ error: 'Faltan datos (usuario y respuesta).' });
@@ -227,8 +253,8 @@ export async function verificarLogin(req, res, next) {
       verification = await verifyAuthenticationResponse({
         response: respuesta,
         expectedChallenge: challenge,
-        expectedOrigin: ORIGIN,
-        expectedRPID: RP_ID,
+        expectedOrigin: origin,
+        expectedRPID: rpID,
         requireUserVerification: true,
         credential: {
           id: cred.credential_id,

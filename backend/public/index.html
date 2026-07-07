@@ -311,10 +311,21 @@ function biometriaDisponible() {
       && typeof SimpleWebAuthnBrowser !== 'undefined';
 }
 
+// WebAuthn solo funciona en un "contexto seguro": HTTPS, o localhost. Si se
+// abre por IP con HTTP (ej. http://192.168.1.50:3000 desde el celular), el
+// navegador lo bloquea. Detectamos ese caso para avisar con claridad en vez
+// de mostrar un error críptico.
+function contextoSeguro() {
+  if (window.isSecureContext) return true;
+  const h = location.hostname;
+  return h === 'localhost' || h === '127.0.0.1';
+}
+
 async function hacerRegistro() {
   const usuario = document.getElementById('login-usuario').value.trim();
   if (usuario.length < 3) return setLoginMsg('Escribí un usuario (mínimo 3 letras).', 'error');
   if (!biometriaDisponible()) return setLoginMsg('Este dispositivo/navegador no soporta login biométrico.', 'error');
+  if (!contextoSeguro()) return setLoginMsg('El login biométrico necesita HTTPS (o abrir la página como localhost). Por IP con http:// el navegador lo bloquea. Ver AUTENTICACION_BIOMETRICA.md.', 'error');
 
   try {
     setLoginMsg('Seguí las instrucciones de tu dispositivo…');
@@ -331,6 +342,7 @@ async function hacerLogin() {
   const usuario = document.getElementById('login-usuario').value.trim();
   if (usuario.length < 3) return setLoginMsg('Escribí tu usuario.', 'error');
   if (!biometriaDisponible()) return setLoginMsg('Este dispositivo/navegador no soporta login biométrico.', 'error');
+  if (!contextoSeguro()) return setLoginMsg('El login biométrico necesita HTTPS (o abrir la página como localhost). Por IP con http:// el navegador lo bloquea. Ver AUTENTICACION_BIOMETRICA.md.', 'error');
 
   try {
     setLoginMsg('Verificando…');
@@ -346,6 +358,7 @@ async function hacerLogin() {
 
 function traducirError(e) {
   const m = (e && e.message) || '';
+  if (/RP ID|SecurityError|insecure|secure context|invalid.*domain/i.test(m)) return 'El login biométrico necesita HTTPS (o localhost). Por IP con http:// el navegador lo bloquea.';
   if (/NotAllowed|timed out|cancel/i.test(m)) return 'Se canceló o no se reconoció la biometría. Reintentá.';
   if (/no tiene ninguna/i.test(m)) return 'Este usuario no tiene huella/rostro registrado. Registralo primero.';
   if (/no encontrado/i.test(m)) return 'Usuario no encontrado. ¿Querés registrarte?';

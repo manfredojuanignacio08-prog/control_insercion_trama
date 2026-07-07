@@ -80,3 +80,17 @@ perforadas del Jacquard.
 En una frase: **hoy el sistema decide y guarda el "qué tejer", y el ESP32
 puede arrancar y parar el telar; que además le dicte físicamente cada pasada,
 ocupando el lugar de las tarjetas del Jacquard, es la evolución que sigue.**
+
+---
+
+## 📌 La vía viable para el Nivel 2: control por marcos (dobby)
+
+Dado que los tejidos de esta planta son **mayormente patrones repetitivos**
+(tipo cortina), el Nivel 2 es alcanzable como prototipo real mediante
+**control por marcos (dobby)** en lugar de control hilo por hilo. Esto reduce
+el hardware de "cientos de electroimanes" a solo **8–16 actuadores**, algo que
+un ESP32 maneja sin problema.
+
+El desarrollo completo de esta solución —cómo funciona, el hardware, y cómo se
+conecta con lo que ya está hecho— está en:
+**`NIVEL2_CONTROL_POR_MARCOS.md`** (en esta misma carpeta).

@@ -265,6 +265,39 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
 [data-theme="dark"] .g-col-n,
 [data-theme="dark"] .grid-row.active-row .g-row-n{color:var(--acc)}
 
+/* ── Correcciones adicionales de modo oscuro (reportadas) ───────────── */
+
+/* (1) El rojo de "Eliminar" (#8B1F1F) es casi invisible sobre fondo
+   oscuro. En modo oscuro usamos un rojo bastante más claro y legible. */
+[data-theme="dark"] .pat-btn.del{color:#FF7B72}
+[data-theme="dark"] .status-badge.error,
+[data-theme="dark"] .confirm-yes.danger{background:#B4423C}
+
+/* (2) Los botones de control (pausa/stop) quedaban como recuadros oscuros
+   casi sin ícono visible. Les damos una superficie más clara y un ícono
+   con buen contraste, más un borde para que se despeguen del fondo. */
+[data-theme="dark"] .ctrl-stop{
+  background:#3A3530;color:#F5F0EB;border:1.5px solid rgba(245,240,235,.30);
+}
+[data-theme="dark"] .ctrl-pause{
+  background:#3A3530;color:var(--acc);border:1.5px solid rgba(224,165,204,.45);
+}
+[data-theme="dark"] .ctrl-roll{
+  background:#3A3530;color:#E8B96A;border:1.5px solid rgba(232,185,106,.40);
+}
+
+/* (3) El logo del hero se veía "vacío" en oscuro porque el recuadro claro
+   perdía presencia. Reforzamos el fondo blanco y el borde para que se
+   note lleno y con marco. */
+[data-theme="dark"] .hero-logo-wrap{
+  background:#F5F0EB;
+  box-shadow:0 4px 24px rgba(0,0,0,.45), 0 0 0 2px rgba(245,240,235,.55);
+}
+/* El logo chico de la barra superior también sobre un chip claro */
+[data-theme="dark"] .tb-logo{
+  background:#F5F0EB;border-radius:8px;padding:3px 5px;box-sizing:content-box;
+}
+
 /* ─────────────────────────────────────────────
    ██ SCREEN: EDITOR
 ───────────────────────────────────────────── */

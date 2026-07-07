@@ -69,11 +69,41 @@ WEBAUTHN_ORIGIN=http://localhost:3000
 - `WEBAUTHN_ORIGIN`: la URL completa desde donde se sirve la web, ej
   `https://trama.miempresa.com`.
 
-> ⚠️ **WebAuthn exige HTTPS en producción** (en `localhost` funciona con HTTP
-> para desarrollo). Cuando el sistema se publique con un dominio real, tiene
-> que estar servido por HTTPS, o el navegador no va a permitir usar la
-> biometría. No es una limitación del proyecto, es una regla del estándar por
-> seguridad.
+### ⚠️ Requisito clave: HTTPS (o localhost)
+
+WebAuthn solo funciona en un **"contexto seguro"**. En la práctica, eso
+significa una de estas dos:
+
+- La página se abre como **`localhost`** / `127.0.0.1` (sirve para probar en
+  la misma computadora donde corre el backend), **o**
+- La página se sirve por **HTTPS** (con certificado válido).
+
+**Lo que NO funciona:** abrir la página desde el celular por IP con `http://`
+(por ejemplo `http://192.168.1.50:3000`). En ese caso el navegador **bloquea**
+la biometría y aparece un error tipo *"The RP ID is invalid for this domain"*
+o *"insecure context"*. No es un bug del sistema: es una regla de seguridad
+del estándar WebAuthn.
+
+**El RP ID se detecta solo:** el backend ya no usa un valor fijo — lo deriva
+del dominio desde el que se abre la página, así funciona igual en localhost,
+por IP o por dominio real, sin configurar nada. El único requisito que queda
+es el del contexto seguro (HTTPS o localhost).
+
+### Cómo probarlo / usarlo entonces
+
+| Situación | ¿Anda la biometría? | Cómo |
+|---|---|---|
+| En la PC donde corre el backend | ✅ | abrir `http://localhost:3000` |
+| Desde el celular en la red local | ⚠️ solo con HTTPS | ver opciones abajo |
+| En producción con dominio | ✅ | servir por HTTPS |
+
+Para probar desde el celular sin montar un certificado, la forma más simple
+es usar un túnel HTTPS gratuito (por ejemplo **ngrok** o **cloudflared**), que
+te da una URL `https://…` que apunta a tu backend local. Al abrir esa URL en
+el celular, la biometría funciona porque ya es HTTPS.
+
+En producción, alojar el backend detrás de HTTPS (Render, un dominio con
+certificado, etc.) resuelve esto de forma definitiva.
 
 ## Cómo lo usa la web (flujo)
 
