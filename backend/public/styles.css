@@ -298,6 +298,20 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
   background:#F5F0EB;border-radius:8px;padding:3px 5px;box-sizing:content-box;
 }
 
+/* (4) Botones "Guardar" / "Nuevo" y "Limpiar": en oscuro el texto quedaba
+   con muy poco contraste (texto claro sobre rosa claro, o rosa oscuro sobre
+   gris). Se corrige el color del texto para que se lea bien. */
+[data-theme="dark"] .save-primary{
+  background:var(--acc);color:#3D1030;  /* texto oscuro sobre rosa claro */
+}
+[data-theme="dark"] .save-secondary{
+  background:#3A3530;color:#F5F0EB;border:1px solid rgba(245,240,235,.30);
+}
+/* El "Limpiar" de la biblioteca usaba --rose (rosa oscuro), invisible en
+   fondo oscuro. Lo pasamos al acento claro. Lleva !important porque el
+   color va inline en el HTML. */
+[data-theme="dark"] button.lib-clear{color:var(--acc) !important}
+
 /* ─────────────────────────────────────────────
    ██ SCREEN: EDITOR
 ───────────────────────────────────────────── */

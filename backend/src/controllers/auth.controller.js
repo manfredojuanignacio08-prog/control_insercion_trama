@@ -8,7 +8,7 @@ import crypto from 'crypto';
 import { pool } from '../db.js';
 
 /**
- * Autenticación biométrica (huella / rostro) mediante WebAuthn / FIDO2.
+ * Autenticación biométrica (huella dactilar) mediante WebAuthn / FIDO2.
  *
  * Cómo funciona, en criollo:
  *  - El sensor biométrico (huella o Face ID) lo lee el DISPOSITIVO del
@@ -16,10 +16,10 @@ import { pool } from '../db.js';
  *  - El dispositivo genera un par de claves (pública/privada). La privada
  *    queda protegida en el hardware; la pública se manda al servidor.
  *  - Para entrar, el dispositivo firma un "desafío" aleatorio con su clave
- *    privada (desbloqueándola con la huella/rostro). El servidor verifica esa
+ *    privada (desbloqueándola con la huella dactilar). El servidor verifica esa
  *    firma con la clave pública que tenía guardada.
  *  - Resultado: el servidor confirma que es el usuario correcto SIN ver nunca
- *    su huella ni su rostro.
+ *    su huella.
  *
  * Flujo: registro (registrar el dispositivo una vez) y login (usarlo después).
  */
@@ -66,13 +66,13 @@ async function limpiarDesafiosVencidos() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  REGISTRO — asociar la huella/rostro de un dispositivo a un usuario
+//  REGISTRO — asociar la huella dactilar de un dispositivo a un usuario
 // ══════════════════════════════════════════════════════════════════════
 
 /**
  * POST /api/auth/registro/iniciar   body: { usuario, nombre? }
  * Crea el usuario si no existe y devuelve las "opciones" que el navegador
- * necesita para pedirle la huella/rostro al usuario.
+ * necesita para pedirle la huella dactilar al usuario.
  */
 export async function iniciarRegistro(req, res, next) {
   try {
@@ -110,9 +110,13 @@ export async function iniciarRegistro(req, res, next) {
       attestationType: 'none',
       excludeCredentials: creds.map((c) => ({ id: c.credential_id })),
       authenticatorSelection: {
-        // "platform" = biometría integrada del dispositivo (huella / Face ID).
+        // "platform" = usar el autenticador integrado del dispositivo (el
+        // lector de huella dactilar del celular/notebook), no una llave USB
+        // externa. El tipo concreto (huella) lo resuelve el sistema operativo;
+        // en los dispositivos del proyecto el sensor integrado es de huella.
+        authenticatorAttachment: 'platform',
         residentKey: 'preferred',
-        userVerification: 'required', // exige verificación biométrica (o PIN)
+        userVerification: 'required', // exige verificación por huella (o PIN)
       },
     });
 
@@ -182,12 +186,12 @@ export async function verificarRegistro(req, res, next) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  LOGIN — entrar usando la huella/rostro ya registrada
+//  LOGIN — entrar usando la huella dactilar ya registrada
 // ══════════════════════════════════════════════════════════════════════
 
 /**
  * POST /api/auth/login/iniciar   body: { usuario }
- * Devuelve las opciones para que el navegador pida la huella/rostro.
+ * Devuelve las opciones para que el navegador pida la huella dactilar.
  */
 export async function iniciarLogin(req, res, next) {
   try {
@@ -204,7 +208,7 @@ export async function iniciarLogin(req, res, next) {
       [user.id]
     );
     if (creds.length === 0) {
-      return res.status(400).json({ error: 'Este usuario no tiene ninguna huella/rostro registrado.' });
+      return res.status(400).json({ error: 'Este usuario no tiene ninguna huella registrada.' });
     }
 
     const options = await generateAuthenticationOptions({

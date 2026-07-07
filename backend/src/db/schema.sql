@@ -94,7 +94,7 @@ FOR EACH ROW
 EXECUTE FUNCTION set_modificado_at();
 
 -- ============================================================
--- Login biométrico (huella / rostro) con WebAuthn — ver
+-- Login biométrico (huella dactilar) con WebAuthn — ver
 -- migracion_003_login_biometrico.sql para el detalle y las notas de
 -- seguridad. Resumen: la biometría NUNCA se guarda ni viaja al servidor;
 -- solo se guardan las claves públicas de los dispositivos registrados.

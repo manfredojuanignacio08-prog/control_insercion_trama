@@ -44,13 +44,13 @@
 </div>
 
 <!-- ════════════════════════════════════════════
-     OVERLAY: LOGIN BIOMÉTRICO (huella / rostro)
+     OVERLAY: LOGIN POR HUELLA DACTILAR
 ════════════════════════════════════════════ -->
 <div id="login-overlay" style="position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
   <div style="max-width:340px;width:100%;">
-    <div style="font-size:56px;margin-bottom:6px;">🔐</div>
+    <div style="font-size:56px;margin-bottom:6px;">👆</div>
     <h1 style="font-size:22px;color:var(--tx);margin:0 0 6px;">Control de Inserción de Trama</h1>
-    <p style="color:var(--tx3);font-size:14px;margin:0 0 28px;">Ingresá con tu huella digital o rostro</p>
+    <p style="color:var(--tx3);font-size:14px;margin:0 0 28px;">Ingresá con tu huella dactilar</p>
 
     <input id="login-usuario" type="text" placeholder="Usuario"
       autocomplete="username" autocapitalize="none" spellcheck="false"
@@ -58,12 +58,12 @@
 
     <button onclick="hacerLogin()" id="btn-login"
       style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px;font-family:inherit;">
-      👆 Entrar con huella / rostro
+      👆 Entrar con huella dactilar
     </button>
 
     <button onclick="hacerRegistro()" id="btn-registro"
       style="width:100%;padding:13px;border:1px solid var(--bd);border-radius:14px;background:transparent;color:var(--tx2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">
-      Registrar mi huella / rostro
+      Registrar mi huella dactilar
     </button>
 
     <p id="login-msg" style="margin-top:18px;font-size:13px;min-height:18px;color:var(--tx3);"></p>
@@ -249,7 +249,7 @@
 
     <div style="padding:0 14px 12px;display:flex;gap:8px;flex-wrap:wrap;">
       <input type="text" id="lib-search" placeholder="Buscar dibujos..." onkeyup="filterDraws()" style="flex:1;min-width:150px;padding:10px 12px;border:2px solid var(--bd);border-radius:var(--r-md);font-family:inherit;font-size:14px;background:var(--srf);color:var(--tx);">
-      <button onclick="clearFilters()" style="padding:10px 12px;background:var(--srf2);border:1px solid var(--bd);border-radius:20px;font-size:12px;font-weight:500;color:var(--rose);cursor:pointer;">Limpiar</button>
+      <button onclick="clearFilters()" class="lib-clear" style="padding:10px 12px;background:var(--srf2);border:1px solid var(--bd);border-radius:20px;font-size:12px;font-weight:500;color:var(--acc-md);cursor:pointer;">Limpiar</button>
     </div>
 
     <div class="lib-empty" id="lib-empty">
@@ -280,7 +280,7 @@
 <script src="vendor/simplewebauthn-browser.umd.min.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
-//  LOGIN BIOMÉTRICO (huella / rostro) con WebAuthn
+//  LOGIN POR HUELLA DACTILAR con WebAuthn
 //  Usa los endpoints /api/auth/* del backend. La biometría la lee el
 //  dispositivo del usuario; acá solo se coordina el ida y vuelta.
 // ═══════════════════════════════════════════════════════════════════
@@ -332,7 +332,7 @@ async function hacerRegistro() {
     const opciones = await apiAuth('/registro/iniciar', { usuario });
     const respuesta = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: opciones });
     await apiAuth('/registro/verificar', { usuario, respuesta });
-    setLoginMsg('✔ Huella/rostro registrado. Ya podés entrar.', 'ok');
+    setLoginMsg('✔ Huella registrada. Ya podés entrar.', 'ok');
   } catch (e) {
     setLoginMsg(traducirError(e), 'error');
   }
@@ -360,7 +360,7 @@ function traducirError(e) {
   const m = (e && e.message) || '';
   if (/RP ID|SecurityError|insecure|secure context|invalid.*domain/i.test(m)) return 'El login biométrico necesita HTTPS (o localhost). Por IP con http:// el navegador lo bloquea.';
   if (/NotAllowed|timed out|cancel/i.test(m)) return 'Se canceló o no se reconoció la biometría. Reintentá.';
-  if (/no tiene ninguna/i.test(m)) return 'Este usuario no tiene huella/rostro registrado. Registralo primero.';
+  if (/no tiene ninguna/i.test(m)) return 'Este usuario no tiene huella registrada. Registrala primero.';
   if (/no encontrado/i.test(m)) return 'Usuario no encontrado. ¿Querés registrarte?';
   return m || 'Ocurrió un error. Reintentá.';
 }

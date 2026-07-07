@@ -1,8 +1,8 @@
 -- ============================================================
--- Migración 003: Login biométrico (huella / rostro) con WebAuthn
+-- Migración 003: Login biométrico (huella dactilar) con WebAuthn
 --
 -- El login biométrico se implementa con el estándar WebAuthn / FIDO2.
--- Punto CLAVE de seguridad: la huella o el rostro NUNCA se guardan en la
+-- Punto CLAVE de seguridad: la huella dactilar NUNCA se guardan en la
 -- base de datos ni viajan al servidor. El sensor biométrico del dispositivo
 -- (celular / notebook) valida localmente y solo genera una PRUEBA
 -- criptográfica (una firma con una clave privada que nunca sale del
@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS credenciales_biometricas (
   -- Contador anti-clonación: WebAuthn lo incrementa en cada uso; si llegara
   -- un valor menor al guardado, es señal de credencial clonada.
   counter        BIGINT NOT NULL DEFAULT 0,
-  -- Tipo de autenticador, informativo: "platform" (huella/rostro integrado
+  -- Tipo de autenticador, informativo: "platform" (huella dactilar integrado
   -- en el dispositivo) o "cross-platform" (llave física USB, etc.).
   tipo_dispositivo TEXT,
   apodo          TEXT,                           -- ej: "iPhone de Juan"
