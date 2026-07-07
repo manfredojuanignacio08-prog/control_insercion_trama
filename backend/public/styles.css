@@ -312,6 +312,16 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
    color va inline en el HTML. */
 [data-theme="dark"] button.lib-clear{color:var(--acc) !important}
 
+/* (5) El toast (aviso "Editor reiniciado", etc.) usaba texto color --srf,
+   que en modo oscuro es oscuro → quedaba texto oscuro sobre fondo oscuro,
+   viéndose como un cuadrado negro sin letras encima de los botones. Se
+   fuerza fondo claro y texto oscuro para que se lea. */
+[data-theme="dark"] .toast{
+  background:#F5F0EB;
+  color:#2A2420;
+  box-shadow:0 4px 18px rgba(0,0,0,.5);
+}
+
 /* ─────────────────────────────────────────────
    ██ SCREEN: EDITOR
 ───────────────────────────────────────────── */
