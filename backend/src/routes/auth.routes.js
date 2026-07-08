@@ -26,8 +26,8 @@ router.post('/login/verificar', verificarLogin);
 // Recupero de acceso con código de recuperación
 router.post('/recuperar', recuperarUsuario);
 
-// Regenerar un código de recuperación nuevo (estando logueado, verifica huella)
-router.post('/recuperacion/regenerar', regenerarCodigoRecuperacion);
+// Ver el código de recuperación FIJO (estando logueado, verifica huella)
+router.post('/recuperacion/ver', regenerarCodigoRecuperacion);
 
 // Generar código de invitación para sumar un usuario nuevo (a futuro)
 router.post('/invitacion', generarInvitacion);

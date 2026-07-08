@@ -1,12 +1,11 @@
 // ============================================================
-//  Herramienta de administración: generar / reponer el código
-//  de recuperación de un usuario DESDE EL SERVIDOR.
+//  Herramienta de administración: VER (o crear si falta) el
+//  código de recuperación FIJO de un usuario, DESDE EL SERVIDOR.
 //
-//  ¿Para qué sirve?
-//  El código de recuperación se guarda hasheado en la base (no en texto
-//  plano), así que NO se puede "consultar" uno que ya existe. Si alguien
-//  perdió su código y además no puede entrar con la huella, esta es la
-//  única forma de darle uno nuevo: la corre el administrador en el servidor.
+//  El código de recuperación es fijo por usuario y no cambia. Se guarda en
+//  texto plano (columna recovery_code), así que esta herramienta lo muestra
+//  tal cual. Si el usuario todavía no tuviera uno, se le genera uno y queda
+//  fijo desde ese momento.
 //
 //  Uso:
 //    node src/scripts/codigo_recuperacion.js <usuario>
@@ -15,14 +14,13 @@
 //    node src/scripts/codigo_recuperacion.js jferrando
 //    node src/scripts/codigo_recuperacion.js "maria"
 //
-//  Imprime el código UNA vez por pantalla: anotalo y pasáselo a la persona.
-//  Después esa persona lo escribe en "No puedo entrar con mi huella".
+//  Pasáselo a la persona: lo escribe en "No puedo entrar con mi huella"
+//  junto con su usuario, y entra directo a la app.
 // ============================================================
 
 import crypto from 'crypto';
 import { pool } from '../db.js';
 
-// Mismo hash y formato que usa el backend (SHA-256, mayúsculas)
 const hashCodigo = (codigo) =>
   crypto.createHash('sha256').update(String(codigo).trim().toUpperCase()).digest('hex');
 
@@ -42,7 +40,10 @@ async function main() {
     process.exit(1);
   }
 
-  const { rows } = await pool.query('SELECT id, usuario, nombre FROM usuarios WHERE usuario = $1', [usuario]);
+  const { rows } = await pool.query(
+    'SELECT id, usuario, nombre, recovery_code FROM usuarios WHERE usuario = $1',
+    [usuario]
+  );
   const user = rows[0];
   if (!user) {
     console.error(`\n  No existe ningún usuario llamado "${usuario}".`);
@@ -50,18 +51,23 @@ async function main() {
     process.exit(1);
   }
 
-  const codigo = generarCodigo('TRAMA');
-  await pool.query(
-    'UPDATE usuarios SET recovery_hash = $1, recovery_usado = false WHERE id = $2',
-    [hashCodigo(codigo), user.id]
-  );
+  let codigo = user.recovery_code;
+  let creado = false;
+  if (!codigo) {
+    codigo = generarCodigo('TRAMA');
+    await pool.query(
+      'UPDATE usuarios SET recovery_code = $1, recovery_hash = $2, recovery_usado = false WHERE id = $3',
+      [codigo, hashCodigo(codigo), user.id]
+    );
+    creado = true;
+  }
 
   console.log('\n  ────────────────────────────────────────────');
   console.log(`  Usuario:  ${user.usuario}${user.nombre ? ' (' + user.nombre + ')' : ''}`);
-  console.log(`  Código de recuperación NUEVO:  ${codigo}`);
+  console.log(`  Código de recuperación (FIJO):  ${codigo}`);
   console.log('  ────────────────────────────────────────────');
-  console.log('  Pasáselo a la persona. Lo usa en "No puedo entrar con mi huella".');
-  console.log('  (Reemplaza cualquier código anterior. Se usa una sola vez.)\n');
+  if (creado) console.log('  (Se generó ahora y queda fijo desde este momento.)');
+  console.log('  Siempre es el mismo. Lo usa en "No puedo entrar con mi huella".\n');
 
   await pool.end();
   process.exit(0);

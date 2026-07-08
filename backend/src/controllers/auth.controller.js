@@ -237,17 +237,17 @@ export async function verificarRegistro(req, res, next) {
       [user.id, credential.id, aB64(credential.publicKey), credential.counter, tipo]
     );
 
-    // ── Código de recuperación ───────────────────────────────────────
-    // Si es la PRIMERA credencial de este usuario (recién se registra),
-    // se genera un código de recuperación de un solo uso. Se muestra UNA
-    // vez y se guarda hasheado. Sirve para entrar si la huella falla o si
-    // se cambia de dispositivo.
-    let recoveryCode = null;
-    if (!user.recovery_hash) {
+    // ── Código de recuperación FIJO ──────────────────────────────────
+    // Cada usuario tiene UN código fijo que nunca cambia. Se genera una
+    // sola vez (la primera vez que se registra) y se guarda en texto plano
+    // para poder mostrarlo siempre que el usuario lo necesite. Si el usuario
+    // ya tiene código, NO se toca: sigue siendo el mismo de siempre.
+    let recoveryCode = user.recovery_code || null;
+    if (!recoveryCode) {
       recoveryCode = generarCodigo('TRAMA');
       await pool.query(
-        'UPDATE usuarios SET recovery_hash = $1, recovery_usado = false WHERE id = $2',
-        [hashCodigo(recoveryCode), user.id]
+        'UPDATE usuarios SET recovery_code = $1, recovery_hash = $2, recovery_usado = false WHERE id = $3',
+        [recoveryCode, hashCodigo(recoveryCode), user.id]
       );
     }
 
@@ -262,8 +262,9 @@ export async function verificarRegistro(req, res, next) {
     res.status(201).json({
       ok: true,
       usuario: user.usuario,
-      // El código de recuperación va SOLO en esta respuesta, una única vez.
-      // El usuario debe anotarlo; no se puede volver a mostrar.
+      nombre: user.nombre,
+      // Código de recuperación FIJO del usuario (siempre el mismo). El
+      // usuario puede volver a verlo cuando quiera desde su perfil.
       recovery_code: recoveryCode,
     });
   } catch (e) {
@@ -379,13 +380,10 @@ export async function verificarLogin(req, res, next) {
 
 /**
  * POST /api/auth/recuperar   body: { usuario, codigo }
- * Permite volver a habilitar el registro de huella si el usuario perdió el
- * acceso (cambió de dispositivo, la huella no lee, etc.). Valida el código
- * de recuperación; si es correcto, borra las credenciales viejas para que el
- * usuario registre su huella de nuevo (en registro/iniciar + verificar).
- *
- * El código de recuperación es de un solo uso: al usarse se invalida y se
- * genera uno nuevo cuando el usuario vuelve a registrar la huella.
+ * Ingreso por código de recuperación. Si el usuario perdió la huella o está
+ * en un dispositivo nuevo, escribe su usuario + su código FIJO y entra
+ * DIRECTAMENTE a la app (igual que un login). No se borra ninguna huella ni
+ * se cambia el código: el código siempre es el mismo.
  */
 export async function recuperarUsuario(req, res, next) {
   try {
@@ -397,23 +395,26 @@ export async function recuperarUsuario(req, res, next) {
     const user = rows[0];
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
-    if (!user.recovery_hash || user.recovery_usado) {
-      return res.status(400).json({ error: 'Este usuario no tiene un código de recuperación válido.' });
+    // Validar contra el código fijo (texto plano). Como respaldo, si por
+    // algún motivo sólo existiera el hash viejo, también se acepta por hash.
+    const ingresado = String(codigo).trim().toUpperCase();
+    const guardadoPlano = user.recovery_code ? String(user.recovery_code).trim().toUpperCase() : null;
+    const coincidePlano = guardadoPlano && ingresado === guardadoPlano;
+    const coincideHash = user.recovery_hash && hashCodigo(codigo) === user.recovery_hash;
+
+    if (!guardadoPlano && !user.recovery_hash) {
+      return res.status(400).json({ error: 'Este usuario todavía no tiene un código de recuperación.' });
     }
-    if (hashCodigo(codigo) !== user.recovery_hash) {
+    if (!coincidePlano && !coincideHash) {
       return res.status(401).json({ error: 'El código de recuperación es incorrecto.' });
     }
 
-    // Código correcto: borrar credenciales viejas y marcar el código como usado.
-    // A partir de acá el usuario puede registrar su huella de nuevo (y recibirá
-    // un código de recuperación nuevo).
-    await pool.query('DELETE FROM credenciales_biometricas WHERE usuario_id = $1', [user.id]);
-    await pool.query('UPDATE usuarios SET recovery_hash = NULL, recovery_usado = true WHERE id = $1', [user.id]);
-
+    // Código correcto → entrar directamente. No se toca la huella ni el código.
+    await pool.query('UPDATE usuarios SET ultimo_acceso = now() WHERE id = $1', [user.id]);
     res.json({
       ok: true,
       usuario: user.usuario,
-      mensaje: 'Código correcto. Ahora registrá de nuevo tu huella en este dispositivo.',
+      nombre: user.nombre,
     });
   } catch (e) {
     next(e);
@@ -421,11 +422,10 @@ export async function recuperarUsuario(req, res, next) {
 }
 
 /**
- * POST /api/auth/recuperacion/regenerar   body: { usuario, respuesta }
- * Genera un NUEVO código de recuperación para un usuario que YA puede entrar
- * con su huella. Por seguridad exige verificar la huella primero (la misma
- * verificación que el login), así solo el dueño de la cuenta puede obtener un
- * código nuevo. Devuelve el código UNA sola vez (se guarda hasheado).
+ * POST /api/auth/recuperacion/ver   body: { usuario, respuesta }
+ * Muestra el código de recuperación FIJO del usuario (siempre el mismo). Por
+ * seguridad exige verificar la huella primero (igual que el login), así solo
+ * el dueño de la cuenta puede verlo. NO genera uno nuevo: el código no cambia.
  *
  * Flujo desde la web: login/iniciar → startAuthentication → este endpoint.
  */
@@ -479,17 +479,21 @@ export async function regenerarCodigoRecuperacion(req, res, next) {
       [verification.authenticationInfo.newCounter, cred.id]
     );
 
-    // Generar y guardar el código nuevo (reemplaza cualquiera anterior)
-    const recoveryCode = generarCodigo('TRAMA');
-    await pool.query(
-      'UPDATE usuarios SET recovery_hash = $1, recovery_usado = false WHERE id = $2',
-      [hashCodigo(recoveryCode), user.id]
-    );
+    // Devolver el código FIJO. Si por algún motivo el usuario todavía no
+    // tuviera uno, se genera una única vez y queda fijo desde entonces.
+    let recoveryCode = user.recovery_code || null;
+    if (!recoveryCode) {
+      recoveryCode = generarCodigo('TRAMA');
+      await pool.query(
+        'UPDATE usuarios SET recovery_code = $1, recovery_hash = $2, recovery_usado = false WHERE id = $3',
+        [recoveryCode, hashCodigo(recoveryCode), user.id]
+      );
+    }
 
     res.json({
       ok: true,
       usuario: user.usuario,
-      recovery_code: recoveryCode, // se muestra una sola vez
+      recovery_code: recoveryCode, // el mismo de siempre
     });
   } catch (e) {
     next(e);

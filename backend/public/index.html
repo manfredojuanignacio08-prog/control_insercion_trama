@@ -106,8 +106,8 @@
         <path d="M18 5l2.5 2.5"/>
       </svg>
     </div>
-    <h1 style="font-size:20px;color:var(--tx);margin:0 0 6px;">Recuperar acceso</h1>
-    <p style="color:var(--tx3);font-size:13px;margin:0 0 22px;">Ingresá tu usuario y el código de recuperación que anotaste al registrarte. Después vas a poder registrar tu huella de nuevo.</p>
+    <h1 style="font-size:20px;color:var(--tx);margin:0 0 6px;">Entrar con tu código</h1>
+    <p style="color:var(--tx3);font-size:13px;margin:0 0 22px;">Escribí tu usuario y tu código de recuperación (es fijo, siempre el mismo) y entrás directo a la app.</p>
 
     <input id="rec-usuario" type="text" placeholder="Usuario" autocapitalize="none" spellcheck="false"
       style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:12px;box-sizing:border-box;">
@@ -116,7 +116,7 @@
 
     <button onclick="hacerRecupero()" id="btn-recupero"
       style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">
-      Recuperar acceso
+      Entrar
     </button>
 
     <p id="rec-msg" style="margin-top:16px;font-size:13px;min-height:18px;color:var(--tx3);"></p>
@@ -138,7 +138,7 @@
       </svg>
     </div>
     <h1 id="codigo-titulo" style="font-size:21px;color:var(--tx);margin:0 0 6px;">¡Huella registrada!</h1>
-    <p id="codigo-texto" style="color:var(--tx3);font-size:13.5px;margin:0 0 20px;line-height:1.5;">Este es tu <b>código de recuperación</b>. Anotalo o guardalo en un lugar seguro: te sirve para volver a entrar si algún día la huella no funciona o cambiás de dispositivo. <b>Se muestra una sola vez.</b></p>
+    <p id="codigo-texto" style="color:var(--tx3);font-size:13.5px;margin:0 0 20px;line-height:1.5;">Este es tu <b>código de recuperación</b>. Es <b>fijo</b>: siempre es el mismo. Guardalo en un lugar seguro; te sirve para entrar con tu usuario y este código si algún día la huella no funciona o cambiás de dispositivo. Podés volver a verlo cuando quieras desde tu perfil.</p>
 
     <div style="background:var(--srf);border:2px dashed var(--acc);border-radius:16px;padding:20px 16px;margin-bottom:16px;">
       <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Tu código</div>
@@ -195,6 +195,9 @@
       </div>
       <button id="btn-ver-codigo" onclick="verCodigoRecuperacion()" style="display:none;width:100%;margin-top:8px;padding:11px;border:1px solid var(--bd);border-radius:12px;background:transparent;color:var(--acc-md);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
         Ver mi código de recuperación
+      </button>
+      <button id="btn-activar-huella" onclick="activarHuellaEnDispositivo()" style="display:none;width:100%;margin-top:8px;padding:11px;border:none;border-radius:12px;background:var(--rose);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+        Activar huella en este dispositivo
       </button>
     </div>
 
@@ -439,7 +442,7 @@ async function hacerRegistro() {
     const opciones = await apiAuth('/registro/iniciar', { usuario, invitacion });
     const respuesta = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: opciones });
     const r = await apiAuth('/registro/verificar', { usuario, respuesta });
-    setUsuarioActual(usuario, r.nombre);
+    setUsuarioActual(usuario, r.nombre, 'huella');
     // Si vino un código de recuperación (primer registro), mostrarlo bien
     // visible: es la ÚNICA vez que se ve. El usuario debe anotarlo.
     if (r.recovery_code) {
@@ -461,9 +464,13 @@ function mostrarCodigoRecuperacion(codigo, opts = {}) {
   const t = document.getElementById('codigo-titulo');
   const p = document.getElementById('codigo-texto');
   const bEntrar = document.querySelector('#codigo-overlay button[onclick="cerrarCodigoYEntrar()"]');
-  if (opts.titulo && t) t.textContent = opts.titulo;
-  if (opts.texto && p) p.innerHTML = opts.texto;
-  if (opts.botonEntrar && bEntrar) bEntrar.textContent = opts.botonEntrar;
+  // Defaults (contexto: recién registrado). Se pueden sobreescribir con opts.
+  const titulo = opts.titulo || '¡Huella registrada!';
+  const texto = opts.texto || 'Este es tu <b>código de recuperación</b>. Es <b>fijo</b>: siempre es el mismo. Guardalo en un lugar seguro; te sirve para entrar con tu usuario y este código si la huella no funciona o cambiás de dispositivo. Podés volver a verlo desde tu perfil.';
+  const botonEntrar = opts.botonEntrar || 'Ya lo anoté, entrar';
+  if (t) t.textContent = titulo;
+  if (p) p.innerHTML = texto;
+  if (bEntrar) bEntrar.textContent = botonEntrar;
   document.getElementById('login-overlay').style.display = 'none';
   const btn = document.getElementById('btn-copiar-codigo');
   if (btn) btn.textContent = 'Copiar código';
@@ -495,8 +502,40 @@ function cerrarCodigoYEntrar() {
   entrarAlSistema();
 }
 
-// Regenera un código de recuperación NUEVO estando logueado. Pide la huella
-// para confirmar que sos vos, y después muestra el código en la pantalla
+// Registra (activa) la huella en ESTE dispositivo para el usuario que entró
+// con código. Después de esto, la próxima vez podrá entrar con la huella en
+// este dispositivo, sin usar el código. El código fijo sigue como respaldo.
+async function activarHuellaEnDispositivo() {
+  if (!usuarioActual) return toast('Iniciá sesión primero.');
+  if (!biometriaDisponible()) return toast('Este dispositivo no soporta la huella.');
+  if (!contextoSeguro()) return toast('Necesita HTTPS (o localhost) para usar la huella.');
+  const usuario = usuarioActual.usuario;
+  try {
+    toast('Seguí las instrucciones de tu dispositivo…');
+    const opciones = await apiAuth('/registro/iniciar', { usuario });
+    const respuesta = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: opciones });
+    await apiAuth('/registro/verificar', { usuario, respuesta });
+    // Ya tiene la huella en este dispositivo: pasa a origen 'huella' y el
+    // botón desaparece.
+    origenSesion = 'huella';
+    renderUsuarioActual();
+    toast('✔ Huella activada en este dispositivo');
+  } catch (e) {
+    // Si el dispositivo ya estaba registrado, el navegador lo bloquea:
+    // lo tratamos como "ya está activada".
+    const msg = (e && e.message) || '';
+    if (/already registered|exclude|InvalidState/i.test(msg)) {
+      origenSesion = 'huella';
+      renderUsuarioActual();
+      toast('Este dispositivo ya tenía tu huella activada');
+    } else {
+      toast(traducirError(e));
+    }
+  }
+}
+
+// Muestra el código de recuperación FIJO del usuario (siempre el mismo).
+// Pide la huella para confirmar que sos vos, y lo muestra en la pantalla
 // destacada (con opción de copiarlo).
 async function verCodigoRecuperacion() {
   if (!usuarioActual) return toast('Iniciá sesión para ver tu código.');
@@ -507,12 +546,12 @@ async function verCodigoRecuperacion() {
     toast('Confirmá con tu huella…');
     const opciones = await apiAuth('/login/iniciar', { usuario });
     const respuesta = await SimpleWebAuthnBrowser.startAuthentication({ optionsJSON: opciones });
-    const r = await apiAuth('/recuperacion/regenerar', { usuario, respuesta });
+    const r = await apiAuth('/recuperacion/ver', { usuario, respuesta });
     if (r.recovery_code) {
       mostrarCodigoRecuperacion(r.recovery_code, {
         titulo: 'Tu código de recuperación',
-        texto: 'Generamos un código <b>nuevo</b> para vos. Anotalo o copialo y guardalo en un lugar seguro. Reemplaza a cualquier código anterior y <b>se muestra una sola vez.</b>',
-        botonEntrar: 'Ya lo guardé, listo',
+        texto: 'Este es tu código de recuperación. <b>Es fijo: siempre es el mismo.</b> Guardalo en un lugar seguro; con tu usuario y este código podés entrar directo si la huella no funciona o cambiás de dispositivo.',
+        botonEntrar: 'Listo',
       });
     }
   } catch (e) {
@@ -531,7 +570,7 @@ async function hacerLogin() {
     const opciones = await apiAuth('/login/iniciar', { usuario });
     const respuesta = await SimpleWebAuthnBrowser.startAuthentication({ optionsJSON: opciones });
     const r = await apiAuth('/login/verificar', { usuario, respuesta });
-    setUsuarioActual(r.usuario || usuario, r.nombre);
+    setUsuarioActual(r.usuario || usuario, r.nombre, 'huella');
     setLoginMsg('✔ Bienvenido, ' + (r.nombre || r.usuario), 'ok');
     setTimeout(entrarAlSistema, 500);
   } catch (e) {
@@ -564,8 +603,10 @@ function entrarSinLogin() {
 // Guardamos en memoria quién inició sesión, para mostrarlo en Inicio y
 // permitir cerrar sesión. Si es null, se está usando como "Invitado".
 let usuarioActual = null;
-function setUsuarioActual(usuario, nombre) {
+let origenSesion = null; // 'huella' | 'codigo' | 'invitado'
+function setUsuarioActual(usuario, nombre, origen) {
   usuarioActual = usuario ? { usuario, nombre: nombre || usuario } : null;
+  origenSesion = usuario ? (origen || origenSesion || 'huella') : 'invitado';
   renderUsuarioActual();
 }
 
@@ -577,6 +618,7 @@ function renderUsuarioActual() {
   const btnSalir = document.getElementById('btn-salir');
   const btnIniciar = document.getElementById('btn-iniciar-sesion');
   const btnVerCodigo = document.getElementById('btn-ver-codigo');
+  const btnActivarHuella = document.getElementById('btn-activar-huella');
   if (!nombreEl) return;
 
   if (usuarioActual) {
@@ -587,6 +629,9 @@ function renderUsuarioActual() {
     if (btnSalir) btnSalir.style.display = '';
     if (btnIniciar) btnIniciar.style.display = 'none';
     if (btnVerCodigo) btnVerCodigo.style.display = '';
+    // El botón de activar la huella solo aparece si entró con código
+    // (en un dispositivo donde todavía no tiene la huella registrada).
+    if (btnActivarHuella) btnActivarHuella.style.display = (origenSesion === 'codigo') ? '' : 'none';
   } else {
     nombreEl.textContent = 'Invitado';
     subEl.textContent = 'Estás usando la app sin iniciar sesión';
@@ -594,6 +639,7 @@ function renderUsuarioActual() {
     if (btnSalir) btnSalir.style.display = 'none';
     if (btnIniciar) btnIniciar.style.display = '';
     if (btnVerCodigo) btnVerCodigo.style.display = 'none';
+    if (btnActivarHuella) btnActivarHuella.style.display = 'none';
   }
 }
 
@@ -643,16 +689,16 @@ async function hacerRecupero() {
   if (usuario.length < 3 || !codigo) return setRecMsg('Completá tu usuario y el código.', 'error');
   try {
     setRecMsg('Verificando código…');
-    await apiAuth('/recuperar', { usuario, codigo });
-    setRecMsg('✔ Código correcto. Ahora registrá tu huella de nuevo.', 'ok');
-    // volver al login con el usuario cargado para que registre la huella
+    const r = await apiAuth('/recuperar', { usuario, codigo });
+    setRecMsg('✔ Código correcto. Entrando…', 'ok');
+    // Entrar DIRECTO a la app (no se re-registra la huella)
+    setUsuarioActual(r.usuario || usuario, r.nombre, 'codigo');
     setTimeout(() => {
-      volverAlLogin();
-      document.getElementById('login-usuario').value = usuario;
-      setLoginMsg('Registrá tu huella en este dispositivo tocando "Registrar".', 'ok');
-    }, 1200);
+      document.getElementById('recupero-overlay').style.display = 'none';
+      entrarAlSistema();
+    }, 500);
   } catch (e) {
-    setRecMsg((e && e.message) || 'No se pudo recuperar. Revisá el código.', 'error');
+    setRecMsg((e && e.message) || 'No se pudo entrar. Revisá el código.', 'error');
   }
 }
 
