@@ -56,10 +56,11 @@ function datosRP(req) {
 
 const CHALLENGE_TTL_MIN = 5; // los desafíos vencen a los 5 minutos
 
-// Cantidad de usuarios que se pueden registrar libremente (sin invitación).
-// Los primeros 3 (las personas importantes) entran sin traba; del 4º en
-// adelante hace falta un código de invitación.
-const LIMITE_LIBRE = 3;
+// Registro ABIERTO y SIN LÍMITE: cualquier persona puede registrar su huella
+// sin necesidad de un código de invitación. Se deja en Infinity para que
+// nunca se pida invitación. (El sistema de invitaciones sigue existiendo por
+// compatibilidad, pero no bloquea el registro.)
+const LIMITE_LIBRE = Infinity;
 
 // Vencimiento de un código de invitación (días).
 const INVITACION_TTL_DIAS = 7;
@@ -473,9 +474,9 @@ export async function estadoRegistro(req, res, next) {
     const total = rows[0].n;
     res.json({
       registrados: total,
-      limite_libre: LIMITE_LIBRE,
-      registro_abierto: total < LIMITE_LIBRE,     // ¿quedan cupos sin invitación?
-      requiere_invitacion: total >= LIMITE_LIBRE, // ¿del 4º en adelante?
+      limite_libre: null,          // sin límite
+      registro_abierto: true,      // el registro siempre está abierto
+      requiere_invitacion: false,  // nunca hace falta código de invitación
     });
   } catch (e) {
     next(e);

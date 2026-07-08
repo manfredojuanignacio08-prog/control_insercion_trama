@@ -48,7 +48,17 @@
 ════════════════════════════════════════════ -->
 <div id="login-overlay" style="position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
   <div style="max-width:340px;width:100%;">
-    <div style="font-size:56px;margin-bottom:6px;">👆</div>
+    <div style="width:88px;height:88px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:var(--acc-lt);border-radius:22px;">
+      <svg width="52" height="52" viewBox="0 0 48 48" fill="none" stroke="var(--acc)" stroke-width="3" stroke-linecap="round">
+        <!-- Trama tejida: hilos de urdimbre (verticales) y trama (horizontales) -->
+        <line x1="12" y1="6" x2="12" y2="42"/>
+        <line x1="24" y1="6" x2="24" y2="42"/>
+        <line x1="36" y1="6" x2="36" y2="42"/>
+        <line x1="6" y1="14" x2="42" y2="14"/>
+        <line x1="6" y1="24" x2="42" y2="24"/>
+        <line x1="6" y1="34" x2="42" y2="34"/>
+      </svg>
+    </div>
     <h1 style="font-size:22px;color:var(--tx);margin:0 0 6px;">Control de Inserción de Trama</h1>
     <p style="color:var(--tx3);font-size:14px;margin:0 0 28px;">Ingresá con tu huella dactilar</p>
 
@@ -88,7 +98,14 @@
 ════════════════════════════════════════════ -->
 <div id="recupero-overlay" style="display:none;position:fixed;inset:0;z-index:2001;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
   <div style="max-width:340px;width:100%;">
-    <div style="font-size:52px;margin-bottom:6px;">🔑</div>
+    <div style="width:82px;height:82px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:var(--acc-lt);border-radius:22px;">
+      <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="7.5" cy="15.5" r="4.5"/>
+        <path d="M10.5 12.5 20 3"/>
+        <path d="M16 7l3 3"/>
+        <path d="M18 5l2.5 2.5"/>
+      </svg>
+    </div>
     <h1 style="font-size:20px;color:var(--tx);margin:0 0 6px;">Recuperar acceso</h1>
     <p style="color:var(--tx3);font-size:13px;margin:0 0 22px;">Ingresá tu usuario y el código de recuperación que anotaste al registrarte. Después vas a poder registrar tu huella de nuevo.</p>
 
@@ -111,6 +128,36 @@
 </div>
 
 <!-- ════════════════════════════════════════════
+     OVERLAY: CÓDIGO DE RECUPERACIÓN (se ve una sola vez, bien destacado)
+════════════════════════════════════════════ -->
+<div id="codigo-overlay" style="display:none;position:fixed;inset:0;z-index:2002;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
+  <div style="max-width:360px;width:100%;">
+    <div style="width:82px;height:82px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;background:var(--acc-lt);border-radius:22px;">
+      <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/>
+      </svg>
+    </div>
+    <h1 style="font-size:21px;color:var(--tx);margin:0 0 6px;">¡Huella registrada!</h1>
+    <p style="color:var(--tx3);font-size:13.5px;margin:0 0 20px;line-height:1.5;">Este es tu <b>código de recuperación</b>. Anotalo o guardalo en un lugar seguro: te sirve para volver a entrar si algún día la huella no funciona o cambiás de dispositivo. <b>Se muestra una sola vez.</b></p>
+
+    <div style="background:var(--srf);border:2px dashed var(--acc);border-radius:16px;padding:20px 16px;margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Tu código</div>
+      <div id="codigo-valor" style="font-size:26px;font-weight:800;letter-spacing:2px;color:var(--acc);word-break:break-all;">—</div>
+    </div>
+
+    <button onclick="copiarCodigoRecuperacion()" id="btn-copiar-codigo"
+      style="width:100%;padding:13px;border:1px solid var(--acc);border-radius:14px;background:transparent;color:var(--acc);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;font-family:inherit;">
+      Copiar código
+    </button>
+
+    <button onclick="cerrarCodigoYEntrar()"
+      style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">
+      Ya lo anoté, entrar
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
      SCREEN: INICIO
 ════════════════════════════════════════════ -->
 <div class="screen active" id="sc-inicio">
@@ -126,6 +173,26 @@
 
       <div class="hero-title">Control de Inserción de Trama</div>
       <div class="hero-sub">Industria Textil Argentina · Ferrando</div>
+    </div>
+
+    <!-- Tarjeta de Usuario / Sesión -->
+    <div class="card-list" style="padding-top:16px;">
+      <div class="action-card" style="cursor:default;">
+        <div class="card-accent" style="background:var(--acc);"></div>
+        <div class="card-inner">
+          <div id="usuario-avatar" style="width:44px;height:44px;flex-shrink:0;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;">·</div>
+          <div class="card-body">
+            <div class="card-title" id="usuario-nombre">Invitado</div>
+            <div class="card-desc" id="usuario-sub">Estás usando la app sin iniciar sesión</div>
+          </div>
+          <button id="btn-salir" onclick="cerrarSesion()" style="display:none;flex-shrink:0;padding:9px 16px;border:1px solid var(--bd);border-radius:12px;background:transparent;color:var(--acc);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+            Salir
+          </button>
+          <button id="btn-iniciar-sesion" onclick="irAlLogin()" style="display:none;flex-shrink:0;padding:9px 16px;border:none;border-radius:12px;background:var(--rose);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">
+            Iniciar sesión
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Dibujo Cargado Actual (Marco Informativo) -->
@@ -369,6 +436,7 @@ async function hacerRegistro() {
     const opciones = await apiAuth('/registro/iniciar', { usuario, invitacion });
     const respuesta = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: opciones });
     const r = await apiAuth('/registro/verificar', { usuario, respuesta });
+    setUsuarioActual(usuario, r.nombre);
     // Si vino un código de recuperación (primer registro), mostrarlo bien
     // visible: es la ÚNICA vez que se ve. El usuario debe anotarlo.
     if (r.recovery_code) {
@@ -381,16 +449,41 @@ async function hacerRegistro() {
   }
 }
 
-// Muestra el código de recuperación de forma destacada (una sola vez)
+// Muestra el código de recuperación en una pantalla propia, bien destacada
+// (se ve una sola vez). El usuario lo anota o lo copia antes de entrar.
+let _codigoRecuperacionActual = '';
 function mostrarCodigoRecuperacion(codigo) {
-  const cont = document.getElementById('login-msg');
-  cont.innerHTML =
-    '<div style="background:var(--acc-lt);border:1px solid var(--acc);border-radius:12px;padding:14px;margin-top:6px;">' +
-    '<div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">✔ Huella registrada. <b>Anotá tu código de recuperación</b> (se muestra una sola vez):</div>' +
-    '<div style="font-size:20px;font-weight:700;letter-spacing:1px;color:var(--acc);margin:8px 0;">' + codigo + '</div>' +
-    '<div style="font-size:11px;color:var(--tx3);">Guardalo en un lugar seguro. Te sirve para entrar si algún día la huella no funciona.</div>' +
-    '<button onclick="entrarAlSistema()" style="margin-top:12px;width:100%;padding:11px;border:none;border-radius:10px;background:var(--rose);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Ya lo anoté, entrar</button>' +
-    '</div>';
+  _codigoRecuperacionActual = codigo;
+  document.getElementById('codigo-valor').textContent = codigo;
+  document.getElementById('login-overlay').style.display = 'none';
+  const btn = document.getElementById('btn-copiar-codigo');
+  if (btn) btn.textContent = 'Copiar código';
+  document.getElementById('codigo-overlay').style.display = 'flex';
+}
+
+// Copia el código al portapapeles (con respaldo por si no hay permiso)
+async function copiarCodigoRecuperacion() {
+  const btn = document.getElementById('btn-copiar-codigo');
+  try {
+    await navigator.clipboard.writeText(_codigoRecuperacionActual);
+    if (btn) btn.textContent = '✔ Copiado';
+  } catch (e) {
+    // Respaldo para navegadores/contextos sin API de portapapeles
+    const tmp = document.createElement('textarea');
+    tmp.value = _codigoRecuperacionActual;
+    document.body.appendChild(tmp);
+    tmp.select();
+    try { document.execCommand('copy'); if (btn) btn.textContent = '✔ Copiado'; }
+    catch (_) { if (btn) btn.textContent = 'Copialo a mano'; }
+    document.body.removeChild(tmp);
+  }
+  setTimeout(() => { if (btn) btn.textContent = 'Copiar código'; }, 2500);
+}
+
+// Cierra la pantalla del código y entra al sistema
+function cerrarCodigoYEntrar() {
+  document.getElementById('codigo-overlay').style.display = 'none';
+  entrarAlSistema();
 }
 
 async function hacerLogin() {
@@ -404,6 +497,7 @@ async function hacerLogin() {
     const opciones = await apiAuth('/login/iniciar', { usuario });
     const respuesta = await SimpleWebAuthnBrowser.startAuthentication({ optionsJSON: opciones });
     const r = await apiAuth('/login/verificar', { usuario, respuesta });
+    setUsuarioActual(r.usuario || usuario, r.nombre);
     setLoginMsg('✔ Bienvenido, ' + (r.nombre || r.usuario), 'ok');
     setTimeout(entrarAlSistema, 500);
   } catch (e) {
@@ -422,12 +516,67 @@ function traducirError(e) {
 
 function entrarAlSistema() {
   document.getElementById('login-overlay').style.display = 'none';
+  renderUsuarioActual();
 }
 
 // Opción de saltear el login (sistema abierto de uso interno; útil mientras
 // no haya usuarios cargados o para pruebas).
 function entrarSinLogin() {
+  setUsuarioActual(null, null); // entra como invitado
   entrarAlSistema();
+}
+
+// ─── Usuario actual (sesión) ──────────────────────────────────────────
+// Guardamos en memoria quién inició sesión, para mostrarlo en Inicio y
+// permitir cerrar sesión. Si es null, se está usando como "Invitado".
+let usuarioActual = null;
+function setUsuarioActual(usuario, nombre) {
+  usuarioActual = usuario ? { usuario, nombre: nombre || usuario } : null;
+  renderUsuarioActual();
+}
+
+// Dibuja la tarjeta de usuario en la pantalla de Inicio
+function renderUsuarioActual() {
+  const nombreEl = document.getElementById('usuario-nombre');
+  const subEl = document.getElementById('usuario-sub');
+  const avatarEl = document.getElementById('usuario-avatar');
+  const btnSalir = document.getElementById('btn-salir');
+  const btnIniciar = document.getElementById('btn-iniciar-sesion');
+  if (!nombreEl) return;
+
+  if (usuarioActual) {
+    const nom = usuarioActual.nombre || usuarioActual.usuario;
+    nombreEl.textContent = nom;
+    subEl.textContent = 'Sesión iniciada · @' + usuarioActual.usuario;
+    avatarEl.textContent = (nom.trim()[0] || '?').toUpperCase();
+    if (btnSalir) btnSalir.style.display = '';
+    if (btnIniciar) btnIniciar.style.display = 'none';
+  } else {
+    nombreEl.textContent = 'Invitado';
+    subEl.textContent = 'Estás usando la app sin iniciar sesión';
+    avatarEl.textContent = '·';
+    if (btnSalir) btnSalir.style.display = 'none';
+    if (btnIniciar) btnIniciar.style.display = '';
+  }
+}
+
+// Cierra la sesión y vuelve a la pantalla de login para volver a entrar
+function cerrarSesion() {
+  showConfirm('¿Cerrar sesión?', 'Vas a volver a la pantalla de ingreso.', () => {
+    setUsuarioActual(null, null);
+    // limpiar el login para el próximo ingreso
+    const u = document.getElementById('login-usuario'); if (u) u.value = '';
+    setLoginMsg('');
+    goTo('sc-inicio');
+    document.getElementById('login-overlay').style.display = 'flex';
+  });
+}
+
+// Muestra de nuevo el login desde el modo invitado (sin confirmación)
+function irAlLogin() {
+  const u = document.getElementById('login-usuario'); if (u) u.value = '';
+  setLoginMsg('');
+  document.getElementById('login-overlay').style.display = 'flex';
 }
 
 // ─── Recupero de acceso ───────────────────────────────────────────────
