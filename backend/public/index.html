@@ -137,8 +137,8 @@
         <path d="M9 12l2 2 4-4"/><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2z"/>
       </svg>
     </div>
-    <h1 style="font-size:21px;color:var(--tx);margin:0 0 6px;">¡Huella registrada!</h1>
-    <p style="color:var(--tx3);font-size:13.5px;margin:0 0 20px;line-height:1.5;">Este es tu <b>código de recuperación</b>. Anotalo o guardalo en un lugar seguro: te sirve para volver a entrar si algún día la huella no funciona o cambiás de dispositivo. <b>Se muestra una sola vez.</b></p>
+    <h1 id="codigo-titulo" style="font-size:21px;color:var(--tx);margin:0 0 6px;">¡Huella registrada!</h1>
+    <p id="codigo-texto" style="color:var(--tx3);font-size:13.5px;margin:0 0 20px;line-height:1.5;">Este es tu <b>código de recuperación</b>. Anotalo o guardalo en un lugar seguro: te sirve para volver a entrar si algún día la huella no funciona o cambiás de dispositivo. <b>Se muestra una sola vez.</b></p>
 
     <div style="background:var(--srf);border:2px dashed var(--acc);border-radius:16px;padding:20px 16px;margin-bottom:16px;">
       <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Tu código</div>
@@ -193,6 +193,9 @@
           </button>
         </div>
       </div>
+      <button id="btn-ver-codigo" onclick="verCodigoRecuperacion()" style="display:none;width:100%;margin-top:8px;padding:11px;border:1px solid var(--bd);border-radius:12px;background:transparent;color:var(--acc-md);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+        Ver mi código de recuperación
+      </button>
     </div>
 
     <!-- Dibujo Cargado Actual (Marco Informativo) -->
@@ -450,11 +453,17 @@ async function hacerRegistro() {
 }
 
 // Muestra el código de recuperación en una pantalla propia, bien destacada
-// (se ve una sola vez). El usuario lo anota o lo copia antes de entrar.
+// (se ve una sola vez). Se usa tanto al registrarse como al regenerarlo.
 let _codigoRecuperacionActual = '';
-function mostrarCodigoRecuperacion(codigo) {
+function mostrarCodigoRecuperacion(codigo, opts = {}) {
   _codigoRecuperacionActual = codigo;
   document.getElementById('codigo-valor').textContent = codigo;
+  const t = document.getElementById('codigo-titulo');
+  const p = document.getElementById('codigo-texto');
+  const bEntrar = document.querySelector('#codigo-overlay button[onclick="cerrarCodigoYEntrar()"]');
+  if (opts.titulo && t) t.textContent = opts.titulo;
+  if (opts.texto && p) p.innerHTML = opts.texto;
+  if (opts.botonEntrar && bEntrar) bEntrar.textContent = opts.botonEntrar;
   document.getElementById('login-overlay').style.display = 'none';
   const btn = document.getElementById('btn-copiar-codigo');
   if (btn) btn.textContent = 'Copiar código';
@@ -484,6 +493,31 @@ async function copiarCodigoRecuperacion() {
 function cerrarCodigoYEntrar() {
   document.getElementById('codigo-overlay').style.display = 'none';
   entrarAlSistema();
+}
+
+// Regenera un código de recuperación NUEVO estando logueado. Pide la huella
+// para confirmar que sos vos, y después muestra el código en la pantalla
+// destacada (con opción de copiarlo).
+async function verCodigoRecuperacion() {
+  if (!usuarioActual) return toast('Iniciá sesión para ver tu código.');
+  if (!biometriaDisponible()) return toast('Este dispositivo no soporta la huella.');
+  if (!contextoSeguro()) return toast('Necesita HTTPS (o localhost) para usar la huella.');
+  const usuario = usuarioActual.usuario;
+  try {
+    toast('Confirmá con tu huella…');
+    const opciones = await apiAuth('/login/iniciar', { usuario });
+    const respuesta = await SimpleWebAuthnBrowser.startAuthentication({ optionsJSON: opciones });
+    const r = await apiAuth('/recuperacion/regenerar', { usuario, respuesta });
+    if (r.recovery_code) {
+      mostrarCodigoRecuperacion(r.recovery_code, {
+        titulo: 'Tu código de recuperación',
+        texto: 'Generamos un código <b>nuevo</b> para vos. Anotalo o copialo y guardalo en un lugar seguro. Reemplaza a cualquier código anterior y <b>se muestra una sola vez.</b>',
+        botonEntrar: 'Ya lo guardé, listo',
+      });
+    }
+  } catch (e) {
+    toast(traducirError(e));
+  }
 }
 
 async function hacerLogin() {
@@ -542,6 +576,7 @@ function renderUsuarioActual() {
   const avatarEl = document.getElementById('usuario-avatar');
   const btnSalir = document.getElementById('btn-salir');
   const btnIniciar = document.getElementById('btn-iniciar-sesion');
+  const btnVerCodigo = document.getElementById('btn-ver-codigo');
   if (!nombreEl) return;
 
   if (usuarioActual) {
@@ -551,12 +586,14 @@ function renderUsuarioActual() {
     avatarEl.textContent = (nom.trim()[0] || '?').toUpperCase();
     if (btnSalir) btnSalir.style.display = '';
     if (btnIniciar) btnIniciar.style.display = 'none';
+    if (btnVerCodigo) btnVerCodigo.style.display = '';
   } else {
     nombreEl.textContent = 'Invitado';
     subEl.textContent = 'Estás usando la app sin iniciar sesión';
     avatarEl.textContent = '·';
     if (btnSalir) btnSalir.style.display = 'none';
     if (btnIniciar) btnIniciar.style.display = '';
+    if (btnVerCodigo) btnVerCodigo.style.display = 'none';
   }
 }
 
@@ -875,6 +912,7 @@ function renderGrid() {
 	}
 
 function tapCell(r, c) {
+  if (edicionBloqueada()) return;
   curRow = r; // Establecer la fila activa para el color
   const val = grid[r][c] || 0;
   if (val > 0) {
@@ -917,6 +955,7 @@ function closeRepsModal() {
 }
 
 function applySize() {
+  if (edicionBloqueada()) return;
   const rawR = document.getElementById('in-rows').value;
   const rawC = document.getElementById('in-cols').value;
   const rNum = parseInt(rawR, 10);
@@ -940,6 +979,7 @@ function applySize() {
 }
 
 function clearGrid() {
+  if (edicionBloqueada()) return;
   showConfirm('¿Limpiar toda la grilla?', 'Se borrarán todas las celdas activas.', () => {
     grid = Array.from({length:nR}, () => Array(nC).fill(0));
     stopPlay();
@@ -951,6 +991,7 @@ function clearGrid() {
 }
 
 function newDraw() {
+		  if (edicionBloqueada()) return;
 		  showConfirm('¿Crear nueva inserción?', 'Se perderán los cambios no guardados.', () => {
 		    stopPlay();
 		    editId = null;
@@ -991,6 +1032,26 @@ function updPlayUI() {
   else if (curRow >= nR)                { st.textContent = '¡Tejido completo!'; setPlayBar('done'); }
   else                                  { st.textContent = 'Detenido'; setPlayBar(''); }
   rw.textContent = info;
+  aplicarBloqueoEdicion();
+}
+
+// ─── Bloqueo de edición durante la ejecución ──────────────────────────
+// Mientras la matriz se está EJECUTANDO (play/tejiendo) no se permite
+// editarla: ni agregar/quitar pasadas, ni cambiar color, ni tamaño, etc.
+// Solo se puede editar cuando está EN PAUSA o DETENIDA.
+// Devuelve true (y avisa) si la edición está bloqueada ahora mismo.
+function edicionBloqueada() {
+  if (isPlaying) {
+    toast('Pausá o detené la ejecución para poder editar la matriz');
+    return true;
+  }
+  return false;
+}
+
+// Aplica/quita el estado visual de "bloqueado por ejecución" en el editor
+function aplicarBloqueoEdicion() {
+  const ed = document.getElementById('sc-editor');
+  if (ed) ed.classList.toggle('ejecutando', isPlaying);
 }
 
 async function startPlay() {
@@ -1443,6 +1504,7 @@ function esc(s) {
 
 // ========== SIMULADOR DE COLOR ==========
 function openColorSimulator() {
+  if (edicionBloqueada()) return;
   const sel = document.getElementById('row-select');
   sel.innerHTML = '<option value="all">Toda la matriz</option>';
   for (let i = 0; i < nR; i++) {
@@ -1470,6 +1532,7 @@ function updateColorPreview() {
 }
 
 function applyThreadColor() {
+  if (edicionBloqueada()) return;
   const color = document.getElementById('thread-color').value;
   const rowSelect = document.getElementById('row-select');
   const target = rowSelect.value; // "all" o el índice de la fila

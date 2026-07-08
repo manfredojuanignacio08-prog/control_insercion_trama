@@ -421,6 +421,82 @@ export async function recuperarUsuario(req, res, next) {
 }
 
 /**
+ * POST /api/auth/recuperacion/regenerar   body: { usuario, respuesta }
+ * Genera un NUEVO código de recuperación para un usuario que YA puede entrar
+ * con su huella. Por seguridad exige verificar la huella primero (la misma
+ * verificación que el login), así solo el dueño de la cuenta puede obtener un
+ * código nuevo. Devuelve el código UNA sola vez (se guarda hasheado).
+ *
+ * Flujo desde la web: login/iniciar → startAuthentication → este endpoint.
+ */
+export async function regenerarCodigoRecuperacion(req, res, next) {
+  try {
+    const { rpID, origin } = datosRP(req);
+    const { usuario, respuesta } = req.body || {};
+    if (!usuario || !respuesta) {
+      return res.status(400).json({ error: 'Faltan datos (usuario y verificación de huella).' });
+    }
+
+    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+    const user = rows[0];
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    // Verificar la huella (reutiliza el desafío de tipo 'login')
+    const challenge = await tomarDesafio('login', user.id);
+    if (!challenge) return res.status(400).json({ error: 'El desafío venció o no existe. Reintentá.' });
+
+    const { rows: credRows } = await pool.query(
+      'SELECT * FROM credenciales_biometricas WHERE credential_id = $1 AND usuario_id = $2',
+      [respuesta.id, user.id]
+    );
+    const cred = credRows[0];
+    if (!cred) return res.status(400).json({ error: 'Credencial no reconocida para este usuario.' });
+
+    let verification;
+    try {
+      verification = await verifyAuthenticationResponse({
+        response: respuesta,
+        expectedChallenge: challenge,
+        expectedOrigin: origin,
+        expectedRPID: rpID,
+        requireUserVerification: true,
+        credential: {
+          id: cred.credential_id,
+          publicKey: deB64(cred.public_key),
+          counter: Number(cred.counter),
+        },
+      });
+    } catch (err) {
+      return res.status(400).json({ error: 'No se pudo verificar la huella: ' + err.message });
+    }
+    if (!verification.verified) {
+      return res.status(401).json({ error: 'La verificación biométrica falló.' });
+    }
+
+    // Actualizar el contador anti-clonación
+    await pool.query(
+      'UPDATE credenciales_biometricas SET counter = $1, ultimo_uso = now() WHERE id = $2',
+      [verification.authenticationInfo.newCounter, cred.id]
+    );
+
+    // Generar y guardar el código nuevo (reemplaza cualquiera anterior)
+    const recoveryCode = generarCodigo('TRAMA');
+    await pool.query(
+      'UPDATE usuarios SET recovery_hash = $1, recovery_usado = false WHERE id = $2',
+      [hashCodigo(recoveryCode), user.id]
+    );
+
+    res.json({
+      ok: true,
+      usuario: user.usuario,
+      recovery_code: recoveryCode, // se muestra una sola vez
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+/**
  * POST /api/auth/invitacion   body: { usuario }
  * Cualquier usuario ya registrado puede generar un código de invitación para
  * sumar un usuario nuevo en el futuro. Devuelve el código UNA vez (se guarda

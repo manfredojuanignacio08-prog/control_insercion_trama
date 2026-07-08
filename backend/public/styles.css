@@ -710,3 +710,39 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
   transition: background 0.2s;
 }
 .cd-action-btn:active { background: var(--acc-lt); }
+
+/* ══════════════════════════════════════════════════════════
+   Bloqueo de edición mientras la matriz se está EJECUTANDO
+   (tejiendo). Los controles de edición se atenúan y no
+   responden; solo se puede usar la barra de reproducción
+   (pausar / detener / retroceder). Al pausar o detener, todo
+   vuelve a habilitarse automáticamente.
+   ══════════════════════════════════════════════════════════ */
+#sc-editor.ejecutando .editor-cfg,
+#sc-editor.ejecutando .editor-tools,
+#sc-editor.ejecutando .save-secondary,
+#sc-editor.ejecutando .tb-btn {
+  opacity: .4;
+  pointer-events: none;
+  filter: grayscale(0.35);
+  transition: opacity .2s ease;
+}
+/* La grilla sigue "tocable" para poder avisar por qué no se edita,
+   pero se muestra el cursor de bloqueado. */
+#sc-editor.ejecutando .g-cell { cursor: not-allowed; }
+#sc-editor.ejecutando .editor-namebar .name-in { opacity: .55; }
+
+/* Aviso visible de que está en ejecución */
+#sc-editor.ejecutando .editor-grid-area::before {
+  content: "En ejecución · edición bloqueada";
+  display: block;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  color: var(--acc);
+  background: var(--acc-lt);
+  border-radius: 8px;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+}

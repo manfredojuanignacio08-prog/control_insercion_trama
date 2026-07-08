@@ -5,6 +5,7 @@ import {
   iniciarLogin,
   verificarLogin,
   recuperarUsuario,
+  regenerarCodigoRecuperacion,
   generarInvitacion,
   estadoRegistro,
 } from '../controllers/auth.controller.js';
@@ -24,6 +25,9 @@ router.post('/login/verificar', verificarLogin);
 
 // Recupero de acceso con código de recuperación
 router.post('/recuperar', recuperarUsuario);
+
+// Regenerar un código de recuperación nuevo (estando logueado, verifica huella)
+router.post('/recuperacion/regenerar', regenerarCodigoRecuperacion);
 
 // Generar código de invitación para sumar un usuario nuevo (a futuro)
 router.post('/invitacion', generarInvitacion);
