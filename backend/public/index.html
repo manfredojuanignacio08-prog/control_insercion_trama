@@ -180,7 +180,7 @@
       <div class="action-card" style="cursor:default;">
         <div class="card-accent" style="background:var(--acc);"></div>
         <div class="card-inner">
-          <div id="usuario-avatar" style="width:44px;height:44px;flex-shrink:0;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;">·</div>
+          <div id="usuario-avatar" style="width:44px;height:44px;flex-shrink:0;border-radius:50%;background:var(--acc);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;"><svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5.5 19.5c0-3.6 2.9-5.6 6.5-5.6s6.5 2 6.5 5.6z"/></svg></div>
           <div class="card-body">
             <div class="card-title" id="usuario-nombre">Invitado</div>
             <div class="card-desc" id="usuario-sub">Estás usando la app sin iniciar sesión</div>
@@ -635,7 +635,8 @@ function renderUsuarioActual() {
   } else {
     nombreEl.textContent = 'Invitado';
     subEl.textContent = 'Estás usando la app sin iniciar sesión';
-    avatarEl.textContent = '·';
+    // Ícono de persona (en vez de un punto)
+    avatarEl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5.5 19.5c0-3.6 2.9-5.6 6.5-5.6s6.5 2 6.5 5.6z"/></svg>';
     if (btnSalir) btnSalir.style.display = 'none';
     if (btnIniciar) btnIniciar.style.display = '';
     if (btnVerCodigo) btnVerCodigo.style.display = 'none';

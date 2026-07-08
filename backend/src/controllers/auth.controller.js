@@ -242,13 +242,20 @@ export async function verificarRegistro(req, res, next) {
     // sola vez (la primera vez que se registra) y se guarda en texto plano
     // para poder mostrarlo siempre que el usuario lo necesite. Si el usuario
     // ya tiene código, NO se toca: sigue siendo el mismo de siempre.
+    // Va en su propio try/catch: si por algún motivo fallara (ej. base sin
+    // migrar), el registro de la huella NO debe romperse por eso.
     let recoveryCode = user.recovery_code || null;
-    if (!recoveryCode) {
-      recoveryCode = generarCodigo('TRAMA');
-      await pool.query(
-        'UPDATE usuarios SET recovery_code = $1, recovery_hash = $2, recovery_usado = false WHERE id = $3',
-        [recoveryCode, hashCodigo(recoveryCode), user.id]
-      );
+    try {
+      if (!recoveryCode) {
+        recoveryCode = generarCodigo('TRAMA');
+        await pool.query(
+          'UPDATE usuarios SET recovery_code = $1, recovery_hash = $2, recovery_usado = false WHERE id = $3',
+          [recoveryCode, hashCodigo(recoveryCode), user.id]
+        );
+      }
+    } catch (errRec) {
+      console.warn('No se pudo guardar el código de recuperación (se continúa):', errRec.message);
+      recoveryCode = null; // el registro sigue siendo válido igual
     }
 
     // Si el registro usó un código de invitación, marcarlo como consumido.

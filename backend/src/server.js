@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
@@ -105,9 +106,43 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use(errorHandler);
 
+// ─── Migraciones automáticas al arrancar ─────────────────────────────
+// Aplica las migraciones (migracion_*.sql) al iniciar el servidor. Todas
+// usan "IF NOT EXISTS", así que correrlas de nuevo no rompe nada: si la
+// columna/tabla ya existe, no hace nada. Esto evita el típico error 500
+// por una columna que falta cuando alguien se olvida de correr "npm run
+// migrate" a mano. Cada archivo va en su propio try/catch para que un
+// problema en uno no frene a los demás.
+async function aplicarMigraciones() {
+  try {
+    const dir = path.join(__dirname, 'db');
+    const archivos = fs
+      .readdirSync(dir)
+      .filter((f) => /^migracion_\d+.*\.sql$/.test(f))
+      .sort();
+    let aplicadas = 0;
+    for (const archivo of archivos) {
+      try {
+        const sql = fs.readFileSync(path.join(dir, archivo), 'utf-8');
+        await pool.query(sql);
+        aplicadas++;
+      } catch (err) {
+        console.warn(`  ⚠ Migración ${archivo} no se pudo aplicar (se continúa): ${err.message}`);
+      }
+    }
+    if (archivos.length) console.log(`Migraciones verificadas al arranque (${aplicadas}/${archivos.length}).`);
+  } catch (err) {
+    console.error('No se pudieron leer las migraciones:', err.message);
+    console.error('Podés correrlas a mano con: npm run migrate');
+  }
+}
+
 const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'})`);
+let server;
+aplicarMigraciones().finally(() => {
+  server = app.listen(PORT, () => {
+    console.log(`Servidor escuchando en http://localhost:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'})`);
+  });
 });
 
 // ─── Apagado prolijo ────────────────────────────────────────────────
@@ -117,6 +152,7 @@ const server = app.listen(PORT, () => {
 // de salir, para no cortar queries a la mitad ni dejar conexiones colgadas.
 function shutdown(signal) {
   console.log(`\nRecibida señal ${signal}, cerrando servidor...`);
+  if (!server) { pool.end().finally(() => process.exit(0)); return; }
   server.close(async () => {
     try {
       await pool.end();
