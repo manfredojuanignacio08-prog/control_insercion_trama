@@ -66,10 +66,46 @@
       Registrar mi huella dactilar
     </button>
 
+    <!-- Campo de invitación: aparece solo si el registro ya está cerrado (4º en adelante) -->
+    <input id="login-invitacion" type="text" placeholder="Código de invitación (si te lo dieron)"
+      autocapitalize="characters" spellcheck="false"
+      style="display:none;width:100%;padding:12px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:13px;font-family:inherit;margin-top:12px;box-sizing:border-box;text-align:center;">
+
     <p id="login-msg" style="margin-top:18px;font-size:13px;min-height:18px;color:var(--tx3);"></p>
 
-    <button onclick="entrarSinLogin()" style="margin-top:8px;background:none;border:none;color:var(--tx3);font-size:12px;text-decoration:underline;cursor:pointer;">
+    <button onclick="mostrarRecupero()" id="link-recupero" style="margin-top:4px;background:none;border:none;color:var(--acc-md);font-size:12.5px;text-decoration:underline;cursor:pointer;display:block;width:100%;">
+      No puedo entrar con mi huella
+    </button>
+
+    <button onclick="entrarSinLogin()" style="margin-top:10px;background:none;border:none;color:var(--tx3);font-size:12px;text-decoration:underline;cursor:pointer;">
       Continuar sin iniciar sesión
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     OVERLAY: RECUPERO CON CÓDIGO
+════════════════════════════════════════════ -->
+<div id="recupero-overlay" style="display:none;position:fixed;inset:0;z-index:2001;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
+  <div style="max-width:340px;width:100%;">
+    <div style="font-size:52px;margin-bottom:6px;">🔑</div>
+    <h1 style="font-size:20px;color:var(--tx);margin:0 0 6px;">Recuperar acceso</h1>
+    <p style="color:var(--tx3);font-size:13px;margin:0 0 22px;">Ingresá tu usuario y el código de recuperación que anotaste al registrarte. Después vas a poder registrar tu huella de nuevo.</p>
+
+    <input id="rec-usuario" type="text" placeholder="Usuario" autocapitalize="none" spellcheck="false"
+      style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:12px;box-sizing:border-box;">
+    <input id="rec-codigo" type="text" placeholder="Código (ej: TRAMA-ABC123)" autocapitalize="characters" spellcheck="false"
+      style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;text-align:center;">
+
+    <button onclick="hacerRecupero()" id="btn-recupero"
+      style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">
+      Recuperar acceso
+    </button>
+
+    <p id="rec-msg" style="margin-top:16px;font-size:13px;min-height:18px;color:var(--tx3);"></p>
+
+    <button onclick="volverAlLogin()" style="margin-top:6px;background:none;border:none;color:var(--tx3);font-size:12px;text-decoration:underline;cursor:pointer;">
+      Volver
     </button>
   </div>
 </div>
@@ -329,13 +365,32 @@ async function hacerRegistro() {
 
   try {
     setLoginMsg('Seguí las instrucciones de tu dispositivo…');
-    const opciones = await apiAuth('/registro/iniciar', { usuario });
+    const invitacion = document.getElementById('login-invitacion').value.trim();
+    const opciones = await apiAuth('/registro/iniciar', { usuario, invitacion });
     const respuesta = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: opciones });
-    await apiAuth('/registro/verificar', { usuario, respuesta });
-    setLoginMsg('✔ Huella registrada. Ya podés entrar.', 'ok');
+    const r = await apiAuth('/registro/verificar', { usuario, respuesta });
+    // Si vino un código de recuperación (primer registro), mostrarlo bien
+    // visible: es la ÚNICA vez que se ve. El usuario debe anotarlo.
+    if (r.recovery_code) {
+      mostrarCodigoRecuperacion(r.recovery_code);
+    } else {
+      setLoginMsg('✔ Huella registrada. Ya podés entrar.', 'ok');
+    }
   } catch (e) {
     setLoginMsg(traducirError(e), 'error');
   }
+}
+
+// Muestra el código de recuperación de forma destacada (una sola vez)
+function mostrarCodigoRecuperacion(codigo) {
+  const cont = document.getElementById('login-msg');
+  cont.innerHTML =
+    '<div style="background:var(--acc-lt);border:1px solid var(--acc);border-radius:12px;padding:14px;margin-top:6px;">' +
+    '<div style="font-size:12px;color:var(--tx2);margin-bottom:6px;">✔ Huella registrada. <b>Anotá tu código de recuperación</b> (se muestra una sola vez):</div>' +
+    '<div style="font-size:20px;font-weight:700;letter-spacing:1px;color:var(--acc);margin:8px 0;">' + codigo + '</div>' +
+    '<div style="font-size:11px;color:var(--tx3);">Guardalo en un lugar seguro. Te sirve para entrar si algún día la huella no funciona.</div>' +
+    '<button onclick="entrarAlSistema()" style="margin-top:12px;width:100%;padding:11px;border:none;border-radius:10px;background:var(--rose);color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Ya lo anoté, entrar</button>' +
+    '</div>';
 }
 
 async function hacerLogin() {
@@ -374,6 +429,64 @@ function entrarAlSistema() {
 function entrarSinLogin() {
   entrarAlSistema();
 }
+
+// ─── Recupero de acceso ───────────────────────────────────────────────
+function mostrarRecupero() {
+  document.getElementById('login-overlay').style.display = 'none';
+  const ov = document.getElementById('recupero-overlay');
+  ov.style.display = 'flex';
+  // precargar el usuario si ya lo escribió en el login
+  const u = document.getElementById('login-usuario').value.trim();
+  if (u) document.getElementById('rec-usuario').value = u;
+}
+
+function volverAlLogin() {
+  document.getElementById('recupero-overlay').style.display = 'none';
+  document.getElementById('login-overlay').style.display = 'flex';
+}
+
+function setRecMsg(txt, tipo) {
+  const el = document.getElementById('rec-msg');
+  el.textContent = txt || '';
+  el.style.color = tipo === 'error' ? 'var(--red, #c0392b)' : tipo === 'ok' ? '#2E9E5B' : 'var(--tx3)';
+}
+
+async function hacerRecupero() {
+  const usuario = document.getElementById('rec-usuario').value.trim();
+  const codigo = document.getElementById('rec-codigo').value.trim();
+  if (usuario.length < 3 || !codigo) return setRecMsg('Completá tu usuario y el código.', 'error');
+  try {
+    setRecMsg('Verificando código…');
+    await apiAuth('/recuperar', { usuario, codigo });
+    setRecMsg('✔ Código correcto. Ahora registrá tu huella de nuevo.', 'ok');
+    // volver al login con el usuario cargado para que registre la huella
+    setTimeout(() => {
+      volverAlLogin();
+      document.getElementById('login-usuario').value = usuario;
+      setLoginMsg('Registrá tu huella en este dispositivo tocando "Registrar".', 'ok');
+    }, 1200);
+  } catch (e) {
+    setRecMsg((e && e.message) || 'No se pudo recuperar. Revisá el código.', 'error');
+  }
+}
+
+// ─── Estado del registro (mostrar el campo de invitación si corresponde) ─
+async function chequearEstadoRegistro() {
+  try {
+    const res = await fetch('/api/auth/estado-registro');
+    if (!res.ok) return;
+    const est = await res.json();
+    // Si el registro ya está cerrado (4º en adelante), mostrar el campo de
+    // invitación y avisar en el botón de registro.
+    if (est.requiere_invitacion) {
+      document.getElementById('login-invitacion').style.display = 'block';
+      const btn = document.getElementById('btn-registro');
+      if (btn) btn.textContent = 'Registrarme (con código de invitación)';
+    }
+  } catch (e) { /* si falla, no pasa nada: se registra normal */ }
+}
+// chequear al cargar la página
+chequearEstadoRegistro();
 </script>
 <script>
 const SK = 'telar_v3'; // ya no se usa para guardar; se conserva por compatibilidad

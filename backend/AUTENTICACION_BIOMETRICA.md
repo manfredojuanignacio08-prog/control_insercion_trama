@@ -124,3 +124,44 @@ La gestión de sesión posterior al login (por ejemplo, emitir un token para
 mantener la sesión abierta, o proteger cada endpoint exigiendo estar logueado)
 es un paso adicional que se puede sumar según cómo el equipo quiera manejar
 los permisos — la base para hacerlo ya está puesta.
+
+---
+
+## Recupero de acceso y registro de usuarios
+
+### Registro: los primeros 3 son libres
+
+Los **primeros 3 usuarios** (las personas importantes) se registran sin
+ninguna traba: entran, registran su huella y listo. Cuando ya hay 3 usuarios,
+el registro público **se cierra automáticamente**: del 4º en adelante hace
+falta un código de invitación. No hay roles: todos los usuarios son iguales.
+
+### Código de recuperación (por si la huella falla)
+
+Al registrar su huella, cada usuario recibe **una sola vez** un código de
+recuperación (tipo `TRAMA-ABC123`). Debe anotarlo. Si algún día no puede
+entrar con la huella (cambió de celular, se le rompió el lector, etc.), usa
+ese código en "No puedo entrar con mi huella" para volver a habilitar el
+registro de su huella en el dispositivo nuevo.
+
+- El código se guarda **hasheado** (nunca en texto plano).
+- Es de **un solo uso**: al recuperarse, se genera uno nuevo cuando el
+  usuario vuelve a registrar la huella.
+
+### Sumar usuarios en el futuro (código de invitación)
+
+Cualquier usuario ya registrado (con huella) puede generar un **código de
+invitación** (`POST /api/auth/invitacion`), tipo `INVITAR-XYZ789`, que vence
+en 7 días. Se lo pasa a la persona nueva, que lo ingresa al registrarse. Sin
+un código válido, del 4º usuario en adelante no se puede registrar nadie.
+
+### Endpoints agregados
+
+| Endpoint | Para qué |
+|---|---|
+| `GET /api/auth/estado-registro` | Dice si el registro está abierto o requiere invitación (la web lo usa para mostrar el campo de código). |
+| `POST /api/auth/recuperar` | Valida el código de recuperación y habilita re-registrar la huella. |
+| `POST /api/auth/invitacion` | Un usuario registrado genera un código de invitación para sumar a alguien. |
+
+Tablas nuevas: columnas `recovery_hash` / `recovery_usado` en `usuarios`, y la
+tabla `invitaciones`. Ver `src/db/migracion_004_recupero_usuarios.sql`.

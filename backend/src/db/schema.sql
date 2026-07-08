@@ -133,3 +133,23 @@ CREATE TABLE IF NOT EXISTS desafios_webauthn (
 );
 
 CREATE INDEX IF NOT EXISTS idx_desafio_challenge ON desafios_webauthn(challenge);
+
+-- ============================================================
+-- Recupero de usuario + códigos de invitación (migración 004)
+-- Ver migracion_004_recupero_usuarios.sql para el detalle.
+-- ============================================================
+
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_hash TEXT;
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_usado BOOLEAN NOT NULL DEFAULT false;
+
+CREATE TABLE IF NOT EXISTS invitaciones (
+  id           SERIAL PRIMARY KEY,
+  codigo_hash  TEXT NOT NULL,
+  creada_por   INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  usada        BOOLEAN NOT NULL DEFAULT false,
+  usada_por    INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+  creada_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
+  expira_at    TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_invitaciones_hash ON invitaciones(codigo_hash);

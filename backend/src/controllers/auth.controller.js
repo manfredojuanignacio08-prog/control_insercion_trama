@@ -56,9 +56,44 @@ function datosRP(req) {
 
 const CHALLENGE_TTL_MIN = 5; // los desafíos vencen a los 5 minutos
 
+// Cantidad de usuarios que se pueden registrar libremente (sin invitación).
+// Los primeros 3 (las personas importantes) entran sin traba; del 4º en
+// adelante hace falta un código de invitación.
+const LIMITE_LIBRE = 3;
+
+// Vencimiento de un código de invitación (días).
+const INVITACION_TTL_DIAS = 7;
+
 // Helpers base64url <-> Buffer
 const aB64 = (buf) => Buffer.from(buf).toString('base64url');
 const deB64 = (str) => Buffer.from(str, 'base64url');
+
+// Hash SHA-256 (para guardar códigos de recuperación e invitación sin texto plano)
+const hashCodigo = (codigo) =>
+  crypto.createHash('sha256').update(String(codigo).trim().toUpperCase()).digest('hex');
+
+// Genera un código legible tipo "TRAMA-4K7Q" (fácil de anotar, difícil de adivinar)
+function generarCodigo(prefijo) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin I,O,0,1 para no confundir
+  let s = '';
+  const bytes = crypto.randomBytes(6);
+  for (let i = 0; i < 6; i++) s += chars[bytes[i] % chars.length];
+  return `${prefijo}-${s.slice(0, 3)}${s.slice(3)}`;
+}
+
+// Valida un código de invitación. Devuelve {ok, id?, motivo?}.
+async function validarInvitacion(codigo) {
+  if (!codigo || typeof codigo !== 'string' || !codigo.trim()) {
+    return { ok: false, motivo: 'Falta el código de invitación.' };
+  }
+  const h = hashCodigo(codigo);
+  const { rows } = await pool.query(
+    'SELECT * FROM invitaciones WHERE codigo_hash = $1 AND usada = false AND expira_at >= now()',
+    [h]
+  );
+  if (!rows[0]) return { ok: false, motivo: 'El código de invitación es inválido, ya se usó o venció.' };
+  return { ok: true, id: rows[0].id };
+}
 
 // Limpia desafíos vencidos (se llama de vez en cuando, no en cada request)
 async function limpiarDesafiosVencidos() {
@@ -77,16 +112,38 @@ async function limpiarDesafiosVencidos() {
 export async function iniciarRegistro(req, res, next) {
   try {
     const { rpID, origin } = datosRP(req);
-    const { usuario, nombre } = req.body || {};
+    const { usuario, nombre, invitacion } = req.body || {};
     if (!usuario || typeof usuario !== 'string' || usuario.trim().length < 3) {
       return res.status(400).json({ error: 'El usuario debe tener al menos 3 caracteres.' });
     }
     const nom = usuario.trim();
 
-    // Buscar o crear el usuario
+    // Buscar el usuario
     let { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [nom]);
     let user = rows[0];
+
+    // ── Control de registro ──────────────────────────────────────────
+    // Los primeros LIMITE_LIBRE usuarios se registran libres. A partir de
+    // ahí (para sumar usuarios en el futuro) hace falta un código de
+    // invitación válido, que cualquier usuario ya registrado puede generar.
+    // No hay roles: todos los usuarios son iguales.
     if (!user) {
+      const { rows: cnt } = await pool.query('SELECT COUNT(*)::int AS n FROM usuarios');
+      const totalUsuarios = cnt[0].n;
+
+      if (totalUsuarios >= LIMITE_LIBRE) {
+        // Ya se completaron los registros libres: exigir invitación.
+        const inv = await validarInvitacion(invitacion);
+        if (!inv.ok) {
+          return res.status(403).json({
+            error: inv.motivo || 'El registro está cerrado. Necesitás un código de invitación de un usuario ya registrado.',
+            requiere_invitacion: true,
+          });
+        }
+        // marcar el id de invitación para consumirla al verificar el registro
+        req._invitacionId = inv.id;
+      }
+
       const webauthnId = aB64(crypto.randomBytes(32));
       const ins = await pool.query(
         'INSERT INTO usuarios (usuario, nombre, webauthn_id) VALUES ($1, $2, $3) RETURNING *',
@@ -179,7 +236,35 @@ export async function verificarRegistro(req, res, next) {
       [user.id, credential.id, aB64(credential.publicKey), credential.counter, tipo]
     );
 
-    res.status(201).json({ ok: true, usuario: user.usuario });
+    // ── Código de recuperación ───────────────────────────────────────
+    // Si es la PRIMERA credencial de este usuario (recién se registra),
+    // se genera un código de recuperación de un solo uso. Se muestra UNA
+    // vez y se guarda hasheado. Sirve para entrar si la huella falla o si
+    // se cambia de dispositivo.
+    let recoveryCode = null;
+    if (!user.recovery_hash) {
+      recoveryCode = generarCodigo('TRAMA');
+      await pool.query(
+        'UPDATE usuarios SET recovery_hash = $1, recovery_usado = false WHERE id = $2',
+        [hashCodigo(recoveryCode), user.id]
+      );
+    }
+
+    // Si el registro usó un código de invitación, marcarlo como consumido.
+    if (req._invitacionId) {
+      await pool.query(
+        'UPDATE invitaciones SET usada = true, usada_por = $1 WHERE id = $2',
+        [user.id, req._invitacionId]
+      );
+    }
+
+    res.status(201).json({
+      ok: true,
+      usuario: user.usuario,
+      // El código de recuperación va SOLO en esta respuesta, una única vez.
+      // El usuario debe anotarlo; no se puede volver a mostrar.
+      recovery_code: recoveryCode,
+    });
   } catch (e) {
     next(e);
   }
@@ -282,6 +367,116 @@ export async function verificarLogin(req, res, next) {
     await pool.query('UPDATE usuarios SET ultimo_acceso = now() WHERE id = $1', [user.id]);
 
     res.json({ ok: true, usuario: user.usuario, nombre: user.nombre });
+  } catch (e) {
+    next(e);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  RECUPERO Y GESTIÓN DE USUARIOS
+// ══════════════════════════════════════════════════════════════════════
+
+/**
+ * POST /api/auth/recuperar   body: { usuario, codigo }
+ * Permite volver a habilitar el registro de huella si el usuario perdió el
+ * acceso (cambió de dispositivo, la huella no lee, etc.). Valida el código
+ * de recuperación; si es correcto, borra las credenciales viejas para que el
+ * usuario registre su huella de nuevo (en registro/iniciar + verificar).
+ *
+ * El código de recuperación es de un solo uso: al usarse se invalida y se
+ * genera uno nuevo cuando el usuario vuelve a registrar la huella.
+ */
+export async function recuperarUsuario(req, res, next) {
+  try {
+    const { usuario, codigo } = req.body || {};
+    if (!usuario || !codigo) {
+      return res.status(400).json({ error: 'Faltan datos (usuario y código de recuperación).' });
+    }
+    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+    const user = rows[0];
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    if (!user.recovery_hash || user.recovery_usado) {
+      return res.status(400).json({ error: 'Este usuario no tiene un código de recuperación válido.' });
+    }
+    if (hashCodigo(codigo) !== user.recovery_hash) {
+      return res.status(401).json({ error: 'El código de recuperación es incorrecto.' });
+    }
+
+    // Código correcto: borrar credenciales viejas y marcar el código como usado.
+    // A partir de acá el usuario puede registrar su huella de nuevo (y recibirá
+    // un código de recuperación nuevo).
+    await pool.query('DELETE FROM credenciales_biometricas WHERE usuario_id = $1', [user.id]);
+    await pool.query('UPDATE usuarios SET recovery_hash = NULL, recovery_usado = true WHERE id = $1', [user.id]);
+
+    res.json({
+      ok: true,
+      usuario: user.usuario,
+      mensaje: 'Código correcto. Ahora registrá de nuevo tu huella en este dispositivo.',
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+/**
+ * POST /api/auth/invitacion   body: { usuario }
+ * Cualquier usuario ya registrado puede generar un código de invitación para
+ * sumar un usuario nuevo en el futuro. Devuelve el código UNA vez (se guarda
+ * hasheado). No hay roles: todos pueden invitar.
+ */
+export async function generarInvitacion(req, res, next) {
+  try {
+    const { usuario } = req.body || {};
+    if (!usuario) return res.status(400).json({ error: 'Falta el usuario que genera la invitación.' });
+
+    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+    const user = rows[0];
+    if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
+
+    // Verificar que quien invita tenga al menos una huella registrada (es un
+    // usuario real y activo del sistema).
+    const { rows: creds } = await pool.query(
+      'SELECT 1 FROM credenciales_biometricas WHERE usuario_id = $1 LIMIT 1', [user.id]
+    );
+    if (creds.length === 0) {
+      return res.status(403).json({ error: 'Solo un usuario con huella registrada puede generar invitaciones.' });
+    }
+
+    const codigo = generarCodigo('INVITAR');
+    const expira = new Date(Date.now() + INVITACION_TTL_DIAS * 24 * 60 * 60 * 1000);
+    await pool.query(
+      'INSERT INTO invitaciones (codigo_hash, creada_por, expira_at) VALUES ($1, $2, $3)',
+      [hashCodigo(codigo), user.id, expira]
+    );
+
+    res.status(201).json({
+      ok: true,
+      codigo,  // se muestra una sola vez
+      vence: expira.toISOString(),
+      mensaje: `Pasale este código a la persona nueva. Vence en ${INVITACION_TTL_DIAS} días.`,
+    });
+  } catch (e) {
+    next(e);
+  }
+}
+
+/**
+ * GET /api/auth/estado-registro
+ * Le dice a la web si el registro está abierto (quedan cupos libres) o si ya
+ * hace falta código de invitación. Sirve para mostrar u ocultar el campo de
+ * invitación en la pantalla de registro.
+ */
+export async function estadoRegistro(req, res, next) {
+  try {
+    const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM usuarios');
+    const total = rows[0].n;
+    res.json({
+      registrados: total,
+      limite_libre: LIMITE_LIBRE,
+      registro_abierto: total < LIMITE_LIBRE,     // ¿quedan cupos sin invitación?
+      requiere_invitacion: total >= LIMITE_LIBRE, // ¿del 4º en adelante?
+    });
   } catch (e) {
     next(e);
   }

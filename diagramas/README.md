@@ -37,6 +37,14 @@ de cómo se fue llegando a la solución. El mismo contenido en texto está en
 Útil para explicar **por qué** se hizo el proyecto y cómo se razonó la
 solución.
 
+## 4. `diagrama_nivel2_marcos`
+
+**Etapa de marcos del Nivel 2 (evolución).** Muestra cómo el ESP32 dictaría
+la secuencia del dibujo moviendo los marcos del telar: backend → ESP32 →
+módulo PCA9685 → 8-16 servomotores (uno por marco) → telar. Incluye el camino
+alternativo con solenoides. Es el diagrama del Nivel 2 (control del tejido),
+a diferencia del eléctrico que es el Nivel 1 (arranque/pausa).
+
 ## Cuál mirar según la pregunta
 
 | Si preguntan... | Mirar |
@@ -46,3 +54,4 @@ solución.
 | "¿Cómo está cableado el ESP32 al telar?" | Diagrama eléctrico |
 | "¿Qué protecciones eléctricas tiene el circuito?" | Diagrama eléctrico |
 | "¿Por qué se hizo el proyecto? ¿Cómo llegaron a la solución?" | Árbol de problemas y soluciones |
+| "¿Cómo controlaría el ESP32 los marcos para tejer el dibujo?" | Nivel 2 (marcos) |
