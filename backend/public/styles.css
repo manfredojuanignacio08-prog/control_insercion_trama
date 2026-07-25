@@ -363,6 +363,27 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
 .status-badge.saved{background:#D4E8D4;color:#2E6E4A}
 [data-theme="dark"] .status-badge.saved{background:rgba(46,110,74,.25);color:#7FD87F}
 
+.telar-status-bar{
+  display:flex;gap:14px;padding:6px 14px 10px;
+  background:var(--srf);border-bottom:1px solid var(--bd);
+  flex-shrink:0;flex-wrap:wrap;
+}
+.telar-status-item{
+  display:flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:700;color:var(--tx3);
+  letter-spacing:.03em;
+}
+.telar-dot{
+  width:7px;height:7px;border-radius:50%;flex-shrink:0;
+  background:var(--tx3);transition:background .2s;
+}
+.telar-dot.ok{background:var(--green)}
+.telar-dot.warn{background:var(--amber)}
+.telar-dot.off{background:var(--red)}
+.telar-status-item.ok-txt{color:var(--green)}
+.telar-status-item.warn-txt{color:var(--amber)}
+.telar-status-item.off-txt{color:var(--red)}
+
 .editor-grid-area{
   flex:1;overflow:auto;padding:12px;
   background:var(--bg);min-height:0;

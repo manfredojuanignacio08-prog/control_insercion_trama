@@ -162,9 +162,13 @@ void loop() {
 // ------------------------------------------------------------
 // GET /api/telares/{id} → comparar estado deseado vs. conocido
 // ------------------------------------------------------------
+// El "?origen=esp32" es lo único nuevo: le avisa al backend que este
+// sondeo viene del dispositivo real (no de alguien mirando la web), así
+// puede guardar un heartbeat verdadero para mostrar "ESP32 conectado"
+// en el editor. No cambia nada de la lógica de Marcha/Pausa.
 void sincronizarConBackend() {
   HTTPClient http;
-  String url = String(API_BASE_URL) + "/api/telares/" + String(TELAR_ID);
+  String url = String(API_BASE_URL) + "/api/telares/" + String(TELAR_ID) + "?origen=esp32";
   http.begin(url);
   http.setTimeout(5000);
 

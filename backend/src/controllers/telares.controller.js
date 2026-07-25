@@ -21,8 +21,21 @@ export async function listarTelares(req, res, next) {
 }
 
 // GET /api/telares/:id
+// El ESP32 (Nivel 1) llama este mismo endpoint cada ~2,5s para sondear
+// el estado deseado. Cuando lo hace, agrega ?origen=esp32 a la URL; eso
+// es lo que permite distinguir su sondeo del que hace la propia web (que
+// también puede consultar este endpoint para mostrar el estado en
+// pantalla) y dejar un "heartbeat" real del dispositivo, no de cualquier
+// pestaña abierta.
 export async function obtenerTelar(req, res, next) {
   try {
+    if (req.query.origen === 'esp32') {
+      await pool.query(
+        `UPDATE telares SET ultimo_ping_esp32 = now() WHERE id = $1`,
+        [req.params.id]
+      );
+    }
+
     const { rows } = await pool.query(
       `SELECT t.*, p.nombre AS patron_actual_nombre,
               h.id AS historial_actual_id, h.fila_actual, h.columna_actual,

@@ -304,6 +304,17 @@
       <span class="status-badge" id="ed-status">Nuevo</span>
     </div>
 
+    <div class="telar-status-bar" id="telar-status-bar">
+      <span class="telar-status-item" id="telar-conexion">
+        <span class="telar-dot" id="telar-conexion-dot"></span>
+        <span id="telar-conexion-txt">Sin datos del ESP32</span>
+      </span>
+      <span class="telar-status-item" id="telar-tejiendo">
+        <span class="telar-dot" id="telar-tejiendo-dot"></span>
+        <span id="telar-tejiendo-txt">—</span>
+      </span>
+    </div>
+
     <div class="editor-grid-area" id="grid-area">
       <div class="grid-inner" id="grid-container"></div>
     </div>
@@ -854,6 +865,7 @@ let curPass = 0;
 let isPlaying = false;
 let playTimer = null;
 let newDrawCounter = 1; // Contador para nuevas inserciones
+let telarStatusTimer = null; // sondeo de estado del telar (solo con el editor abierto)
 
 function goTo(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -864,6 +876,75 @@ function goTo(id) {
   if (id === 'sc-biblioteca') renderLib();
   if (id === 'sc-inicio') updateStats();
   if (id === 'sc-editor' && !editId) resetEditorForNew();
+
+  // La tarjeta de "ESP32 conectado / Tejiendo" solo tiene sentido con el
+  // editor a la vista. Se prende el sondeo al entrar y se apaga al salir,
+  // para no gastar pedidos de más en las otras pantallas.
+  if (id === 'sc-editor') {
+    actualizarEstadoTelar();
+    if (!telarStatusTimer) telarStatusTimer = setInterval(actualizarEstadoTelar, 4000);
+  } else if (telarStatusTimer) {
+    clearInterval(telarStatusTimer);
+    telarStatusTimer = null;
+  }
+}
+
+// Consulta el estado real del telar (backend) y actualiza la tarjeta.
+// "Conectado" se decide por el heartbeat que deja el ESP32 en cada uno
+// de sus sondeos (cada 2,5s según el firmware): si la última marca tiene
+// menos de 8s, se considera conectado (con margen). Si el ESP32 nunca
+// mandó el heartbeat (firmware viejo sin el parámetro ?origen=esp32), se
+// muestra "Sin datos" en vez de inventar un estado.
+async function actualizarEstadoTelar() {
+  if (!telarPorDefectoId) return;
+  const dotConn = document.getElementById('telar-conexion-dot');
+  const txtConn = document.getElementById('telar-conexion-txt');
+  const itemConn = document.getElementById('telar-conexion');
+  const dotTej = document.getElementById('telar-tejiendo-dot');
+  const txtTej = document.getElementById('telar-tejiendo-txt');
+  const itemTej = document.getElementById('telar-tejiendo');
+  if (!dotConn || !dotTej) return;
+
+  try {
+    const telar = await apiFetch(`/telares/${telarPorDefectoId}`);
+
+    // ── Conexión del ESP32 ──
+    itemConn.className = 'telar-status-item';
+    if (telar.ultimo_ping_esp32) {
+      const segundos = (Date.now() - new Date(telar.ultimo_ping_esp32).getTime()) / 1000;
+      if (segundos < 8) {
+        dotConn.className = 'telar-dot ok';
+        txtConn.textContent = 'ESP32 conectado';
+        itemConn.classList.add('ok-txt');
+      } else {
+        dotConn.className = 'telar-dot off';
+        txtConn.textContent = `Sin conexión (hace ${Math.round(segundos)}s)`;
+        itemConn.classList.add('off-txt');
+      }
+    } else {
+      dotConn.className = 'telar-dot';
+      txtConn.textContent = 'Sin datos del ESP32';
+    }
+
+    // ── ¿Está tejiendo? (según el backend, no solo la animación local) ──
+    itemTej.className = 'telar-status-item';
+    const mapaEstado = {
+      tejiendo: ['ok',   'Tejiendo'],
+      pausado:  ['warn', 'Pausado'],
+      apagado:  ['',     'Detenido'],
+      error:    ['off',  'Error'],
+    };
+    const [clase, texto] = mapaEstado[telar.estado] || ['', telar.estado || '—'];
+    dotTej.className = 'telar-dot' + (clase ? ' ' + clase : '');
+    txtTej.textContent = texto;
+    if (clase === 'ok') itemTej.classList.add('ok-txt');
+    if (clase === 'warn') itemTej.classList.add('warn-txt');
+    if (clase === 'off') itemTej.classList.add('off-txt');
+  } catch (e) {
+    // Sin red o el telar no existe todavía: mostrar neutro, sin alarmar.
+    dotConn.className = 'telar-dot';
+    txtConn.textContent = 'Sin datos del ESP32';
+  }
 }
 
 function resetEditorForNew() {
