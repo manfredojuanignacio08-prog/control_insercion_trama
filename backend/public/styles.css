@@ -276,9 +276,6 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
 /* (2) Los botones de control (pausa/stop) quedaban como recuadros oscuros
    casi sin ícono visible. Les damos una superficie más clara y un ícono
    con buen contraste, más un borde para que se despeguen del fondo. */
-[data-theme="dark"] .ctrl-stop{
-  background:#3A3530;color:#F5F0EB;border:1.5px solid rgba(245,240,235,.30);
-}
 [data-theme="dark"] .ctrl-pause{
   background:#3A3530;color:var(--acc);border:1.5px solid rgba(224,165,204,.45);
 }
@@ -459,7 +456,6 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
 .ctrl-btn:active{transform:scale(.88)}
 .ctrl-roll{background:var(--srf2);color:var(--amber);
   border:1.5px solid rgba(156,92,10,.3)}
-.ctrl-stop{background:var(--srf2);color:var(--tx3)}
 .ctrl-pause{background:var(--srf2);color:var(--acc);
   border:1.5px solid var(--bd)}
 .ctrl-play{background:var(--acc);color:var(--on-rose);
