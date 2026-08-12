@@ -332,7 +332,6 @@
         <div class="play-row-txt" id="play-row">Fila — / —</div>
       </div>
       <button class="ctrl-btn ctrl-roll" onclick="rollback()" title="Retroceder fila">↩</button>
-      <button class="ctrl-btn ctrl-stop" onclick="stopPlay()" title="Detener">⬛</button>
       <button class="ctrl-btn ctrl-pause" onclick="pausePlay()" title="Pausa">⏸</button>
       <button class="ctrl-btn ctrl-play" onclick="startPlay()" title="Iniciar">▶</button>
     </div>
@@ -951,7 +950,7 @@ function resetEditorForNew() {
   console.log("FORZANDO RESET TOTAL DEL EDITOR...");
   
   // 1. Parar tejido
-  stopPlay();
+  pausePlay();
   
   // 2. Limpiar IDs de edición (esto es lo que evita que se sobreescriba el anterior)
   editId = null;
@@ -1101,7 +1100,7 @@ function applySize() {
   const c = Math.min(32, Math.max(2, cNum || 8));
   document.getElementById('in-rows').value = r;
   document.getElementById('in-cols').value = c;
-  stopPlay();
+  pausePlay();
   mkGrid(r, c, true);
   sincronizarPatron();
 }
@@ -1110,7 +1109,7 @@ function clearGrid() {
   if (edicionBloqueada()) return;
   showConfirm('¿Limpiar toda la grilla?', 'Se borrarán todas las celdas activas.', () => {
     grid = Array.from({length:nR}, () => Array(nC).fill(0));
-    stopPlay();
+    pausePlay();
     renderGrid();
     setStatus('Modificado', false);
     sincronizarPatron();
@@ -1121,7 +1120,7 @@ function clearGrid() {
 function newDraw() {
 		  if (edicionBloqueada()) return;
 		  showConfirm('¿Crear nueva inserción?', 'Se perderán los cambios no guardados.', () => {
-		    stopPlay();
+		    pausePlay();
 		    editId = null;
 		    document.getElementById('insercion-name').value = `Nueva Inserci\u00f3n ${newDrawCounter}`;
 		    newDrawCounter++;
@@ -1282,15 +1281,15 @@ function doTick() {
   }, delayMs);
 }
 
-function pausePlay() {
-  if (!isPlaying && curRow < 0) return;
-  isPlaying = false;
-  clearTimeout(playTimer);
-  updPlayUI(); renderGrid();
-  toast('Tejido pausado');
-}
-
-async function stopPlay() {
+// Botón físico único del telar: "Pausa" (no existe un botón de Detener
+// separado en la máquina real). Antes había dos funciones: una que solo
+// pausaba la animación en pantalla sin avisarle a nada más (no llegaba
+// ni al backend ni al ESP32), y otra ("Detener") que sí llamaba al backend
+// y por lo tanto era la única que realmente pulsaba el relé físico de
+// Pausa en el telar. Se unificaron en una sola función para que el botón
+// "Pausa" de la web cumpla su función real tanto en software (backend)
+// como en hardware (ESP32 → relé de Pausa).
+async function pausePlay() {
   const habiaProduccion = curRow >= 0;
   isPlaying = false;
   clearTimeout(playTimer);
@@ -1301,9 +1300,12 @@ async function stopPlay() {
   if (habiaProduccion && telarPorDefectoId) {
     try {
       await apiFetch(`/telares/${telarPorDefectoId}/detener`, { method: 'POST', body: JSON.stringify({}) });
+      toast('Tejido pausado');
     } catch (e) {
       // Puede no haber producción en curso (409) — no es un error real, se ignora.
     }
+  } else {
+    toast('Tejido pausado');
   }
 }
 
@@ -1460,7 +1462,7 @@ function loadDrawInEditor(id) {
 	  document.getElementById('in-cols').value = nC;
 	  document.getElementById('insercion-name').value = d.nombre;
 	  setStatus('Editando', false);
-	  stopPlay();
+	  pausePlay();
 	  renderGrid();
 	  goTo('sc-editor');
 	  toast(`Inserción cargada: ${d.nombre}`);
