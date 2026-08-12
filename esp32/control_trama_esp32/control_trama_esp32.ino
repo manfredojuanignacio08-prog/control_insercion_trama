@@ -22,8 +22,11 @@
  *        - pasa a "tejiendo"  → pulso en el relé de MARCHA (GPIO 25)
  *        - deja de "tejiendo" → pulso en el relé de PAUSA  (GPIO 26)
  *      Es decir: asignar un patrón desde la web/app arranca la máquina
- *      real, y "Detener" desde la web/app la pausa. Los botones físicos
- *      siguen funcionando igual (la conexión es en paralelo).
+ *      real, y el botón "Pausa" de la web/app la pausa. Los botones
+ *      físicos del telar siguen funcionando igual (la conexión es en
+ *      paralelo). Nota: el telar real solo tiene botones de Marcha y
+ *      Pausa (no existe un "Detener" físico distinto), por eso la web
+ *      tampoco lo tiene: el único botón de corte es "Pausa".
  *   4. Si falla la red, NO hace nada peligroso (fail-safe): los relés
  *      quedan sueltos y el telar sigue gobernado por su botonera física.
  *   5. Reporta fallas propias a POST /api/errores para que queden en el
@@ -272,3 +275,4 @@ void parpadearLed(int veces) {
     delay(60);
   }
 }
+
