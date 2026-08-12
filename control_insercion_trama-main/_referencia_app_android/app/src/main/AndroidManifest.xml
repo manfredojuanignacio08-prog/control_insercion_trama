@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Sin este permiso la app no puede hacer ningún pedido a la API. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!--
+        NOTA para quien integra el proyecto:
+        - @mipmap/ic_launcher lo genera Android Studio solo al crear el
+          proyecto "Empty Activity" (no hace falta agregarlo a mano).
+        - El theme se deja como el genérico de Material3 (Theme.Material3.
+          DayNight.NoActionBar) para NO depender de un @style propio que
+          haya que crear a mano. La identidad visual real (colores de la
+          marca, modo claro/oscuro) la aplica Compose en ui/theme/Theme.kt
+          — que es lo que efectivamente se ve en pantalla.
+    -->
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="Control de Inserción de Trama"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/Theme.Material3.DayNight.NoActionBar">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

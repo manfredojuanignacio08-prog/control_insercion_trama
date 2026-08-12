@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="fl" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2B6CB0"/></marker>
+    <marker id="flg" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#1f7a3d"/></marker>
+  </defs>
+
+  <rect width="1000" height="640" fill="#faf5ec"/>
+  <text x="500" y="34" text-anchor="middle" font-size="20" font-weight="bold" fill="#7c2155">Nivel 2 — Etapa de control de marcos (Dobby)</text>
+  <text x="500" y="56" text-anchor="middle" font-size="12.5" fill="#6b5b53">Cómo el ESP32 dicta la secuencia del dibujo moviendo los marcos del telar · camino con servomotores (recomendado)</text>
+
+  <!-- BACKEND -->
+  <rect x="40" y="90" width="180" height="70" rx="10" fill="#eef3fd" stroke="#2B6CB0" stroke-width="2"/>
+  <text x="130" y="118" text-anchor="middle" font-size="13" font-weight="bold" fill="#2B6CB0">BACKEND</text>
+  <text x="130" y="137" text-anchor="middle" font-size="10.5">Guarda la secuencia</text>
+  <text x="130" y="151" text-anchor="middle" font-size="10.5">del patrón (matriz)</text>
+
+  <line x1="220" y1="125" x2="285" y2="125" stroke="#2B6CB0" stroke-width="2.5" marker-end="url(#fl)"/>
+  <text x="252" y="117" text-anchor="middle" font-size="9.5" fill="#2B6CB0">WiFi</text>
+
+  <!-- ESP32 -->
+  <rect x="290" y="90" width="180" height="70" rx="10" fill="#fff8e6" stroke="#b45309" stroke-width="2"/>
+  <text x="380" y="115" text-anchor="middle" font-size="13" font-weight="bold" fill="#b45309">ESP32</text>
+  <text x="380" y="133" text-anchor="middle" font-size="10.5">Pide la secuencia y</text>
+  <text x="380" y="147" text-anchor="middle" font-size="10.5">manda las órdenes</text>
+
+  <line x1="470" y1="125" x2="535" y2="125" stroke="#2B6CB0" stroke-width="2.5" marker-end="url(#fl)"/>
+  <text x="502" y="117" text-anchor="middle" font-size="9.5" fill="#2B6CB0">I²C (2 pines)</text>
+
+  <!-- PCA9685 -->
+  <rect x="540" y="90" width="200" height="70" rx="10" fill="#f4eefb" stroke="#7048a8" stroke-width="2"/>
+  <text x="640" y="112" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#7048a8">MÓDULO PCA9685</text>
+  <text x="640" y="130" text-anchor="middle" font-size="10.5">Controlador de servos</text>
+  <text x="640" y="144" text-anchor="middle" font-size="10.5">(hasta 16 canales PWM)</text>
+
+  <!-- FUENTE -->
+  <rect x="770" y="90" width="190" height="70" rx="10" fill="#fdeaea" stroke="#c0392b" stroke-width="2"/>
+  <text x="865" y="112" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#c0392b">FUENTE 5V 10A</text>
+  <text x="865" y="130" text-anchor="middle" font-size="10.5">Alimenta los servos</text>
+  <text x="865" y="144" text-anchor="middle" font-size="10.5">(NO desde el ESP32)</text>
+  <line x1="865" y1="160" x2="865" y2="185" stroke="#c0392b" stroke-width="2"/>
+  <line x1="865" y1="185" x2="640" y2="185" stroke="#c0392b" stroke-width="2"/>
+  <line x1="640" y1="185" x2="640" y2="160" stroke="#c0392b" stroke-width="2" marker-end="url(#fl)"/>
+  <text x="700" y="180" text-anchor="middle" font-size="9" fill="#c0392b">alimentación de potencia</text>
+
+  <!-- Bajada a los servos -->
+  <line x1="640" y1="160" x2="640" y2="230" stroke="#7048a8" stroke-width="2.5" marker-end="url(#fl)"/>
+  <text x="720" y="210" text-anchor="middle" font-size="10" fill="#7048a8">señal PWM a cada servo</text>
+
+  <!-- SERVOS (fila de actuadores) -->
+  <text x="500" y="255" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f7a3d">8 a 16 SERVOMOTORES MG996R — uno por marco</text>
+  <g>
+    <!-- 8 servos representados -->
+    <g font-size="10" fill="#1e3d2a">
+      <rect x="60" y="270" width="95" height="48" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1.3"/>
+      <text x="107" y="290" text-anchor="middle" font-weight="bold">Servo 1</text>
+      <text x="107" y="308" text-anchor="middle">Marco 1</text>
+
+      <rect x="170" y="270" width="95" height="48" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1.3"/>
+      <text x="217" y="290" text-anchor="middle" font-weight="bold">Servo 2</text>
+      <text x="217" y="308" text-anchor="middle">Marco 2</text>
+
+      <rect x="280" y="270" width="95" height="48" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1.3"/>
+      <text x="327" y="290" text-anchor="middle" font-weight="bold">Servo 3</text>
+      <text x="327" y="308" text-anchor="middle">Marco 3</text>
+
+      <rect x="390" y="270" width="95" height="48" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1.3"/>
+      <text x="437" y="290" text-anchor="middle" font-weight="bold">Servo 4</text>
+      <text x="437" y="308" text-anchor="middle">Marco 4</text>
+
+      <rect x="515" y="270" width="95" height="48" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1.3"/>
+      <text x="562" y="290" text-anchor="middle" font-weight="bold">Servo 5</text>
+      <text x="562" y="308" text-anchor="middle">Marco 5</text>
+
+      <rect x="625" y="270" width="95" height="48" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1.3"/>
+      <text x="672" y="290" text-anchor="middle" font-weight="bold">Servo 6</text>
+      <text x="672" y="308" text-anchor="middle">Marco 6</text>
+
+      <rect x="735" y="270" width="95" height="48" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1.3"/>
+      <text x="782" y="290" text-anchor="middle" font-weight="bold">Servo 7</text>
+      <text x="782" y="308" text-anchor="middle">Marco 7</text>
+
+      <rect x="845" y="270" width="95" height="48" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1.3"/>
+      <text x="892" y="290" text-anchor="middle" font-weight="bold">Servo 8</text>
+      <text x="892" y="308" text-anchor="middle">Marco 8</text>
+    </g>
+  </g>
+
+  <!-- lineas del PCA a los servos (esquemático) -->
+  <line x1="640" y1="230" x2="640" y2="248" stroke="#7048a8" stroke-width="1.5"/>
+  <line x1="107" y1="248" x2="892" y2="248" stroke="#7048a8" stroke-width="1.5"/>
+  <g stroke="#7048a8" stroke-width="1.2">
+    <line x1="107" y1="248" x2="107" y2="270"/>
+    <line x1="217" y1="248" x2="217" y2="270"/>
+    <line x1="327" y1="248" x2="327" y2="270"/>
+    <line x1="437" y1="248" x2="437" y2="270"/>
+    <line x1="562" y1="248" x2="562" y2="270"/>
+    <line x1="672" y1="248" x2="672" y2="270"/>
+    <line x1="782" y1="248" x2="782" y2="270"/>
+    <line x1="892" y1="248" x2="892" y2="270"/>
+  </g>
+
+  <!-- flechas a los marcos del telar -->
+  <g stroke="#1f7a3d" stroke-width="2">
+    <line x1="107" y1="318" x2="107" y2="352" marker-end="url(#flg)"/>
+    <line x1="217" y1="318" x2="217" y2="352" marker-end="url(#flg)"/>
+    <line x1="327" y1="318" x2="327" y2="352" marker-end="url(#flg)"/>
+    <line x1="437" y1="318" x2="437" y2="352" marker-end="url(#flg)"/>
+    <line x1="562" y1="318" x2="562" y2="352" marker-end="url(#flg)"/>
+    <line x1="672" y1="318" x2="672" y2="352" marker-end="url(#flg)"/>
+    <line x1="782" y1="318" x2="782" y2="352" marker-end="url(#flg)"/>
+    <line x1="892" y1="318" x2="892" y2="352" marker-end="url(#flg)"/>
+  </g>
+
+  <!-- TELAR: los marcos -->
+  <rect x="55" y="356" width="890" height="90" rx="10" fill="#edf7ee" stroke="#1f7a3d" stroke-width="2.5"/>
+  <text x="500" y="382" text-anchor="middle" font-size="13" font-weight="bold" fill="#1f7a3d">TELAR — Marcos (cada uno sube o baja un grupo de hilos)</text>
+  <text x="500" y="404" text-anchor="middle" font-size="10.5">En cada pasada, el ESP32 decide qué marcos suben. Esa combinación forma el dibujo.</text>
+  <text x="500" y="422" text-anchor="middle" font-size="10.5">Un patrón repetitivo = una secuencia corta de combinaciones de marcos, que se repite en bucle.</text>
+  <text x="500" y="439" text-anchor="middle" font-size="10" fill="#1f7a3d" font-style="italic">Esta etapa reemplaza la función de las tarjetas perforadas del Jacquard.</text>
+
+  <!-- Nota alternativa solenoides -->
+  <rect x="55" y="466" width="890" height="118" rx="10" fill="#fff" stroke="#b45309" stroke-width="1.3" stroke-dasharray="5 3"/>
+  <text x="70" y="488" font-size="11.5" font-weight="bold" fill="#b45309">⚙ Camino alternativo: en vez de servos, electroimanes/solenoides</text>
+  <text x="70" y="508" font-size="10.5" fill="#3d2020">Si los marcos pesan mucho y un servo no tiene fuerza, se usan solenoides. En ese caso, entre el ESP32 y cada</text>
+  <text x="70" y="524" font-size="10.5" fill="#3d2020">solenoide va un MOSFET IRLZ44N (para conmutar la corriente) y un diodo flyback 1N4007 en paralelo con la</text>
+  <text x="70" y="540" font-size="10.5" fill="#3d2020">bobina (para absorber el pico de tensión al apagarse). Si faltan pines, se usa un 74HC595 en vez del PCA9685.</text>
+  <text x="70" y="560" font-size="10.5" fill="#3d2020" font-weight="bold">Con servos NO hacen falta MOSFET ni diodos → por eso los servos son el camino recomendado para el prototipo.</text>
+  <text x="70" y="577" font-size="9.5" fill="#6b5b53" font-style="italic">Detalle de componentes y cantidades en el documento de componentes del Nivel 2.</text>
+
+  <text x="960" y="620" text-anchor="end" font-size="10" fill="#6b5b53">Control de Inserción de Trama · Nivel 2 (marcos / dobby)</text>
+</svg>
