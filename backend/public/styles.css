@@ -279,8 +279,8 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
 [data-theme="dark"] .ctrl-pause{
   background:#3A3530;color:var(--acc);border:1.5px solid rgba(224,165,204,.45);
 }
-[data-theme="dark"] .ctrl-roll{
-  background:#3A3530;color:#E8B96A;border:1.5px solid rgba(232,185,106,.40);
+[data-theme="dark"] .ctrl-back-fisico{
+  background:#3A3530;color:#E88989;border:1.5px solid rgba(232,137,137,.40);
 }
 
 /* (3) El logo del hero se veía "vacío" en oscuro porque el recuadro claro
@@ -454,12 +454,12 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
   justify-content:center;flex-shrink:0;transition:transform .1s;
 }
 .ctrl-btn:active{transform:scale(.88)}
-.ctrl-roll{background:var(--srf2);color:var(--amber);
-  border:1.5px solid rgba(156,92,10,.3)}
 .ctrl-pause{background:var(--srf2);color:var(--acc);
   border:1.5px solid var(--bd)}
 .ctrl-play{background:var(--acc);color:var(--on-rose);
   box-shadow:0 2px 10px rgba(124,33,85,.4)}
+.ctrl-back-fisico{background:var(--srf2);color:var(--red);
+  border:1.5px solid rgba(139,31,31,.35)}
 
 .editor-savebar{
   background:var(--srf);border-top:1px solid var(--bd);

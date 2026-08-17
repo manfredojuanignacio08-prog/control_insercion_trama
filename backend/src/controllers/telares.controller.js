@@ -221,11 +221,44 @@ export async function avanzarTelar(req, res, next) {
   }
 }
 
+// POST /api/telares/:id/retroceder-fisico
+// Pulso del botón FÍSICO "Retroceder" del telar (relé en paralelo al
+// botón real de la máquina, para corregir tras un corte de hilo).
+// OJO: no confundir con /retroceder de acá abajo, que solo mueve el
+// cursor de fila/columna del patrón en la web (edición/simulación),
+// sin ningún efecto sobre el telar real.
+//
+// No guardamos "el pulso" en sí: incrementamos un contador
+// (retroceder_seq). El ESP32 sondea este valor junto con "estado" cada
+// pocos segundos; cuando lo ve distinto al último que conocía, pulsa el
+// relé una vez. Este patrón (contador creciente en vez de un flag) evita
+// que dos pedidos seguidos "se pisen" entre sí antes de que el ESP32
+// llegue a sondear.
+export async function retrocederFisico(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { rows } = await pool.query(
+      `UPDATE telares SET retroceder_seq = retroceder_seq + 1
+       WHERE id = $1
+       RETURNING id, retroceder_seq`,
+      [id]
+    );
+    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+}
+
 // POST /api/telares/:id/retroceder  { pasos? }
 // El "volver atrás" pedido por el equipo: retrocede la posición sin
 // reconstruir nada, usando fila_actual/columna_actual ya guardados.
 // Es un espejo de rollback() en el frontend: retrocede una celda completa
 // (no importa en qué pasada estaba), y esa celda se retoma desde 0.
+// NOTA: la web ya no usa esta ruta desde que se sacó el botón ↩ del editor
+// (ver commit de eliminación del botón "Retroceder fila"); se mantiene
+// porque la app de referencia Android (_referencia_app_android) todavía
+// la llama.
 export async function retrocederTelar(req, res, next) {
   const client = await pool.connect();
   try {

@@ -33,23 +33,29 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 ## Etapa 3 — El relé, pero con un LED o zumbador (NO el telar)
 
 - [ ] Conectá el módulo relé: 5V a JD-VCC, 3.3V a VCC lógico, GND común,
-      GPIO 25 → IN1, GPIO 26 → IN2.
+      GPIO 25 → IN1, GPIO 26 → IN2, GPIO 27 → IN3 (relé adicional para
+      Retroceder — si el módulo es de 2 canales, hace falta sumar un
+      tercer relé o pasar a un módulo de 3-4 canales).
 - [ ] En lugar del telar, poné un **LED con resistencia** (o un zumbador, o
-      simplemente escuchá el "clic" del relé) en los contactos NO/COM.
+      simplemente escuchá el "clic" del relé) en los contactos NO/COM de
+      cada uno de los tres relés.
 - [ ] Desde la web, asigná un patrón (estado "tejiendo"): debe sonar/encender
       el relé de **Marcha** una vez (un pulso, no quedar pegado).
 - [ ] Detené desde la web: debe activarse el relé de **Pausa** una vez.
+- [ ] Apretá el botón ⏪ de la web (con confirmación): debe activarse el
+      relé de **Retroceder** una vez.
 - [ ] **Prueba del arranque seguro:** reiniciá el ESP32 con todo conectado.
-      Los relés **NO deben dispararse solos** al encender. Si se disparan,
-      revisá los pull-ups de 10 kΩ en IN1/IN2.
+      Los tres relés **NO deben dispararse solos** al encender. Si se
+      disparan, revisá los pull-ups de 10 kΩ en IN1/IN2/IN3.
 
 ## Etapa 4 — Conexión al telar (recién ahora)
 
 - [ ] Con el telar **apagado**, identificá los dos cables de cada botón
-      físico (Marcha y Pausa).
-- [ ] Conectá **en paralelo** NO1/COM1 a las chapas del botón de Marcha, y
-      NO2/COM2 a las del botón de Pausa. En paralelo = la botonera manual
-      tiene que seguir funcionando igual.
+      físico (Marcha, Pausa y Retroceder).
+- [ ] Conectá **en paralelo** NO1/COM1 a las chapas del botón de Marcha,
+      NO2/COM2 a las del botón de Pausa, y NO3/COM3 a las del botón de
+      Retroceder. En paralelo = la botonera manual tiene que seguir
+      funcionando igual.
 - [ ] Antes de energizar, verificá que **la botonera manual del telar sigue
       andando** (apretá los botones a mano).
 - [ ] Recién ahí probá el arranque/pausa desde la web, con alguien al lado
@@ -69,11 +75,20 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 
 Antes de esta validación física, ya se verificó lo siguiente:
 
-**Coherencia entre documentos (12/12):** los pines (GPIO 25→IN1 Marcha,
-GPIO 26→IN2 Pausa), la cadena de voltajes (24V→5V→3,3V), la separación
-JD-VCC/VCC-lógico, la advertencia de quitar el jumper, la conexión en
-paralelo, y la etapa de protección coinciden entre el firmware, el diagrama
-eléctrico y el documento de conexiones.
+**Coherencia entre documentos (12/12, diseño de 2 relés Marcha/Pausa):** los
+pines (GPIO 25→IN1 Marcha, GPIO 26→IN2 Pausa), la cadena de voltajes
+(24V→5V→3,3V), la separación JD-VCC/VCC-lógico, la advertencia de quitar el
+jumper, la conexión en paralelo, y la etapa de protección coinciden entre el
+firmware, el diagrama eléctrico y el documento de conexiones.
+
+> ⚠️ **Pendiente:** esta verificación de 12/12 se hizo con el firmware
+> `verif_coherencia.py`, que compara el `.ino` contra el diagrama SVG y el
+> documento "Documentación Eléctrica Telar - ESP32". Al sumar el tercer
+> relé (GPIO 27 → Retroceder), el `.ino` y este checklist ya se actualizaron,
+> pero **el diagrama SVG y ese documento todavía no** — por eso no se puede
+> afirmar "13/13" todavía. Falta actualizar esas dos fuentes y volver a
+> correr `verif_coherencia.py` antes de dar por cerrada la coherencia del
+> diseño de 3 relés.
 
 **Simulación del flujo lógico Nivel 1 (6/6):** el arranque seguro (el telar
 no arranca solo), el arranque con "tejiendo", la ausencia de doble-pulso

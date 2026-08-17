@@ -25,6 +25,11 @@ router.post('/:id/asignar-patron', telaresController.asignarPatron);
 router.post('/:id/detener', telaresController.detenerTelar);
 router.post('/:id/avanzar', playbackLimiter, telaresController.avanzarTelar);
 router.post('/:id/retroceder', playbackLimiter, telaresController.retrocederTelar);
+// Botón físico real del telar (Retroceder). A diferencia de la ruta de
+// arriba (llamada en cada paso de la animación), esta es una acción
+// puntual que el operador dispara a mano de vez en cuando — no necesita
+// el límite generoso de playbackLimiter, con el general de la API alcanza.
+router.post('/:id/retroceder-fisico', telaresController.retrocederFisico);
 router.get('/:id/historial', telaresController.historialPorTelar);
 
 export default router;

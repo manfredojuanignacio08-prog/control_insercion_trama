@@ -331,9 +331,9 @@
         <div class="play-status-txt" id="play-status">Detenido</div>
         <div class="play-row-txt" id="play-row">Fila — / —</div>
       </div>
-      <button class="ctrl-btn ctrl-roll" onclick="rollback()" title="Retroceder fila">↩</button>
       <button class="ctrl-btn ctrl-pause" onclick="pausePlay()" title="Pausa">⏸</button>
       <button class="ctrl-btn ctrl-play" onclick="startPlay()" title="Iniciar">▶</button>
+      <button class="ctrl-btn ctrl-back-fisico" onclick="retrocederFisico()" title="Retroceder telar (acción física real)">⏪</button>
     </div>
 
     <div class="editor-savebar">
@@ -1309,38 +1309,27 @@ async function pausePlay() {
   }
 }
 
-async function rollback() {
-  if (curRow <= 0 && curCol <= 0) { toast('Ya estás al inicio'); return; }
-  isPlaying = false;
-  clearTimeout(playTimer);
-
-  if (telarPorDefectoId) {
-    try {
-      const resultado = await apiFetch(`/telares/${telarPorDefectoId}/retroceder`, {
-        method: 'POST',
-        body: JSON.stringify({ pasos: 1 }),
-      });
-      curRow = resultado.fila_actual;
-      curCol = resultado.columna_actual;
-      curPass = 0;
-      updPlayUI(); renderGrid();
-      toast(`↩ Retrocedido a fila ${curRow + 1}, columna ${curCol + 1}`);
-      return;
-    } catch (e) {
-      logError('Error al retroceder', e.message, 'RETROCEDER');
-      // Si falla el backend, se sigue con el cálculo local como respaldo.
-    }
+// Botón físico real del telar. Reemplaza a la vieja rollback() (↩), que
+// solo movía el cursor de fila/columna del patrón en la web (edición/
+// simulación, sin ningún efecto en la máquina) — se sacó por no tener
+// uso real una vez que existe este botón, que sí actúa sobre el telar
+// de verdad. Por eso pide confirmación antes de mandar la orden: no
+// queremos mover el mecanismo real por error mientras alguien solo
+// está mirando o editando el patrón en pantalla.
+async function retrocederFisico() {
+  if (!telarPorDefectoId) { toast('No hay telar seleccionado'); return; }
+  const confirmado = confirm('¿Retroceder el telar físico? Esto mueve el mecanismo real de la máquina.');
+  if (!confirmado) return;
+  try {
+    await apiFetch(`/telares/${telarPorDefectoId}/retroceder-fisico`, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+    toast('⏪ Orden de retroceso enviada al telar');
+  } catch (e) {
+    logError('Error al retroceder el telar físico', e.message, 'RETROCEDER_FISICO');
+    toast('No se pudo enviar la orden de retroceso');
   }
-
-  if (curCol > 0) {
-    curCol--;
-  } else if (curRow > 0) {
-    curRow--;
-    curCol = nC - 1;
-  }
-  curPass = 0;
-  updPlayUI(); renderGrid();
-  toast(`↩ Retrocedido a fila ${curRow + 1}, columna ${curCol + 1}`);
 }
 
 async function loadStore() {

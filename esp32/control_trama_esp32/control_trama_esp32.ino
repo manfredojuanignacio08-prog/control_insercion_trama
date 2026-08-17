@@ -8,9 +8,10 @@
  *
  *   - El ESP32 actúa como GATEWAY: NO controla los motores del telar
  *     (la placa nativa de la máquina conserva toda su lógica).
- *   - Dos relés optoacoplados van conectados EN PARALELO a los botones
- *     físicos de Marcha (Inicio) y Pausa del telar. Energizar un relé
- *     durante un instante = "apretar el botón" sin tocar la botonera.
+ *   - Tres relés optoacoplados van conectados EN PARALELO a los botones
+ *     físicos de Marcha (Inicio), Pausa y Retroceder del telar. Energizar
+ *     un relé durante un instante = "apretar el botón" sin tocar la
+ *     botonera.
  *   - Alimentación: 24V del telar → fusible → diodo Schottky → LM2596
  *     (5V) → ESP32 (VIN) + bobinas del relé (JD-VCC, jumper quitado).
  *     La lógica del relé (VCC chico) va a los 3.3V del ESP32.
@@ -24,9 +25,13 @@
  *      Es decir: asignar un patrón desde la web/app arranca la máquina
  *      real, y el botón "Pausa" de la web/app la pausa. Los botones
  *      físicos del telar siguen funcionando igual (la conexión es en
- *      paralelo). Nota: el telar real solo tiene botones de Marcha y
- *      Pausa (no existe un "Detener" físico distinto), por eso la web
- *      tampoco lo tiene: el único botón de corte es "Pausa".
+ *      paralelo). Nota: el telar real tiene 3 botones — Marcha, Pausa y
+ *      Retroceder — no existe un "Detener" físico distinto, por eso la
+ *      web tampoco lo tiene: el único botón de corte es "Pausa".
+ *   3b. Además, sondea "retroceder_seq". Cada vez que ese número cambia
+ *       respecto al último conocido, pulsa el relé de RETROCEDER (GPIO
+ *       27) una sola vez — es una acción puntual (corregir tras un corte
+ *       de hilo), no un estado persistente como Marcha/Pausa.
  *   4. Si falla la red, NO hace nada peligroso (fail-safe): los relés
  *      quedan sueltos y el telar sigue gobernado por su botonera física.
  *   5. Reporta fallas propias a POST /api/errores para que queden en el
@@ -59,9 +64,10 @@
 // ------------------------------------------------------------
 // Pines (según la documentación eléctrica del proyecto)
 // ------------------------------------------------------------
-const int PIN_RELE_MARCHA = 25;  // IN1 del módulo relé → botón Inicio/Marcha
-const int PIN_RELE_PAUSA  = 26;  // IN2 del módulo relé → botón Pausa/Parada
-const int PIN_LED         = 2;   // LED integrado (indicador de estado)
+const int PIN_RELE_MARCHA     = 25;  // IN1 del módulo relé → botón Inicio/Marcha
+const int PIN_RELE_PAUSA      = 26;  // IN2 del módulo relé → botón Pausa/Parada
+const int PIN_RELE_RETROCEDER = 27;  // IN3 (relé adicional) → botón Retroceder
+const int PIN_LED             = 2;   // LED integrado (indicador de estado)
 
 // La mayoría de los módulos de relé optoacoplados de 5V se ACTIVAN CON
 // NIVEL BAJO (LOW = relé cerrado). Si el tuyo es al revés, cambiá esto
@@ -84,6 +90,7 @@ const int           WDT_TIMEOUT_S         = 15;    // watchdog
 // Arranca "desconocido" (-1) para no mandar pulsos apenas prende hasta
 // tener una primera lectura confiable.
 int estadoDeseado = -1;          // -1 desconocido | 0 detenido | 1 tejiendo
+int retrocederSeqConocido = -1;  // -1 desconocido (no se pulsa hasta la 1ra lectura)
 unsigned long ultimoSondeo = 0;
 unsigned long ultimoComando = 0;
 
@@ -95,12 +102,15 @@ void setup() {
   // primero se escribe el nivel inactivo y RECIÉN DESPUÉS se configura el
   // pin como salida. Si se hace al revés, hay un instante en que el pin
   // queda flotando/bajo y el relé da un pulso fantasma al encender.
-  digitalWrite(PIN_RELE_MARCHA, NIVEL_INACTIVO);
-  digitalWrite(PIN_RELE_PAUSA,  NIVEL_INACTIVO);
-  pinMode(PIN_RELE_MARCHA, OUTPUT);
-  pinMode(PIN_RELE_PAUSA,  OUTPUT);
-  digitalWrite(PIN_RELE_MARCHA, NIVEL_INACTIVO);
-  digitalWrite(PIN_RELE_PAUSA,  NIVEL_INACTIVO);
+  digitalWrite(PIN_RELE_MARCHA,     NIVEL_INACTIVO);
+  digitalWrite(PIN_RELE_PAUSA,      NIVEL_INACTIVO);
+  digitalWrite(PIN_RELE_RETROCEDER, NIVEL_INACTIVO);
+  pinMode(PIN_RELE_MARCHA,     OUTPUT);
+  pinMode(PIN_RELE_PAUSA,      OUTPUT);
+  pinMode(PIN_RELE_RETROCEDER, OUTPUT);
+  digitalWrite(PIN_RELE_MARCHA,     NIVEL_INACTIVO);
+  digitalWrite(PIN_RELE_PAUSA,      NIVEL_INACTIVO);
+  digitalWrite(PIN_RELE_RETROCEDER, NIVEL_INACTIVO);
 
   pinMode(PIN_LED, OUTPUT);
   Serial.begin(115200);
@@ -182,9 +192,11 @@ void sincronizarConBackend() {
     return;  // no se actúa con información dudosa
   }
 
-  // Solo nos interesa "estado"; el filtro evita gastar RAM en el resto
+  // Solo nos interesa "estado" y "retroceder_seq"; el filtro evita gastar
+  // RAM en el resto de la respuesta.
   JsonDocument filtro;
   filtro["estado"] = true;
+  filtro["retroceder_seq"] = true;
   JsonDocument doc;
   DeserializationError err =
       deserializeJson(doc, http.getString(), DeserializationOption::Filter(filtro));
@@ -222,6 +234,31 @@ void sincronizarConBackend() {
       pulsarRele(PIN_RELE_PAUSA);
     }
     estadoDeseado = deseadoAhora;
+    ultimoComando = millis();
+  }
+
+  // ------------------------------------------------------------
+  // Retroceder físico: no es un estado persistente como Marcha/Pausa,
+  // es una acción puntual. Por eso se compara un CONTADOR en vez de
+  // un estado: cada vez que "retroceder_seq" cambia respecto al último
+  // valor conocido, hubo un pedido nuevo → un pulso, ni más ni menos,
+  // sin importar cuánto haya cambiado el número.
+  // ------------------------------------------------------------
+  int retrocederSeqAhora = doc["retroceder_seq"] | -1;
+  if (retrocederSeqAhora == -1) return;  // el backend no mandó el campo
+
+  if (retrocederSeqConocido == -1) {
+    // Primera lectura tras el arranque: solo se memoriza, no se pulsa.
+    retrocederSeqConocido = retrocederSeqAhora;
+    return;
+  }
+
+  if (retrocederSeqAhora != retrocederSeqConocido) {
+    if (millis() - ultimoComando < MIN_ENTRE_COMANDOS_MS) return;
+
+    Serial.println("Backend pide RETROCEDER → pulso en relé de RETROCEDER");
+    pulsarRele(PIN_RELE_RETROCEDER);
+    retrocederSeqConocido = retrocederSeqAhora;
     ultimoComando = millis();
   }
 }

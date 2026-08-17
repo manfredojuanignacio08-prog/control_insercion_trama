@@ -5,10 +5,11 @@ equipo** ("Documentación Eléctrica Telar - ESP32"): el ESP32 actúa como
 **gateway de control remoto** sobre un telar automático ya operativo. No
 reemplaza la lógica de la máquina — le "aprieta los botones".
 
-**Cómo:** dos relés optoacoplados conectados **en paralelo** con los
-botones físicos de **Marcha** (GPIO 25 → IN1) y **Pausa** (GPIO 26 → IN2).
-Un pulso breve del relé equivale a una pulsación manual, y la botonera
-física sigue funcionando exactamente igual.
+**Cómo:** tres relés optoacoplados conectados **en paralelo** con los
+botones físicos de **Marcha** (GPIO 25 → IN1), **Pausa** (GPIO 26 → IN2)
+y **Retroceder** (GPIO 27 → IN3). Un pulso breve del relé equivale a una
+pulsación manual, y la botonera física sigue funcionando exactamente
+igual.
 
 **Idea clave:** el ESP32 sondea `GET /api/telares/1` — el mismo endpoint
 que consumen la web y la app. Cuando alguien asigna un patrón desde la
@@ -57,8 +58,8 @@ real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
 |---|---|
 | Potencia | 24V telar → fusible → diodo Schottky → LM2596 → 5V |
 | 5V | LM2596 OUT+ → ESP32 VIN **y** JD-VCC del relé (jumper quitado) |
-| Lógica | ESP32 3.3V → VCC lógico del relé; GPIO 25 → IN1; GPIO 26 → IN2 |
-| Telar | NO1+COM1 en paralelo al botón de Marcha; NO2+COM2 al de Pausa |
+| Lógica | ESP32 3.3V → VCC lógico del relé; GPIO 25 → IN1; GPIO 26 → IN2; GPIO 27 → IN3 |
+| Telar | NO1+COM1 en paralelo al botón de Marcha; NO2+COM2 al de Pausa; NO3+COM3 al de Retroceder |
 | Filtrado | TVS P6KE33CA + 470 µF + 100 nF en la entrada; 47 µF en la salida |
 
 ## 4. Cómo compilar y subir

@@ -61,7 +61,9 @@ CREATE TABLE IF NOT EXISTS telares (
   estado            TEXT NOT NULL DEFAULT 'apagado'
                       CHECK (estado IN ('apagado', 'tejiendo', 'pausado', 'error')),
   patron_actual_id  INTEGER REFERENCES patrones(id) ON DELETE SET NULL,
-  creado_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+  creado_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ultimo_ping_esp32 TIMESTAMPTZ,       -- migración 006: heartbeat del ESP32
+  retroceder_seq    INTEGER NOT NULL DEFAULT 0  -- migración 007: botón físico Retroceder
 );
 
 CREATE TABLE IF NOT EXISTS historial_produccion (
@@ -305,6 +307,10 @@ CREATE INDEX IF NOT EXISTS idx_desafio_challenge ON desafios_webauthn(challenge)
 -- ============================================================
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_hash TEXT;
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_usado BOOLEAN NOT NULL DEFAULT false;
+
+-- migración 005: código de recuperación fijo (texto plano, ver esa
+-- migración para la nota de seguridad). Faltaba en este archivo.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_code TEXT;
 
 CREATE TABLE IF NOT EXISTS invitaciones (
   id           SERIAL PRIMARY KEY,
