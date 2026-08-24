@@ -51,14 +51,24 @@ adicional en serie entre la salida del LM2596 y VIN — con eso pueden
 convivir ambas fuentes sin pelearse (la caída de ~0.3V no afecta, VIN
 acepta 4.7V sin problema).
 
-## 3. Dimensionar el fusible (que hoy no tiene valor definido)
+## 3. Dimensionar el fusible
 
-El consumo real del circuito es chico: ESP32 con WiFi (~250 mA pico) +
-2 relés (~70 mA c/u en 5V) → menos de 150 mA sobre la línea de 24V
-(el LM2596 convierte potencia, no corriente 1:1). Recomendación:
-**fusible lento (slow-blow) de 0.5 A** en la entrada de 24V. Uno mucho más
-grande "protege" poco; uno rápido puede saltar con el pico de carga de los
-capacitores al conectar.
+> **ACTUALIZADO (24/08/26):** esta sección estaba escrita para el diseño
+> anterior, que tomaba los 24V del telar. Ese enfoque se descartó: la
+> alimentación ahora es una fuente propia HLK-5M05 (220V AC → 5V DC, 1A),
+> totalmente independiente del telar, y el fusible protege la entrada de
+> **220V**, no una línea de 24V.
+
+El consumo real del circuito sigue siendo chico: ESP32 con WiFi (~250 mA
+pico) + 3 relés (~70 mA c/u en 5V) → unos 500 mA como techo en la línea
+de 5V. Del lado de 220V eso es una corriente muy baja, pero el módulo
+switching tiene un pico de arranque (inrush) bastante mayor que su
+consumo nominal.
+
+Recomendación: **fusible lento (slow-blow) de 1 A** en la entrada de 220V,
+que es el valor que indica el propio datasheet del HLK-5M05. Un fusible de
+0,5 A puede saltar solo en cada encendido por ese pico inicial, sin que
+haya ninguna falla real.
 
 ## 4. Ajustes finos de la etapa de potencia
 

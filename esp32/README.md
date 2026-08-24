@@ -60,6 +60,20 @@ real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
 | 5V | LM2596 OUT+ → ESP32 VIN **y** JD-VCC del relé (jumper quitado) |
 | Lógica | ESP32 3.3V → VCC lógico del relé; GPIO 25 → IN1; GPIO 26 → IN2; GPIO 27 → IN3 |
 | Telar | NO1+COM1 en paralelo al botón de Marcha; NO2+COM2 al de Pausa; NO3+COM3 al de Retroceder |
+| Sensado | Botones Avanzar e Impulso → puente rectificador + R 2,2 kΩ → PC817 → GPIO 32 / GPIO 33 (pull-up 10 kΩ a 3.3V) |
+
+### Sensado de Avanzar e Impulso (solo lectura)
+
+Estos dos botones **no** tienen relé: siguen siendo 100% manuales. El ESP32
+únicamente los "escucha", con un optoacoplador PC817 por canal que aísla el
+24V AC de la botonera del micro.
+
+Hace falta porque el sensor de pasada no distingue en qué sentido se movió
+el telar: si el operario usa Avanzar o Impulso a mano y el ESP32 no se
+entera, el conteo de posición se desincroniza en silencio. Al detectar el
+flanco, el firmware avisa al backend (`POST /evento-fisico`) y la web marca
+la posición como incierta hasta que alguien la confirme
+(`POST /confirmar-posicion`).
 | Filtrado | TVS P6KE33CA + 470 µF + 100 nF en la entrada; 47 µF en la salida |
 
 ## 4. Cómo compilar y subir

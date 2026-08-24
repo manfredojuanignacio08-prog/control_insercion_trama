@@ -250,6 +250,52 @@ export async function retrocederFisico(req, res, next) {
   }
 }
 
+// POST /api/telares/:id/evento-fisico  { tipo: 'avanzar' | 'impulso' }
+// El ESP32 llama esta ruta cuando detecta (por sensado, no por control)
+// que alguien usó a mano el botón Avanzar o Impulso del telar. No
+// intentamos recalcular fila_actual/columna_actual con precisión —no
+// sabemos cuánto se movió el telar realmente— así que solo dejamos
+// registrado que la posición mostrada puede estar desactualizada.
+export async function eventoFisico(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { tipo } = req.body;
+    if (!['avanzar', 'impulso'].includes(tipo)) {
+      throw badRequest('El campo tipo debe ser "avanzar" o "impulso".');
+    }
+    const { rows } = await pool.query(
+      `UPDATE telares
+       SET posicion_incierta = true,
+           ultimo_evento_manual = now(),
+           ultimo_evento_manual_tipo = $2
+       WHERE id = $1
+       RETURNING id, posicion_incierta, ultimo_evento_manual, ultimo_evento_manual_tipo`,
+      [id, tipo]
+    );
+    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/telares/:id/confirmar-posicion
+// El operario, tras mirar el telar y confirmar dónde está realmente
+// parado, limpia la marca de "posición incierta" desde la web.
+export async function confirmarPosicion(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { rows } = await pool.query(
+      `UPDATE telares SET posicion_incierta = false WHERE id = $1 RETURNING id, posicion_incierta`,
+      [id]
+    );
+    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+}
+
 // POST /api/telares/:id/retroceder  { pasos? }
 // El "volver atrás" pedido por el equipo: retrocede la posición sin
 // reconstruir nada, usando fila_actual/columna_actual ya guardados.

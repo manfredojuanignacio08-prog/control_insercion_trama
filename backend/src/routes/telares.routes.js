@@ -30,6 +30,10 @@ router.post('/:id/retroceder', playbackLimiter, telaresController.retrocederTela
 // puntual que el operador dispara a mano de vez en cuando — no necesita
 // el límite generoso de playbackLimiter, con el general de la API alcanza.
 router.post('/:id/retroceder-fisico', telaresController.retrocederFisico);
+// Sensado (no control) de Avanzar/Impulso: el ESP32 avisa un uso manual,
+// y el operario confirma la posición real cuando la revisó.
+router.post('/:id/evento-fisico', telaresController.eventoFisico);
+router.post('/:id/confirmar-posicion', telaresController.confirmarPosicion);
 router.get('/:id/historial', telaresController.historialPorTelar);
 
 export default router;

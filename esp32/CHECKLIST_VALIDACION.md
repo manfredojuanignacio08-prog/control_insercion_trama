@@ -48,10 +48,28 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       Los tres relés **NO deben dispararse solos** al encender. Si se
       disparan, revisá los pull-ups de 10 kΩ en IN1/IN2/IN3.
 
+## Etapa 3b — Sensado de Avanzar/Impulso (banco, sin telar)
+
+- [ ] Armá un canal de sensado: puente rectificador (DB107) + R 2,2 kΩ 1W
+      → LED del PC817; del otro lado, colector con pull-up de 10 kΩ a 3.3V
+      → GPIO 32 (Avanzar). Repetí para GPIO 33 (Impulso).
+- [ ] Con el multímetro, confirmá que **en reposo el GPIO lee 3.3V** (alto).
+- [ ] Simulá el botón: aplicá una fuente de 24V AC (o el propio telar, más
+      adelante) a la entrada del puente. El GPIO debe caer a **0V** (bajo)
+      mientras dure la pulsación.
+- [ ] En el monitor de serie debe aparecer el mensaje de sensado, y en la
+      web la barra de estado debe mostrar **"Posición incierta"**.
+- [ ] Apretá **Confirmar** en la web: el aviso debe desaparecer.
+- [ ] **Anti-rebote:** una pulsación sola no debe generar más de un aviso
+      (el firmware filtra con 400 ms de debounce).
+
 ## Etapa 4 — Conexión al telar (recién ahora)
 
 - [ ] Con el telar **apagado**, identificá los dos cables de cada botón
-      físico (Marcha, Pausa y Retroceder).
+      físico (Marcha, Pausa y Retroceder, más Avanzar e Impulso para el
+      sensado). Si un botón tiene 3 o 4 terminales, con el multímetro en
+      continuidad elegí el par **NA** (el que NO pita en reposo y SÍ al
+      apretar); el par NC no se usa.
 - [ ] Conectá **en paralelo** NO1/COM1 a las chapas del botón de Marcha,
       NO2/COM2 a las del botón de Pausa, y NO3/COM3 a las del botón de
       Retroceder. En paralelo = la botonera manual tiene que seguir
@@ -75,7 +93,7 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 
 Antes de esta validación física, ya se verificó lo siguiente:
 
-**Coherencia entre documentos (12/12, diseño de 2 relés Marcha/Pausa):** los
+**Coherencia entre documentos (12/12, verificada sobre el diseño original de 2 relés Marcha/Pausa):** los
 pines (GPIO 25→IN1 Marcha, GPIO 26→IN2 Pausa), la cadena de voltajes
 (24V→5V→3,3V), la separación JD-VCC/VCC-lógico, la advertencia de quitar el
 jumper, la conexión en paralelo, y la etapa de protección coinciden entre el
