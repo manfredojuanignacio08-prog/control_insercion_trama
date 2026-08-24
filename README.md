@@ -88,7 +88,7 @@ escritorio, ya que está pensada para pantalla de teléfono).
 
 ### 2. ESP32 (fase de hardware)
 
-El firmware sigue el diseño eléctrico del equipo: dos relés en paralelo con
+El firmware sigue el diseño eléctrico del equipo: tres relés en paralelo con
 los botones de Marcha y Pausa del telar. Asignar un patrón desde la web
 arranca la máquina real; "Detener" la pausa. Detalle en `esp32/README.md` y
 mejoras eléctricas en `esp32/RECOMENDACIONES_ELECTRICAS.md`.

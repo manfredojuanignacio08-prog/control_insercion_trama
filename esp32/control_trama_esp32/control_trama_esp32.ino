@@ -94,6 +94,7 @@ const unsigned long DURACION_PULSO_MS     = 300;   // "apretar el botón"
 const unsigned long MIN_ENTRE_COMANDOS_MS = 2000;  // anti-doble-pulso
 const int           WDT_TIMEOUT_S         = 15;    // watchdog
 const unsigned long DEBOUNCE_SENSOR_MS    = 400;   // ignora rebotes/ripple del AC en el sensado
+const unsigned long REINTENTO_AVISO_MS    = 3000;  // espera entre reintentos si el backend no responde
 
 // ------------------------------------------------------------
 // Estado
@@ -107,10 +108,31 @@ unsigned long ultimoSondeo = 0;
 unsigned long ultimoComando = 0;
 
 // Sensado de Avanzar/Impulso (solo lectura, no controlan nada)
-int  ultimoNivelAvanzar = HIGH;
-int  ultimoNivelImpulso = HIGH;
-unsigned long ultimoEventoAvanzar = 0;
-unsigned long ultimoEventoImpulso = 0;
+// Se usan interrupciones (no muestreo dentro del loop) porque el loop
+// tiene delay(50) y el sondeo al backend bloquea varios ms: una pulsación
+// corta del operario podía pasar desapercibida. La ISR solo levanta una
+// bandera; el POST al backend se hace después, en el loop.
+volatile bool eventoAvanzarPendiente = false;
+volatile bool eventoImpulsoPendiente = false;
+volatile unsigned long ultimoEventoAvanzar = 0;
+volatile unsigned long ultimoEventoImpulso = 0;
+unsigned long ultimoIntentoAviso = 0;  // espacia los reintentos si el backend falla
+
+void IRAM_ATTR isrAvanzar() {
+  unsigned long ahora = millis();
+  if (ahora - ultimoEventoAvanzar >= DEBOUNCE_SENSOR_MS) {
+    ultimoEventoAvanzar = ahora;
+    eventoAvanzarPendiente = true;
+  }
+}
+
+void IRAM_ATTR isrImpulso() {
+  unsigned long ahora = millis();
+  if (ahora - ultimoEventoImpulso >= DEBOUNCE_SENSOR_MS) {
+    ultimoEventoImpulso = ahora;
+    eventoImpulsoPendiente = true;
+  }
+}
 
 // ------------------------------------------------------------
 // Setup
@@ -132,6 +154,8 @@ void setup() {
 
   pinMode(PIN_SENSOR_AVANZAR, INPUT);  // pull-up es externa (10kΩ a 3.3V), no hace falta INPUT_PULLUP
   pinMode(PIN_SENSOR_IMPULSO, INPUT);
+  attachInterrupt(digitalPinToInterrupt(PIN_SENSOR_AVANZAR), isrAvanzar, FALLING);
+  attachInterrupt(digitalPinToInterrupt(PIN_SENSOR_IMPULSO), isrImpulso, FALLING);
 
   pinMode(PIN_LED, OUTPUT);
   Serial.begin(115200);
@@ -190,8 +214,35 @@ void loop() {
     sincronizarConBackend();
   }
 
-  revisarSensorManual(PIN_SENSOR_AVANZAR, "avanzar", ultimoNivelAvanzar, ultimoEventoAvanzar);
-  revisarSensorManual(PIN_SENSOR_IMPULSO, "impulso", ultimoNivelImpulso, ultimoEventoImpulso);
+  // Las ISR ya detectaron el flanco; acá solo se despacha el aviso al
+  // backend (una operación de red no puede hacerse dentro de una ISR).
+  // El reintento se espacia: si el backend está caído, sin esta guarda el
+  // loop lo golpearía cada 50ms e inundaría la red sin necesidad.
+  if ((eventoAvanzarPendiente || eventoImpulsoPendiente) &&
+      millis() - ultimoIntentoAviso >= REINTENTO_AVISO_MS) {
+    ultimoIntentoAviso = millis();
+
+    // La bandera se consume ANTES de enviar, no después: el POST tarda
+    // hasta 2s y en ese lapso la ISR puede registrar una pulsación nueva.
+    // Si limpiáramos al volver, borraríamos ese segundo evento sin haberlo
+    // avisado nunca. Si el envío falla, se vuelve a marcar para reintentar.
+    if (eventoAvanzarPendiente) {
+      eventoAvanzarPendiente = false;
+      Serial.println("Sensado: se usó el botón avanzar (manual)");
+      if (!reportarEventoFisico("avanzar")) {
+        eventoAvanzarPendiente = true;  // falló: queda pendiente de reintento
+      }
+      esp_task_wdt_reset();
+    }
+    if (eventoImpulsoPendiente) {
+      eventoImpulsoPendiente = false;
+      Serial.println("Sensado: se usó el botón impulso (manual)");
+      if (!reportarEventoFisico("impulso")) {
+        eventoImpulsoPendiente = true;
+      }
+      esp_task_wdt_reset();
+    }
+  }
 
   delay(50);
 }
@@ -288,45 +339,36 @@ void sincronizarConBackend() {
 }
 
 // ------------------------------------------------------------
-// Sensado de Avanzar/Impulso — SOLO LECTURA, no controla nada
-// ------------------------------------------------------------
-// Detecta el flanco de bajada (HIGH->LOW = botón apretado, vía el
-// optoacoplador) con un debounce simple por tiempo. Al detectarlo,
-// avisa al backend que hubo un movimiento manual: eso es lo único que
-// hace, no intenta adivinar cuántas filas/pasadas se movió el telar.
-void revisarSensorManual(int pin, const char* nombre, int& ultimoNivel, unsigned long& ultimoEvento) {
-  int nivelAhora = digitalRead(pin);
-
-  if (nivelAhora == LOW && ultimoNivel == HIGH) {
-    // flanco de bajada detectado
-    if (millis() - ultimoEvento >= DEBOUNCE_SENSOR_MS) {
-      Serial.printf("Sensado: se usó el botón %s (manual)\n", nombre);
-      reportarEventoFisico(nombre);
-      ultimoEvento = millis();
-    }
-  }
-  ultimoNivel = nivelAhora;
-}
-
-// ------------------------------------------------------------
 // POST /api/telares/{id}/evento-fisico — avisa un uso manual de
 // Avanzar/Impulso, para que la web marque la posición como incierta
 // ------------------------------------------------------------
-void reportarEventoFisico(const char* tipo) {
-  if (WiFi.status() != WL_CONNECTED) return;
+// Devuelve true solo si el backend confirmó que recibió el aviso.
+// Importa: si esto falla y se descarta el evento, la web nunca se entera
+// de que la posición quedó desincronizada — que es justo el problema que
+// este sensado tiene que evitar. Por eso el loop reintenta.
+bool reportarEventoFisico(const char* tipo) {
+  if (WiFi.status() != WL_CONNECTED) return false;
   HTTPClient http;
   String url = String(API_BASE_URL) + "/api/telares/" + String(TELAR_ID) + "/evento-fisico";
   http.begin(url);
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(5000);
+  // 2s (no 5s): este POST puede dispararse justo después del sondeo, y la
+  // suma de ambos timeouts no debe acercarse al watchdog de 15s.
+  http.setTimeout(2000);
 
   JsonDocument doc;
   doc["tipo"] = tipo;
 
   String cuerpo;
   serializeJson(doc, cuerpo);
-  http.POST(cuerpo);
+  int codigo = http.POST(cuerpo);
   http.end();
+
+  if (codigo != 200) {
+    Serial.printf("Error avisando evento %s: HTTP %d (se reintenta)\n", tipo, codigo);
+    return false;
+  }
+  return true;
 }
 
 // ------------------------------------------------------------

@@ -72,12 +72,27 @@ app.use(morgan(isProd ? 'combined' : 'dev'));
 // Limita abuso de la API (ajustable por .env). No aplica a los archivos estáticos
 // ni a avanzar/retroceder (esas dos tienen su propio límite, mucho más
 // generoso, en telares.routes.js — se llaman en cada paso de la animación).
+//
+// Tampoco aplica al sondeo del ESP32 (GET /telares/:id?origen=esp32): el
+// firmware consulta cada 2,5s, o sea ~360 pedidos cada 15 minutos, por
+// encima del límite general de 300. Sin esta excepción el propio ESP32 se
+// auto-bloqueaba a los ~12 minutos de encendido y dejaba de recibir órdenes
+// (el telar quedaba sin responder a Marcha/Pausa desde la web).
+//
+// El límite es de 900 (no 300) porque la web refresca el estado del telar
+// cada 4s = 225 pedidos cada 15 min POR PESTAÑA ABIERTA. Con dos personas
+// mirando a la vez (el operario en el celular y alguien en la PC, o durante
+// una presentación) ya se pasaban los 300 sin que nadie hiciera nada, y la
+// app empezaba a devolver errores sola. 900 deja lugar para ~3 pestañas
+// más el uso normal.
 const apiLimiter = rateLimit({
   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: Number(process.env.RATE_LIMIT_MAX) || 300,
+  max: Number(process.env.RATE_LIMIT_MAX) || 900,
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => /\/telares\/[^/]+\/(avanzar|retroceder)$/.test(req.path),
+  skip: (req) =>
+    /\/telares\/[^/]+\/(avanzar|retroceder)$/.test(req.path) ||
+    req.query.origen === 'esp32',
   message: { error: 'Demasiadas solicitudes, intentá de nuevo más tarde.' },
 });
 app.use('/api', apiLimiter);

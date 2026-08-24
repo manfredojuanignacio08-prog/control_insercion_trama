@@ -798,6 +798,10 @@ async function obtenerOCrearTelarPorDefecto() {
   try {
     const telares = await apiFetch('/telares');
     if (telares.length > 0) {
+      // Se toma el primero: hoy hay una sola máquina. Si se agrega otra,
+      // esto deja de ser suficiente — además hay que hacer coincidir el
+      // TELAR_ID del firmware del ESP32 (config.h), que está fijo, o la web
+      // terminaría mostrando un telar y el ESP32 accionando otro.
       telarPorDefectoId = telares[0].id;
     } else {
       const nuevo = await apiFetch('/telares', {
@@ -899,8 +903,16 @@ function goTo(id) {
 // menos de 8s, se considera conectado (con margen). Si el ESP32 nunca
 // mandó el heartbeat (firmware viejo sin el parámetro ?origen=esp32), se
 // muestra "Sin datos" en vez de inventar un estado.
+let ultimoEventoManualVisto = null;
+
+let estadoTelarEnCurso = false;
+
 async function actualizarEstadoTelar() {
   if (!telarPorDefectoId) return;
+  // Guarda contra ejecuciones solapadas: el setInterval dispara cada 4s sin
+  // esperar a que termine la anterior, así que con la red lenta (típico en
+  // la fábrica) los pedidos se apilaban y empeoraban la congestión.
+  if (estadoTelarEnCurso) return;
   const dotConn = document.getElementById('telar-conexion-dot');
   const txtConn = document.getElementById('telar-conexion-txt');
   const itemConn = document.getElementById('telar-conexion');
@@ -909,6 +921,7 @@ async function actualizarEstadoTelar() {
   const itemTej = document.getElementById('telar-tejiendo');
   if (!dotConn || !dotTej) return;
 
+  estadoTelarEnCurso = true;
   try {
     const telar = await apiFetch(`/telares/${telarPorDefectoId}`);
 
@@ -950,17 +963,26 @@ async function actualizarEstadoTelar() {
     // mire el telar y confirme dónde está parado de verdad.
     const itemPos = document.getElementById('telar-posicion');
     const txtPos = document.getElementById('telar-posicion-txt');
+    if (!itemPos || !txtPos) return;  // mismo criterio que los otros indicadores
     if (telar.posicion_incierta) {
       itemPos.style.display = '';
       const tipo = telar.ultimo_evento_manual_tipo || 'manual';
       txtPos.textContent = `Posición incierta (uso manual: ${tipo})`;
+      // Se guarda cuál es el evento que el operario está viendo: al confirmar
+      // se manda de vuelta, para no tapar un movimiento posterior.
+      ultimoEventoManualVisto = telar.ultimo_evento_manual || null;
     } else {
+      ultimoEventoManualVisto = null;
       itemPos.style.display = 'none';
     }
   } catch (e) {
     // Sin red o el telar no existe todavía: mostrar neutro, sin alarmar.
     dotConn.className = 'telar-dot';
     txtConn.textContent = 'Sin datos del ESP32';
+  } finally {
+    // Siempre se libera, incluso si hubo error o un return temprano dentro
+    // del try: si quedara en true, el estado no se actualizaría nunca más.
+    estadoTelarEnCurso = false;
   }
 }
 
@@ -972,11 +994,18 @@ async function confirmarPosicionTelar() {
   try {
     await apiFetch(`/telares/${telarPorDefectoId}/confirmar-posicion`, {
       method: 'POST',
-      body: JSON.stringify({}),
+      body: JSON.stringify({ visto_hasta: ultimoEventoManualVisto }),
     });
     toast('Posición confirmada');
     actualizarEstadoTelar();
   } catch (e) {
+    // 409 = hubo otro movimiento manual mientras el operario confirmaba:
+    // el aviso sigue en pie a propósito, no es una falla del sistema.
+    if (e.status === 409 || /nuevo movimiento manual/i.test(e.message || '')) {
+      toast('Hubo otro movimiento manual: revisá la posición de nuevo');
+      actualizarEstadoTelar();
+      return;
+    }
     logError('Error al confirmar la posición', e.message, 'CONFIRMAR_POSICION');
     toast('No se pudo confirmar la posición');
   }

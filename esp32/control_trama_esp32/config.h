@@ -27,6 +27,12 @@
 // ---- Qué telar controla ESTE dispositivo ----
 // Por ahora hay un solo telar (id 1). Si en el futuro hay varios, cada
 // ESP32 lleva grabado el id del telar físico al que está conectado.
+// OJO: tiene que coincidir con el telar que la web está mostrando. Hoy la
+// web usa el PRIMER telar de la base (telares[0]), que con una sola máquina
+// creada es el id 1. Si algún día se crea otro telar, o se borra y recrea el
+// primero (el id es SERIAL, no se reutiliza), este número puede quedar
+// apuntando a un telar distinto del que se ve en pantalla: la web mostraría
+// un estado y el ESP32 estaría accionando otro. Verificar en ese caso.
 #define TELAR_ID      1
 
 // ---- Polaridad del módulo de relés ----

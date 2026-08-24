@@ -285,11 +285,38 @@ export async function eventoFisico(req, res, next) {
 export async function confirmarPosicion(req, res, next) {
   try {
     const { id } = req.params;
-    const { rows } = await pool.query(
-      `UPDATE telares SET posicion_incierta = false WHERE id = $1 RETURNING id, posicion_incierta`,
-      [id]
-    );
-    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    const { visto_hasta } = req.body || {};
+
+    // Condición de carrera: entre que la web muestra el aviso y el operario
+    // toca "Confirmar", el ESP32 puede haber registrado OTRO uso manual. Si
+    // limpiáramos a ciegas, ese segundo evento quedaría tapado y la posición
+    // volvería a mostrarse como confiable sin serlo.
+    //
+    // Por eso la web manda el timestamp del evento que efectivamente vio
+    // (visto_hasta) y solo se limpia si no llegó nada nuevo después. Si el
+    // campo no viene (cliente viejo), se mantiene el comportamiento anterior.
+    const { rows } = visto_hasta
+      ? await pool.query(
+          `UPDATE telares SET posicion_incierta = false
+           WHERE id = $1 AND (ultimo_evento_manual IS NULL OR ultimo_evento_manual <= $2)
+           RETURNING id, posicion_incierta, ultimo_evento_manual`,
+          [id, visto_hasta]
+        )
+      : await pool.query(
+          `UPDATE telares SET posicion_incierta = false WHERE id = $1
+           RETURNING id, posicion_incierta, ultimo_evento_manual`,
+          [id]
+        );
+
+    if (rows.length === 0) {
+      // Con visto_hasta, 0 filas puede significar dos cosas distintas.
+      const existe = await pool.query('SELECT id FROM telares WHERE id = $1', [id]);
+      if (existe.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+      throw conflict(
+        'Se registró un nuevo movimiento manual del telar mientras confirmabas. ' +
+        'Revisá la posición otra vez antes de confirmar.'
+      );
+    }
     res.json(rows[0]);
   } catch (err) {
     next(err);

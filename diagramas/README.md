@@ -17,9 +17,10 @@ quién y por qué.
 ## 2. `diagrama_conexion_electrica.svg` / `.png`
 
 **Diagrama físico/eléctrico**: el cableado real del ESP32 — las 4 etapas
-del circuito (potencia desde los 24V del telar, control a 5V, lógica a
-3.3V, y actuación con los relés sobre la botonera), con las mejoras de
-protección recomendadas marcadas en ámbar. Es una copia del mismo archivo
+del circuito (alimentación con fuente propia HLK-5M05 desde 220V, lógica a
+3.3V hacia los 3 relés, actuación sobre la botonera de 24V AC, y sensado
+por optoacopladores de los botones manuales Avanzar/Impulso), con las
+mejoras de protección recomendadas marcadas en ámbar. Es una copia del mismo archivo
 que está en `esp32/`, puesto acá también para tener ambos diagramas juntos.
 
 Útil para explicar cómo está **cableado** el ESP32 al telar, componente

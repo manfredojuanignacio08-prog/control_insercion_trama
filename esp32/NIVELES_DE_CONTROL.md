@@ -32,7 +32,7 @@ distinta dificultad y conviene ser honesto sobre cada uno.
 ### 🟢 Nivel 1 — Arranque y parada (lo que hace el ESP32 HOY)
 
 El ESP32 acciona la **máquina de accionamiento**: darle Play (Marcha) y Pausa
-al telar, mediante los dos relés en paralelo con la botonera, como describe el
+al telar, mediante los tres relés (Marcha/Pausa/Retroceder) en paralelo con la botonera, como describe el
 resto de esta documentación.
 
 - **Estado:** resuelto en el diseño y probado a nivel de código.

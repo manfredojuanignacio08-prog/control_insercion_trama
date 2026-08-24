@@ -56,8 +56,8 @@ real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
 
 | Etapa | Conexión |
 |---|---|
-| Potencia | 24V telar → fusible → diodo Schottky → LM2596 → 5V |
-| 5V | LM2596 OUT+ → ESP32 VIN **y** JD-VCC del relé (jumper quitado) |
+| Potencia | 220V pared → fusible 1A lento → módulo HLK-5M05 → 5V (fuente propia, no toca el telar) |
+| 5V | HLK-5M05 OUT → ESP32 VIN **y** VCC del módulo relé (jumper JD-VCC/VCC puesto) |
 | Lógica | ESP32 3.3V → VCC lógico del relé; GPIO 25 → IN1; GPIO 26 → IN2; GPIO 27 → IN3 |
 | Telar | NO1+COM1 en paralelo al botón de Marcha; NO2+COM2 al de Pausa; NO3+COM3 al de Retroceder |
 | Sensado | Botones Avanzar e Impulso → puente rectificador + R 2,2 kΩ → PC817 → GPIO 32 / GPIO 33 (pull-up 10 kΩ a 3.3V) |

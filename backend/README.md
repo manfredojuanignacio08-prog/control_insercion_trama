@@ -125,6 +125,9 @@ en vez de la del proxy.
 | POST | `/api/telares/:id/detener` | `{pasadas_totales?, alertas_disparadas?}` | Cierra la producción en curso (409 si no había ninguna). Si no se manda `pasadas_totales`, conserva el contador ya acumulado por `/avanzar` |
 | POST | `/api/telares/:id/avanzar` | `{pasos?}` (default 1) | Avanza N pasadas físicas de tejido (pensado para el ESP32) — espejo exacto de `doTick()` del frontend: respeta cuántas pasadas tiene cada celda de `matriz_pasadas`, cruza de fila sola, y al terminar el patrón vuelve a la fila 0 y sigue (bucle infinito, suma a `vueltas_completadas`) |
 | POST | `/api/telares/:id/retroceder` | `{pasos?}` (default 1) | Retrocede N pasos sin reconstruir nada — espejo exacto de `rollback()` del frontend, usa `fila_actual`/`columna_actual` ya guardados. No retrocede más allá del inicio (`al_inicio: true`) |
+| POST | `/api/telares/:id/retroceder-fisico` | — | Pulsa el relé del botón **físico** Retroceder del telar (mueve la máquina de verdad). No confundir con `/retroceder`, que solo mueve el cursor del patrón en la web. Incrementa `retroceder_seq`; el ESP32 detecta el cambio al sondear y da el pulso |
+| POST | `/api/telares/:id/evento-fisico` | `{tipo: 'avanzar'\|'impulso'}` | Lo llama el ESP32 cuando **sensa** (no acciona) que alguien usó a mano esos botones del telar. Marca `posicion_incierta = true`: el sensor de pasada no distingue dirección, así que un uso manual desincroniza el conteo y hay que avisar |
+| POST | `/api/telares/:id/confirmar-posicion` | `{visto_hasta?}` | El operario ya revisó el telar y confirma la posición: limpia `posicion_incierta`. Si se manda `visto_hasta` (timestamp del evento que la web mostró) y llegó otro evento después, responde **409** en vez de tapar el aviso nuevo |
 | GET | `/api/telares/:id/historial` | — | Historial de ese telar |
 
 ### Historial global y errores
@@ -146,6 +149,12 @@ src/
 │   ├── init.js                                  Script que ejecuta el schema.sql
 │   ├── migracion_001_matriz_ligamento.sql       Migración: agrega matriz_ligamento
 │   ├── migracion_002_repeticiones_y_posicion.sql Migración: agrega fila_actual, columna_actual, pasada_actual, vueltas_completadas
+│   ├── migracion_003_login_biometrico.sql       Migración: tablas de credenciales y desafíos WebAuthn
+│   ├── migracion_004_recupero_usuarios.sql      Migración: recuperación de cuenta e invitaciones
+│   ├── migracion_005_codigo_recuperacion_fijo.sql Migración: código de recuperación fijo por usuario
+│   ├── migracion_006_ping_esp32.sql             Migración: ultimo_ping_esp32 (heartbeat del ESP32)
+│   ├── migracion_007_retroceder_fisico.sql      Migración: retroceder_seq (botón físico Retroceder)
+│   ├── migracion_008_evento_fisico.sql          Migración: posicion_incierta + ultimo_evento_manual (sensado de Avanzar/Impulso)
 │   └── migrate.js                                Corre TODAS las migracion_*.sql en orden
 ├── utils/
 │   ├── ligamento.js        Deriva matriz_ligamento desde matriz_pasadas

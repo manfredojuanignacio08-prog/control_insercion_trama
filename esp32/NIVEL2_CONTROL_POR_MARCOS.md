@@ -73,7 +73,7 @@ Encaja naturalmente con el sistema actual:
   pasada"*, en vez de (o además de) la simulación visual.
 - El **backend** ya guarda y entrega esa secuencia por la API. No hay que
   rediseñarlo: el ESP32 pediría la secuencia igual que hoy pide el estado.
-- El **firmware** del ESP32 pasaría de accionar 2 relés (Marcha/Pausa) a
+- El **firmware** del ESP32 pasaría de accionar 3 relés (Marcha/Pausa/Retroceder) a
   accionar además los 8–16 actuadores de los marcos, siguiendo la secuencia.
 
 En otras palabras: **la parte de software ya está casi lista; lo que se suma

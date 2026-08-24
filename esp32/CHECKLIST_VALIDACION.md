@@ -12,7 +12,7 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 
 - [ ] Con el circuito armado pero **el ESP32 y el relé desconectados**,
       alimentá la entrada con los 24V (o la fuente de banco).
-- [ ] Medí con el multímetro la salida del **LM2596**: ajustá el
+- [ ] Medí con el multímetro la salida del **HLK-5M05** (debe dar 5V fijos, no tiene ajuste). Nota: el paso siguiente aplicaba al LM2596 del diseño anterior, hoy sin uso: ajustá el
       potenciómetro hasta leer **5,0 V** estables en OUT+ / OUT–.
 - [ ] Verificá la polaridad: OUT+ es positivo, OUT– es negativo. Un error
       acá quema todo lo que conectes después.

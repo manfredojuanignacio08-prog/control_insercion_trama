@@ -63,7 +63,10 @@ CREATE TABLE IF NOT EXISTS telares (
   patron_actual_id  INTEGER REFERENCES patrones(id) ON DELETE SET NULL,
   creado_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   ultimo_ping_esp32 TIMESTAMPTZ,       -- migración 006: heartbeat del ESP32
-  retroceder_seq    INTEGER NOT NULL DEFAULT 0  -- migración 007: botón físico Retroceder
+  retroceder_seq    INTEGER NOT NULL DEFAULT 0,  -- migración 007: botón físico Retroceder
+  posicion_incierta BOOLEAN NOT NULL DEFAULT false,  -- migración 008: uso manual de Avanzar/Impulso
+  ultimo_evento_manual      TIMESTAMPTZ,          -- migración 008
+  ultimo_evento_manual_tipo TEXT                  -- migración 008: 'avanzar' | 'impulso'
 );
 
 CREATE TABLE IF NOT EXISTS historial_produccion (

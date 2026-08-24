@@ -328,7 +328,7 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 | `NODE_ENV` | Modo de ejecución (`development` o `production`) | `production` |
 | `CORS_ORIGIN` | Dominios que pueden llamar a la API. Vacío = cualquiera. | `https://miapp.com` |
 | `TRUST_PROXY` | Poner en `true` si hay Nginx u otro proxy delante (incluido Render) | `false` |
-| `RATE_LIMIT_MAX` | Máximo de solicitudes por IP por ventana de tiempo | `300` |
+| `RATE_LIMIT_MAX` | Máximo de solicitudes por IP por ventana de tiempo. **Ojo:** la web refresca el estado del telar cada 4s (≈225 pedidos por pestaña cada 15 min), así que con 2 pestañas abiertas un valor de `300` se agota solo y la app empieza a dar errores sin que nadie haga nada. Si venís de una versión anterior, revisá que tu `.env` no tenga `RATE_LIMIT_MAX=300`. | `900` |
 | `RATE_LIMIT_WINDOW_MS` | Ventana de tiempo del rate limit en milisegundos | `900000` (15 min) |
 
 ---
@@ -430,7 +430,7 @@ todo de apuro cuando llegue ese momento.
 ### Cómo controla el ESP32 al telar
 
 El firmware (carpeta `esp32/`) hace de **gateway**: no reemplaza la lógica de
-la máquina, la comanda. Dos relés van conectados **en paralelo** a los botones
+la máquina, la comanda. Tres relés van conectados **en paralelo** a los botones
 de Marcha y Pausa del telar. El ESP32 consulta al backend el estado del telar
 (la misma API que usa la app) y, cuando alguien asigna un patrón desde la app
 (el telar pasa a `tejiendo`), pulsa el relé de Marcha; cuando alguien detiene,

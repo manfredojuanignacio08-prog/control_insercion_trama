@@ -1,5 +1,21 @@
 # Recomendaciones sobre la conexión eléctrica (Telar – ESP32)
 
+> ⚠️ **AVISO (24/08/26) — buena parte de este documento describe el diseño
+> ANTERIOR.** Se analizaba alimentar el sistema tomando los 24V del telar
+> (fusible → diodo Schottky → TVS → LM2596). Ese enfoque **se descartó**:
+> hoy la alimentación es una fuente propia **HLK-5M05 (220V AC → 5V DC, 1A)**,
+> independiente del telar, y la botonera resultó ser de **24V AC** (medido),
+> no DC. En consecuencia quedaron **sin uso** el LM2596, el diodo Schottky,
+> el TVS y los dos capacitores electrolíticos (se conservan como repuesto).
+>
+> Lo que **sigue vigente** de este documento: los pull-ups de 10 kΩ, la
+> tierra en estrella, la separación de masas con optoacopladores, el criterio
+> de cableado (par trenzado/mallado lejos de los motores) y las precauciones
+> generales de armado. Lo referido a la etapa 24V→5V es histórico.
+>
+> El diseño actual está en `README.md`, `CHECKLIST_VALIDACION.md` y en
+> `diagramas/diagrama_conexion_electrica.svg`.
+
 Revisión del documento "Documentación Eléctrica Telar - ESP32". La base
 está **muy bien pensada**: relés optoacoplados en paralelo con la botonera
 (no invasivo), step-down desde los 24V del telar, y una etapa de filtrado
@@ -23,8 +39,9 @@ no un detalle.
 
 **Solución en dos capas (recomendadas las dos):**
 
-1. **Hardware (2 resistencias, centavos):** una resistencia **pull-up de
-   10 kΩ** desde IN1 a 3.3V, y otra desde IN2 a 3.3V. Mantienen los pines
+1. **Hardware (5 resistencias, centavos):** una resistencia **pull-up de
+   10 kΩ** desde cada IN a 3.3V — IN1, IN2 e IN3 (los tres relés) — más una
+   por cada entrada de sensado (GPIO 32 y 33). Mantienen los pines
    en nivel inactivo durante el arranque, pase lo que pase con el
    software. Es la protección más barata y efectiva de toda la lista.
 2. **Software (ya aplicado en el firmware):** se escribe el nivel inactivo
@@ -32,10 +49,12 @@ no un detalle.
    firmware **solo memoriza** el estado del backend sin pulsar nada, hasta
    detectar un cambio real.
 
-**Elección de pines — bien elegidos:** GPIO 25 y 26 **no** son pines de
-arranque del ESP32 (los "strapping pins" 0, 2, 5, 12 y 15 cambian de nivel
-solos durante el boot). Mantener esos dos; no mover los relés a ninguno de
-los pines de arranque.
+**Elección de pines — bien elegidos:** los cinco pines en uso —GPIO 25, 26 y
+27 para los relés (Marcha, Pausa, Retroceder) y GPIO 32 y 33 para el sensado
+de Avanzar/Impulso— **no** son pines de arranque del ESP32 (los "strapping
+pins" 0, 2, 5, 12 y 15 cambian de nivel solos durante el boot). Mantenerlos;
+no mover ni los relés ni las entradas de sensado a un pin de arranque: un
+relé conectado ahí puede dar un pulso fantasma al encender la placa.
 
 ## 2. Peligro concreto: USB y 24V al mismo tiempo
 
@@ -136,10 +155,11 @@ relés):
 
 | Ítem | Cantidad | Para qué |
 |---|---|---|
-| Resistencia 10 kΩ | 2 (+2 si se usa el MOSFET) | Pull-up de IN1/IN2 (punto 1) y pull-down de Gate (punto 6) |
+| Resistencia 10 kΩ | 5 (+2 si se usa el MOSFET) | Pull-up de IN1/IN2/IN3 (3 relés) + 2 del sensado Avanzar/Impulso (punto 1), y pull-down de Gate (punto 6) |
 | Resistencia 100–220 Ω | 1 | Serie de Gate del IRLZ44N (punto 6) |
-| Fusible lento 0.5 A | 1 (+ repuesto) | Entrada de 24V (punto 3) |
-| Diodo Schottky extra (SS34 o similar) | 1 (opcional) | Convivencia USB + 24V (punto 2) |
+| Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220V** del HLK-5M05 (punto 3). El de 0,5 A del diseño anterior no sirve acá: salta con el pico de arranque del módulo |
+| Optoacoplador PC817 + puente DB107 + R 2,2 kΩ 1W | 2 de cada uno | Sensado aislado de los botones Avanzar e Impulso (24V AC → GPIO 32/33) |
+| Diodo Schottky extra (SS34 o similar) | 1 (opcional) | Convivencia USB + 24V (punto 2) — **ya no aplica**: la alimentación es por fuente propia, no desde el telar |
 | Diodo 1N5408 | 1 (solo si el MOSFET maneja carga inductiva) | Flyback (punto 6) |
 
 Total estimado: unos pocos dólares. La mejora de fiabilidad es enorme en
