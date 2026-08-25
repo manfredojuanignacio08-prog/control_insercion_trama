@@ -21,7 +21,7 @@ const connectionConfig = process.env.DATABASE_URL
       ssl: sslConfig,
     };
 
-// max: tope de conexiones simultáneas del pool (Supabase free tier comparte
+// max: tope de conexiones simultáneas del pool (Neon free tier comparte
 // un límite bajo de conexiones directas entre todo el equipo).
 // connectionTimeoutMillis: evita que una request se quede colgada para
 // siempre si la base no responde (importante para una base en la nube).

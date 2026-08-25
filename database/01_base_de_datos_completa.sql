@@ -1,6 +1,6 @@
 -- ============================================================
 -- BASE DE DATOS COMPLETA — Control de Inserción de Trama
--- PostgreSQL / Supabase
+-- PostgreSQL / Neon
 --
 -- QUÉ ES ESTE ARCHIVO
 -- Es el único script que hace falta correr para tener la base de datos
@@ -36,7 +36,7 @@
 --     fila 0 y sigue en bucle infinito (así es un telar real) — por eso
 --     vueltas_completadas cuenta cuántas veces se repitió el patrón entero.
 --
--- Nota: la base real del equipo (Supabase) se creó sin estas columnas.
+-- Nota: la base real del equipo (Neon) se creó sin estas columnas.
 -- Para actualizarla, usar database/01_base_de_datos_completa.sql (o
 -- los migracion_*.sql sueltos, ver npm run migrate).
 -- ============================================================
@@ -118,7 +118,7 @@ EXECUTE FUNCTION set_modificado_at();
 
 -- ── migracion_001_matriz_ligamento.sql ──
 -- ============================================================
--- MIGRACIÓN 001 — Ajustar la base de datos existente (Supabase del equipo)
+-- MIGRACIÓN 001 — Ajustar la base de datos existente (Neon del equipo)
 -- para que coincida con el backend.
 --
 -- A diferencia de schema.sql (que crea tablas nuevas desde cero con

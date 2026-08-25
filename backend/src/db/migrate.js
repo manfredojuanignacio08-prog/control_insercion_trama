@@ -1,5 +1,5 @@
 // Ejecuta TODAS las migraciones (migracion_*.sql) en orden contra la base
-// configurada en .env. Pensado para correr contra la base de Supabase del
+// configurada en .env. Pensado para correr contra la base de Neon del
 // equipo cada vez que se agrega algo nuevo al backend.
 // Uso: npm run migrate
 import fs from 'fs';

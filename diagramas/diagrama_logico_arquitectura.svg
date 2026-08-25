@@ -59,7 +59,7 @@
   <rect x="848" y="252" width="242" height="110" rx="10" fill="#f4eefb" stroke="#7048a8" stroke-width="2.5"/>
   <text x="969" y="282" text-anchor="middle" font-size="15" font-weight="bold" fill="#7048a8">BASE DE DATOS</text>
   <text x="969" y="303" text-anchor="middle" font-size="11.5">PostgreSQL</text>
-  <text x="969" y="320" text-anchor="middle" font-size="11.5">alojada en Supabase (nube)</text>
+  <text x="969" y="320" text-anchor="middle" font-size="11.5">alojada en Neon (nube)</text>
   <text x="969" y="340" text-anchor="middle" font-size="10.5" fill="#7048a8">4 tablas: patrones, telares,</text>
   <text x="969" y="353" text-anchor="middle" font-size="10.5" fill="#7048a8">historial_produccion, errores_log</text>
 
@@ -77,11 +77,11 @@
   <!-- ════════ NIVEL 4: TELAR ════════ -->
   <line x1="575" y1="522" x2="575" y2="562" stroke="#1f7a3d" stroke-width="2.5" marker-end="url(#flechaVerde)"/>
   <rect x="600" y="530" width="330" height="34" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1"/>
-  <text x="765" y="552" text-anchor="middle" font-size="11" fill="#1f7a3d" font-weight="bold">2 relés · pulso Marcha / Pausa</text>
+  <text x="765" y="552" text-anchor="middle" font-size="11" fill="#1f7a3d" font-weight="bold">3 relés · Marcha / Pausa / Retroceder</text>
 
   <rect x="330" y="568" width="490" height="120" rx="10" fill="#edf7ee" stroke="#1f7a3d" stroke-width="2.5"/>
   <text x="575" y="596" text-anchor="middle" font-size="16" font-weight="bold" fill="#1f7a3d">TELAR FÍSICO INDUSTRIAL</text>
-  <text x="575" y="618" text-anchor="middle" font-size="11.5">Botones Marcha / Pausa con relés en paralelo</text>
+  <text x="575" y="618" text-anchor="middle" font-size="11.5">Botones Marcha / Pausa / Retroceder con relés en paralelo</text>
   <text x="575" y="636" text-anchor="middle" font-size="11.5">La botonera física sigue operable a mano siempre</text>
   <text x="575" y="658" text-anchor="middle" font-size="10.5" fill="#1f7a3d">Diagrama de conexión eléctrica detallado:</text>
   <text x="575" y="674" text-anchor="middle" font-size="10.5" fill="#1f7a3d" font-style="italic">esp32/diagrama_conexion_electrica.svg</text>

@@ -62,7 +62,7 @@ efecto negativo se convierte en un **fin** (un beneficio logrado).
 1. **Se creó un editor visual de patrones** (la página web): una cuadrícula
    donde se define, celda por celda, cuántas pasadas lleva cada punto, con
    colores por fila. → ataca la causa 1.
-2. **Se diseñó una base de datos central (PostgreSQL en Supabase)** con 4
+2. **Se diseñó una base de datos central (PostgreSQL en Neon)** con 4
    tablas: patrones, telares, historial y errores. → ataca las causas 2 y 5.
 3. **Se construyó un backend (Node.js + Express)** que expone una API REST:
    es el intermediario único entre la interfaz, la base de datos y el telar.
@@ -104,7 +104,7 @@ medida que aparecían. Este es el camino real que siguió el proyecto:
    con esa API en vez de con `localStorage`.
 
 3. **Segundo problema — "¿dónde se aloja la base de datos?".**
-   → Solución: **PostgreSQL en Supabase**, en la nube, para no depender de un
+   → Solución: **PostgreSQL en Neon**, en la nube, para no depender de un
    servidor propio ni de una sola máquina, y tener respaldos y acceso remoto.
 
 4. **Tercer problema — "el sistema tiene que poder repetir un patrón sin

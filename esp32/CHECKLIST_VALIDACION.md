@@ -11,13 +11,16 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 ## Etapa 1 — Alimentación (SIN el ESP32 conectado)
 
 - [ ] Con el circuito armado pero **el ESP32 y el relé desconectados**,
-      alimentá la entrada con los 24V (o la fuente de banco).
-- [ ] Medí con el multímetro la salida del **HLK-5M05** (debe dar 5V fijos, no tiene ajuste). Nota: el paso siguiente aplicaba al LM2596 del diseño anterior, hoy sin uso: ajustá el
-      potenciómetro hasta leer **5,0 V** estables en OUT+ / OUT–.
+      alimentá la entrada de 220V del módulo de fuente (con su fusible de 1A
+      en serie).
+- [ ] Medí con el multímetro la salida del **HLK-5M05**: debe dar **5 V
+      fijos y estables**. No tiene potenciómetro de ajuste; si no da 5 V, el
+      módulo está fallado y hay que reemplazarlo.
 - [ ] Verificá la polaridad: OUT+ es positivo, OUT– es negativo. Un error
       acá quema todo lo que conectes después.
 - [ ] Cortá la alimentación. Confirmá que el **jumper JD-VCC del módulo relé
-      esté QUITADO** (si queda puesto, puede realimentar 5V al ESP32 y
+      esté PUESTO** (une JD-VCC con VCC: así el módulo se alimenta con los
+      mismos 5 V, sin fuente separada para las bobinas).
       dañarlo).
 
 ## Etapa 2 — El ESP32 solo (SIN el relé, SIN el telar)
@@ -93,7 +96,7 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 
 Antes de esta validación física, ya se verificó lo siguiente:
 
-**Coherencia entre documentos (12/12, verificada sobre el diseño original de 2 relés Marcha/Pausa):** los
+**Coherencia entre documentos:** los
 pines (GPIO 25→IN1 Marcha, GPIO 26→IN2 Pausa), la cadena de voltajes
 (24V→5V→3,3V), la separación JD-VCC/VCC-lógico, la advertencia de quitar el
 jumper, la conexión en paralelo, y la etapa de protección coinciden entre el

@@ -1,18 +1,22 @@
 # Simulación del FLUJO LÓGICO del Nivel 2 (control por marcos / dobby)
 # Verifica que un patrón repetitivo se traduzca correctamente en la secuencia
-# de marcos que suben en cada pasada, y que el ESP32 (vía PCA9685) los comande.
+# de marcos que suben en cada pasada, y que el ESP32 (vía el registro de
+# desplazamiento 74HC595) los comande.
 
-class PCA9685Simulado:
-    """Simula el controlador de 16 canales. Cada canal = un servo = un marco."""
+N_CANALES_74HC595 = 8   # un solo integrado da 8 salidas
+
+class Registro74HC595Simulado:
+    """Simula el registro de desplazamiento. Cada salida controla un MOSFET,
+    y cada MOSFET acciona el solenoide de un marco."""
     def __init__(self, n_marcos):
         self.n = n_marcos
-        self.canales = [0]*16   # 0=abajo, 1=arriba
+        self.salidas = [0]*N_CANALES_74HC595   # 0=abajo, 1=arriba
     def set_marcos(self, marcos_arriba):
-        self.canales = [0]*16
+        self.salidas = [0]*N_CANALES_74HC595
         for m in marcos_arriba:
             if 0 <= m < self.n:
-                self.canales[m] = 1
-        return [self.canales[i] for i in range(self.n)]
+                self.salidas[m] = 1
+        return [self.salidas[i] for i in range(self.n)]
 
 def patron_a_secuencia_marcos(matriz, n_marcos):
     """
@@ -46,7 +50,7 @@ patron_raya = [
     [0,1,0,1,0,1,0,1],  # pasada 4: como la 2
 ]
 
-pca = PCA9685Simulado(N_MARCOS)
+registro = Registro74HC595Simulado(N_MARCOS)
 secuencia = patron_a_secuencia_marcos(patron_raya, N_MARCOS)
 
 print(f"\n  Telar de {N_MARCOS} marcos. Patrón repetitivo de {len(patron_raya)} pasadas.\n")
@@ -55,10 +59,10 @@ print("  Simulando 2 repeticiones completas del patrón (8 pasadas):\n")
 historial = []
 for rep in range(2):
     for i, marcos in enumerate(secuencia):
-        estado_servos = pca.set_marcos(marcos)
-        historial.append(tuple(estado_servos))
+        estado_solenoides = registro.set_marcos(marcos)
+        historial.append(tuple(estado_solenoides))
         arriba = ','.join(str(m+1) for m in marcos) if marcos else 'ninguno'
-        print(f"  rep{rep+1} pasada {i+1}: marcos arriba = [{arriba}]   servos={estado_servos}")
+        print(f"  rep{rep+1} pasada {i+1}: marcos arriba = [{arriba}]   solenoides={estado_solenoides}")
     print()
 
 # ── VERIFICACIONES ──
@@ -83,9 +87,9 @@ v.append(("Nunca se activan más marcos que los físicos (8)",
 # 4. En cada pasada, complementariedad (los que no suben, bajan)
 v.append(("En cada pasada, cada marco está definido (arriba O abajo)",
           all(len(h) == N_MARCOS for h in historial)))
-# 5. Un PCA9685 alcanza (≤16 canales)
-v.append(("Un solo PCA9685 alcanza para este telar (≤16 marcos)",
-          N_MARCOS <= 16))
+# 5. Un solo 74HC595 alcanza (8 salidas para los 8 marcos del telar)
+v.append(("Un solo 74HC595 alcanza para este telar (8 marcos = 8 salidas)",
+          N_MARCOS <= N_CANALES_74HC595))
 
 okc = 0
 for nombre, cond in v:

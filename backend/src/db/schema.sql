@@ -19,7 +19,7 @@
 --     fila 0 y sigue en bucle infinito (así es un telar real) — por eso
 --     vueltas_completadas cuenta cuántas veces se repitió el patrón entero.
 --
--- Nota: la base real del equipo (Supabase) se creó sin estas columnas.
+-- Nota: la base real del equipo (Neon) se creó sin estas columnas.
 -- Para actualizarla, usar database/01_base_de_datos_completa.sql (o
 -- los migracion_*.sql sueltos, ver npm run migrate).
 -- ============================================================

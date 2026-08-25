@@ -1,5 +1,5 @@
 -- ============================================================
--- MIGRACIÓN 001 — Ajustar la base de datos existente (Supabase del equipo)
+-- MIGRACIÓN 001 — Ajustar la base de datos existente (Neon del equipo)
 -- para que coincida con el backend.
 --
 -- A diferencia de schema.sql (que crea tablas nuevas desde cero con

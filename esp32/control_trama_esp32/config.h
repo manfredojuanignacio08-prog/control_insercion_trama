@@ -18,7 +18,7 @@
 //   - Backend corriendo en una PC de la misma red:  "http://192.168.1.50:3000"
 //   - Backend desplegado en la nube con dominio:    "https://tu-backend.onrender.com"
 //
-// OJO: tiene que ser la URL del BACKEND (Node/Express), NO la de Supabase.
+// OJO: tiene que ser la URL del BACKEND (Node/Express), NO la de la base de datos.
 // El ESP32 nunca habla directo con la base de datos: siempre pasa por la
 // API, igual que la web y la app — así todas las reglas de negocio
 // (transacciones, validaciones, bloqueos) se aplican también al hardware.

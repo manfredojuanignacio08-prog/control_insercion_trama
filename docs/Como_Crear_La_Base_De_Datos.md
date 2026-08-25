@@ -1,7 +1,7 @@
 # Cómo crear la base de datos — paso a paso (100% desde el navegador)
 
 Esta guía no usa la terminal en ningún momento. Todo se hace haciendo click
-en páginas web: Supabase para la base de datos, Render para el backend.
+en páginas web: Neon para la base de datos, Render para el backend.
 
 El archivo que vas a usar es **`database/01_base_de_datos_completa.sql`**
 (está en la carpeta `database/` de este mismo paquete). Es un solo archivo
@@ -10,12 +10,12 @@ que elegir nada, simplemente correrlo.
 
 ---
 
-## Paso 1 — Crear una cuenta en Supabase
+## Paso 1 — Crear una cuenta en Neon
 
-1. Entrá a [supabase.com](https://supabase.com).
-2. Click en **Start your project** → registrate (podés usar GitHub).
+1. Entrá a [neon.com](https://neon.com).
+2. Click en **Sign up** → registrate (podés usar GitHub).
 
-> Si el equipo ya tiene un proyecto de Supabase armado y vos ya tenés acceso
+> Si el equipo ya tiene un proyecto de Neon armado y vos ya tenés acceso
 > a él (te invitaron como colaborador), salteá este paso y el Paso 2, y vas
 > directo al Paso 3 usando ese proyecto existente.
 
@@ -23,16 +23,17 @@ que elegir nada, simplemente correrlo.
 
 ## Paso 2 — Crear el proyecto (la base de datos)
 
-1. Dentro de Supabase, click en **New project**.
+1. Dentro de Neon, click en **New project**.
 2. Completá:
-   - **Name**: `control-trama` (o el nombre que quieras)
-   - **Database Password**: elegí una contraseña fuerte y **guardala** —
-     la vas a necesitar después para conectar el backend. Supabase no la
-     vuelve a mostrar.
-   - **Region**: la más cercana (por ejemplo, `South America (São Paulo)`)
+   - **Project name**: `control-trama` (o el nombre que quieras)
+   - **Postgres version**: la que viene por defecto
+   - **Region**: la más cercana (por ejemplo, `AWS South America (São Paulo)`)
    - **Plan**: el que diga **Free**
-3. Click en **Create new project** y esperá un par de minutos mientras
-   Supabase prepara todo (vas a ver una barra de progreso).
+3. Click en **Create project**. Neon lo prepara en unos segundos.
+4. Al terminar te muestra la **connection string** (empieza con
+   `postgresql://`). **Copiala y guardala** — es lo que va a necesitar el
+   backend para conectarse. La podés volver a ver después en el panel, en
+   la sección **Connection Details**.
 
 ---
 
@@ -44,7 +45,7 @@ que elegir nada, simplemente correrlo.
 3. Abrí el archivo `database/01_base_de_datos_completa.sql` de este paquete
    con cualquier editor de texto (Notepad, TextEdit, VS Code, lo que tengas),
    seleccioná todo el contenido (Ctrl+A / Cmd+A) y copialo (Ctrl+C / Cmd+C).
-4. Pegalo en el SQL Editor de Supabase (Ctrl+V / Cmd+V).
+4. Pegalo en el SQL Editor de Neon (Ctrl+V / Cmd+V).
 5. Click en **Run** (o `Ctrl+Enter` / `Cmd+Enter`).
 6. Al final de la ejecución, en la pestaña de resultados debería aparecer
    una tabla con 4 filas:
@@ -82,7 +83,7 @@ Esto es lo que el backend necesita para hablar con esta base.
 3. Buscá la sección **Connection string** y elegí la pestaña **URI**.
 4. Copiá esa cadena — tiene esta forma:
    ```
-   postgresql://postgres:[YOUR-PASSWORD]@db.xxxxxxxxxxxx.supabase.co:5432/postgres
+   postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require
    ```
 5. Reemplazá `[YOUR-PASSWORD]` por la contraseña que elegiste en el Paso 2.
    Guardá esta cadena completa — es tu `DATABASE_URL`.
@@ -112,5 +113,5 @@ ningún momento.
 
 Si más adelante el backend necesita una columna o tabla nueva, el mismo
 procedimiento sirve: te paso el `.sql` actualizado, lo pegás en el SQL
-Editor de Supabase, le das **Run**, y listo — no hace falta repetir todo
+Editor de Neon, le das **Run**, y listo — no hace falta repetir todo
 desde cero, el script siempre detecta qué ya existe y solo agrega lo nuevo.

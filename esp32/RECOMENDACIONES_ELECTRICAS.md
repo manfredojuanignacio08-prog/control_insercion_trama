@@ -1,30 +1,17 @@
 # Recomendaciones sobre la conexión eléctrica (Telar – ESP32)
 
-> ⚠️ **AVISO (24/08/26) — buena parte de este documento describe el diseño
-> ANTERIOR.** Se analizaba alimentar el sistema tomando los 24V del telar
-> (fusible → diodo Schottky → TVS → LM2596). Ese enfoque **se descartó**:
-> hoy la alimentación es una fuente propia **HLK-5M05 (220V AC → 5V DC, 1A)**,
-> independiente del telar, y la botonera resultó ser de **24V AC** (medido),
-> no DC. En consecuencia quedaron **sin uso** el LM2596, el diodo Schottky,
-> el TVS y los dos capacitores electrolíticos (se conservan como repuesto).
->
-> Lo que **sigue vigente** de este documento: los pull-ups de 10 kΩ, la
-> tierra en estrella, la separación de masas con optoacopladores, el criterio
-> de cableado (par trenzado/mallado lejos de los motores) y las precauciones
-> generales de armado. Lo referido a la etapa 24V→5V es histórico.
->
-> El diseño actual está en `README.md`, `CHECKLIST_VALIDACION.md` y en
-> `diagramas/diagrama_conexion_electrica.svg`.
+Revisión del diseño eléctrico del nodo de control. La base es sólida: el
+ESP32 actúa como puente entre la web y la botonera del telar, mediante tres
+relés en paralelo con los botones de Marcha, Pausa y Retroceder, más el
+sensado aislado de Avanzar e Impulso.
 
-Revisión del documento "Documentación Eléctrica Telar - ESP32". La base
-está **muy bien pensada**: relés optoacoplados en paralelo con la botonera
-(no invasivo), step-down desde los 24V del telar, y una etapa de filtrado
-seria (fusible, Schottky, TVS, electrolíticos y cerámicos). Lo que sigue
-son mejoras y precauciones **sin agregar ningún sensor nuevo** — solo
-elementos de protección, criterios de armado y cambios de código (que ya
-quedaron aplicados en el firmware).
+La alimentación es una **fuente propia HLK-5M05 (220 V AC → 5 V DC, 1 A)**,
+independiente del telar: el sistema no toma corriente de la máquina, y lo
+único que toca su circuito son los contactos secos de los relés y las
+entradas de sensado, aisladas por optoacopladores.
 
----
+Lo que sigue son las mejoras y precauciones concretas, ordenadas por
+importancia.
 
 ## 1. Lo más importante: el "golpe fantasma" de los relés al arrancar
 
@@ -56,71 +43,66 @@ pins" 0, 2, 5, 12 y 15 cambian de nivel solos durante el boot). Mantenerlos;
 no mover ni los relés ni las entradas de sensado a un pin de arranque: un
 relé conectado ahí puede dar un pulso fantasma al encender la placa.
 
-## 2. Peligro concreto: USB y 24V al mismo tiempo
+## 2. Alimentación por USB durante la programación
 
-Cuando se conecta el cable USB para programar o ver el monitor serie
-**con el sistema alimentado desde los 24V del telar**, la salida de 5V del
-LM2596 y los 5V del puerto USB de la computadora quedan enfrentados por el
-pin VIN. Según la placa, eso puede quemar el diodo interno del ESP32 o
-inyectar corriente a la PC.
+Cuando se conecta el cable USB para programar o ver el monitor serie, el
+puerto USB de la computadora alimenta el ESP32 por su propio regulador.
+Si al mismo tiempo el módulo de fuente está entregando 5 V al pin VIN,
+ambas fuentes quedan enfrentadas.
 
-**Regla práctica:** desconectar la entrada de 24V (o abrir el fusible)
-antes de enchufar el USB. **Alternativa de hardware:** un diodo Schottky
-adicional en serie entre la salida del LM2596 y VIN — con eso pueden
-convivir ambas fuentes sin pelearse (la caída de ~0.3V no afecta, VIN
-acepta 4.7V sin problema).
+**Regla práctica:** desconectar la entrada de 220 V del módulo de fuente
+antes de enchufar el USB para programar. Es la forma más simple y segura;
+no hace falta ningún componente extra para resolverlo.
+
+Una vez cargado el firmware, el sistema trabaja alimentado únicamente por
+su propia fuente, con el USB desconectado.
 
 ## 3. Dimensionar el fusible
 
-> **ACTUALIZADO (24/08/26):** esta sección estaba escrita para el diseño
-> anterior, que tomaba los 24V del telar. Ese enfoque se descartó: la
-> alimentación ahora es una fuente propia HLK-5M05 (220V AC → 5V DC, 1A),
-> totalmente independiente del telar, y el fusible protege la entrada de
-> **220V**, no una línea de 24V.
+La alimentación del sistema es una fuente propia HLK-5M05 (220 V AC → 5 V
+DC, 1 A), independiente del telar, y el fusible protege su entrada de red.
 
-El consumo real del circuito sigue siendo chico: ESP32 con WiFi (~250 mA
+El consumo real del circuito es chico: ESP32 con WiFi (~250 mA
 pico) + 3 relés (~70 mA c/u en 5V) → unos 500 mA como techo en la línea
 de 5V. Del lado de 220V eso es una corriente muy baja, pero el módulo
 switching tiene un pico de arranque (inrush) bastante mayor que su
 consumo nominal.
 
-Recomendación: **fusible lento (slow-blow) de 1 A** en la entrada de 220V,
-que es el valor que indica el propio datasheet del HLK-5M05. Un fusible de
-0,5 A puede saltar solo en cada encendido por ese pico inicial, sin que
-haya ninguna falla real.
+Recomendación: **fusible lento (slow-blow) de 1 A** en la entrada de 220 V,
+que es el valor que indica el propio datasheet del módulo. Un fusible de
+menor amperaje puede saltar solo en cada encendido por ese pico inicial,
+sin que haya ninguna falla real.
 
-## 4. Ajustes finos de la etapa de potencia
+## 4. Verificaciones de la etapa de alimentación
 
-- **Ajustar el LM2596 ANTES de conectar el ESP32:** girar el preset con la
-  salida en vacío midiendo con multímetro hasta clavar 5.0–5.1V. Estos
-  módulos vienen de fábrica con la salida alta (a veces >10V) y eso mata
-  la placa en el acto.
-- **Verificar el Schottky de entrada:** que sea de al menos **2–3 A y
-  40V+** (ej. SS34 o 1N5822). Uno chico (1N5819, 1 A) trabaja al límite
-  con el pico de arranque de los capacitores.
-- **El TVS P6KE33CA está bien elegido**, un solo detalle: su tensión de
-  recorte (clamping) llega a ~45V en picos fuertes y el LM2596 tolera 40V
-  (45V absoluto). Está justo pero dentro de margen. Si se quiere más
-  holgura sin cambiar nada más, la variante **P6KE30CA** recorta más bajo
-  y sigue lejos de los 24V nominales.
-- **Capacitores a 50V para línea de 24V:** correcto, buen margen. Respetar
-  la polaridad de los electrolíticos (franja = negativo), como ya indica
-  la guía.
+- **Medir la salida ANTES de conectar el ESP32:** con la entrada de 220 V
+  conectada y la salida en vacío, confirmar con el multímetro que entrega
+  **5,0 V estables**. El módulo no tiene ajuste; si no da 5 V, está fallado
+  y hay que reemplazarlo antes de conectarle nada.
+- **Respetar la polaridad de salida:** OUT+ es positivo, OUT– negativo. Un
+  error acá quema el ESP32 en el acto.
+- **Capacitor de desacople de 100 nF** lo más cerca posible del pin de
+  alimentación del ESP32 y del VCC del módulo de relés. Filtra el ruido de
+  alta frecuencia que generan las bobinas al conmutar.
+- **Aislar la entrada de red:** los 220 V solo deben tocar el módulo de
+  fuente. Ningún cable de red debe quedar suelto ni cerca de la etapa
+  lógica dentro del gabinete.
 
 ## 5. Cableado y ruido (costo cero, mucho efecto)
 
 - **Los cables de los relés a la botonera, trenzados de a pares** (NO1 con
-  COM1 trenzados entre sí; ídem canal 2) y **lejos de los cables de los
+  COM1 trenzados entre sí; ídem canales 2 y 3) y **lejos de los cables de los
   motores** del telar. El ruido inductivo de los motores es la causa nº1
   de cuelgues de WiFi y reinicios en este tipo de montaje.
-- **Cables cortos en la etapa lógica** (3.3V, IN1, IN2): cuanto más
-  largos, más antena para el ruido.
-- **Tierra en estrella:** todos los GND (LM2596 OUT-, ESP32, relé) a un
-  mismo punto físico, no encadenados uno tras otro.
-- **El jumper del relé quitado + VCC lógico a 3.3V** (como ya está en la
-  guía) es la configuración correcta: la bobina se alimenta con los 5V del
-  LM2596 y la lógica con el ESP32, con el optoacoplador de por medio.
-  Mantenerlo así.
+- **Cables cortos en la etapa lógica** (3.3 V, IN1, IN2, IN3 y las dos
+  entradas de sensado): cuanto más largos, más antena para el ruido.
+- **Tierra en estrella:** todos los GND (salida de la fuente, ESP32, módulo
+  de relés) a un mismo punto físico, no encadenados uno tras otro.
+- **El jumper JD-VCC/VCC del módulo de relés va PUESTO:** con una sola
+  fuente de 5 V alimentando todo, el jumper une ambas líneas y no hace
+  falta una alimentación separada para las bobinas. El aislamiento entre la
+  señal del ESP32 y el contacto que toca el telar lo da el optoacoplador
+  interno del módulo, que sigue cumpliendo su función igual.
 
 ## 6. Protecciones para las reservas (MOSFET y TB6600)
 
@@ -157,9 +139,8 @@ relés):
 |---|---|---|
 | Resistencia 10 kΩ | 5 (+2 si se usa el MOSFET) | Pull-up de IN1/IN2/IN3 (3 relés) + 2 del sensado Avanzar/Impulso (punto 1), y pull-down de Gate (punto 6) |
 | Resistencia 100–220 Ω | 1 | Serie de Gate del IRLZ44N (punto 6) |
-| Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220V** del HLK-5M05 (punto 3). El de 0,5 A del diseño anterior no sirve acá: salta con el pico de arranque del módulo |
-| Optoacoplador PC817 + puente DB107 + R 2,2 kΩ 1W | 2 de cada uno | Sensado aislado de los botones Avanzar e Impulso (24V AC → GPIO 32/33) |
-| Diodo Schottky extra (SS34 o similar) | 1 (opcional) | Convivencia USB + 24V (punto 2) — **ya no aplica**: la alimentación es por fuente propia, no desde el telar |
+| Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
+| Optoacoplador PC817 + puente DB107 + R 2,2 kΩ 1 W | 2 de cada uno | Sensado aislado de los botones Avanzar e Impulso (24 V AC → GPIO 32/33) |
 | Diodo 1N5408 | 1 (solo si el MOSFET maneja carga inductiva) | Flyback (punto 6) |
 
 Total estimado: unos pocos dólares. La mejora de fiabilidad es enorme en

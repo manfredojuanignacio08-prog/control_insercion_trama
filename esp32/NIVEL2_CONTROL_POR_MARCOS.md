@@ -19,7 +19,7 @@ justamente lo que hace un telar **dobby o de maquinita**.
 | Enfoque | Qué controla | Elementos necesarios | ¿Viable como prototipo? |
 |---|---|---|---|
 | Jacquard (hilo por hilo) | cada hilo | cientos / miles | ❌ inviable a esa escala |
-| **Dobby (por marcos)** | grupos de hilos | **8 a 16** | ✅ **sí, con un ESP32** |
+| **Dobby (por marcos)** | grupos de hilos | **8** (máximo de este telar) | ✅ **sí, con un ESP32** |
 
 Toda tela con un patrón que se repite (cortinas, rayas, espigado, panal,
 tramas geométricas) se define por una **secuencia corta de combinaciones de
@@ -42,7 +42,7 @@ de esas combinaciones, que se repite.
         │
         ▼
    ┌───────────┐   energiza    ┌──────────────────────┐
-   │   ESP32   │ ────────────▶ │ 8–16 actuadores       │
+   │   ESP32   │ ────────────▶ │ 8 actuadores          │
    │ (gateway) │               │ (uno por marco)       │
    └───────────┘               └──────────────────────┘
                                         │
@@ -52,13 +52,14 @@ de esas combinaciones, que se repite.
 
 ## El hardware necesario
 
-- **8 a 16 actuadores**, uno por marco. Pueden ser:
-  - **electroimanes / solenoides** (tiran de cada marco), o
-  - **servomotores** (giran para subir/bajar el marco).
+- **8 solenoides / electroimanes de 12V**, uno por marco (máximo confirmado
+  del telar Vamatex C201 en el relevamiento del 19/08/26). Cada uno tira de
+  su marco cuando recibe corriente.
 - El **ESP32** recibe del backend la secuencia y, en cada pasada, activa los
   marcos que van arriba.
 - Como son pocos, entran casi en los pines del ESP32; con **un solo shift
-  register** (74HC595) sobra para manejar los 8–16 sin quedarse sin pines.
+  register** (74HC595) sobra para manejar los 8 sin quedarse sin pines: con
+  8 marcos alcanza con un solo integrado, no hace falta encadenar un segundo.
 - Una **fuente** acorde al consumo de los actuadores (los electroimanes de
   varios marcos a la vez piden corriente; se dimensiona según el modelo).
 
@@ -74,7 +75,7 @@ Encaja naturalmente con el sistema actual:
 - El **backend** ya guarda y entrega esa secuencia por la API. No hay que
   rediseñarlo: el ESP32 pediría la secuencia igual que hoy pide el estado.
 - El **firmware** del ESP32 pasaría de accionar 3 relés (Marcha/Pausa/Retroceder) a
-  accionar además los 8–16 actuadores de los marcos, siguiendo la secuencia.
+  accionar además los 8 actuadores de los marcos, siguiendo la secuencia.
 
 En otras palabras: **la parte de software ya está casi lista; lo que se suma
 es la parte física de los marcos, que ahora es chica.**

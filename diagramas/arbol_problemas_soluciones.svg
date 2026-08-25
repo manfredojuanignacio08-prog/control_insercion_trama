@@ -116,7 +116,7 @@
 
     <rect x="946" y="336" width="208" height="42" rx="6" fill="#fff" stroke="#2E6E4A" stroke-width="1"/>
     <text x="1050" y="353" text-anchor="middle">Base de datos central</text>
-    <text x="1050" y="367" text-anchor="middle">(PostgreSQL / Supabase)</text>
+    <text x="1050" y="367" text-anchor="middle">(PostgreSQL / Neon)</text>
 
     <rect x="1164" y="336" width="196" height="42" rx="6" fill="#fff" stroke="#2E6E4A" stroke-width="1"/>
     <text x="1262" y="353" text-anchor="middle">Backend con API REST</text>
@@ -163,7 +163,7 @@
     <rect x="480" y="500" width="200" height="96" rx="8" fill="#fff" stroke="#7c2155" stroke-width="1.5"/>
     <circle cx="502" cy="522" r="12" fill="#7c2155"/><text x="502" y="526" text-anchor="middle" font-size="12" font-weight="bold" fill="#fff">3</text>
     <text x="522" y="526" font-size="11.5" font-weight="bold" fill="#7c2155">¿Dónde alojarla?</text>
-    <text x="492" y="548" fill="#3d2020" font-size="10.5">→ PostgreSQL en Supabase</text>
+    <text x="492" y="548" fill="#3d2020" font-size="10.5">→ PostgreSQL en Neon</text>
     <text x="492" y="562" fill="#3d2020" font-size="10.5">(nube). Sin servidor propio,</text>
     <text x="492" y="576" fill="#3d2020" font-size="10.5">con respaldos y acceso</text>
     <text x="492" y="590" fill="#3d2020" font-size="10.5">remoto.</text>

@@ -74,7 +74,7 @@ entera, el conteo de posición se desincroniza en silencio. Al detectar el
 flanco, el firmware avisa al backend (`POST /evento-fisico`) y la web marca
 la posición como incierta hasta que alguien la confirme
 (`POST /confirmar-posicion`).
-| Filtrado | TVS P6KE33CA + 470 µF + 100 nF en la entrada; 47 µF en la salida |
+| Filtrado | Capacitores de 100 nF de desacople junto al ESP32 y al módulo de relés |
 
 ## 4. Cómo compilar y subir
 
@@ -83,7 +83,7 @@ la posición como incierta hasta que alguien la confirme
 2. *Tools → Manage Libraries* → instalá **ArduinoJson** (Benoît Blanchon,
    v7.x). `WiFi` y `HTTPClient` ya vienen con el core.
 3. Abrí `control_trama_esp32.ino` y **editá `config.h`**: Wi-Fi, URL del
-   backend (la del servidor Node, **no** la de Supabase) y la polaridad
+   backend (la del servidor Node, **no** la de Neon) y la polaridad
    del relé si hiciera falta.
 4. Placa: *ESP32 Dev Module* → puerto → **Upload**.
 5. Monitor serie a **115200 baudios** para ver conexión, sondeos y pulsos.
@@ -99,7 +99,7 @@ la posición como incierta hasta que alguien la confirme
    USB).
 2. Levantá el backend y asigná un patrón desde la web → a los pocos
    segundos se **escucha el clic** del relé de Marcha y el LED parpadea.
-3. Tocá "Detener" en la web → clic del relé de Pausa.
+3. Tocá "Pausa" en la web → clic del relé de Pausa.
 4. Recién cuando eso funcione, cablear los contactos NO/COM a la botonera
    del telar según el documento eléctrico.
 

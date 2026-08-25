@@ -12,9 +12,10 @@
  *     físicos de Marcha (Inicio), Pausa y Retroceder del telar. Energizar
  *     un relé durante un instante = "apretar el botón" sin tocar la
  *     botonera.
- *   - Alimentación: 24V del telar → fusible → diodo Schottky → LM2596
- *     (5V) → ESP32 (VIN) + bobinas del relé (JD-VCC, jumper quitado).
- *     La lógica del relé (VCC chico) va a los 3.3V del ESP32.
+ *   - Alimentación: 220V de red → fusible lento 1A → módulo HLK-5M05
+ *     (5V) → ESP32 (VIN) + módulo de relés (VCC, con el jumper JD-VCC
+ *     puesto). Es una fuente propia, independiente del telar: el sistema
+ *     no toma corriente de la máquina.
  *
  *  Qué hace:
  *   1. Se conecta al Wi-Fi.

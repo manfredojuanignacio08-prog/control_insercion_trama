@@ -16,7 +16,7 @@ telares de la planta. El producto tiene cuatro partes:
   PostgreSQL, que guarda los patrones, registra qué telar está tejiendo qué,
   y mantiene el historial de producción. Además sirve la página web. Es el
   único que habla con la base.
-- **Base de datos (PostgreSQL en Supabase)**: donde vive toda la información,
+- **Base de datos (PostgreSQL en Neon)**: donde vive toda la información,
   alojada en la nube.
 - **Firmware ESP32**: el puente con el telar físico. Lee del backend si el
   telar debe estar tejiendo y acciona los relés conectados a los botones de
@@ -37,7 +37,7 @@ control_insercion_trama_completo/
 ├── backend/                       El núcleo: API REST + PostgreSQL
 │   ├── src/
 │   │   ├── server.js              Servidor Express (punto de entrada)
-│   │   ├── db.js                  Conexión a PostgreSQL/Supabase
+│   │   ├── db.js                  Conexión a PostgreSQL/Neon
 │   │   ├── db/schema.sql          Esquema de la base de datos
 │   │   ├── db/init.js             Crea las tablas (correr una vez)
 │   │   ├── utils/                 Lógica pura (ligamento, posición, validación)
@@ -71,7 +71,7 @@ control_insercion_trama_completo/
 ## 3. Cómo levantar todo
 
 > **Importante sobre la base de datos:** el equipo ya tiene una base compartida
-> en **Supabase** con las 4 tablas creadas (ver
+> en **Neon** con las 4 tablas creadas (ver
 > `docs/Documentacion_BaseDeDatos_Telar.docx`). Para usar esa base real, hay
 > que pedir la contraseña de conexión y completarla en `DATABASE_URL` (se
 > explica en el Paso 2 de la sección 3.5). Las opciones de abajo (Docker o
@@ -126,7 +126,7 @@ NODE_ENV=production
 ```sql
 CREATE DATABASE control_trama;
 ```
-Si en cambio vas a conectarte a la base real del equipo en Supabase, no creás
+Si en cambio vas a conectarte a la base real del equipo en Neon, no creás
 nada — solo completá `DATABASE_URL` en el `.env` (ver sección 3.5, Paso 2).
 
 **Paso 4 — Crear o actualizar las tablas:**
@@ -197,7 +197,7 @@ Si usás Nginx, poner `TRUST_PROXY=true` en el `.env`.
 ### 3.5 Desplegar en Render (gratis, paso a paso)
 
 [Render](https://render.com) permite alojar el backend sin pagar nada y sin
-necesidad de servidor propio. La base de datos (Supabase) ya existe y se
+necesidad de servidor propio. La base de datos (Neon) ya existe y se
 conecta desde acá, no se crea otra. Esta sección está pensada para alguien
 que nunca usó Render.
 
@@ -223,17 +223,17 @@ Render necesita leer el código desde un repositorio de Git (no se sube el `.zip
    ```
    (Reemplazá `TU_USUARIO` por tu usuario de GitHub. Te va a pedir que inicies sesión la primera vez.)
 
-#### Paso 2 — Conectar la base de datos del equipo (Supabase)
+#### Paso 2 — Conectar la base de datos del equipo (Neon)
 
-El equipo ya tiene una base de datos en **Supabase**, con las 4 tablas creadas
+El equipo ya tiene una base de datos en **Neon**, con las 4 tablas creadas
 (`patrones`, `telares`, `historial_produccion`, `errores_log`). No hace falta
 crear una base nueva en Render — solo conectar el backend a esa.
 
 1. Pedile al responsable de la base de datos del equipo la contraseña de
-   conexión de Supabase (no está en este documento por seguridad).
+   conexión de Neon (no está en este documento por seguridad).
 2. Con esos datos, armá la cadena de conexión con este formato:
    ```
-   postgresql://postgres:LA_CONTRASEÑA@db.rybhfvnvxpfujpqdlqnk.supabase.co:5432/postgres
+   postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require
    ```
    (Reemplazá `LA_CONTRASEÑA` por la real. El resto — host, puerto, usuario,
    nombre de base — ya está confirmado en la documentación de la base de datos del equipo.)
@@ -257,7 +257,7 @@ crear una base nueva en Render — solo conectar el backend a esa.
      *(Este comando es seguro de correr contra la base compartida del equipo:
      `init.js` usa `CREATE TABLE IF NOT EXISTS` y `migrate.js` agrega solo lo
      que falte (`matriz_ligamento`, índices, trigger) sin tocar ni borrar
-     ningún dato existente. Es justamente lo que hace que la base de Supabase
+     ningún dato existente. Es justamente lo que hace que la base de Neon
      quede igual de completa que la que usa el backend en desarrollo.)*
    - **Plan**: el que diga **Free**
 
@@ -265,8 +265,8 @@ crear una base nueva en Render — solo conectar el backend a esa.
 
    | Key | Value |
    |---|---|
-   | `DATABASE_URL` | la cadena de conexión a Supabase armada en el Paso 2 |
-   | `PGSSL` | `true` *(obligatorio — Supabase exige SSL, sin esto la conexión falla)* |
+   | `DATABASE_URL` | la cadena de conexión a Neon armada en el Paso 2 |
+   | `PGSSL` | `true` *(obligatorio — Neon exige SSL, sin esto la conexión falla)* |
    | `NODE_ENV` | `production` |
    | `TRUST_PROXY` | `true` |
    | `CORS_ORIGIN` | (dejarlo vacío por ahora) |
@@ -301,9 +301,9 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 - **Se "duerme" tras 15 minutos sin uso.** La primera visita después de eso tarda
   entre 30 y 50 segundos en responder mientras el servidor arranca de nuevo. Las
   siguientes son normales hasta que vuelva a quedar inactivo.
-- **La base de datos es la de Supabase del equipo, no una de Render** — eso es
+- **La base de datos es la de Neon del equipo, no una de Render** — eso es
   bueno: no se borra ni expira si el servicio de Render se reinicia o se duerme,
-  ya que vive en otro lugar. Revisar directamente en el dashboard de Supabase
+  ya que vive en otro lugar. Revisar directamente en el dashboard de Neon
   las condiciones del plan free de esa plataforma (límite de almacenamiento y
   de conexiones simultáneas).
 - Cada vez que se actualice el código y se vuelva a desplegar, el `Start Command`
@@ -320,9 +320,9 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 
 | Variable | Para qué sirve | Ejemplo |
 |---|---|---|
-| `DATABASE_URL` | URL de conexión completa. **Usar esta para conectar a la base de Supabase del equipo.** Si se completa, ignora las variables `PG*` de abajo. | `postgresql://postgres:CONTRASEÑA@db.rybhfvnvxpfujpqdlqnk.supabase.co:5432/postgres` |
-| `PGSSL` | Si la conexión exige SSL. **Obligatorio en `true` para Supabase**, o la conexión falla. | `true` |
-| `PG_POOL_MAX` | Máximo de conexiones simultáneas a la base. No conviene subirlo sin necesidad (Supabase free tiene un límite compartido entre todo el equipo). | `10` |
+| `DATABASE_URL` | URL de conexión completa. **Usar esta para conectar a la base de Neon del equipo.** Si se completa, ignora las variables `PG*` de abajo. | `postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require` |
+| `PGSSL` | Si la conexión exige SSL. **Obligatorio en `true` para Neon**, o la conexión falla. | `true` |
+| `PG_POOL_MAX` | Máximo de conexiones simultáneas a la base. No conviene subirlo sin necesidad (Neon free tiene un límite compartido entre todo el equipo). | `10` |
 | `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Datos de conexión sueltos, **solo para una base local de desarrollo** (se ignoran si `DATABASE_URL` tiene un valor) | `localhost` / `5432` / `postgres` / — / `control_trama` |
 | `PORT` | Puerto del servidor web | `3000` |
 | `NODE_ENV` | Modo de ejecución (`development` o `production`) | `production` |
@@ -448,7 +448,7 @@ las protecciones eléctricas recomendadas y el diagrama del circuito están en
 |---|---|
 | `npm run init-db` falla con "connection refused" | PostgreSQL no está corriendo. Iniciarlo con `service postgresql start` o equivalente. |
 | `npm run init-db` falla con "password authentication" | Revisar `PGPASSWORD` (o `DATABASE_URL`) en el `.env`. |
-| `npm run migrate` falla con "SSL required" o similar | Falta `PGSSL=true` en el `.env` — Supabase exige SSL. |
+| `npm run migrate` falla con "SSL required" o similar | Falta `PGSSL=true` en el `.env` — Neon exige SSL. |
 | `npm run migrate` no agrega `matriz_ligamento` a patrones viejos | Revisar que el patrón tenga `matriz_pasadas` válida; el backfill solo corre sobre filas con `matriz_ligamento IS NULL`. |
 | La biblioteca aparece vacía | Es normal si es la primera vez. Crear un patrón (desde la app o la web de demo). |
 | Error al guardar: "Ya existe un dibujo con ese nombre" | Los nombres son únicos en la base. Cambiar el nombre o borrar el anterior. |

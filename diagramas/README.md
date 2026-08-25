@@ -42,9 +42,9 @@ solución.
 
 **Etapa de marcos del Nivel 2 (evolución).** Muestra cómo el ESP32 dictaría
 la secuencia del dibujo moviendo los marcos del telar: backend → ESP32 →
-módulo PCA9685 → 8-16 servomotores (uno por marco) → telar. Incluye el camino
-alternativo con solenoides. Es el diagrama del Nivel 2 (control del tejido),
-a diferencia del eléctrico que es el Nivel 1 (arranque/pausa).
+registro de desplazamiento 74HC595 → MOSFETs → 8 solenoides (uno por marco)
+→ telar. Es el diagrama del Nivel 2 (control del tejido), a diferencia del
+eléctrico que es el Nivel 1 (arranque/pausa).
 
 ## Cuál mirar según la pregunta
 

@@ -9,16 +9,16 @@
 > `matriz_ligamento` se mantiene como parte del backend (con derivación automática
 > desde `matriz_pasadas`). En cambio, se generó una **migración SQL**
 > (`backend/src/db/migracion_001_matriz_ligamento.sql`, ejecutable con
-> `npm run migrate`) para actualizar la base real de Supabase y que coincida con
+> `npm run migrate`) para actualizar la base real de Neon y que coincida con
 > el backend, en vez de achicar el backend para que coincida con la base. Ver
 > sección 9 para el detalle de la migración y cómo se probó.
 
 | Decisión | Resolución |
 |---|---|
-| ¿Qué representa la matriz? | **Las dos cosas, en campos separados**: `matriz_pasadas` (enteros) y `matriz_ligamento` (binario, derivado automáticamente). El backend la mantiene; la base de Supabase se actualiza con la migración para tenerla también. |
+| ¿Qué representa la matriz? | **Las dos cosas, en campos separados**: `matriz_pasadas` (enteros) y `matriz_ligamento` (binario, derivado automáticamente). El backend la mantiene; la base de Neon se actualiza con la migración para tenerla también. |
 | Alcance de telares para el MVP | **Esquema multi-telar desde ahora**, pero el piloto funcional arranca probando con **1 solo telar** conectado. |
 | Login de operarios | **No por ahora.** Sistema abierto en planta, sin tabla de usuarios ni auth en esta versión. |
-| ¿Dónde vive la base de datos? | **Supabase** (PostgreSQL administrado en la nube), no una base local. Credenciales compartidas por el equipo. |
+| ¿Dónde vive la base de datos? | **Neon** (PostgreSQL administrado en la nube), no una base local. Credenciales compartidas por el equipo. |
 | Tipografía del frontend | **Century Gothic**, con `Questrial` (Google Fonts) como respaldo — Century Gothic es una fuente comercial y no se puede empaquetar ni cargar desde un CDN gratuito, así que se usa si el sistema operativo del usuario ya la tiene instalada, y si no, cae a Questrial (la alternativa libre más parecida geométricamente). |
 
 ---
@@ -200,18 +200,18 @@ Reemplazar la simulación de `startPlay/doTick` por datos reales del microcontro
 > coloreada igual que en el editor. Dejó de ser un pendiente.
 
 > ✅ **`matriz_ligamento` se mantiene en el backend** (no se quitó). En cambio, se
-> migró la base de datos real de Supabase para que la tenga también — ver sección 9.
+> migró la base de datos real de Neon para que la tenga también — ver sección 9.
 
 ---
 
-## 9. Migración de la base de datos real (Supabase) para que coincida con el backend
+## 9. Migración de la base de datos real (Neon) para que coincida con el backend
 
 Se decidió que el backend es la fuente de verdad — en vez de sacarle `matriz_ligamento`
 para que coincida con la base que el equipo ya armó, se generó una migración que
 actualiza esa base para que coincida con el backend.
 
 **Archivo:** `backend/src/db/migracion_001_matriz_ligamento.sql`
-**Cómo correrla:** `npm run migrate` (con `.env` apuntando a la base de Supabase real)
+**Cómo correrla:** `npm run migrate` (con `.env` apuntando a la base de Neon real)
 
 Qué hace, en orden:
 1. Agrega la columna `matriz_ligamento JSONB` a `patrones` (la única diferencia real
@@ -433,7 +433,7 @@ límite y consistencia. Lo que se verificó y/o corrigió:
 
 Si dos ediciones de un patrón **ya guardado** llegan desordenadas por la red
 (poco probable en uso normal, algo más probable con la latencia real de
-Supabase), gana la última que llega al servidor. Resolverlo del todo requeriría
+Neon), gana la última que llega al servidor. Resolverlo del todo requeriría
 una cola de escritura por patrón — se evaluó que el costo no justifica el
 beneficio para este caso de uso (un solo operario editando un patrón a la vez).
 Conviene tenerlo presente si en el futuro varios usuarios editan el mismo

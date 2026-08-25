@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // ⚠️ CAMBIAR ESTA URL SEGÚN DÓNDE ESTÉ CORRIENDO EL BACKEND NODE.JS
-    // (¡la URL del backend, NO la de Supabase! La app nunca habla directo
+    // (¡la URL del backend, NO la de la base de datos! La app nunca habla directo
     // con la base de datos: siempre pasa por la API, igual que la web).
     //
     //  - Emulador de Android Studio, backend corriendo en tu propia PC

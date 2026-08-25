@@ -88,7 +88,8 @@ ocupando el lugar de las tarjetas del Jacquard, es la evolución que sigue.**
 Dado que los tejidos de esta planta son **mayormente patrones repetitivos**
 (tipo cortina), el Nivel 2 es alcanzable como prototipo real mediante
 **control por marcos (dobby)** en lugar de control hilo por hilo. Esto reduce
-el hardware de "cientos de electroimanes" a solo **8–16 actuadores**, algo que
+el hardware de "cientos de electroimanes" a solo **8 actuadores** (máximo
+confirmado del telar tras el relevamiento del 19/08/26), algo que
 un ESP32 maneja sin problema.
 
 El desarrollo completo de esta solución —cómo funciona, el hardware, y cómo se
