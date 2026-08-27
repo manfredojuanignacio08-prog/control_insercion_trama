@@ -84,8 +84,20 @@ const int PIN_LED             = 2;   // LED integrado (indicador de estado)
 // La mayoría de los módulos de relé optoacoplados de 5V se ACTIVAN CON
 // NIVEL BAJO (LOW = relé cerrado). Si el tuyo es al revés, cambiá esto
 // en config.h y listo — el resto del código se adapta solo.
-const int NIVEL_ACTIVO   = RELE_ACTIVO_BAJO ? LOW  : HIGH;
-const int NIVEL_INACTIVO = RELE_ACTIVO_BAJO ? HIGH : LOW;
+// Cada relé puede tener su propia polaridad (ver config.h): en este equipo
+// el módulo de 2 canales es activo-bajo y el individual de Retroceder es
+// activo-alto. Estas funciones devuelven el nivel correcto según el pin,
+// así el resto del código no tiene que preocuparse por la diferencia.
+int nivelActivo(int pin) {
+  if (pin == PIN_RELE_MARCHA)     return RELE_MARCHA_ACTIVO_BAJO     ? LOW : HIGH;
+  if (pin == PIN_RELE_PAUSA)      return RELE_PAUSA_ACTIVO_BAJO      ? LOW : HIGH;
+  if (pin == PIN_RELE_RETROCEDER) return RELE_RETROCEDER_ACTIVO_BAJO ? LOW : HIGH;
+  return LOW;
+}
+
+int nivelInactivo(int pin) {
+  return nivelActivo(pin) == LOW ? HIGH : LOW;
+}
 
 // ------------------------------------------------------------
 // Tiempos
@@ -143,15 +155,15 @@ void setup() {
   // primero se escribe el nivel inactivo y RECIÉN DESPUÉS se configura el
   // pin como salida. Si se hace al revés, hay un instante en que el pin
   // queda flotando/bajo y el relé da un pulso fantasma al encender.
-  digitalWrite(PIN_RELE_MARCHA,     NIVEL_INACTIVO);
-  digitalWrite(PIN_RELE_PAUSA,      NIVEL_INACTIVO);
-  digitalWrite(PIN_RELE_RETROCEDER, NIVEL_INACTIVO);
+  digitalWrite(PIN_RELE_MARCHA,     nivelInactivo(PIN_RELE_MARCHA));
+  digitalWrite(PIN_RELE_PAUSA,      nivelInactivo(PIN_RELE_PAUSA));
+  digitalWrite(PIN_RELE_RETROCEDER, nivelInactivo(PIN_RELE_RETROCEDER));
   pinMode(PIN_RELE_MARCHA,     OUTPUT);
   pinMode(PIN_RELE_PAUSA,      OUTPUT);
   pinMode(PIN_RELE_RETROCEDER, OUTPUT);
-  digitalWrite(PIN_RELE_MARCHA,     NIVEL_INACTIVO);
-  digitalWrite(PIN_RELE_PAUSA,      NIVEL_INACTIVO);
-  digitalWrite(PIN_RELE_RETROCEDER, NIVEL_INACTIVO);
+  digitalWrite(PIN_RELE_MARCHA,     nivelInactivo(PIN_RELE_MARCHA));
+  digitalWrite(PIN_RELE_PAUSA,      nivelInactivo(PIN_RELE_PAUSA));
+  digitalWrite(PIN_RELE_RETROCEDER, nivelInactivo(PIN_RELE_RETROCEDER));
 
   pinMode(PIN_SENSOR_AVANZAR, INPUT);  // pull-up es externa (10kΩ a 3.3V), no hace falta INPUT_PULLUP
   pinMode(PIN_SENSOR_IMPULSO, INPUT);
@@ -378,11 +390,11 @@ bool reportarEventoFisico(const char* tipo) {
 // El diseño garantiza que el relé NUNCA queda pegado: el apagado no
 // depende de ninguna condición externa, es una secuencia fija.
 void pulsarRele(int pin) {
-  digitalWrite(pin, NIVEL_ACTIVO);
+  digitalWrite(pin, nivelActivo(pin));
   // El pulso es corto; refrescamos el watchdog antes y después por prolijidad
   esp_task_wdt_reset();
   delay(DURACION_PULSO_MS);
-  digitalWrite(pin, NIVEL_INACTIVO);
+  digitalWrite(pin, nivelInactivo(pin));
   esp_task_wdt_reset();
   parpadearLed(2);
 }
