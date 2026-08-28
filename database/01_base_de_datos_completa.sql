@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS telares (
   creado_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
   ultimo_ping_esp32 TIMESTAMPTZ,       -- migración 006: heartbeat del ESP32
   retroceder_seq    INTEGER NOT NULL DEFAULT 0,  -- migración 007: botón físico Retroceder
-  posicion_incierta BOOLEAN NOT NULL DEFAULT false,  -- migración 008: uso manual de Avanzar/Impulso
+  posicion_incierta BOOLEAN NOT NULL DEFAULT false,  -- migración 008: uso manual de los botones del telar
   ultimo_evento_manual      TIMESTAMPTZ,          -- migración 008
   ultimo_evento_manual_tipo TEXT                  -- migración 008: 'avanzar' | 'impulso'
 );

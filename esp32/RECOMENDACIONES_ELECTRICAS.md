@@ -3,7 +3,7 @@
 Revisión del diseño eléctrico del nodo de control. La base es sólida: el
 ESP32 actúa como puente entre la web y la botonera del telar, mediante tres
 relés en paralelo con los botones de Marcha, Pausa y Retroceder, más el
-sensado aislado de Avanzar e Impulso.
+sensado aislado de esos mismos tres botones, para detectar cuando el operario los usa a mano.
 
 La alimentación es una **fuente propia HLK-5M05 (220 V AC → 5 V DC, 1 A)**,
 independiente del telar: el sistema no toma corriente de la máquina, y lo
@@ -38,7 +38,7 @@ no un detalle.
 
 **Elección de pines — bien elegidos:** los cinco pines en uso —GPIO 25, 26 y
 27 para los relés (Marcha, Pausa, Retroceder) y GPIO 32 y 33 para el sensado
-de Avanzar/Impulso— **no** son pines de arranque del ESP32 (los "strapping
+del sensado— **no** son pines de arranque del ESP32 (los "strapping
 pins" 0, 2, 5, 12 y 15 cambian de nivel solos durante el boot). Mantenerlos;
 no mover ni los relés ni las entradas de sensado a un pin de arranque: un
 relé conectado ahí puede dar un pulso fantasma al encender la placa.
@@ -131,16 +131,16 @@ relés):
 | Anti-doble-pulso (2 s mínimos entre comandos) | Doble pulsación por lecturas repetidas del backend |
 | Watchdog por hardware (15 s) | Cuelgues por ruido eléctrico: el ESP32 se reinicia solo, con relés en reposo |
 | Fail-safe sin red | Si se cae el WiFi o el backend, el ESP32 no actúa y la botonera física sigue mandando |
-| Polaridad del relé configurable (`RELE_ACTIVO_BAJO`) | Adaptarse a módulos activo-alto sin tocar el código |
+| Polaridad configurable **por relé** (`RELE_*_ACTIVO_BAJO`) | Permite mezclar módulos activo-bajo y activo-alto en el mismo equipo. Ojo: la resistencia de cada canal depende de esto — pull-up a 3.3V para activo-bajo, pull-down a GND para activo-alto |
 
 ## 8. Resumen de compras/cambios (todo protección, nada de sensores)
 
 | Ítem | Cantidad | Para qué |
 |---|---|---|
-| Resistencia 10 kΩ | 5 (+2 si se usa el MOSFET) | Pull-up de IN1/IN2/IN3 (3 relés) + 2 del sensado Avanzar/Impulso (punto 1), y pull-down de Gate (punto 6) |
+| Resistencia 10 kΩ | 6 (+2 si se usa el MOSFET) | Pull-up de IN1/IN2/IN3 (3 relés) + 3 del sensado de los mismos botones (punto 1), y pull-down de Gate (punto 6) |
 | Resistencia 100–220 Ω | 1 | Serie de Gate del IRLZ44N (punto 6) |
 | Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
-| Optoacoplador PC817 + puente DB107 + R 2,2 kΩ 1 W | 2 de cada uno | Sensado aislado de los botones Avanzar e Impulso (24 V AC → GPIO 32/33) |
+| Optoacoplador PC817 + puente DB107 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |
 | Diodo 1N5408 | 1 (solo si el MOSFET maneja carga inductiva) | Flyback (punto 6) |
 
 Total estimado: unos pocos dólares. La mejora de fiabilidad es enorme en

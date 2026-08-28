@@ -33,15 +33,18 @@
  *       respecto al último conocido, pulsa el relé de RETROCEDER (GPIO
  *       27) una sola vez — es una acción puntual (corregir tras un corte
  *       de hilo), no un estado persistente como Marcha/Pausa.
- *   3c. Avanzar e Impulso NO tienen relé — son 100% manuales, el ESP32
- *       solo los "escucha". Cada botón está aislado con un optoacoplador
- *       (24V AC del botón -> puente rectificador -> resistencia limitadora
- *       -> LED del PC817; el fototransistor, con pull-up a 3.3V, cae a
- *       nivel bajo mientras el botón está apretado). Al detectar ese
- *       flanco, el ESP32 avisa al backend (POST /evento-fisico) para que
- *       la web pueda marcar "posición incierta" — sin esto, un uso manual
- *       de estos 2 botones desincroniza el conteo de pasadas sin que
- *       nadie se entere.
+ *   3c. Los MISMOS tres botones se sensan además en sentido inverso: si un
+ *       operario los aprieta a mano en la máquina, el ESP32 se entera y
+ *       avisa al backend (POST /evento-fisico), para que la web refleje lo
+ *       que realmente está pasando en el telar. Sin esto, alguien podía
+ *       arrancar el telar a mano y la web seguía mostrando "detenido".
+ *       Cada botón está aislado con un optoacoplador (24V AC del botón ->
+ *       puente rectificador -> resistencia limitadora -> LED del PC817; el
+ *       fototransistor, con pull-up a 3.3V, cae a nivel bajo mientras el
+ *       botón está apretado).
+ *       OJO: al pulsar un relé, ese mismo sensado detecta el pulso propio.
+ *       Por eso hay una ventana de ignorado (IGNORAR_ECO_MS) tras cada
+ *       pulso, para no leer las propias órdenes como si fueran manuales.
  *   4. Si falla la red, NO hace nada peligroso (fail-safe): los relés
  *      quedan sueltos y el telar sigue gobernado por su botonera física.
  *   5. Reporta fallas propias a POST /api/errores para que queden en el
@@ -77,8 +80,9 @@
 const int PIN_RELE_MARCHA     = 25;  // IN1 del módulo relé → botón Inicio/Marcha
 const int PIN_RELE_PAUSA      = 26;  // IN2 del módulo relé → botón Pausa/Parada
 const int PIN_RELE_RETROCEDER = 27;  // IN3 (relé adicional) → botón Retroceder
-const int PIN_SENSOR_AVANZAR  = 32;  // Salida del PC817 → sensa el botón Avanzar (solo lectura)
-const int PIN_SENSOR_IMPULSO  = 33;  // Salida del PC817 → sensa el botón Impulso (solo lectura)
+const int PIN_SENSOR_MARCHA     = 32;  // PC817 → sensa el botón Marcha    (solo lectura)
+const int PIN_SENSOR_PAUSA      = 33;  // PC817 → sensa el botón Pausa     (solo lectura)
+const int PIN_SENSOR_RETROCEDER = 34;  // PC817 → sensa el botón Retroceder (solo lectura)
 const int PIN_LED             = 2;   // LED integrado (indicador de estado)
 
 // La mayoría de los módulos de relé optoacoplados de 5V se ACTIVAN CON
@@ -108,6 +112,11 @@ const unsigned long MIN_ENTRE_COMANDOS_MS = 2000;  // anti-doble-pulso
 const int           WDT_TIMEOUT_S         = 15;    // watchdog
 const unsigned long DEBOUNCE_SENSOR_MS    = 400;   // ignora rebotes/ripple del AC en el sensado
 const unsigned long REINTENTO_AVISO_MS    = 3000;  // espera entre reintentos si el backend no responde
+// Cuando el ESP32 pulsa un relé, el sensado de ESE botón detecta la misma
+// pulsación (el relé cierra el mismo circuito que el botón). Sin esta
+// ventana, el sistema leería sus propias órdenes como si fueran del
+// operario y se realimentaría. Cubre el pulso (300 ms) con margen.
+const unsigned long IGNORAR_ECO_MS        = 800;
 
 // ------------------------------------------------------------
 // Estado
@@ -120,30 +129,47 @@ int retrocederSeqConocido = -1;  // -1 desconocido (no se pulsa hasta la 1ra lec
 unsigned long ultimoSondeo = 0;
 unsigned long ultimoComando = 0;
 
-// Sensado de Avanzar/Impulso (solo lectura, no controlan nada)
+// Sensado de los botones del telar (solo lectura: detecta uso manual)
 // Se usan interrupciones (no muestreo dentro del loop) porque el loop
 // tiene delay(50) y el sondeo al backend bloquea varios ms: una pulsación
 // corta del operario podía pasar desapercibida. La ISR solo levanta una
 // bandera; el POST al backend se hace después, en el loop.
-volatile bool eventoAvanzarPendiente = false;
-volatile bool eventoImpulsoPendiente = false;
-volatile unsigned long ultimoEventoAvanzar = 0;
-volatile unsigned long ultimoEventoImpulso = 0;
+volatile bool eventoMarchaPendiente     = false;
+volatile bool eventoPausaPendiente      = false;
+volatile bool eventoRetrocederPendiente = false;
+volatile unsigned long ultimoEventoMarcha     = 0;
+volatile unsigned long ultimoEventoPausa      = 0;
+volatile unsigned long ultimoEventoRetroceder = 0;
+// Momento del último pulso propio de cada relé, para descartar el eco.
+volatile unsigned long ultimoPulsoMarcha     = 0;
+volatile unsigned long ultimoPulsoPausa      = 0;
+volatile unsigned long ultimoPulsoRetroceder = 0;
 unsigned long ultimoIntentoAviso = 0;  // espacia los reintentos si el backend falla
 
-void IRAM_ATTR isrAvanzar() {
+void IRAM_ATTR isrMarcha() {
   unsigned long ahora = millis();
-  if (ahora - ultimoEventoAvanzar >= DEBOUNCE_SENSOR_MS) {
-    ultimoEventoAvanzar = ahora;
-    eventoAvanzarPendiente = true;
+  if (ahora - ultimoPulsoMarcha < IGNORAR_ECO_MS) return;   // eco del propio relé
+  if (ahora - ultimoEventoMarcha >= DEBOUNCE_SENSOR_MS) {
+    ultimoEventoMarcha = ahora;
+    eventoMarchaPendiente = true;
   }
 }
 
-void IRAM_ATTR isrImpulso() {
+void IRAM_ATTR isrPausa() {
   unsigned long ahora = millis();
-  if (ahora - ultimoEventoImpulso >= DEBOUNCE_SENSOR_MS) {
-    ultimoEventoImpulso = ahora;
-    eventoImpulsoPendiente = true;
+  if (ahora - ultimoPulsoPausa < IGNORAR_ECO_MS) return;
+  if (ahora - ultimoEventoPausa >= DEBOUNCE_SENSOR_MS) {
+    ultimoEventoPausa = ahora;
+    eventoPausaPendiente = true;
+  }
+}
+
+void IRAM_ATTR isrRetroceder() {
+  unsigned long ahora = millis();
+  if (ahora - ultimoPulsoRetroceder < IGNORAR_ECO_MS) return;
+  if (ahora - ultimoEventoRetroceder >= DEBOUNCE_SENSOR_MS) {
+    ultimoEventoRetroceder = ahora;
+    eventoRetrocederPendiente = true;
   }
 }
 
@@ -165,10 +191,15 @@ void setup() {
   digitalWrite(PIN_RELE_PAUSA,      nivelInactivo(PIN_RELE_PAUSA));
   digitalWrite(PIN_RELE_RETROCEDER, nivelInactivo(PIN_RELE_RETROCEDER));
 
-  pinMode(PIN_SENSOR_AVANZAR, INPUT);  // pull-up es externa (10kΩ a 3.3V), no hace falta INPUT_PULLUP
-  pinMode(PIN_SENSOR_IMPULSO, INPUT);
-  attachInterrupt(digitalPinToInterrupt(PIN_SENSOR_AVANZAR), isrAvanzar, FALLING);
-  attachInterrupt(digitalPinToInterrupt(PIN_SENSOR_IMPULSO), isrImpulso, FALLING);
+  // Las pull-ups son externas (10 kΩ a 3.3V), no hace falta INPUT_PULLUP.
+  // GPIO 34 es de solo-entrada y no tiene pull-up interna: la externa es
+  // obligatoria en ese canal.
+  pinMode(PIN_SENSOR_MARCHA,     INPUT);
+  pinMode(PIN_SENSOR_PAUSA,      INPUT);
+  pinMode(PIN_SENSOR_RETROCEDER, INPUT);
+  attachInterrupt(digitalPinToInterrupt(PIN_SENSOR_MARCHA),     isrMarcha,     FALLING);
+  attachInterrupt(digitalPinToInterrupt(PIN_SENSOR_PAUSA),      isrPausa,      FALLING);
+  attachInterrupt(digitalPinToInterrupt(PIN_SENSOR_RETROCEDER), isrRetroceder, FALLING);
 
   pinMode(PIN_LED, OUTPUT);
   Serial.begin(115200);
@@ -231,7 +262,7 @@ void loop() {
   // backend (una operación de red no puede hacerse dentro de una ISR).
   // El reintento se espacia: si el backend está caído, sin esta guarda el
   // loop lo golpearía cada 50ms e inundaría la red sin necesidad.
-  if ((eventoAvanzarPendiente || eventoImpulsoPendiente) &&
+  if ((eventoMarchaPendiente || eventoPausaPendiente || eventoRetrocederPendiente) &&
       millis() - ultimoIntentoAviso >= REINTENTO_AVISO_MS) {
     ultimoIntentoAviso = millis();
 
@@ -239,20 +270,22 @@ void loop() {
     // hasta 2s y en ese lapso la ISR puede registrar una pulsación nueva.
     // Si limpiáramos al volver, borraríamos ese segundo evento sin haberlo
     // avisado nunca. Si el envío falla, se vuelve a marcar para reintentar.
-    if (eventoAvanzarPendiente) {
-      eventoAvanzarPendiente = false;
-      Serial.println("Sensado: se usó el botón avanzar (manual)");
-      if (!reportarEventoFisico("avanzar")) {
-        eventoAvanzarPendiente = true;  // falló: queda pendiente de reintento
-      }
+    if (eventoMarchaPendiente) {
+      eventoMarchaPendiente = false;
+      Serial.println("Sensado: alguien apretó MARCHA en el telar");
+      if (!reportarEventoFisico("marcha")) eventoMarchaPendiente = true;
       esp_task_wdt_reset();
     }
-    if (eventoImpulsoPendiente) {
-      eventoImpulsoPendiente = false;
-      Serial.println("Sensado: se usó el botón impulso (manual)");
-      if (!reportarEventoFisico("impulso")) {
-        eventoImpulsoPendiente = true;
-      }
+    if (eventoPausaPendiente) {
+      eventoPausaPendiente = false;
+      Serial.println("Sensado: alguien apretó PAUSA en el telar");
+      if (!reportarEventoFisico("pausa")) eventoPausaPendiente = true;
+      esp_task_wdt_reset();
+    }
+    if (eventoRetrocederPendiente) {
+      eventoRetrocederPendiente = false;
+      Serial.println("Sensado: alguien apretó RETROCEDER en el telar");
+      if (!reportarEventoFisico("retroceder")) eventoRetrocederPendiente = true;
       esp_task_wdt_reset();
     }
   }
@@ -353,7 +386,7 @@ void sincronizarConBackend() {
 
 // ------------------------------------------------------------
 // POST /api/telares/{id}/evento-fisico — avisa un uso manual de
-// Avanzar/Impulso, para que la web marque la posición como incierta
+// un botón, para que la web refleje el estado real del telar
 // ------------------------------------------------------------
 // Devuelve true solo si el backend confirmó que recibió el aviso.
 // Importa: si esto falla y se descarta el evento, la web nunca se entera
@@ -390,6 +423,14 @@ bool reportarEventoFisico(const char* tipo) {
 // El diseño garantiza que el relé NUNCA queda pegado: el apagado no
 // depende de ninguna condición externa, es una secuencia fija.
 void pulsarRele(int pin) {
+  // Se anota el instante del pulso ANTES de darlo: el sensado de ese mismo
+  // botón va a detectarlo (el relé cierra el circuito del botón), y sin esta
+  // marca lo interpretaría como una pulsación manual del operario.
+  unsigned long ahora = millis();
+  if (pin == PIN_RELE_MARCHA)          ultimoPulsoMarcha     = ahora;
+  else if (pin == PIN_RELE_PAUSA)      ultimoPulsoPausa      = ahora;
+  else if (pin == PIN_RELE_RETROCEDER) ultimoPulsoRetroceder = ahora;
+
   digitalWrite(pin, nivelActivo(pin));
   // El pulso es corto; refrescamos el watchdog antes y después por prolijidad
   esp_task_wdt_reset();

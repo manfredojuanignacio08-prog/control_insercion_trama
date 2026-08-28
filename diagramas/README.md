@@ -19,7 +19,7 @@ quién y por qué.
 **Diagrama físico/eléctrico**: el cableado real del ESP32 — las 4 etapas
 del circuito (alimentación con fuente propia HLK-5M05 desde 220V, lógica a
 3.3V hacia los 3 relés, actuación sobre la botonera de 24V AC, y sensado
-por optoacopladores de los botones manuales Avanzar/Impulso), con las
+por optoacopladores de esos mismos tres botones, para detectar el uso manual), con las
 mejoras de protección recomendadas marcadas en ámbar. Es una copia del mismo archivo
 que está en `esp32/`, puesto acá también para tener ambos diagramas juntos.
 

@@ -951,6 +951,19 @@ async function actualizarEstadoTelar() {
       apagado:  ['',     'Detenido'],
       error:    ['off',  'Error'],
     };
+    // Si alguien usó los botones del telar a mano, el backend ya cambió el
+    // estado: la web se alinea con eso. Sin esto, la pantalla podía seguir
+    // diciendo "detenido" con la máquina andando (o al revés).
+    if (telar.estado === 'tejiendo' && !isPlaying && telar.ultimo_evento_manual_tipo === 'marcha') {
+      toast('El telar se puso en marcha desde la botonera');
+    }
+    if (telar.estado === 'pausado' && isPlaying) {
+      isPlaying = false;
+      clearTimeout(playTimer);
+      updPlayUI();
+      toast('El telar se pausó desde la botonera');
+    }
+
     const [clase, texto] = mapaEstado[telar.estado] || ['', telar.estado || '—'];
     dotTej.className = 'telar-dot' + (clase ? ' ' + clase : '');
     txtTej.textContent = texto;
@@ -958,7 +971,7 @@ async function actualizarEstadoTelar() {
     if (clase === 'warn') itemTej.classList.add('warn-txt');
     if (clase === 'off') itemTej.classList.add('off-txt');
 
-    // ── Posición incierta (uso manual de Avanzar/Impulso, sensado por el ESP32) ──
+    // ── Posición incierta (uso manual detectado por el sensado del ESP32) ──
     // No intentamos recalcular fila/columna: solo avisamos para que alguien
     // mire el telar y confirme dónde está parado de verdad.
     const itemPos = document.getElementById('telar-posicion');
@@ -967,7 +980,8 @@ async function actualizarEstadoTelar() {
     if (telar.posicion_incierta) {
       itemPos.style.display = '';
       const tipo = telar.ultimo_evento_manual_tipo || 'manual';
-      txtPos.textContent = `Posición incierta (uso manual: ${tipo})`;
+      const nombres = { marcha: 'Marcha', pausa: 'Pausa', retroceder: 'Retroceder' };
+      txtPos.textContent = `Posición incierta (botón ${nombres[tipo] || tipo} usado a mano)`;
       // Se guarda cuál es el evento que el operario está viendo: al confirmar
       // se manda de vuelta, para no tapar un movimiento posterior.
       ultimoEventoManualVisto = telar.ultimo_evento_manual || null;
@@ -988,7 +1002,7 @@ async function actualizarEstadoTelar() {
 
 // El operario ya miró el telar y sabe dónde está parado de verdad:
 // limpia la marca de "posición incierta" que dejó un uso manual de
-// Avanzar/Impulso (sensado por el ESP32, sin relé de por medio).
+// los botones del telar (detectado por el sensado del ESP32).
 async function confirmarPosicionTelar() {
   if (!telarPorDefectoId) return;
   try {
@@ -1260,11 +1274,26 @@ async function startPlay() {
     try {
       const telar = await apiFetch(`/telares/${telarPorDefectoId}`);
       if (String(telar.patron_actual_id) !== String(editId)) {
+        // Patrón distinto (o ninguno): es un trabajo nuevo, arranca de cero.
         await apiFetch(`/telares/${telarPorDefectoId}/asignar-patron`, {
           method: 'POST',
           body: JSON.stringify({ patron_id: Number(editId) }),
         });
         curRow = 0; curCol = 0; curPass = 0; // arranca de cero, igual que en el backend
+      } else {
+        // Mismo patrón: se está retomando algo pausado. Se reanuda sin tocar
+        // la posición, para que el tejido siga donde había quedado.
+        try {
+          await apiFetch(`/telares/${telarPorDefectoId}/reanudar`, { method: 'POST', body: JSON.stringify({}) });
+        } catch (e) {
+          // 409 = no hay producción en curso (por ejemplo, si antes se usó
+          // Detener). Se reasigna el patrón para abrir una nueva.
+          await apiFetch(`/telares/${telarPorDefectoId}/asignar-patron`, {
+            method: 'POST',
+            body: JSON.stringify({ patron_id: Number(editId) }),
+          });
+          curRow = 0; curCol = 0; curPass = 0;
+        }
       }
     } catch (e) {
       logError('Error al asignar patrón al telar', e.message, 'ASIGNAR_TELAR');
@@ -1358,13 +1387,15 @@ async function pausePlay() {
   const habiaProduccion = curRow >= 0;
   isPlaying = false;
   clearTimeout(playTimer);
-  curRow = -1;
-  curCol = -1;
-  curPass = 0;
+  // OJO: NO se resetea curRow/curCol/curPass. Pausa es pausa: la posición
+  // se conserva para que ▶ retome exactamente donde quedó. (Antes se ponían
+  // en -1 y el Play siguiente arrancaba el dibujo desde cero.)
   updPlayUI(); renderGrid();
   if (habiaProduccion && telarPorDefectoId) {
     try {
-      await apiFetch(`/telares/${telarPorDefectoId}/detener`, { method: 'POST', body: JSON.stringify({}) });
+      // /pausar (no /detener): deja la producción abierta y conserva el
+      // patrón, así ▶ retoma donde quedó en vez de arrancar de cero.
+      await apiFetch(`/telares/${telarPorDefectoId}/pausar`, { method: 'POST', body: JSON.stringify({}) });
       toast('Tejido pausado');
     } catch (e) {
       // Puede no haber producción en curso (409) — no es un error real, se ignora.
@@ -1381,19 +1412,60 @@ async function pausePlay() {
 // de verdad. Por eso pide confirmación antes de mandar la orden: no
 // queremos mover el mecanismo real por error mientras alguien solo
 // está mirando o editando el patrón en pantalla.
-async function retrocederFisico() {
+// Retrocede UNA pasada: pausa el tejido, mueve la posición un paso atrás
+// (en pantalla y en el backend) y le pide al ESP32 un pulso del relé de
+// Retroceder. Usa el modal propio de la app, no el confirm() del navegador.
+function retrocederFisico() {
   if (!telarPorDefectoId) { toast('No hay telar seleccionado'); return; }
-  const confirmado = confirm('¿Retroceder el telar físico? Esto mueve el mecanismo real de la máquina.');
-  if (!confirmado) return;
+  showConfirm(
+    'Retroceder una pasada',
+    'El telar va a retroceder una pasada y el tejido queda pausado. ¿Continuar?',
+    ejecutarRetroceso,
+    'Retroceder'
+  );
+}
+
+async function ejecutarRetroceso() {
+  // 1) Pausar: retroceder con el tejido en marcha dejaría la posición
+  //    descoordinada entre la pantalla y la máquina.
+  isPlaying = false;
+  clearTimeout(playTimer);
+  updPlayUI();
+
+  // 2) Retroceder una pasada en el backend (fuente de verdad de la posición)
+  try {
+    const r = await apiFetch(`/telares/${telarPorDefectoId}/retroceder`, {
+      method: 'POST',
+      body: JSON.stringify({ pasos: 1 }),
+    });
+    if (r && r.fila_actual !== undefined && r.fila_actual !== null) {
+      curRow = r.fila_actual;
+      curCol = r.columna_actual;
+      curPass = r.pasada_actual || 0;
+    }
+  } catch (e) {
+    // Sin producción abierta el backend no tiene posición que mover: se
+    // retrocede solo en pantalla para que el operario igual vea el cambio.
+    if (curPass > 0) {
+      curPass--;
+    } else if (curCol > 0) {
+      curCol--; curPass = 0;
+    } else if (curRow > 0) {
+      curRow--; curCol = nC - 1; curPass = 0;
+    }
+  }
+  updPlayUI(); renderGrid();
+
+  // 3) Pedirle al ESP32 el pulso del relé de Retroceder
   try {
     await apiFetch(`/telares/${telarPorDefectoId}/retroceder-fisico`, {
       method: 'POST',
       body: JSON.stringify({}),
     });
-    toast('⏪ Orden de retroceso enviada al telar');
+    toast(`⏪ Retrocedido a fila ${curRow + 1}, columna ${curCol + 1}`);
   } catch (e) {
     logError('Error al retroceder el telar físico', e.message, 'RETROCEDER_FISICO');
-    toast('No se pudo enviar la orden de retroceso');
+    toast('Se retrocedió en pantalla, pero no se pudo avisar al telar');
   }
 }
 

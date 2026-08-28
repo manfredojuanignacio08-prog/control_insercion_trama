@@ -35,12 +35,26 @@
 // un estado y el ESP32 estaría accionando otro. Verificar en ese caso.
 #define TELAR_ID      1
 
-// ---- Polaridad del módulo de relés ----
-// La MAYORÍA de los módulos de relé optoacoplados de 5V se activan con
-// nivel BAJO (LOW en el pin IN = relé cerrado) → dejar en true.
-// Si tu módulo se activa con nivel ALTO, poné false.
-// Cómo saberlo: con el módulo alimentado y el pin IN al aire o a 3.3V,
-// el relé debe estar SUELTO; si está pegado, es activo-alto → false.
-#define RELE_ACTIVO_BAJO  true
+// ---- Polaridad de CADA módulo de relé ----
+// La mayoría de los módulos optoacoplados de 5V se activan con nivel BAJO
+// (LOW en el pin IN = relé cerrado) → true. Los módulos de un solo canal
+// con pines rotulados "S / + / -" suelen ser al revés: se activan con
+// nivel ALTO → false.
+//
+// Cómo saberlo, con el módulo alimentado y el pin de señal al aire:
+// si el relé queda SUELTO, es activo-bajo (true); si queda PEGADO (con el
+// LED encendido), es activo-alto (false).
+//
+// IMPORTANTE — la resistencia de cada canal depende de esto:
+//   activo-bajo (true)  → pull-UP de 10 kΩ a 3.3V  (lo mantiene suelto)
+//   activo-alto (false) → pull-DOWN de 10 kΩ a GND (lo mantiene suelto)
+// Si se pone la resistencia al revés, el relé arranca PEGADO.
+//
+// En este equipo conviven los dos tipos: el módulo de 2 canales
+// (Marcha/Pausa) es activo-bajo, y el módulo individual de Retroceder
+// resultó activo-alto.
+#define RELE_MARCHA_ACTIVO_BAJO      true
+#define RELE_PAUSA_ACTIVO_BAJO       true
+#define RELE_RETROCEDER_ACTIVO_BAJO  false
 
 #endif

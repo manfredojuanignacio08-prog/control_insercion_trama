@@ -123,21 +123,21 @@
 
   <!-- ════════ ETAPA 5: SENSADO (solo lectura, sin relé) ════════ -->
   <rect x="20" y="735" width="1110" height="190" rx="10" fill="#fdf0f5" stroke="#7c2155" stroke-width="1.5"/>
-  <text x="36" y="759" font-size="15" font-weight="bold" fill="#7c2155">ETAPA 4 · SENSADO — el ESP32 "escucha" Avanzar e Impulso (no los controla)</text>
+  <text x="36" y="759" font-size="15" font-weight="bold" fill="#7c2155">ETAPA 4 · SENSADO — el ESP32 "escucha" los mismos 3 botones (detecta uso manual)</text>
 
   <rect x="60" y="781" width="250" height="120" rx="8" fill="#fff" stroke="#7c2155" stroke-width="1.5"/>
   <text x="185" y="803" text-anchor="middle" font-size="13" font-weight="bold">Botones manuales</text>
-  <text x="185" y="827" text-anchor="middle" font-size="11.5">Avanti / Avanzar</text>
-  <text x="185" y="847" text-anchor="middle" font-size="11.5">Marcia Discontinua / Impulso</text>
-  <text x="185" y="873" text-anchor="middle" font-size="10" fill="#6b5b53">24V AC · siguen 100% manuales</text>
-  <text x="185" y="889" text-anchor="middle" font-size="10" fill="#6b5b53">(sin relé, no se accionan por web)</text>
+  <text x="185" y="827" text-anchor="middle" font-size="11.5">Marcha / Avviamento</text>
+  <text x="185" y="847" text-anchor="middle" font-size="11.5">Pausa / Stop  ·  Retroceder / Indietro</text>
+  <text x="185" y="873" text-anchor="middle" font-size="10" fill="#6b5b53">24V AC · los mismos que accionan los relés</text>
+  <text x="185" y="889" text-anchor="middle" font-size="10" fill="#6b5b53">(el relé los aprieta; el opto los escucha)</text>
 
   <line x1="310" y1="841" x2="395" y2="841" stroke="#7c2155" stroke-width="2" marker-end="url(#flecha)"/>
   <text x="352" y="831" text-anchor="middle" font-size="9.5">2 hilos c/u</text>
 
   <rect x="400" y="781" width="230" height="120" rx="8" fill="#fff" stroke="#7c2155" stroke-width="1.5"/>
   <text x="515" y="803" text-anchor="middle" font-size="13" font-weight="bold">Puente rectificador</text>
-  <text x="515" y="825" text-anchor="middle" font-size="11">DB107 (1A) · ×2</text>
+  <text x="515" y="825" text-anchor="middle" font-size="11">DB107 (1A) · ×3</text>
   <text x="515" y="849" text-anchor="middle" font-size="11">+ R 2,2 kΩ 1W en serie</text>
   <text x="515" y="877" text-anchor="middle" font-size="10" fill="#6b5b53">convierte el AC del botón</text>
   <text x="515" y="893" text-anchor="middle" font-size="10" fill="#6b5b53">y limita la corriente al LED</text>
@@ -146,7 +146,7 @@
 
   <rect x="710" y="781" width="230" height="120" rx="8" fill="#fff" stroke="#7c2155" stroke-width="1.5"/>
   <text x="825" y="803" text-anchor="middle" font-size="13" font-weight="bold">Optoacoplador PC817</text>
-  <text x="825" y="825" text-anchor="middle" font-size="11">×2 (uno por botón)</text>
+  <text x="825" y="825" text-anchor="middle" font-size="11">×3 (uno por botón)</text>
   <text x="825" y="849" text-anchor="middle" font-size="11">+ pull-up 10 kΩ a 3.3V</text>
   <text x="825" y="877" text-anchor="middle" font-size="10" fill="#6b5b53">aísla el 24V AC del ESP32:</text>
   <text x="825" y="893" text-anchor="middle" font-size="10" fill="#6b5b53">nada de 24V toca el micro</text>
@@ -155,8 +155,8 @@
 
   <rect x="1020" y="795" width="90" height="92" rx="8" fill="#fff" stroke="#7c2155" stroke-width="2"/>
   <text x="1065" y="819" text-anchor="middle" font-size="12" font-weight="bold">ESP32</text>
-  <text x="1065" y="845" text-anchor="middle" font-size="11">GPIO 32</text>
-  <text x="1065" y="865" text-anchor="middle" font-size="11">GPIO 33</text>
+  <text x="1065" y="845" text-anchor="middle" font-size="11">GPIO 32 / 33</text>
+  <text x="1065" y="865" text-anchor="middle" font-size="11">GPIO 34</text>
 
   <!-- Leyenda -->
   <line x1="40" y1="948" x2="90" y2="948" stroke="#3d3d3d" stroke-width="2"/>

@@ -126,7 +126,7 @@ en vez de la del proxy.
 | POST | `/api/telares/:id/avanzar` | `{pasos?}` (default 1) | Avanza N pasadas físicas de tejido (pensado para el ESP32) — espejo exacto de `doTick()` del frontend: respeta cuántas pasadas tiene cada celda de `matriz_pasadas`, cruza de fila sola, y al terminar el patrón vuelve a la fila 0 y sigue (bucle infinito, suma a `vueltas_completadas`) |
 | POST | `/api/telares/:id/retroceder` | `{pasos?}` (default 1) | Retrocede N pasos sin reconstruir nada — espejo exacto de `rollback()` del frontend, usa `fila_actual`/`columna_actual` ya guardados. No retrocede más allá del inicio (`al_inicio: true`) |
 | POST | `/api/telares/:id/retroceder-fisico` | — | Pulsa el relé del botón **físico** Retroceder del telar (mueve la máquina de verdad). No confundir con `/retroceder`, que solo mueve el cursor del patrón en la web. Incrementa `retroceder_seq`; el ESP32 detecta el cambio al sondear y da el pulso |
-| POST | `/api/telares/:id/evento-fisico` | `{tipo: 'avanzar'\|'impulso'}` | Lo llama el ESP32 cuando **sensa** (no acciona) que alguien usó a mano esos botones del telar. Marca `posicion_incierta = true`: el sensor de pasada no distingue dirección, así que un uso manual desincroniza el conteo y hay que avisar |
+| POST | `/api/telares/:id/evento-fisico` | `{tipo: 'marcha'\|'pausa'\|'retroceder'}` | Lo llama el ESP32 cuando **sensa** (no acciona) que un operario apretó a mano un botón del telar. Actualiza el estado real: `marcha`→`tejiendo`, `pausa`→`pausado`, `retroceder`→ mueve la posición una pasada atrás. Sin esto, alguien podía arrancar el telar a mano y la web seguía mostrando "detenido" |
 | POST | `/api/telares/:id/confirmar-posicion` | `{visto_hasta?}` | El operario ya revisó el telar y confirma la posición: limpia `posicion_incierta`. Si se manda `visto_hasta` (timestamp del evento que la web mostró) y llegó otro evento después, responde **409** en vez de tapar el aviso nuevo |
 | GET | `/api/telares/:id/historial` | — | Historial de ese telar |
 
@@ -154,7 +154,7 @@ src/
 │   ├── migracion_005_codigo_recuperacion_fijo.sql Migración: código de recuperación fijo por usuario
 │   ├── migracion_006_ping_esp32.sql             Migración: ultimo_ping_esp32 (heartbeat del ESP32)
 │   ├── migracion_007_retroceder_fisico.sql      Migración: retroceder_seq (botón físico Retroceder)
-│   ├── migracion_008_evento_fisico.sql          Migración: posicion_incierta + ultimo_evento_manual (sensado de Avanzar/Impulso)
+│   ├── migracion_008_evento_fisico.sql          Migración: posicion_incierta + ultimo_evento_manual (sensado de los botones)
 │   └── migrate.js                                Corre TODAS las migracion_*.sql en orden
 ├── utils/
 │   ├── ligamento.js        Deriva matriz_ligamento desde matriz_pasadas

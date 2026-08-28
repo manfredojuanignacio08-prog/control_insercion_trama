@@ -23,6 +23,10 @@ router.get('/:id', telaresController.obtenerTelar);
 router.post('/', telaresController.crearTelar);
 router.post('/:id/asignar-patron', telaresController.asignarPatron);
 router.post('/:id/detener', telaresController.detenerTelar);
+// Pausa/reanudación: conservan la producción y el patrón (a diferencia de
+// /detener, que cierra el trabajo y desasigna el patrón).
+router.post('/:id/pausar', telaresController.pausarTelar);
+router.post('/:id/reanudar', telaresController.reanudarTelar);
 router.post('/:id/avanzar', playbackLimiter, telaresController.avanzarTelar);
 router.post('/:id/retroceder', playbackLimiter, telaresController.retrocederTelar);
 // Botón físico real del telar (Retroceder). A diferencia de la ruta de
@@ -30,7 +34,7 @@ router.post('/:id/retroceder', playbackLimiter, telaresController.retrocederTela
 // puntual que el operador dispara a mano de vez en cuando — no necesita
 // el límite generoso de playbackLimiter, con el general de la API alcanza.
 router.post('/:id/retroceder-fisico', telaresController.retrocederFisico);
-// Sensado (no control) de Avanzar/Impulso: el ESP32 avisa un uso manual,
+// Sensado (no control) de los 3 botones: el ESP32 avisa un uso manual,
 // y el operario confirma la posición real cuando la revisó.
 router.post('/:id/evento-fisico', telaresController.eventoFisico);
 router.post('/:id/confirmar-posicion', telaresController.confirmarPosicion);

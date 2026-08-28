@@ -1,15 +1,17 @@
 -- ============================================================
--- Migración 008: sensado (no control) de Avanzar e Impulso
+-- Migración 008: sensado (no control) de los botones del telar
 --
--- A diferencia de Marcha/Pausa/Retroceder, estos 2 botones del telar
--- NO tienen relé: siguen siendo 100% manuales. El ESP32 solo los
--- "escucha" con un optoacoplador por canal, y avisa al backend cuando
--- detecta que se usaron — sin eso, un uso manual de estos botones
--- desincroniza el conteo de pasadas/posición sin que nadie se entere.
+-- Los mismos tres botones que el ESP32 acciona por relé (Marcha, Pausa
+-- y Retroceder) se "escuchan" además con un optoacoplador por canal.
+-- Así, si un operario los aprieta a mano en la máquina, el backend se
+-- entera y la web refleja lo que realmente está pasando en el telar:
+-- sin esto, alguien podía arrancar la máquina desde la botonera y la
+-- página seguía mostrando "detenido".
 --
--- posicion_incierta: se pone en TRUE apenas llega un aviso de uso
--- manual. Queda así hasta que alguien confirme la posición a mano
--- desde la web (POST /confirmar-posicion), que la vuelve a FALSE.
+-- posicion_incierta: se pone en TRUE cuando el uso manual deja la
+-- posición sin referencia (por ejemplo, arrancan el telar a mano sin
+-- que haya un trabajo abierto en el sistema). Queda así hasta que
+-- alguien la confirme desde la web (POST /confirmar-posicion).
 -- ============================================================
 
 ALTER TABLE telares ADD COLUMN IF NOT EXISTS posicion_incierta BOOLEAN NOT NULL DEFAULT false;

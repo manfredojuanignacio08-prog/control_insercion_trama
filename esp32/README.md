@@ -41,7 +41,7 @@ real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
 - **Anti-doble-pulso**: 2 s mínimos entre comandos.
 - **Watchdog por hardware (15 s)**: si el programa se cuelga (ruido
   eléctrico), el ESP32 se reinicia solo con los relés en reposo.
-- **Polaridad configurable** (`RELE_ACTIVO_BAJO` en `config.h`) para
+- **Polaridad configurable por relé** (`RELE_MARCHA_ACTIVO_BAJO`, `RELE_PAUSA_ACTIVO_BAJO`, `RELE_RETROCEDER_ACTIVO_BAJO` en `config.h`) para
   módulos activo-bajo (los más comunes) o activo-alto.
 
 > Las recomendaciones sobre la parte **eléctrica** (pull-ups en IN1/IN2,
@@ -60,9 +60,9 @@ real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
 | 5V | HLK-5M05 OUT → ESP32 VIN **y** VCC del módulo relé (jumper JD-VCC/VCC puesto) |
 | Lógica | ESP32 3.3V → VCC lógico del relé; GPIO 25 → IN1; GPIO 26 → IN2; GPIO 27 → IN3 |
 | Telar | NO1+COM1 en paralelo al botón de Marcha; NO2+COM2 al de Pausa; NO3+COM3 al de Retroceder |
-| Sensado | Botones Avanzar e Impulso → puente rectificador + R 2,2 kΩ → PC817 → GPIO 32 / GPIO 33 (pull-up 10 kΩ a 3.3V) |
+| Sensado | Los mismos 3 botones (Marcha/Pausa/Retroceder) → puente rectificador + R 2,2 kΩ → PC817 → GPIO 32 / 33 / 34 (pull-up 10 kΩ a 3.3V) |
 
-### Sensado de Avanzar e Impulso (solo lectura)
+### Sensado de los botones del telar (solo lectura)
 
 Estos dos botones **no** tienen relé: siguen siendo 100% manuales. El ESP32
 únicamente los "escucha", con un optoacoplador PC817 por canal que aísla el

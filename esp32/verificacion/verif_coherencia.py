@@ -49,10 +49,11 @@ chk("GPIO25→IN1, GPIO26→IN2 y GPIO27→IN3 (mapeo consistente)",
     ino_25_in1 and doc_25_in1 and svg_in1 and svg_in3 and ino_27,
     f"ino_25→IN1={ino_25_in1} doc_25→IN1={doc_25_in1} svg_IN1/IN2={svg_in1} svg_IN3={svg_in3} ino_27={ino_27}")
 
-# ── 2b. Sensado de Avanzar/Impulso (GPIO32/33, solo lectura) ──
-ino_sens = bool(re.search(r'PIN_SENSOR_AVANZAR\s*=\s*32', ino)) and bool(re.search(r'PIN_SENSOR_IMPULSO\s*=\s*33', ino))
-svg_sens = 'GPIO 32' in svg and 'GPIO 33' in svg
-chk("Sensado de Avanzar/Impulso en GPIO32/33 (firmware y diagrama)", ino_sens and svg_sens,
+# ── 2b. Sensado de los 3 botones (GPIO32/33/34, solo lectura) ──
+ino_sens = all(bool(re.search(rf'PIN_SENSOR_{n}\s*=\s*{p}', ino))
+               for n, p in [('MARCHA', 32), ('PAUSA', 33), ('RETROCEDER', 34)])
+svg_sens = 'GPIO 32' in svg and 'GPIO 34' in svg
+chk("Sensado de los 3 botones en GPIO32/33/34 (firmware y diagrama)", ino_sens and svg_sens,
     f"ino={ino_sens} svg={svg_sens}")
 
 # ── 3. Cadena de alimentación 220V→5V→3.3V ──
@@ -90,7 +91,7 @@ chk("Fusible de 1A protegiendo la entrada de 220V (en el diagrama)", prot)
 
 # ── 9. Arranque seguro de relés en el firmware ──
 # escribe NIVEL_INACTIVO ANTES de pinMode OUTPUT
-m_w1 = re.search(r'digitalWrite\(PIN_RELE_MARCHA,\s*NIVEL_INACTIVO\)', ino)
+m_w1 = re.search(r'digitalWrite\(PIN_RELE_MARCHA,\s*nivelInactivo\(', ino)
 idx_w1 = m_w1.start() if m_w1 else -1
 m_pm = re.search(r'pinMode\(PIN_RELE_MARCHA,\s*OUTPUT\)', ino)
 idx_pm = m_pm.start() if m_pm else -1
@@ -98,7 +99,7 @@ chk("Firmware: arranque seguro (escribe INACTIVO antes de pinMode)", 0 <= idx_w1
     f"write@{idx_w1} < pinMode@{idx_pm}")
 
 # ── 10. Relé activo-bajo coherente (firmware) ──
-rab = 'RELE_ACTIVO_BAJO' in cfg and 'NIVEL_ACTIVO' in ino and 'NIVEL_INACTIVO' in ino
+rab = 'RELE_MARCHA_ACTIVO_BAJO' in cfg and 'nivelActivo' in ino and 'nivelInactivo' in ino
 chk("Firmware maneja polaridad del relé (activo-bajo configurable)", rab)
 
 # ── 11. Pulso momentáneo (no deja el relé pegado) ──

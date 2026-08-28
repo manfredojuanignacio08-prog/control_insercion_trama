@@ -51,7 +51,7 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       Los tres relés **NO deben dispararse solos** al encender. Si se
       disparan, revisá los pull-ups de 10 kΩ en IN1/IN2/IN3.
 
-## Etapa 3b — Sensado de Avanzar/Impulso (banco, sin telar)
+## Etapa 3b — Sensado de los botones (banco, sin telar)
 
 - [ ] Armá un canal de sensado: puente rectificador (DB107) + R 2,2 kΩ 1W
       → LED del PC817; del otro lado, colector con pull-up de 10 kΩ a 3.3V
@@ -69,8 +69,8 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 ## Etapa 4 — Conexión al telar (recién ahora)
 
 - [ ] Con el telar **apagado**, identificá los dos cables de cada botón
-      físico (Marcha, Pausa y Retroceder, más Avanzar e Impulso para el
-      sensado). Si un botón tiene 3 o 4 terminales, con el multímetro en
+      físico (Marcha, Pausa y Retroceder: cada par sirve tanto para el relé
+      como para el sensado). Si un botón tiene 3 o 4 terminales, con el multímetro en
       continuidad elegí el par **NA** (el que NO pita en reposo y SÍ al
       apretar); el par NC no se usa.
 - [ ] Conectá **en paralelo** NO1/COM1 a las chapas del botón de Marcha,

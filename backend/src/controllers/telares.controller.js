@@ -181,7 +181,7 @@ export async function avanzarTelar(req, res, next) {
     if (existeTelar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
 
     const enCurso = await client.query(
-      `SELECT h.*, p.matriz_pasadas
+      `SELECT h.*, p.columnas
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -221,6 +221,62 @@ export async function avanzarTelar(req, res, next) {
   }
 }
 
+// POST /api/telares/:id/pausar
+// PAUSA de verdad, a diferencia de /detener: deja la producción ABIERTA
+// (estado 'en_curso') y CONSERVA el patrón asignado, cambiando solo el
+// estado del telar a 'pausado'. Así, al reanudar, el tejido retoma en la
+// misma fila/columna/pasada en la que quedó.
+//
+// /detener, en cambio, cierra la producción y pone patron_actual_id = NULL:
+// eso es un fin de trabajo, no una pausa. Usar /detener para pausar hacía
+// que al dar Play de nuevo el dibujo arrancara desde cero.
+//
+// Para el ESP32 no cambia nada: cualquier estado distinto de 'tejiendo'
+// se interpreta como "no tejer", así que el relé de Pausa se pulsa igual.
+export async function pausarTelar(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { rows } = await pool.query(
+      `UPDATE telares SET estado = 'pausado'
+       WHERE id = $1
+       RETURNING id, estado, patron_actual_id`,
+      [id]
+    );
+    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+}
+
+// POST /api/telares/:id/reanudar
+// Vuelve a poner el telar en 'tejiendo' después de una pausa, sin tocar la
+// posición ni reasignar el patrón. Exige que haya una producción en curso:
+// si no la hay, lo que corresponde es asignar un patrón, no reanudar.
+export async function reanudarTelar(req, res, next) {
+  try {
+    const { id } = req.params;
+    const enCurso = await pool.query(
+      `SELECT id FROM historial_produccion
+       WHERE telar_id = $1 AND estado = 'en_curso'`,
+      [id]
+    );
+    if (enCurso.rows.length === 0) {
+      throw conflict(`El telar ${id} no tiene una producción en curso para reanudar.`);
+    }
+    const { rows } = await pool.query(
+      `UPDATE telares SET estado = 'tejiendo'
+       WHERE id = $1
+       RETURNING id, estado, patron_actual_id`,
+      [id]
+    );
+    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+}
+
 // POST /api/telares/:id/retroceder-fisico
 // Pulso del botón FÍSICO "Retroceder" del telar (relé en paralelo al
 // botón real de la máquina, para corregir tras un corte de hilo).
@@ -250,32 +306,90 @@ export async function retrocederFisico(req, res, next) {
   }
 }
 
-// POST /api/telares/:id/evento-fisico  { tipo: 'avanzar' | 'impulso' }
-// El ESP32 llama esta ruta cuando detecta (por sensado, no por control)
-// que alguien usó a mano el botón Avanzar o Impulso del telar. No
-// intentamos recalcular fila_actual/columna_actual con precisión —no
-// sabemos cuánto se movió el telar realmente— así que solo dejamos
-// registrado que la posición mostrada puede estar desactualizada.
+// POST /api/telares/:id/evento-fisico  { tipo: 'marcha' | 'pausa' | 'retroceder' }
+// Lo llama el ESP32 cuando SENSA (no cuando acciona) que un operario apretó
+// a mano uno de los botones del telar. Sirve para que la web refleje lo que
+// realmente pasa en la máquina: sin esto, alguien podía arrancar el telar
+// con el botón físico y la web seguía mostrando "detenido".
+//
+// Cada tipo tiene su efecto:
+//   marcha     → el telar arrancó   → estado 'tejiendo'
+//   pausa      → el telar se detuvo → estado 'pausado'
+//   retroceder → retrocedió una pasada → se mueve la posición hacia atrás
+//
+// El ESP32 descarta el eco de sus propios pulsos antes de llamar acá, así
+// que un evento que llega es siempre una acción humana sobre la máquina.
 export async function eventoFisico(req, res, next) {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
     const { tipo } = req.body;
-    if (!['avanzar', 'impulso'].includes(tipo)) {
-      throw badRequest('El campo tipo debe ser "avanzar" o "impulso".');
+    if (!['marcha', 'pausa', 'retroceder'].includes(tipo)) {
+      throw badRequest("El campo tipo debe ser 'marcha', 'pausa' o 'retroceder'.");
     }
-    const { rows } = await pool.query(
-      `UPDATE telares
-       SET posicion_incierta = true,
-           ultimo_evento_manual = now(),
-           ultimo_evento_manual_tipo = $2
-       WHERE id = $1
-       RETURNING id, posicion_incierta, ultimo_evento_manual, ultimo_evento_manual_tipo`,
-      [id, tipo]
+
+    await client.query('BEGIN');
+
+    const telar = await client.query('SELECT id FROM telares WHERE id = $1 FOR UPDATE', [id]);
+    if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+
+    // Producción abierta (si la hay). Sin ella no se puede ubicar la posición.
+    const enCurso = await client.query(
+      `SELECT h.*, p.columnas
+         FROM historial_produccion h
+         JOIN patrones p ON p.id = h.patron_id
+        WHERE h.telar_id = $1 AND h.estado = 'en_curso'
+        FOR UPDATE OF h`,
+      [id]
     );
-    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+
+    let nuevoEstado = null;
+    let posicionIncierta = false;
+
+    if (tipo === 'marcha') {
+      nuevoEstado = 'tejiendo';
+      // Si arrancaron la máquina a mano sin que haya un trabajo abierto en
+      // el sistema, el telar está tejiendo pero nadie sabe en qué punto del
+      // dibujo: se marca la posición como incierta.
+      if (enCurso.rows.length === 0) posicionIncierta = true;
+    } else if (tipo === 'pausa') {
+      nuevoEstado = 'pausado';
+    } else if (tipo === 'retroceder') {
+      if (enCurso.rows.length > 0) {
+        const row = enCurso.rows[0];
+        const { fila_actual, columna_actual, pasada_actual } = retrocederPosicionTejido(
+          row.fila_actual, row.columna_actual, row.columnas, 1
+        );
+        await client.query(
+          `UPDATE historial_produccion
+              SET fila_actual = $1, columna_actual = $2, pasada_actual = $3
+            WHERE id = $4`,
+          [fila_actual, columna_actual, pasada_actual, row.id]
+        );
+      } else {
+        // Retrocedieron a mano sin trabajo abierto: no hay posición que mover.
+        posicionIncierta = true;
+      }
+    }
+
+    const { rows } = await client.query(
+      `UPDATE telares
+          SET estado = COALESCE($2, estado),
+              posicion_incierta = CASE WHEN $3 THEN true ELSE posicion_incierta END,
+              ultimo_evento_manual = now(),
+              ultimo_evento_manual_tipo = $4
+        WHERE id = $1
+        RETURNING id, estado, posicion_incierta, ultimo_evento_manual, ultimo_evento_manual_tipo`,
+      [id, nuevoEstado, posicionIncierta, tipo]
+    );
+
+    await client.query('COMMIT');
     res.json(rows[0]);
   } catch (err) {
+    await client.query('ROLLBACK');
     next(err);
+  } finally {
+    client.release();
   }
 }
 
