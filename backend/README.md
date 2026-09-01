@@ -168,13 +168,19 @@ src/
 ## 6. Decisiones de diseño aplicadas (ver documento de análisis)
 
 - `matriz_pasadas` (enteros) y `matriz_ligamento` (binario) son **campos separados**.
-- La repetición es **a nivel de celda** (ya existía: cada valor de
-  `matriz_pasadas` ya es cuántas veces se repite esa celda) — no se agregó
-  ningún campo nuevo para esto, ya estaba resuelto desde el principio.
-- `historial_produccion.fila_actual` / `columna_actual` / `pasada_actual`
-  guardan la posición exacta de la producción en curso (mismo significado
-  que `curRow`/`curCol`/`curPass` del frontend) — soportan "retroceder un
-  paso" sin reconstruir nada. `vueltas_completadas` cuenta cuántas veces se
+- **Una FILA es una PASADA.** En cada pasada, la fila del patrón define qué
+  marcos suben: cada columna es una bobina/electroimán del dobby. Las
+  columnas NO se recorren una por una — son simultáneas dentro de la misma
+  pasada. Lo que avanza es la fila.
+- La repetición es **de fila entera**: si una fila tiene números mayores a 1,
+  esa pasada se repite esa cantidad de veces antes de pasar a la siguiente
+  (se toma el mayor valor de la fila). No se agregó ningún campo nuevo:
+  `matriz_pasadas` ya guardaba esos números.
+- `historial_produccion.fila_actual` / `pasada_actual` guardan la posición de
+  la producción en curso (mismo significado que `curRow`/`curPass` del
+  frontend) — soportan "retroceder una pasada" sin reconstruir nada.
+  `columna_actual` se conserva por compatibilidad pero ya no marca posición:
+  siempre vale 0. `vueltas_completadas` cuenta cuántas veces se
   tejió el patrón entero (no hay "final": es un bucle infinito, igual que
   un telar real, hasta que se detiene manualmente).
 - Esquema **multi-telar desde el día 1**; el piloto puede arrancar con un solo

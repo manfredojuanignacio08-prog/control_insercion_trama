@@ -1307,65 +1307,40 @@ async function startPlay() {
   doTick();
 }
 
+// Cuántas veces se repite una fila antes de pasar a la siguiente (mínimo 1).
+// Espejo de repeticionesDeFila() en backend/src/utils/posicion.js.
+function repeticionesDeFila(fila) {
+  if (!Array.isArray(fila) || fila.length === 0) return 1;
+  const max = Math.max(...fila.map(v => Number(v) || 0));
+  return max > 0 ? max : 1;
+}
+
+// UNA FILA = UNA PASADA.
+// En cada pasada, la fila del patrón define qué marcos suben: cada columna
+// es una bobina/electroimán del dobby. Las columnas NO se recorren una por
+// una — son simultáneas dentro de la misma pasada. Lo que avanza es la fila.
 function doTick() {
   if (!isPlaying) return;
-  
-  // Scroll a la fila actual
+
   const el = document.getElementById(`gr${curRow}`);
-  if (el) el.scrollIntoView({behavior:'smooth', block:'nearest'});
-  
-  // Obtener las pasadas de la celda actual
-  const cellPasadas = grid[curRow] && grid[curRow][curCol] ? grid[curRow][curCol] : 0;
-  
-  // Determinar la velocidad según si la celda tiene pasadas o no
-  let delayMs = 500; // Velocidad normal para celdas con pasadas
-  if (cellPasadas === 0 || cellPasadas === null || cellPasadas === undefined) {
-    delayMs = 100; // Velocidad rápida para celdas vacías (5x más rápido)
-  }
-  
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const repeticiones = repeticionesDeFila(grid[curRow]);
+  const delayMs = 500; // una pasada del telar
+
   playTimer = setTimeout(() => {
-    // Si la celda está vacía, solo pasar a la siguiente sin contar pasadas
-    if (cellPasadas === 0 || cellPasadas === null || cellPasadas === undefined) {
-      curCol++;
-      
-      // Si completamos la fila, pasar a la siguiente
-      if (curCol >= nC) {
-        curCol = 0;
-        curRow++;
-        
-        // Si completamos todas las filas, terminar
-        if (curRow >= nR) {
-          curRow = 0;
-          curCol = 0;
-          curPass = 0;
-          toast('Reiniciando pasadas...');
-        }
-      }
-    } else {
-      // Si la celda tiene pasadas, contar y repetir
-      curPass++;
-      
-      // Si completamos todas las pasadas de esta celda, pasar a la siguiente
-      if (curPass >= cellPasadas) {
+    curPass++;
+    if (curPass >= repeticiones) {
+      curPass = 0;
+      curRow++;
+      if (curRow >= nR) {
+        curRow = 0;
         curPass = 0;
-        curCol++;
-        
-        // Si completamos la fila, pasar a la siguiente
-        if (curCol >= nC) {
-          curCol = 0;
-          curRow++;
-          
-          // Si completamos todas las filas, terminar
-          if (curRow >= nR) {
-            curRow = 0;
-            curCol = 0;
-            curPass = 0;
-            toast('Reiniciando pasadas...');
-          }
-        }
+        toast('Reiniciando patrón...');
       }
     }
-    
+    curCol = 0; // dentro de una pasada las columnas son simultáneas
+
     updPlayUI(); renderGrid();
     if (telarPorDefectoId) {
       apiFetch(`/telares/${telarPorDefectoId}/avanzar`, { method: 'POST', body: JSON.stringify({ pasos: 1 }) })
@@ -1374,6 +1349,7 @@ function doTick() {
     doTick();
   }, delayMs);
 }
+
 
 // Botón físico único del telar: "Pausa" (no existe un botón de Detener
 // separado en la máquina real). Antes había dos funciones: una que solo
@@ -1446,13 +1422,15 @@ async function ejecutarRetroceso() {
   } catch (e) {
     // Sin producción abierta el backend no tiene posición que mover: se
     // retrocede solo en pantalla para que el operario igual vea el cambio.
+    // Una fila = una pasada: si la fila se estaba repitiendo, se retrocede
+    // una repetición; si no, se vuelve a la fila anterior.
     if (curPass > 0) {
       curPass--;
-    } else if (curCol > 0) {
-      curCol--; curPass = 0;
     } else if (curRow > 0) {
-      curRow--; curCol = nC - 1; curPass = 0;
+      curRow--;
+      curPass = repeticionesDeFila(grid[curRow]) - 1;
     }
+    curCol = 0;
   }
   updPlayUI(); renderGrid();
 
@@ -1462,7 +1440,7 @@ async function ejecutarRetroceso() {
       method: 'POST',
       body: JSON.stringify({}),
     });
-    toast(`⏪ Retrocedido a fila ${curRow + 1}, columna ${curCol + 1}`);
+    toast(`⏪ Retrocedido a la fila ${curRow + 1} de ${nR}`);
   } catch (e) {
     logError('Error al retroceder el telar físico', e.message, 'RETROCEDER_FISICO');
     toast('Se retrocedió en pantalla, pero no se pudo avisar al telar');

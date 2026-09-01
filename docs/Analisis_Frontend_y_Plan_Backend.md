@@ -247,30 +247,57 @@ El usuario pidió resolverlos eligiendo la opción más eficiente para producci�
 real en fábrica, y luego corrigió mi primera implementación al aclarar cómo
 funciona realmente el tejido — la versión final quedó así:
 
-### ⚠️ Corrección de diseño (importante)
+### ⚠️ Corrección de diseño — UNA FILA ES UNA PASADA (28/08/26)
 
-Mi primera versión modeló la repetición **a nivel de fila completa**
-(`patrones.repeticiones_filas = [3, 150, 2]`, "repetir toda la fila 1 tres
-veces, la fila 2 ciento cincuenta veces"). El usuario aclaró que **no es así
-como funciona el editor**: la repetición ya existe **a nivel de celda
-individual** — cada valor de `matriz_pasadas` ya es "cuántas veces se repite
-*esa celda exacta*" antes de pasar a la siguiente columna. Esto se confirma
-mirando el código que ya existía en el frontend (`doTick()` en `index.html`,
-nunca se tocó):
+Este punto se corrigió dos veces, así que conviene dejar claro cómo quedó y
+por qué las versiones anteriores estaban mal.
 
-```js
-const cellPasadas = grid[curRow][curCol];   // la celda puede repetirse
-curPass++;
-if (curPass >= cellPasadas) { curCol++ }    // recién ahí pasa a la siguiente celda
-if (curCol >= nC) { curRow++ }              // fin de fila -> siguiente fila
-if (curRow >= nR) { curRow = 0; ... }       // fin del patrón -> vuelve a empezar (bucle infinito)
+**Lo que se creía antes:** que el tejido avanzaba celda por celda dentro de
+una fila — se repetía la celda [0,0] sus N pasadas, después se pasaba a la
+[0,1], y al terminar la fila se bajaba a la siguiente.
+
+**Cómo funciona en realidad:** el dobby del telar no trabaja así. En cada
+pasada, la fila entera del patrón define **qué marcos suben**, y cada columna
+de esa fila es una bobina/electroimán:
+
+```
+fila [1, 1, 1]  ->  suben los tres marcos
+fila [0, 1, 0]  ->  sube solo el del medio
 ```
 
-Es decir: **no había que agregar ningún campo nuevo para la repetición** — ya
-estaba resuelta desde el principio del proyecto. Lo único que faltaba era la
-posición para el retroceso. Se corrigió el backend para que coincida
-exactamente con esta lógica (ver `migracion_002_repeticiones_y_posicion.sql`,
-que ahora limpia el campo `repeticiones_filas` si llegó a crearse).
+Las columnas **no se recorren una por una**: se envían juntas, simultáneas,
+porque son los marcos de esa misma pasada. Lo que avanza pasada a pasada es
+la FILA.
+
+Las repeticiones, entonces, son de fila entera, no de celda: si una fila
+tiene números mayores a 1, esa pasada se repite esa cantidad de veces antes
+de pasar a la siguiente. Se toma el mayor valor de la fila (una fila entera
+se repite junta; no puede repetirse "media fila"). Una fila sin ningún 1
+sigue siendo una pasada válida: simplemente no sube ningún marco.
+
+El código quedó así en los dos lados, y son espejo exacto:
+
+```js
+// backend/src/utils/posicion.js  y  doTick() en index.html
+const repeticiones = repeticionesDeFila(matriz[fila]);
+pasada++;
+if (pasada >= repeticiones) {
+  pasada = 0;
+  fila++;                          // una fila = una pasada
+  if (fila >= filas) fila = 0;     // el patrón se teje en bucle
+}
+```
+
+`columna_actual` se conserva en la base y en las firmas por compatibilidad,
+pero **ya no marca posición** (siempre vale 0): dentro de una pasada todas
+las columnas son simultáneas. Para saber qué bobinas se activan en la fila
+actual está `marcosActivosDeFila()`, que es lo que va a usar el ESP32 cuando
+controle el Nivel 2.
+
+La cantidad de filas y columnas **no está fija en ningún lado**: el editor
+admite de 2 a 32 en cada dimensión, y el backend guarda la matriz con las
+dimensiones que reciba. Si el telar suma bobinas, alcanza con cambiar las
+columnas en el editor.
 
 ### Retroceso a nivel de base de datos — ✅ resuelto (versión corregida)
 

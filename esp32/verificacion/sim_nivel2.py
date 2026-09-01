@@ -39,21 +39,23 @@ print("="*66)
 print("  SIMULACIÓN DEL FLUJO LÓGICO — Nivel 2 (marcos / dobby)")
 print("="*66)
 
-# Patrón de ejemplo: una RAYA repetitiva (como las telas de las fotos)
-# 4 pasadas que se repiten, con 8 marcos.
-N_MARCOS = 8
-# matriz: cada fila es una pasada; 1 = ese marco/columna sube
+# Patrón de ejemplo: una RAYA repetitiva (como las telas de las fotos).
+# El Vamatex C201 de la planta tiene 3 bobinas de selección instaladas
+# (relevamiento del 28/08/26), así que el patrón trabaja con 3 marcos.
+# Cada FILA de la matriz es una PASADA, y cada columna una bobina:
+#   [1,1,1] -> suben los tres marcos ; [0,1,0] -> sube solo el del medio
+N_MARCOS = 3
 patron_raya = [
-    [1,0,1,0,1,0,1,0],  # pasada 1: suben marcos pares
-    [0,1,0,1,0,1,0,1],  # pasada 2: suben marcos impares
-    [1,0,1,0,1,0,1,0],  # pasada 3: como la 1
-    [0,1,0,1,0,1,0,1],  # pasada 4: como la 2
+    [1,0,1],  # pasada 1: suben el 1 y el 3
+    [0,1,0],  # pasada 2: sube el del medio
+    [1,0,1],  # pasada 3: como la 1
+    [0,1,0],  # pasada 4: como la 2
 ]
 
 registro = Registro74HC595Simulado(N_MARCOS)
 secuencia = patron_a_secuencia_marcos(patron_raya, N_MARCOS)
 
-print(f"\n  Telar de {N_MARCOS} marcos. Patrón repetitivo de {len(patron_raya)} pasadas.\n")
+print(f"\n  Telar de {N_MARCOS} marcos (bobinas instaladas). Patrón de {len(patron_raya)} pasadas.\n")
 print("  Simulando 2 repeticiones completas del patrón (8 pasadas):\n")
 
 historial = []
@@ -72,23 +74,23 @@ print("="*66 + "\n")
 
 v = []
 # 1. Cada pasada activa exactamente los marcos correctos
-v.append(("La pasada 1 sube los marcos pares (1,3,5,7)",
-          secuencia[0] == [0,2,4,6]))
-v.append(("La pasada 2 sube los marcos impares (2,4,6,8)",
-          secuencia[1] == [1,3,5,7]))
+v.append(("La pasada 1 sube los marcos 1 y 3",
+          secuencia[0] == [0,2]))
+v.append(("La pasada 2 sube solo el marco 2",
+          secuencia[1] == [1]))
 # 2. El patrón se repite idéntico (bucle correcto)
 prim_rep = historial[0:4]
 seg_rep  = historial[4:8]
 v.append(("El patrón se repite idéntico en cada vuelta (bucle correcto)",
           prim_rep == seg_rep))
 # 3. Nunca se activan más marcos que los que tiene el telar
-v.append(("Nunca se activan más marcos que los físicos (8)",
+v.append((f"Nunca se activan más marcos que los físicos ({N_MARCOS})",
           all(sum(h) <= N_MARCOS for h in historial)))
 # 4. En cada pasada, complementariedad (los que no suben, bajan)
 v.append(("En cada pasada, cada marco está definido (arriba O abajo)",
           all(len(h) == N_MARCOS for h in historial)))
 # 5. Un solo 74HC595 alcanza (8 salidas para los 8 marcos del telar)
-v.append(("Un solo 74HC595 alcanza para este telar (8 marcos = 8 salidas)",
+v.append((f"Un solo 74HC595 alcanza para este telar ({N_MARCOS} marcos, 8 salidas disponibles)",
           N_MARCOS <= N_CANALES_74HC595))
 
 okc = 0

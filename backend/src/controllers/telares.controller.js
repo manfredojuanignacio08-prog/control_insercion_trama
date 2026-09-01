@@ -181,7 +181,7 @@ export async function avanzarTelar(req, res, next) {
     if (existeTelar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
 
     const enCurso = await client.query(
-      `SELECT h.*, p.columnas
+      `SELECT h.*, p.matriz_pasadas
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -335,7 +335,7 @@ export async function eventoFisico(req, res, next) {
 
     // Producción abierta (si la hay). Sin ella no se puede ubicar la posición.
     const enCurso = await client.query(
-      `SELECT h.*, p.columnas
+      `SELECT h.*, p.matriz_pasadas
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -358,7 +358,7 @@ export async function eventoFisico(req, res, next) {
       if (enCurso.rows.length > 0) {
         const row = enCurso.rows[0];
         const { fila_actual, columna_actual, pasada_actual } = retrocederPosicionTejido(
-          row.fila_actual, row.columna_actual, row.columnas, 1
+          row.fila_actual, row.columna_actual, row.matriz_pasadas, 1
         );
         await client.query(
           `UPDATE historial_produccion
@@ -458,7 +458,7 @@ export async function retrocederTelar(req, res, next) {
     if (existeTelar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
 
     const enCurso = await client.query(
-      `SELECT h.*, p.columnas
+      `SELECT h.*, p.matriz_pasadas
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -473,7 +473,7 @@ export async function retrocederTelar(req, res, next) {
     const { fila_actual, columna_actual, pasada_actual, al_inicio } = retrocederPosicionTejido(
       row.fila_actual,
       row.columna_actual,
-      row.columnas,
+      row.matriz_pasadas,
       pasos
     );
 

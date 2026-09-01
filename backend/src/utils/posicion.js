@@ -1,74 +1,93 @@
 /**
- * Avanza la posición de tejido N pasos, usando EXACTAMENTE la misma lógica
- * que doTick() en el frontend (index.html): cada celda (fila, columna) tiene
- * un número de "pasadas" — se repite esa celda esa cantidad de veces antes
- * de pasar a la siguiente columna. Al terminar una fila, pasa a la
- * siguiente. Al terminar todas las filas, vuelve a la fila 0 y sigue —
- * el patrón se teje en bucle infinito hasta que alguien lo detenga
- * (no existe un "final", por diseño: así es como funciona un telar real).
+ * MODELO DE TEJIDO — una FILA es una PASADA.
  *
- * matrizPasadas: array de arrays de enteros (igual que patrones.matriz_pasadas).
+ * Así trabaja el dobby del telar: en cada pasada, la fila del patrón define
+ * QUÉ MARCOS suben. Cada columna de la fila es una bobina/electroimán:
+ *   [1, 1, 1] → suben los tres marcos
+ *   [0, 1, 0] → sube solo el del medio
+ *
+ * Es decir, las columnas NO se recorren una por una: se envían juntas, de
+ * una sola vez, porque son simultáneas dentro de la misma pasada. Lo que
+ * avanza pasada a pasada es la FILA.
+ *
+ * Repeticiones: si una fila tiene números mayores a 1, esa pasada se repite
+ * esa cantidad de veces antes de pasar a la siguiente fila. Se toma el mayor
+ * valor de la fila como cantidad de repeticiones (una fila entera se repite
+ * junta, no puede repetirse "media fila"). Una fila sin ningún 1 sigue
+ * siendo una pasada válida: simplemente no sube ningún marco.
+ */
+
+/** Cuántas veces se repite una fila antes de pasar a la siguiente (mínimo 1). */
+export function repeticionesDeFila(fila) {
+  if (!Array.isArray(fila) || fila.length === 0) return 1;
+  const max = Math.max(...fila.map((v) => Number(v) || 0));
+  return max > 0 ? max : 1;
+}
+
+/** Qué marcos suben en una fila: devuelve los índices con valor mayor a 0. */
+export function marcosActivosDeFila(fila) {
+  if (!Array.isArray(fila)) return [];
+  return fila.reduce((acc, v, i) => ((Number(v) || 0) > 0 ? [...acc, i] : acc), []);
+}
+
+/**
+ * Avanza la posición N pasadas. Espejo exacto de doTick() en el frontend.
+ * El patrón se teje en bucle: al terminar la última fila vuelve a la
+ * primera (no existe un "final", así funciona un telar real).
+ *
+ * columna_actual se conserva en la firma y en la base por compatibilidad,
+ * pero ya no marca posición: dentro de una pasada todas las columnas son
+ * simultáneas. Siempre se devuelve 0.
  */
 export function avanzarPosicionTejido(filaActual, columnaActual, pasadaActual, matrizPasadas, pasos) {
   const filas = matrizPasadas.length;
-  const columnas = matrizPasadas[0]?.length || 0;
+  if (filas === 0) return { fila_actual: 0, columna_actual: 0, pasada_actual: 0, vueltas_completadas: 0 };
 
   let fila = filaActual;
-  let columna = columnaActual;
   let pasada = pasadaActual;
   let vueltas = 0;
 
   for (let i = 0; i < pasos; i++) {
-    const cellPasadas = (matrizPasadas[fila] && matrizPasadas[fila][columna]) || 0;
-
-    if (cellPasadas === 0) {
-      columna++;
-    } else {
-      pasada++;
-      if (pasada >= cellPasadas) {
-        pasada = 0;
-        columna++;
-      }
-    }
-
-    if (columna >= columnas) {
-      columna = 0;
+    const repeticiones = repeticionesDeFila(matrizPasadas[fila]);
+    pasada++;
+    if (pasada >= repeticiones) {
+      pasada = 0;
       fila++;
       if (fila >= filas) {
         fila = 0;
-        columna = 0;
-        pasada = 0;
         vueltas++; // completó una vuelta entera del patrón
       }
     }
   }
 
-  return { fila_actual: fila, columna_actual: columna, pasada_actual: pasada, vueltas_completadas: vueltas };
+  return { fila_actual: fila, columna_actual: 0, pasada_actual: pasada, vueltas_completadas: vueltas };
 }
 
 /**
- * Retrocede la posición N pasos. Espejo exacto de rollback() en el frontend:
- * retrocede una columna (o a la última columna de la fila anterior), sin
- * importar en qué pasada de la celda estaba — al volver, esa celda se
- * retoma desde su pasada 0. No retrocede más allá de fila 0, columna 0.
+ * Retrocede N pasadas. Espejo de la función de arriba: si la fila estaba
+ * repitiéndose, retrocede una repetición; si estaba en la primera, vuelve
+ * a la fila anterior (a su última repetición). No pasa de la fila 0.
  */
-export function retrocederPosicionTejido(filaActual, columnaActual, columnas, pasos) {
+export function retrocederPosicionTejido(filaActual, columnaActual, matrizPasadas, pasos) {
+  const filas = Array.isArray(matrizPasadas) ? matrizPasadas.length : 0;
   let fila = filaActual;
-  let columna = columnaActual;
+  let pasada = 0;
   let alInicio = false;
 
+  // Compatibilidad: si llega un número en vez de la matriz (firma vieja),
+  // se retrocede fila a fila sin repeticiones.
+  const matriz = filas > 0 ? matrizPasadas : null;
+
   for (let i = 0; i < pasos; i++) {
-    if (fila <= 0 && columna <= 0) {
+    if (fila <= 0) {
+      fila = 0;
+      pasada = 0;
       alInicio = true;
       break;
     }
-    if (columna > 0) {
-      columna--;
-    } else if (fila > 0) {
-      fila--;
-      columna = columnas - 1;
-    }
+    fila--;
+    pasada = matriz ? repeticionesDeFila(matriz[fila]) - 1 : 0;
   }
 
-  return { fila_actual: fila, columna_actual: columna, pasada_actual: 0, al_inicio: alInicio };
+  return { fila_actual: fila, columna_actual: 0, pasada_actual: pasada, al_inicio: alInicio };
 }
