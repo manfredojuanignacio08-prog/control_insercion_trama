@@ -15,21 +15,6 @@
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- MODAL REPETICIONES -->
-<div class="modal-ov" id="modal-reps" onclick="if(event.target===this)closeRepsModal()">
-  <div class="modal-sheet">
-    <div class="modal-drag"></div>
-    <div class="modal-h">¿Cuántas pasadas?</div>
-    <input class="modal-in" id="modal-reps-in" type="number" placeholder="Número de pasadas..." value="1" min="1" max="999"
-      inputmode="numeric"
-      onkeydown="if(['-','+','e','E','.',','].includes(event.key))event.preventDefault()"
-      oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-    <div class="modal-btns">
-      <button class="modal-btn modal-cancel" onclick="closeRepsModal()">Cancelar</button>
-      <button class="modal-btn modal-ok" id="modal-reps-ok">Confirmar</button>
-    </div>
-  </div>
-</div>
 
 <!-- CONFIRM -->
 <div class="confirm-ov" id="confirm">
@@ -1110,7 +1095,7 @@ function renderGrid() {
 	    for (let c = 0; c < nC; c++) {
 	      const val = grid[r][c] || 0;
 	      const isOn = val > 0;
-	      h += `<div class="g-cell${isOn ? ' on' : ''}" data-reps="${isOn ? val : ''}" onclick="tapCell(${r},${c})"></div>`;
+	      h += `<div class="g-cell${isOn ? ' on' : ''}" onclick="tapCell(${r},${c})"></div>`;
 	    }
 	    h += '</div>';
 	  }
@@ -1119,46 +1104,17 @@ function renderGrid() {
 
 function tapCell(r, c) {
   if (edicionBloqueada()) return;
-  curRow = r; // Establecer la fila activa para el color
-  const val = grid[r][c] || 0;
-  if (val > 0) {
-    showConfirm(
-      '\u00bfQu\u00e9 deseas hacer?',
-      'Puedes cambiar las pasadas o eliminar esta celda.',
-      () => {
-        openRepsModal(r, c, val);
-      },
-      'Cambiar',
-      () => {
-        grid[r][c] = 0;
-        renderGrid();
-        setStatus('Modificado', false);
-        sincronizarPatron();
-      },
-      'Eliminar'
-    );
-  } else {
-    openRepsModal(r, c, 1);
-  }
+  curRow = r; // fila activa, para el color
+  // Una celda es binaria: el elemento del telar se activa o no se activa.
+  // No hay "cantidad de pasadas" por celda — cada FILA es una pasada, y si
+  // se quiere repetir una pasada se dibuja la misma fila otra vez.
+  grid[r][c] = grid[r][c] ? 0 : 1;
+  renderGrid();
+  setStatus('Modificado', false);
+  sincronizarPatron();
 }
 
-function openRepsModal(r, c, defaultVal = 1) {
-  document.getElementById('modal-reps-in').value = defaultVal;
-  document.getElementById('modal-reps-ok').onclick = () => {
-    const reps = Math.min(999, Math.max(1, +document.getElementById('modal-reps-in').value || 1));
-    grid[r][c] = reps;
-    renderGrid();
-    setStatus('Modificado', false);
-    sincronizarPatron();
-    closeRepsModal();
-  };
-  document.getElementById('modal-reps').classList.add('open');
-  setTimeout(() => document.getElementById('modal-reps-in').focus(), 280);
-}
 
-function closeRepsModal() {
-  document.getElementById('modal-reps').classList.remove('open');
-}
 
 function applySize() {
   if (edicionBloqueada()) return;
@@ -1266,7 +1222,7 @@ async function startPlay() {
   // Asegurar que el patrón ya esté guardado (necesita id para poder asignarse a un telar)
   if (!editId) {
     const ok = await sincronizarPatron();
-    if (!ok) { toast('No se pudo guardar el patrón antes de reproducir'); return; }
+    if (!ok) { toast('No se pudo guardar el patrón: revisá que tenga nombre y al menos una celda marcada'); return; }
   }
 
   // Asegurar que el telar por defecto tenga ESTE patrón asignado
@@ -1516,8 +1472,10 @@ function saveDraw() {
       resetEditorForNew();
       toast('¡Guardado! Matriz nueva creada');
     } catch(e) {
-      if (e.status === 409) toast('Error: Ya existe un dibujo con ese nombre');
-      else { toast('Error al guardar'); logError('Error al guardar', e.message, 'SAVE_NEW'); }
+      if (e.status === 409) toast('Ya existe un dibujo con ese nombre');
+      // Se muestra el motivo que devuelve el backend: un "Error al guardar" a
+      // secas no le dice al operario qué corregir.
+      else { toast(e.message || 'Error al guardar'); logError('Error al guardar', e.message, 'SAVE_NEW'); }
     } finally {
       btnYes.disabled = false;
     }
@@ -1544,8 +1502,8 @@ function saveDraw() {
       toast('Inserción guardada - Continuando edición');
       updateStats();
     } catch(e) {
-      if (e.status === 409) toast('Error: Ya existe un dibujo con ese nombre');
-      else { toast('Error al guardar'); logError('Error al guardar', e.message, 'SAVE_CONTINUE'); }
+      if (e.status === 409) toast('Ya existe un dibujo con ese nombre');
+      else { toast(e.message || 'Error al guardar'); logError('Error al guardar', e.message, 'SAVE_CONTINUE'); }
     } finally {
       btnNo.disabled = false;
     }
@@ -1704,7 +1662,10 @@ function showConfirm(title, msg, cbYes, labelYes = 'Confirmar', cbNo = null, lab
   const btnYes = document.getElementById('confirm-yes');
   const btnNo = document.querySelector('.confirm-no');
   btnYes.textContent = labelYes;
-  btnNo.textContent = labelNo;
+  // Si no se pasa etiqueta para el botón secundario (caso de showAlert),
+  // se oculta en vez de quedar como un botón vacío.
+  if (labelNo) { btnNo.textContent = labelNo; btnNo.style.display = ''; }
+  else { btnNo.style.display = 'none'; }
   btnYes.onclick = () => { closeConfirm(); cbYes(); };
   btnNo.onclick = () => { closeConfirm(); if (cbNo) cbNo(); };
   document.getElementById('confirm').classList.add('open');
