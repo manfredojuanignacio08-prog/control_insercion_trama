@@ -6,7 +6,7 @@
 
   <rect width="1000" height="640" fill="#faf5ec"/>
   <text x="500" y="34" text-anchor="middle" font-size="20" font-weight="bold" fill="#7c2155">Nivel 2 — Etapa de control de marcos (Dobby)</text>
-  <text x="500" y="56" text-anchor="middle" font-size="12.5" fill="#6b5b53">Cómo el ESP32 dicta la secuencia del dibujo moviendo los 8 marcos del telar · con solenoides electromagnéticos</text>
+  <text x="500" y="56" text-anchor="middle" font-size="12.5" fill="#6b5b53">Cómo el ESP32 dicta la secuencia del dibujo moviendo los marcos del telar · con solenoides electromagnéticos</text>
 
   <!-- BACKEND -->
   <rect x="40" y="90" width="180" height="70" rx="10" fill="#eef3fd" stroke="#2B6CB0" stroke-width="2"/>
@@ -50,7 +50,7 @@
 
   <line x1="500" y1="245" x2="500" y2="262" stroke="#1f7a3d" stroke-width="2"/>
   <line x1="105" y1="262" x2="895" y2="262" stroke="#1f7a3d" stroke-width="2"/>
-  <text x="500" y="278" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f7a3d">8 SOLENOIDES / ELECTROIMANES 12V — uno por marco</text>
+  <text x="500" y="278" text-anchor="middle" font-size="12" font-weight="bold" fill="#1f7a3d">SOLENOIDES / ELECTROIMANES 12V — uno por marco</text>
 
   <g font-size="10.5">
     <rect x="60" y="288" width="98" height="48" rx="7" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1.5"/>

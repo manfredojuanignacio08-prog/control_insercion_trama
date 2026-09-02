@@ -55,12 +55,12 @@ Control_Insercion_Trama_V14_Final/
   ```js
   {
     id, nombre, filas, columnas,
-    matriz:  [[...]],   // ⚠️ NO es binario 0/1 — cada celda guarda el N° DE PASADAS (0,1,2,3...)
+    matriz:  [[...]],   // una FILA = una PASADA; las columnas son los elementos que se activan a la vez
     colores: [...],     // color de hilo por FILA (hex), separado de la matriz
     creadoAt, modificadoAt
   }
   ```
-- **Simulación de tejido:** `startPlay/pausePlay/stopPlay/rollback` avanzan celda por celda con `setTimeout` (500ms si la celda tiene pasadas, 100ms si está vacía). Es una **simulación visual pura**, no hay comunicación con hardware real.
+- **Simulación de tejido:** `startPlay/pausePlay/retroceder` avanzan FILA por FILA con `setTimeout` (una fila = una pasada; si la fila tiene valores mayores a 1, se repite esa cantidad de veces). Es una **simulación visual pura**, no hay comunicación con hardware real.
 - **"Exportar a PDF"** (`exportDrawToPDF`) en realidad descargaba un `.txt` plano — el botón estaba mal etiquetado, no generaba un PDF real. *(✅ Resuelto — ver sección 8)*
 - **Sin selector de telar/máquina**, sin login, sin tema persistente (el modo oscuro se resetea al recargar).
 

@@ -29,8 +29,8 @@ bucle" es exactamente lo que el sistema ya hace hoy con la matriz de pasadas.
 ## Cómo funciona
 
 En cada pasada del telar, algunos marcos suben y otros bajan; esa combinación
-forma el cruce de los hilos que da el dibujo. Con 8 marcos, cada pasada es
-simplemente **cuáles de los 8 suben**. El patrón repetitivo es una lista corta
+forma el cruce de los hilos que da el dibujo. Cada pasada se reduce entonces a indicar **cuáles se activan**. En este
+telar son 3, confirmado en el relevamiento del 28/08/26. El patrón repetitivo es una lista corta
 de esas combinaciones, que se repite.
 
 ```
@@ -52,14 +52,14 @@ de esas combinaciones, que se repite.
 
 ## El hardware necesario
 
-- **8 solenoides / electroimanes de 12V**, uno por marco (máximo confirmado
-  del telar Vamatex C201 en el relevamiento del 19/08/26). Cada uno tira de
+- **Solenoides / electroimanes de 12V**, uno por marco (el Vamatex C201 tiene
+  3 bobinas de selección instaladas, según el relevamiento del 19/08/26). Cada uno tira de
   su marco cuando recibe corriente.
 - El **ESP32** recibe del backend la secuencia y, en cada pasada, activa los
   marcos que van arriba.
 - Como son pocos, entran casi en los pines del ESP32; con **un solo shift
-  register** (74HC595) sobra para manejar los 8 sin quedarse sin pines: con
-  8 marcos alcanza con un solo integrado, no hace falta encadenar un segundo.
+  register** (74HC595) sobra sin quedarse sin pines: sus 8 salidas
+  alcanzan de sobra para este telar, no hace falta encadenar un segundo.
 - Una **fuente** acorde al consumo de los actuadores (los electroimanes de
   varios marcos a la vez piden corriente; se dimensiona según el modelo).
 

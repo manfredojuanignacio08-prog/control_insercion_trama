@@ -42,7 +42,7 @@ solución.
 
 **Etapa de marcos del Nivel 2 (evolución).** Muestra cómo el ESP32 dictaría
 la secuencia del dibujo moviendo los marcos del telar: backend → ESP32 →
-registro de desplazamiento 74HC595 → MOSFETs → 8 solenoides (uno por marco)
+registro de desplazamiento 74HC595 → MOSFETs → los solenoides de selección (uno por marco)
 → telar. Es el diagrama del Nivel 2 (control del tejido), a diferencia del
 eléctrico que es el Nivel 1 (arranque/pausa).
 

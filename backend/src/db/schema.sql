@@ -6,11 +6,10 @@
 --   - matriz_pasadas y matriz_ligamento son campos separados.
 --   - Esquema multi-telar desde el día 1 (el piloto arranca con 1).
 --   - Sin tabla de usuarios / autenticación en esta versión.
---   - La repetición es A NIVEL DE CELDA (ya existe: cada valor de
---     matriz_pasadas es cuántas veces se repite ESA celda antes de pasar a
---     la siguiente columna). Es un espejo exacto de cómo ya funciona la
---     simulación del editor (doTick/rollback en index.html) — no se agregó
---     ningún campo nuevo para esto, ya estaba resuelto desde antes.
+--   - La repetición es DE FILA ENTERA: una FILA equivale a una PASADA del
+--     telar, y las columnas de esa fila son los elementos que se activan de
+--     forma simultánea. Si una fila tiene valores mayores a 1, esa pasada se
+--     repite esa cantidad de veces (se toma el mayor valor de la fila).
 --   - fila_actual / columna_actual / pasada_actual en historial_produccion:
 --     posición exacta de la producción en curso (mismo significado que
 --     curRow/curCol/curPass del frontend), para soportar "retroceder un

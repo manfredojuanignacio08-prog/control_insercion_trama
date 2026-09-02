@@ -89,7 +89,7 @@ v.append((f"Nunca se activan más marcos que los físicos ({N_MARCOS})",
 # 4. En cada pasada, complementariedad (los que no suben, bajan)
 v.append(("En cada pasada, cada marco está definido (arriba O abajo)",
           all(len(h) == N_MARCOS for h in historial)))
-# 5. Un solo 74HC595 alcanza (8 salidas para los 8 marcos del telar)
+# 5. Un solo 74HC595 alcanza (tiene 8 salidas)
 v.append((f"Un solo 74HC595 alcanza para este telar ({N_MARCOS} marcos, 8 salidas disponibles)",
           N_MARCOS <= N_CANALES_74HC595))
 
