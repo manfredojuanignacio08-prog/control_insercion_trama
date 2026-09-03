@@ -1095,7 +1095,7 @@ function renderGrid() {
 	    for (let c = 0; c < nC; c++) {
 	      const val = grid[r][c] || 0;
 	      const isOn = val > 0;
-	      h += `<div class="g-cell${isOn ? ' on' : ''}" onclick="tapCell(${r},${c})"></div>`;
+	      h += `<div class="g-cell${isOn ? ' on' : ''}" onclick="tapCell(${r},${c})">${isOn ? '1' : ''}</div>`;
 	    }
 	    h += '</div>';
 	  }
@@ -1222,7 +1222,7 @@ async function startPlay() {
   // Asegurar que el patrón ya esté guardado (necesita id para poder asignarse a un telar)
   if (!editId) {
     const ok = await sincronizarPatron();
-    if (!ok) { toast('No se pudo guardar el patrón: revisá que tenga nombre y al menos una celda marcada'); return; }
+    if (!ok) { toast('No se pudo guardar el dibujo: revisá que tenga nombre y al menos una celda marcada'); return; }
   }
 
   // Asegurar que el telar por defecto tenga ESTE patrón asignado
@@ -1292,7 +1292,7 @@ function doTick() {
       if (curRow >= nR) {
         curRow = 0;
         curPass = 0;
-        toast('Reiniciando patrón...');
+        toast('Reiniciando el dibujo...');
       }
     }
     curCol = 0; // dentro de una pasada las columnas son simultáneas
@@ -1549,7 +1549,10 @@ function deleteDraw(id) {
       updateStats();
       toast('Inserción eliminada');
     } catch(e) {
-      if (e.status === 409) showAlert('No se puede eliminar', 'Este patrón tiene historial de producción asociado.');
+      if (e.status === 409) showAlert('No se puede eliminar',
+        'Este dibujo ya se usó para tejer y quedó registrado en el historial de producción de la máquina. '
+        + 'Ese registro documenta lo que el telar tejió, así que el dibujo se conserva para que el historial siga teniendo sentido. '
+        + 'Si no lo vas a usar más, podés abrirlo y guardarlo con otro contenido, o dejarlo como está.');
       else { toast('Error al eliminar'); logError('Error al eliminar', e.message, 'DELETE'); }
     }
   });
