@@ -104,19 +104,28 @@ sin que haya ninguna falla real.
   señal del ESP32 y el contacto que toca el telar lo da el optoacoplador
   interno del módulo, que sigue cumpliendo su función igual.
 
-## 6. Protecciones para las reservas (MOSFET y TB6600)
+## 6. Etapa de potencia del Nivel 2 (bobinas de selección)
 
-Para cuando se usen los componentes reservados, dejar previsto:
+Las bobinas de selección del telar **trabajan con 24 V en corriente alterna**
+(confirmado con el dueño de la planta el 03/09/26). Eso define qué se puede
+usar para comandarlas y qué no.
 
-- **IRLZ44N:** resistencia de **100–220 Ω en serie con el Gate** (limita el
-  pico de corriente que el GPIO le entrega a la compuerta) y **pull-down
-  de 10 kΩ de Gate a GND** (que el MOSFET no quede a mitad de camino con
-  el pin flotando durante el arranque — mismo problema del punto 1).
-  Si la carga es inductiva, **diodo volante (flyback)** en paralelo,
-  ej. 1N5408.
-- **TB6600:** comparte GND con el ESP32 y usa señales de 3.3V sin
-  problema; solo respetar la corriente configurada por los DIP switches
-  según el motor que se conecte.
+- **Relé de estado sólido (SSR), uno por bobina.** Un relé mecánico común no
+  sirve para esta tarea: el telar hace unas 3 pasadas por segundo y cada bobina
+  puede conmutar una vez por pasada, lo que da unas 96.000 conmutaciones por
+  turno. La vida típica de un relé mecánico con carga ronda las 100.000, así
+  que se gastaría en un turno de trabajo. Los relés mecánicos del Bloque A
+  quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas
+  pocas veces por día.
+- Sirve un **módulo SSR** con entrada de 3-32 V DC (lo que entrega el ESP32) y
+  salida para carga de alterna, o el circuito **MOC3041 + BT136**, que además
+  conmuta en el cruce por cero y genera menos ruido.
+- **Los MOSFET no sirven acá.** Un IRLZ44N conduce en un solo sentido y su
+  diodo interno deja pasar el otro semiciclo: la bobina quedaría siempre
+  parcialmente energizada. Los MOSFET y los diodos flyback valen para cargas de
+  continua, que no es el caso de este telar.
+- **Antes de comprar hay que medir** el consumo de una bobina, que define el
+  amperaje del SSR, y la velocidad real de la máquina en pasadas por minuto.
 
 ## 7. Protecciones que ya quedaron aplicadas en el firmware
 
@@ -137,12 +146,11 @@ relés):
 
 | Ítem | Cantidad | Para qué |
 |---|---|---|
-| Resistencia 10 kΩ | 6 (+2 si se usa el MOSFET) | Pull-up de IN1/IN2/IN3 (3 relés) + 3 del sensado de los mismos botones (punto 1), y pull-down de Gate (punto 6) |
-| Resistencia 100–220 Ω | 1 | Serie de Gate del IRLZ44N (punto 6) |
+| Resistencia 10 kΩ | 6 | Polarización de IN1/IN2/IN3 (3 relés) y de los 3 canales de sensado (punto 1). La del canal de Retroceder va a GND, no a 3V3. |
+| Relé de estado sólido (SSR) o MOC3041 + BT136 | 3 | Comandan las bobinas de selección de 24 V AC en el Nivel 2 (punto 6). Un relé mecánico se gastaría en un turno por la frecuencia de conmutación. |
 | Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
 | Optoacoplador PC817 + puente DB157 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |
 | Capacitor electrolítico 22–47 µF 50 V | 3 | En paralelo a la salida del puente, antes de la resistencia. Aplana el AC rectificado: sin él el LED del optoacoplador pulsa 100 veces por segundo y el firmware lee varias pulsaciones donde hubo una sola. Es crítico en el canal de Retroceder, donde cada evento repetido retrocede una pasada de más. TIENE POLARIDAD. |
-| Diodo 1N5408 | 1 (solo si el MOSFET maneja carga inductiva) | Flyback (punto 6) |
 
 Total estimado: unos pocos dólares. La mejora de fiabilidad es enorme en
 relación al costo — especialmente los pull-ups del punto 1, que son la

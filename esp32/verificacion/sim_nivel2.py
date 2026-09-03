@@ -6,8 +6,8 @@
 N_CANALES_74HC595 = 8   # un solo integrado da 8 salidas
 
 class Registro74HC595Simulado:
-    """Simula el registro de desplazamiento. Cada salida controla un MOSFET,
-    y cada MOSFET acciona el solenoide de un marco."""
+    """Simula el registro de desplazamiento. Cada salida comanda un relé de estado sólido,
+    y cada SSR acciona una bobina de selección del telar."""
     def __init__(self, n_marcos):
         self.n = n_marcos
         self.salidas = [0]*N_CANALES_74HC595   # 0=abajo, 1=arriba
@@ -64,7 +64,7 @@ for rep in range(2):
         estado_solenoides = registro.set_marcos(marcos)
         historial.append(tuple(estado_solenoides))
         arriba = ','.join(str(m+1) for m in marcos) if marcos else 'ninguno'
-        print(f"  rep{rep+1} pasada {i+1}: marcos arriba = [{arriba}]   solenoides={estado_solenoides}")
+        print(f"  rep{rep+1} pasada {i+1}: marcos arriba = [{arriba}]   bobinas={estado_solenoides}")
     print()
 
 # ── VERIFICACIONES ──

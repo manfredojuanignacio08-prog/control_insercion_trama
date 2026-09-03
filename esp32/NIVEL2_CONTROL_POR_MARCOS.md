@@ -52,16 +52,41 @@ de esas combinaciones, que se repite.
 
 ## El hardware necesario
 
-- **Solenoides / electroimanes de 12V**, uno por marco (el Vamatex C201 tiene
-  3 bobinas de selección instaladas, según el relevamiento del 19/08/26). Cada uno tira de
-  su marco cuando recibe corriente.
-- El **ESP32** recibe del backend la secuencia y, en cada pasada, activa los
-  marcos que van arriba.
-- Como son pocos, entran casi en los pines del ESP32; con **un solo shift
-  register** (74HC595) sobra sin quedarse sin pines: sus 8 salidas
-  alcanzan de sobra para este telar, no hace falta encadenar un segundo.
-- Una **fuente** acorde al consumo de los actuadores (los electroimanes de
-  varios marcos a la vez piden corriente; se dimensiona según el modelo).
+El telar **ya tiene las bobinas de selección instaladas y funcionando**: no hay
+que comprarlas ni montarlas. Lo que falta es la electrónica que las comande en
+lugar del lector óptico de la cinta de papel.
+
+- **Trabajan con 24 V en corriente alterna**, confirmado por el dueño de la
+  planta el 03/09/26. Este dato define toda la etapa de potencia.
+- Hoy la señal **no llega directo desde el lector óptico a las bobinas**: pasa
+  por unas plaquetas electrónicas alojadas en la caja del telar. La propuesta
+  del dueño es cortar la señal de la óptica e inyectar la del sistema en su
+  lugar, sin intervenir esas plaquetas.
+- **Relés de estado sólido (SSR), uno por bobina.** Es el punto donde más se
+  equivoca la intuición: un relé mecánico común no sirve acá. El telar trabaja
+  alrededor de 200 pasadas por minuto, o sea unas 3 por segundo, y cada bobina
+  puede conmutar una vez por pasada. Eso son unas 96.000 conmutaciones en un
+  turno de 8 horas, cuando la vida típica de un relé mecánico con carga ronda
+  las 100.000: se gastaría en un turno. Un SSR no tiene partes móviles,
+  conmuta en microsegundos y no se desgasta.
+- Sirven tanto un **módulo SSR armado** (entrada de 3-32 V DC, que es
+  justo lo que entrega el ESP32, y salida para carga de alterna) como el
+  circuito clásico de **optotriac MOC3041 más triac BT136**, que además
+  conmuta en el cruce por cero y genera menos ruido eléctrico.
+- El **ESP32** recibe del backend la secuencia y, en cada pasada, activa las
+  bobinas que corresponden a esa fila.
+- Con un solo **registro de desplazamiento 74HC595** alcanza de sobra: sus 8
+  salidas cubren este telar sin quedarse sin pines.
+
+**Lo que quedó descartado:** las versiones anteriores de este documento
+planteaban MOSFET IRLZ44N con diodos flyback. Eso vale para bobinas de
+corriente continua, pero no para estas: un MOSFET conduce en un solo sentido y
+su diodo interno deja pasar el otro semiciclo, con lo que la bobina quedaría
+siempre parcialmente energizada.
+
+**Datos que faltan medir en la máquina:** la velocidad real en pasadas por
+minuto y el consumo de una bobina. El primero confirma el cálculo de vida útil
+y el segundo define qué SSR comprar.
 
 Esto es **de escala de prototipo**, no de proyecto industrial.
 
