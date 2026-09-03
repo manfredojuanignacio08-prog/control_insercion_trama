@@ -137,8 +137,8 @@
 
   <rect x="400" y="781" width="230" height="120" rx="8" fill="#fff" stroke="#7c2155" stroke-width="1.5"/>
   <text x="515" y="803" text-anchor="middle" font-size="13" font-weight="bold">Puente rectificador</text>
-  <text x="515" y="825" text-anchor="middle" font-size="11">DB107 (1A) · ×3</text>
-  <text x="515" y="849" text-anchor="middle" font-size="11">+ R 2,2 kΩ 1W en serie</text>
+  <text x="515" y="825" text-anchor="middle" font-size="11">DB157 (1A) · ×3</text>
+  <text x="515" y="849" text-anchor="middle" font-size="11">+ R capacitor 22-47 µF + R 2,2 kΩ 1W</text>
   <text x="515" y="877" text-anchor="middle" font-size="10" fill="#6b5b53">convierte el AC del botón</text>
   <text x="515" y="893" text-anchor="middle" font-size="10" fill="#6b5b53">y limita la corriente al LED</text>
 

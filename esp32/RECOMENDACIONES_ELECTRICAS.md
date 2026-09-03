@@ -140,7 +140,8 @@ relés):
 | Resistencia 10 kΩ | 6 (+2 si se usa el MOSFET) | Pull-up de IN1/IN2/IN3 (3 relés) + 3 del sensado de los mismos botones (punto 1), y pull-down de Gate (punto 6) |
 | Resistencia 100–220 Ω | 1 | Serie de Gate del IRLZ44N (punto 6) |
 | Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
-| Optoacoplador PC817 + puente DB107 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |
+| Optoacoplador PC817 + puente DB157 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |
+| Capacitor electrolítico 22–47 µF 50 V | 3 | En paralelo a la salida del puente, antes de la resistencia. Aplana el AC rectificado: sin él el LED del optoacoplador pulsa 100 veces por segundo y el firmware lee varias pulsaciones donde hubo una sola. Es crítico en el canal de Retroceder, donde cada evento repetido retrocede una pasada de más. TIENE POLARIDAD. |
 | Diodo 1N5408 | 1 (solo si el MOSFET maneja carga inductiva) | Flyback (punto 6) |
 
 Total estimado: unos pocos dólares. La mejora de fiabilidad es enorme en

@@ -60,7 +60,7 @@ real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
 | 5V | HLK-5M05 OUT → ESP32 VIN **y** VCC del módulo relé (jumper JD-VCC/VCC puesto) |
 | Lógica | ESP32 3.3V → VCC lógico del relé; GPIO 25 → IN1; GPIO 26 → IN2; GPIO 27 → IN3 |
 | Telar | NO1+COM1 en paralelo al botón de Marcha; NO2+COM2 al de Pausa; NO3+COM3 al de Retroceder |
-| Sensado | Los mismos 3 botones (Marcha/Pausa/Retroceder) → puente rectificador + R 2,2 kΩ → PC817 → GPIO 32 / 33 / 34 (pull-up 10 kΩ a 3.3V) |
+| Sensado | Los mismos 3 botones (Marcha/Pausa/Retroceder) → puente rectificador DB157 → capacitor 22–47 µF → R 2,2 kΩ → PC817 → GPIO 32 / 33 / 34 (pull-up 10 kΩ a 3.3V) |
 
 ### Sensado de los botones del telar (solo lectura)
 

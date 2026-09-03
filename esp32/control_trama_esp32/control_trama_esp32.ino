@@ -110,7 +110,14 @@ const unsigned long INTERVALO_SONDEO_MS   = 2500;  // consulta de estado
 const unsigned long DURACION_PULSO_MS     = 300;   // "apretar el botón"
 const unsigned long MIN_ENTRE_COMANDOS_MS = 2000;  // anti-doble-pulso
 const int           WDT_TIMEOUT_S         = 15;    // watchdog
-const unsigned long DEBOUNCE_SENSOR_MS    = 400;   // ignora rebotes/ripple del AC en el sensado
+const unsigned long DEBOUNCE_SENSOR_MS    = 400;   // ignora rebotes del pulsador
+// NOTA DE HARDWARE: cada canal de sensado lleva un capacitor de 22-47 uF en
+// paralelo a la salida del puente rectificador. Sin el, el AC rectificado no
+// queda plano y el LED del optoacoplador se apaga 100 veces por segundo, con
+// lo que este debounce solo alcanza a filtrar parte de los flancos: un boton
+// mantenido generaria un evento cada 400 ms. Con el capacitor, una pulsacion
+// produce un unico flanco. Es critico en Retroceder, donde cada evento de mas
+// retrocede una pasada de mas.
 const unsigned long REINTENTO_AVISO_MS    = 3000;  // espera entre reintentos si el backend no responde
 // Cuando el ESP32 pulsa un relé, el sensado de ESE botón detecta la misma
 // pulsación (el relé cierra el mismo circuito que el botón). Sin esta
