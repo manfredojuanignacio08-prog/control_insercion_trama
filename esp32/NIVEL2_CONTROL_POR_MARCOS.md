@@ -59,10 +59,15 @@ lugar del lector óptico de la cinta de papel.
 - **Trabajan con 24 V en corriente alterna**, confirmado por el dueño de la
   planta el 03/09/26. Este dato define toda la etapa de potencia.
 - Hoy la señal **no llega directo desde el lector óptico a las bobinas**: pasa
-  por unas plaquetas electrónicas alojadas en la caja del telar. La propuesta
-  del dueño es cortar la señal de la óptica e inyectar la del sistema en su
-  lugar, sin intervenir esas plaquetas.
-- **Relés de estado sólido (SSR), uno por bobina.** Es el punto donde más se
+  por unas plaquetas electrónicas alojadas en la caja del telar.
+- **El punto de intervención es el propio lector óptico, no la bobina.** El
+  dueño de la planta lo explicó así: cada lector óptico se corta con una llave,
+  de modo que en lugar de que sea el papel el que interrumpe el haz, lo hace un
+  interruptor electrónico que entrega un 1 o un 0. Esto simplifica bastante la
+  etapa de potencia, porque el sistema no conmuta la corriente de la bobina
+  sino la señal del lector, que maneja mucha menos corriente. Las plaquetas del
+  telar quedan intactas y siguen haciendo su trabajo.
+- **Relés de estado sólido (SSR), uno por lector óptico.** Es el punto donde más se
   equivoca la intuición: un relé mecánico común no sirve acá. El telar trabaja
   alrededor de 200 pasadas por minuto, o sea unas 3 por segundo, y cada bobina
   puede conmutar una vez por pasada. Eso son unas 96.000 conmutaciones en un
@@ -75,8 +80,11 @@ lugar del lector óptico de la cinta de papel.
   conmuta en el cruce por cero y genera menos ruido eléctrico.
 - El **ESP32** recibe del backend la secuencia y, en cada pasada, activa las
   bobinas que corresponden a esa fila.
-- Con un solo **registro de desplazamiento 74HC595** alcanza de sobra: sus 8
-  salidas cubren este telar sin quedarse sin pines.
+- **Los SSR se conectan directo a los GPIO del ESP32.** Un diseño anterior
+  contemplaba un registro de desplazamiento 74HC595 para manejar ocho salidas
+  con pocos pines, pero con tres canales no hace falta: al ESP32 le sobran
+  GPIOs libres. Se elimina un componente, se simplifica el firmware y baja el
+  costo.
 
 **Lo que quedó descartado:** las versiones anteriores de este documento
 planteaban MOSFET IRLZ44N con diodos flyback. Eso vale para bobinas de
@@ -84,9 +92,12 @@ corriente continua, pero no para estas: un MOSFET conduce en un solo sentido y
 su diodo interno deja pasar el otro semiciclo, con lo que la bobina quedaría
 siempre parcialmente energizada.
 
-**Datos que faltan medir en la máquina:** la velocidad real en pasadas por
-minuto y el consumo de una bobina. El primero confirma el cálculo de vida útil
-y el segundo define qué SSR comprar.
+**Datos que faltan medir en la máquina:** la tensión y la corriente en la
+salida de un lector óptico, que definen qué SSR comprar, y la velocidad real en
+pasadas por minuto, que confirma el cálculo de vida útil. Como referencia, las
+máquinas de rapier de esta generación trabajan entre 200 y 260 pasadas por
+minuto, lo que da unas 4 conmutaciones por segundo y alrededor de 110.000 por
+turno de 8 horas.
 
 Esto es **de escala de prototipo**, no de proyecto industrial.
 

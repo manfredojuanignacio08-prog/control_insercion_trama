@@ -110,7 +110,12 @@ Las bobinas de selección del telar **trabajan con 24 V en corriente alterna**
 (confirmado con el dueño de la planta el 03/09/26). Eso define qué se puede
 usar para comandarlas y qué no.
 
-- **Relé de estado sólido (SSR), uno por bobina.** Un relé mecánico común no
+- **El punto de intervención es el lector óptico, no la bobina.** Según explicó
+  el dueño de la planta, cada lector se corta con una llave: en lugar de que el
+  papel interrumpa el haz, lo hace un interruptor electrónico. El sistema
+  conmuta entonces la señal del lector, no la corriente de la bobina, y las
+  plaquetas del telar quedan intactas.
+- **Relé de estado sólido (SSR), uno por lector.** Un relé mecánico común no
   sirve para esta tarea: el telar hace unas 3 pasadas por segundo y cada bobina
   puede conmutar una vez por pasada, lo que da unas 96.000 conmutaciones por
   turno. La vida típica de un relé mecánico con carga ronda las 100.000, así
@@ -124,8 +129,14 @@ usar para comandarlas y qué no.
   diodo interno deja pasar el otro semiciclo: la bobina quedaría siempre
   parcialmente energizada. Los MOSFET y los diodos flyback valen para cargas de
   continua, que no es el caso de este telar.
-- **Antes de comprar hay que medir** el consumo de una bobina, que define el
-  amperaje del SSR, y la velocidad real de la máquina en pasadas por minuto.
+- **Un optoacoplador común tampoco sirve.** Un PC817 tiene salida de
+  fototransistor, que conduce en un solo sentido: con corriente alterna deja
+  pasar medio ciclo. Para alterna hace falta un optotriac (MOC3041) o un SSR,
+  que internamente ya lleva el optoacoplador más una etapa de triac.
+- **Antes de comprar hay que medir** la tensión y la corriente en la salida de
+  un lector óptico, que definen el SSR, y la velocidad real de la máquina. Como
+  referencia, los telares de rapier de esta generación trabajan entre 200 y 260
+  pasadas por minuto.
 
 ## 7. Protecciones que ya quedaron aplicadas en el firmware
 

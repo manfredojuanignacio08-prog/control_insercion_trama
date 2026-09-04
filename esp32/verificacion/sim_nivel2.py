@@ -1,18 +1,18 @@
 # Simulación del FLUJO LÓGICO del Nivel 2 (control por marcos / dobby)
 # Verifica que un patrón repetitivo se traduzca correctamente en la secuencia
 # de marcos que suben en cada pasada, y que el ESP32 (vía el registro de
-# desplazamiento 74HC595) los comande.
+# directas del ESP32) los comande.
 
-N_CANALES_74HC595 = 8   # un solo integrado da 8 salidas
+N_GPIO_DISPONIBLES = 13  # GPIO libres del ESP32 para salidas de control
 
-class Registro74HC595Simulado:
-    """Simula el registro de desplazamiento. Cada salida comanda un relé de estado sólido,
+class SalidasDirectasSimuladas:
+    """Simula las salidas del ESP32. Cada una comanda un relé de estado sólido,
     y cada SSR acciona una bobina de selección del telar."""
     def __init__(self, n_marcos):
         self.n = n_marcos
-        self.salidas = [0]*N_CANALES_74HC595   # 0=abajo, 1=arriba
+        self.salidas = [0]*N_GPIO_DISPONIBLES   # 0=abajo, 1=arriba
     def set_marcos(self, marcos_arriba):
-        self.salidas = [0]*N_CANALES_74HC595
+        self.salidas = [0]*N_GPIO_DISPONIBLES
         for m in marcos_arriba:
             if 0 <= m < self.n:
                 self.salidas[m] = 1
@@ -52,7 +52,7 @@ patron_raya = [
     [0,1,0],  # pasada 4: como la 2
 ]
 
-registro = Registro74HC595Simulado(N_MARCOS)
+salidas_esp32 = SalidasDirectasSimuladas(N_MARCOS)
 secuencia = patron_a_secuencia_marcos(patron_raya, N_MARCOS)
 
 print(f"\n  Telar de {N_MARCOS} marcos (bobinas instaladas). Patrón de {len(patron_raya)} pasadas.\n")
@@ -61,7 +61,7 @@ print("  Simulando 2 repeticiones completas del patrón (8 pasadas):\n")
 historial = []
 for rep in range(2):
     for i, marcos in enumerate(secuencia):
-        estado_bobinas = registro.set_marcos(marcos)
+        estado_bobinas = salidas_esp32.set_marcos(marcos)
         historial.append(tuple(estado_bobinas))
         arriba = ','.join(str(m+1) for m in marcos) if marcos else 'ninguno'
         print(f"  rep{rep+1} pasada {i+1}: marcos arriba = [{arriba}]   bobinas={estado_bobinas}")
@@ -89,9 +89,9 @@ v.append((f"Nunca se activan más marcos que los físicos ({N_MARCOS})",
 # 4. En cada pasada, complementariedad (los que no suben, bajan)
 v.append(("En cada pasada, cada marco está definido (arriba O abajo)",
           all(len(h) == N_MARCOS for h in historial)))
-# 5. Un solo 74HC595 alcanza (tiene 8 salidas)
-v.append((f"Un solo 74HC595 alcanza para este telar ({N_MARCOS} marcos, 8 salidas disponibles)",
-          N_MARCOS <= N_CANALES_74HC595))
+# 5. Los GPIO del ESP32 alcanzan sin componentes intermedios
+v.append((f"Los GPIO del ESP32 alcanzan de sobra ({N_MARCOS} canales, {N_GPIO_DISPONIBLES} libres)",
+          N_MARCOS <= N_GPIO_DISPONIBLES))
 
 okc = 0
 for nombre, cond in v:

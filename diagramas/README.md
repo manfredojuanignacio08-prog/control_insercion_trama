@@ -42,7 +42,7 @@ solución.
 
 **Etapa de marcos del Nivel 2 (evolución).** Muestra cómo el ESP32 dictaría
 la secuencia del dibujo moviendo los marcos del telar: backend → ESP32 →
-registro de desplazamiento 74HC595 → relés de estado sólido (SSR) → las bobinas de selección de 24 V AC del telar
+GPIO del ESP32 → relés de estado sólido (SSR) → los lectores ópticos del telar
 → telar. Es el diagrama del Nivel 2 (control del tejido), a diferencia del
 eléctrico que es el Nivel 1 (arranque/pausa).
 
