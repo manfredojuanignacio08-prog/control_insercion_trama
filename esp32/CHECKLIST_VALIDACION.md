@@ -53,7 +53,7 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 
 ## Etapa 3b — Sensado de los botones (banco, sin telar)
 
-- [ ] Armá un canal de sensado: puente rectificador (DB107) + R 2,2 kΩ 1W
+- [ ] Armá un canal de sensado: puente rectificador (DB157) + capacitor 22-47 µF + R 2,2 kΩ 1W
       → LED del PC817; del otro lado, colector con pull-up de 10 kΩ a 3.3V
       → GPIO 32 (Avanzar). Repetí para GPIO 33 (Impulso).
 - [ ] Con el multímetro, confirmá que **en reposo el GPIO lee 3.3V** (alto).

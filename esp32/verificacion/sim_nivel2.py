@@ -61,10 +61,10 @@ print("  Simulando 2 repeticiones completas del patrón (8 pasadas):\n")
 historial = []
 for rep in range(2):
     for i, marcos in enumerate(secuencia):
-        estado_solenoides = registro.set_marcos(marcos)
-        historial.append(tuple(estado_solenoides))
+        estado_bobinas = registro.set_marcos(marcos)
+        historial.append(tuple(estado_bobinas))
         arriba = ','.join(str(m+1) for m in marcos) if marcos else 'ninguno'
-        print(f"  rep{rep+1} pasada {i+1}: marcos arriba = [{arriba}]   bobinas={estado_solenoides}")
+        print(f"  rep{rep+1} pasada {i+1}: marcos arriba = [{arriba}]   bobinas={estado_bobinas}")
     print()
 
 # ── VERIFICACIONES ──
