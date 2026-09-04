@@ -762,12 +762,18 @@ function apiToLocal(p) {
 
 // Convierte el estado actual del editor al formato que espera la API.
 function localToApi(nombre, mat, colors) {
+  // Red de seguridad: el backend exige que colores_filas tenga exactamente
+  // "filas" elementos. Si por cualquier camino quedó desalineado, se ajusta
+  // acá antes de enviar, en vez de que el guardado falle.
+  const coloresOk = Array.from({length: nR}, (_, ri) =>
+    (Array.isArray(colors) && colors[ri] !== undefined) ? colors[ri] : null
+  );
   return {
     nombre,
     filas: nR,
     columnas: nC,
     matriz_pasadas: mat,
-    colores_filas: colors,
+    colores_filas: coloresOk,
   };
 }
 
@@ -1074,6 +1080,12 @@ function mkGrid(r, c, keep = false) {
       )
     );
   }
+  // Los colores van por fila: si cambia la cantidad de filas hay que
+  // redimensionar el array, o el backend rechaza el guardado porque
+  // colores_filas no coincide con "filas".
+  rowColors = Array.from({length: r}, (_, ri) =>
+    (keep && rowColors[ri] !== undefined) ? rowColors[ri] : null
+  );
   nR = r; nC = c;
   curRow = -1;
   renderGrid();
@@ -1519,7 +1531,9 @@ function loadDrawInEditor(id) {
 	  currentDrawId = d.id;
 	  nR = d.filas; nC = d.columnas;
 	  grid = JSON.parse(JSON.stringify(d.matriz));
-	  rowColors = d.colores ? JSON.parse(JSON.stringify(d.colores)) : Array(nR).fill(null);
+	  rowColors = Array.from({length: nR}, (_, ri) =>
+		    (d.colores && d.colores[ri] !== undefined) ? d.colores[ri] : null
+		  );
 	  document.getElementById('in-rows').value = nR;
 	  document.getElementById('in-cols').value = nC;
 	  document.getElementById('insercion-name').value = d.nombre;
