@@ -3,17 +3,17 @@
    TOKENS — paleta crema/gris (sin blanco/negro puro)
 ───────────────────────────────────────────── */
 :root {
-  --rose:     #7C2155;
-  --rose-md:  #A44F80;
-  --rose-lt:  #C98AB5;
-  --rose-xs:  #F2DCE9;
-  --cream:    #FAF5EC;
-  --cream-dk: #EDE5D6;
-  --cream-bd: #D6C9B8;
-  --gray-dk:  #2A2420;
-  --gray-md:  #4A4540;
-  --gray-lt:  #7A7570;
-  --on-rose:  #F5F0EB;
+  --rose:     #1E3A5F;
+  --rose-md:  #3D6B96;
+  --rose-lt:  #7FA8C9;
+  --rose-xs:  #DCE7F0;
+  --cream:    #F6F8FA;
+  --cream-dk: #E8EDF1;
+  --cream-bd: #CDD8E0;
+  --gray-dk:  #1F2937;
+  --gray-md:  #3F4B5C;
+  --gray-lt:  #6B7684;
+  --on-rose:  #F0F4F8;
   --green:    #2E6E4A;
   --amber:    #9C5C0A;
   --red:      #8B1F1F;
@@ -37,15 +37,15 @@
   --font-display: 'Century Gothic', CenturyGothic, AppleGothic, 'Questrial', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 [data-theme="dark"] {
-  --bg:    #1F1B18;
-  --srf:   #2A2420;
-  --srf2:  #3A3530;
+  --bg:    #131A24;
+  --srf:   #1F2937;
+  --srf2:  #2C3846;
   --bd:    rgba(245,240,235,.22);
-  --tx:    #F5F0EB;
-  --tx2:   #D4C9C0;
-  --tx3:   #B4A99F;
-  --acc:   #E0A5CC;
-  --acc-md:#C47FAF;
+  --tx:    #F0F4F8;
+  --tx2:   #B8C4D0;
+  --tx3:   #8895A3;
+  --acc:   #8FB8DC;
+  --acc-md:#6E9BC4;
   --acc-lt:rgba(224,165,204,.20);
   --sh-sm: 0 1px 4px rgba(0,0,0,.35);
   --sh-md: 0 3px 14px rgba(0,0,0,.45);
@@ -130,7 +130,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
    ██ SCREEN: INICIO — HERO
 ───────────────────────────────────────────── */
 .hero{
-  background:linear-gradient(150deg, var(--rose) 0%, #A04478 55%, #C98AB5 100%);
+  background:linear-gradient(150deg, var(--rose) 0%, #A04478 55%, #7FA8C9 100%);
   padding:36px 24px 32px;
   display:flex;flex-direction:column;align-items:center;gap:0;
   position:relative;overflow:hidden;
@@ -277,22 +277,22 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
    casi sin ícono visible. Les damos una superficie más clara y un ícono
    con buen contraste, más un borde para que se despeguen del fondo. */
 [data-theme="dark"] .ctrl-pause{
-  background:#3A3530;color:var(--acc);border:1.5px solid rgba(224,165,204,.45);
+  background:#2C3846;color:var(--acc);border:1.5px solid rgba(224,165,204,.45);
 }
 [data-theme="dark"] .ctrl-back-fisico{
-  background:#3A3530;color:#E88989;border:1.5px solid rgba(232,137,137,.40);
+  background:#2C3846;color:#E88989;border:1.5px solid rgba(232,137,137,.40);
 }
 
 /* (3) El logo del hero se veía "vacío" en oscuro porque el recuadro claro
    perdía presencia. Reforzamos el fondo blanco y el borde para que se
    note lleno y con marco. */
 [data-theme="dark"] .hero-logo-wrap{
-  background:#F5F0EB;
+  background:#F0F4F8;
   box-shadow:0 4px 24px rgba(0,0,0,.45), 0 0 0 2px rgba(245,240,235,.55);
 }
 /* El logo chico de la barra superior también sobre un chip claro */
 [data-theme="dark"] .tb-logo{
-  background:#F5F0EB;border-radius:8px;padding:3px 5px;box-sizing:content-box;
+  background:#F0F4F8;border-radius:8px;padding:3px 5px;box-sizing:content-box;
 }
 
 /* (4) Botones "Guardar" / "Nuevo" y "Limpiar": en oscuro el texto quedaba
@@ -302,7 +302,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
   background:var(--acc);color:#3D1030;  /* texto oscuro sobre rosa claro */
 }
 [data-theme="dark"] .save-secondary{
-  background:#3A3530;color:#F5F0EB;border:1px solid rgba(245,240,235,.30);
+  background:#2C3846;color:#F0F4F8;border:1px solid rgba(245,240,235,.30);
 }
 /* El "Limpiar" de la biblioteca usaba --rose (rosa oscuro), invisible en
    fondo oscuro. Lo pasamos al acento claro. Lleva !important porque el
@@ -314,8 +314,8 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
    viéndose como un cuadrado negro sin letras encima de los botones. Se
    fuerza fondo claro y texto oscuro para que se lea. */
 [data-theme="dark"] .toast{
-  background:#F5F0EB;
-  color:#2A2420;
+  background:#F0F4F8;
+  color:#1F2937;
   box-shadow:0 4px 18px rgba(0,0,0,.5);
 }
 

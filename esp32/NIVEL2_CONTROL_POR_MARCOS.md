@@ -67,10 +67,10 @@ lugar del lector óptico de la cinta de papel.
   etapa de potencia, porque el sistema no conmuta la corriente de la bobina
   sino la señal del lector, que maneja mucha menos corriente. Las plaquetas del
   telar quedan intactas y siguen haciendo su trabajo.
-- **Relés de estado sólido (SSR), uno por lector óptico.** Es el punto donde más se
+- **Relés de estado sólido (SSR), uno por lector óptico, seis en total óptico.** Es el punto donde más se
   equivoca la intuición: un relé mecánico común no sirve acá. El telar trabaja
   alrededor de 200 pasadas por minuto, o sea unas 3 por segundo, y cada bobina
-  puede conmutar una vez por pasada. Eso son unas 96.000 conmutaciones en un
+  puede conmutar una vez por pasada. Eso son unas 144.000 conmutaciones en un
   turno de 8 horas, cuando la vida típica de un relé mecánico con carga ronda
   las 100.000: se gastaría en un turno. Un SSR no tiene partes móviles,
   conmuta en microsegundos y no se desgasta.
@@ -92,12 +92,11 @@ corriente continua, pero no para estas: un MOSFET conduce en un solo sentido y
 su diodo interno deja pasar el otro semiciclo, con lo que la bobina quedaría
 siempre parcialmente energizada.
 
-**Datos que faltan medir en la máquina:** la tensión y la corriente en la
-salida de un lector óptico, que definen qué SSR comprar, y la velocidad real en
-pasadas por minuto, que confirma el cálculo de vida útil. Como referencia, las
-máquinas de rapier de esta generación trabajan entre 200 y 260 pasadas por
-minuto, lo que da unas 4 conmutaciones por segundo y alrededor de 110.000 por
-turno de 8 horas.
+**Dato que falta medir en la máquina:** la tensión y la corriente en la salida
+de un lector óptico, que definen qué SSR comprar. La velocidad ya está
+confirmada: el telar trabaja a 300 pasadas por minuto, dato que dio el dueño de
+la planta el 06/09/26, lo que equivale a 5 conmutaciones por segundo y unas
+144.000 por turno de 8 horas.
 
 Esto es **de escala de prototipo**, no de proyecto industrial.
 

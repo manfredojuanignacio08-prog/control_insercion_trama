@@ -1607,10 +1607,10 @@ function drawThumb(d) {
   const ctx = c.getContext('2d');
   const W=58, H=58;
   const isDk = document.documentElement.getAttribute('data-theme')==='dark';
-  ctx.fillStyle = isDk ? '#3A3530' : '#FAF5EC';
+  ctx.fillStyle = isDk ? '#2C3846' : '#F6F8FA';
   ctx.fillRect(0, 0, W, H);
   const cw = W / d.columnas, ch = H / d.filas;
-  ctx.fillStyle = isDk ? '#C47FAF' : '#7C2155';
+  ctx.fillStyle = isDk ? '#C47FAF' : '#1E3A5F';
   d.matriz.forEach((row, r) => row.forEach((cell, c2) => {
     if (cell > 0) ctx.fillRect(c2*cw+.5, r*ch+.5, cw-1, ch-1);
   }));
@@ -1902,7 +1902,7 @@ function logError(title, msg, code) {
     </div>
     <div style="background:var(--rose);width:100%;height:100px;border-radius:var(--r-md);margin-bottom:16px;border:2px solid var(--rose);" id="color-sample"></div>
     <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Color del Hilo:</label>
-    <input type="color" id="thread-color" value="#7C2155" onchange="updateColorPreview()" style="width:100%;height:40px;border:none;border-radius:var(--r-md);cursor:pointer;margin-bottom:12px;">
+    <input type="color" id="thread-color" value="#1E3A5F" onchange="updateColorPreview()" style="width:100%;height:40px;border:none;border-radius:var(--r-md);cursor:pointer;margin-bottom:12px;">
     
     <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Aplicar a:</label>
     <select id="row-select" style="width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--bd);background:var(--srf);color:var(--tx);margin-bottom:16px;font-family:inherit;">
@@ -1910,8 +1910,8 @@ function logError(title, msg, code) {
     </select>
 
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
-      <button onclick="setThreadColor('#7C2155')" style="padding:8px;background:#7C2155;color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-weight:600;font-size:12px;">Bordo</button>
-      <button onclick="setThreadColor('#A44F80')" style="padding:8px;background:#A44F80;color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-weight:600;font-size:12px;">Rosa</button>
+      <button onclick="setThreadColor('#1E3A5F')" style="padding:8px;background:#1E3A5F;color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-weight:600;font-size:12px;">Bordo</button>
+      <button onclick="setThreadColor('#3D6B96')" style="padding:8px;background:#3D6B96;color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-weight:600;font-size:12px;">Rosa</button>
       <button onclick="setThreadColor('#2C3E50')" style="padding:8px;background:#2C3E50;color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-weight:600;font-size:12px;">Azul</button>
     </div>
     <div style="display:flex;gap:10px;">

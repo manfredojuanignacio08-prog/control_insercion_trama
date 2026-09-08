@@ -117,7 +117,7 @@ pantallas.
   (nótese que esta pantalla existe en la app antes que en la web: el
   endpoint del backend ya estaba listo, solo faltaba una interfaz).
 - **`ui/theme/Theme.kt`** — la misma paleta de colores que `styles.css` en
-  la web (rosa/vino `#7C2155` + su modo oscuro), para que la app se sienta
+  la web (paleta de azules `#1E3A5F` + su modo oscuro), para que la app se sienta
   parte del mismo producto.
 - **`MainActivity.kt`** — punto de entrada, con barra de navegación
   inferior entre las tres secciones (Biblioteca / Telar / Historial).

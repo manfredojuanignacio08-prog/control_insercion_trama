@@ -8,9 +8,9 @@
     </marker>
   </defs>
 
-  <rect width="1150" height="980" fill="#faf5ec"/>
-  <text x="575" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#7c2155">Conexión eléctrica Telar – ESP32 (Gateway por relés)</text>
-  <text x="575" y="56" text-anchor="middle" font-size="13" fill="#6b5b53">Según la documentación del equipo · Las mejoras recomendadas van en trazo punteado ámbar ⚠</text>
+  <rect width="1150" height="980" fill="#f6f8fa"/>
+  <text x="575" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#1e3a5f">Conexión eléctrica Telar – ESP32 (Gateway por relés)</text>
+  <text x="575" y="56" text-anchor="middle" font-size="13" fill="#6b7684">Según la documentación del equipo · Las mejoras recomendadas van en trazo punteado ámbar ⚠</text>
 
   <!-- ════════ ETAPA 1+2: ALIMENTACIÓN (fuente propia, no toca el telar) ════════ -->
   <rect x="20" y="70" width="1110" height="180" rx="10" fill="#fdeeee" stroke="#8b1f1f" stroke-width="1.5"/>
@@ -18,30 +18,30 @@
 
   <rect x="60" y="116" width="200" height="80" rx="8" fill="#fff" stroke="#8b1f1f" stroke-width="2"/>
   <text x="160" y="146" text-anchor="middle" font-size="14" font-weight="bold">220V de pared</text>
-  <text x="160" y="170" text-anchor="middle" font-size="11" fill="#6b5b53">tomacorriente de la fábrica</text>
+  <text x="160" y="170" text-anchor="middle" font-size="11" fill="#6b7684">tomacorriente de la fábrica</text>
 
   <line x1="260" y1="156" x2="330" y2="156" stroke="#8b1f1f" stroke-width="2" marker-end="url(#flecha)"/>
 
   <rect x="335" y="116" width="200" height="80" rx="8" fill="#fff" stroke="#b45309" stroke-width="2" stroke-dasharray="6 3"/>
   <text x="435" y="142" text-anchor="middle" font-size="13" font-weight="bold">FUSIBLE + PORTAFUSIBLE</text>
   <text x="435" y="164" text-anchor="middle" font-size="11" fill="#b45309">⚠ 1 A lento</text>
-  <text x="435" y="182" text-anchor="middle" font-size="10" fill="#6b5b53">recomendado por el datasheet</text>
+  <text x="435" y="182" text-anchor="middle" font-size="10" fill="#6b7684">recomendado por el datasheet</text>
 
   <line x1="535" y1="156" x2="605" y2="156" stroke="#8b1f1f" stroke-width="2" marker-end="url(#flecha)"/>
 
   <rect x="610" y="116" width="230" height="80" rx="8" fill="#fff" stroke="#8b1f1f" stroke-width="2"/>
   <text x="725" y="142" text-anchor="middle" font-size="14" font-weight="bold">Módulo HLK-5M05</text>
   <text x="725" y="164" text-anchor="middle" font-size="11.5">220V AC → 5V DC · 1 A</text>
-  <text x="725" y="182" text-anchor="middle" font-size="10" fill="#6b5b53">montado dentro del gabinete IP65</text>
+  <text x="725" y="182" text-anchor="middle" font-size="10" fill="#6b7684">montado dentro del gabinete IP65</text>
 
   <line x1="840" y1="156" x2="905" y2="156" stroke="#8b1f1f" stroke-width="2" marker-end="url(#flecha)"/>
 
   <rect x="910" y="116" width="200" height="80" rx="8" fill="#fff" stroke="#8b1f1f" stroke-width="2"/>
   <text x="1010" y="142" text-anchor="middle" font-size="13" font-weight="bold">5V / GND comunes</text>
   <text x="1010" y="164" text-anchor="middle" font-size="11">ESP32 + módulo relé</text>
-  <text x="1010" y="182" text-anchor="middle" font-size="10" fill="#6b5b53">+ pull-ups de sensado</text>
+  <text x="1010" y="182" text-anchor="middle" font-size="10" fill="#6b7684">+ pull-ups de sensado</text>
 
-  <rect x="60" y="206" width="1050" height="32" rx="6" fill="#fff8e6" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4 2"/>
+  <rect x="60" y="206" width="1050" height="32" rx="6" fill="#fff8ec" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4 2"/>
   <text x="585" y="226" text-anchor="middle" font-size="11" fill="#b45309" font-weight="bold">⚠ La alimentación es totalmente independiente del telar: el sistema no toma corriente de la máquina, solo la "toca" con los contactos secos de los relés</text>
 
   <g transform="translate(0,-200)">
@@ -55,7 +55,7 @@
   <text x="80" y="596" font-size="12.5" font-weight="bold">GPIO 25</text>
   <text x="80" y="626" font-size="12.5" font-weight="bold">GPIO 26</text>
   <text x="80" y="656" font-size="12.5" font-weight="bold">GPIO 27</text>
-  <text x="170" y="678" text-anchor="middle" font-size="9.5" fill="#6b5b53">(25/26/27 = pines seguros, no de arranque)</text>
+  <text x="170" y="678" text-anchor="middle" font-size="9.5" fill="#6b7684">(25/26/27 = pines seguros, no de arranque)</text>
 
   <rect x="770" y="516" width="250" height="170" rx="8" fill="#fff" stroke="#7048a8" stroke-width="2"/>
   <text x="895" y="540" text-anchor="middle" font-size="14" font-weight="bold">MÓDULO RELÉ ×3</text>
@@ -63,7 +63,7 @@
   <text x="790" y="596" font-size="12.5" font-weight="bold">IN1 → Marcha</text>
   <text x="790" y="626" font-size="12.5" font-weight="bold">IN2 → Pausa</text>
   <text x="790" y="656" font-size="12.5" font-weight="bold">IN3 → Retroceder</text>
-  <text x="895" y="678" text-anchor="middle" font-size="9.5" fill="#6b5b53">optoacoplado · activo-bajo (config.)</text>
+  <text x="895" y="678" text-anchor="middle" font-size="9.5" fill="#6b7684">optoacoplado · activo-bajo (config.)</text>
 
   <line x1="280" y1="561" x2="765" y2="561" stroke="#7048a8" stroke-width="2" marker-end="url(#flecha)"/>
   <line x1="280" y1="591" x2="765" y2="591" stroke="#7048a8" stroke-width="2" marker-end="url(#flecha)"/>
@@ -73,15 +73,15 @@
 
   <!-- pull-ups recomendados -->
   <line x1="480" y1="561" x2="480" y2="591" stroke="#b45309" stroke-width="2" stroke-dasharray="5 3"/>
-  <rect x="462" y="568" width="36" height="16" rx="3" fill="#fff8e6" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4 2"/>
+  <rect x="462" y="568" width="36" height="16" rx="3" fill="#fff8ec" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4 2"/>
   <text x="480" y="580" text-anchor="middle" font-size="9.5" fill="#b45309" font-weight="bold">10 kΩ</text>
 
   <line x1="600" y1="591" x2="600" y2="621" stroke="#b45309" stroke-width="2" stroke-dasharray="5 3"/>
-  <rect x="582" y="598" width="36" height="16" rx="3" fill="#fff8e6" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4 2"/>
+  <rect x="582" y="598" width="36" height="16" rx="3" fill="#fff8ec" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4 2"/>
   <text x="600" y="610" text-anchor="middle" font-size="9.5" fill="#b45309" font-weight="bold">10 kΩ</text>
 
   <line x1="700" y1="621" x2="700" y2="651" stroke="#b45309" stroke-width="2" stroke-dasharray="5 3"/>
-  <rect x="682" y="628" width="36" height="16" rx="3" fill="#fff8e6" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4 2"/>
+  <rect x="682" y="628" width="36" height="16" rx="3" fill="#fff8ec" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4 2"/>
   <text x="700" y="640" text-anchor="middle" font-size="9.5" fill="#b45309" font-weight="bold">10 kΩ</text>
 
   <text x="522" y="701" text-anchor="middle" font-size="11" fill="#b45309" font-weight="bold">⚠ Pull-ups de 10 kΩ (IN1, IN2 e IN3 a 3.3V): evitan el pulso fantasma de los relés al encender/reiniciar</text>
@@ -122,38 +122,38 @@
 
 
   <!-- ════════ ETAPA 5: SENSADO (solo lectura, sin relé) ════════ -->
-  <rect x="20" y="735" width="1110" height="190" rx="10" fill="#fdf0f5" stroke="#7c2155" stroke-width="1.5"/>
-  <text x="36" y="759" font-size="15" font-weight="bold" fill="#7c2155">ETAPA 4 · SENSADO — el ESP32 "escucha" los mismos 3 botones (detecta uso manual)</text>
+  <rect x="20" y="735" width="1110" height="190" rx="10" fill="#fdf0f5" stroke="#1e3a5f" stroke-width="1.5"/>
+  <text x="36" y="759" font-size="15" font-weight="bold" fill="#1e3a5f">ETAPA 4 · SENSADO — el ESP32 "escucha" los mismos 3 botones (detecta uso manual)</text>
 
-  <rect x="60" y="781" width="250" height="120" rx="8" fill="#fff" stroke="#7c2155" stroke-width="1.5"/>
+  <rect x="60" y="781" width="250" height="120" rx="8" fill="#fff" stroke="#1e3a5f" stroke-width="1.5"/>
   <text x="185" y="803" text-anchor="middle" font-size="13" font-weight="bold">Botones manuales</text>
   <text x="185" y="827" text-anchor="middle" font-size="11.5">Marcha / Avviamento</text>
   <text x="185" y="847" text-anchor="middle" font-size="11.5">Pausa / Stop  ·  Retroceder / Indietro</text>
-  <text x="185" y="873" text-anchor="middle" font-size="10" fill="#6b5b53">24V AC · los mismos que accionan los relés</text>
-  <text x="185" y="889" text-anchor="middle" font-size="10" fill="#6b5b53">(el relé los aprieta; el opto los escucha)</text>
+  <text x="185" y="873" text-anchor="middle" font-size="10" fill="#6b7684">24V AC · los mismos que accionan los relés</text>
+  <text x="185" y="889" text-anchor="middle" font-size="10" fill="#6b7684">(el relé los aprieta; el opto los escucha)</text>
 
-  <line x1="310" y1="841" x2="395" y2="841" stroke="#7c2155" stroke-width="2" marker-end="url(#flecha)"/>
+  <line x1="310" y1="841" x2="395" y2="841" stroke="#1e3a5f" stroke-width="2" marker-end="url(#flecha)"/>
   <text x="352" y="831" text-anchor="middle" font-size="9.5">2 hilos c/u</text>
 
-  <rect x="400" y="781" width="230" height="120" rx="8" fill="#fff" stroke="#7c2155" stroke-width="1.5"/>
+  <rect x="400" y="781" width="230" height="120" rx="8" fill="#fff" stroke="#1e3a5f" stroke-width="1.5"/>
   <text x="515" y="803" text-anchor="middle" font-size="13" font-weight="bold">Puente rectificador</text>
   <text x="515" y="825" text-anchor="middle" font-size="11">DB157 (1A) · ×3</text>
   <text x="515" y="849" text-anchor="middle" font-size="11">+ R capacitor 22-47 µF + R 2,2 kΩ 1W</text>
-  <text x="515" y="877" text-anchor="middle" font-size="10" fill="#6b5b53">convierte el AC del botón</text>
-  <text x="515" y="893" text-anchor="middle" font-size="10" fill="#6b5b53">y limita la corriente al LED</text>
+  <text x="515" y="877" text-anchor="middle" font-size="10" fill="#6b7684">convierte el AC del botón</text>
+  <text x="515" y="893" text-anchor="middle" font-size="10" fill="#6b7684">y limita la corriente al LED</text>
 
-  <line x1="630" y1="841" x2="705" y2="841" stroke="#7c2155" stroke-width="2" marker-end="url(#flecha)"/>
+  <line x1="630" y1="841" x2="705" y2="841" stroke="#1e3a5f" stroke-width="2" marker-end="url(#flecha)"/>
 
-  <rect x="710" y="781" width="230" height="120" rx="8" fill="#fff" stroke="#7c2155" stroke-width="1.5"/>
+  <rect x="710" y="781" width="230" height="120" rx="8" fill="#fff" stroke="#1e3a5f" stroke-width="1.5"/>
   <text x="825" y="803" text-anchor="middle" font-size="13" font-weight="bold">Optoacoplador PC817</text>
   <text x="825" y="825" text-anchor="middle" font-size="11">×3 (uno por botón)</text>
   <text x="825" y="849" text-anchor="middle" font-size="11">+ pull-up 10 kΩ a 3.3V</text>
-  <text x="825" y="877" text-anchor="middle" font-size="10" fill="#6b5b53">aísla el 24V AC del ESP32:</text>
-  <text x="825" y="893" text-anchor="middle" font-size="10" fill="#6b5b53">nada de 24V toca el micro</text>
+  <text x="825" y="877" text-anchor="middle" font-size="10" fill="#6b7684">aísla el 24V AC del ESP32:</text>
+  <text x="825" y="893" text-anchor="middle" font-size="10" fill="#6b7684">nada de 24V toca el micro</text>
 
-  <line x1="940" y1="841" x2="1015" y2="841" stroke="#7c2155" stroke-width="2" marker-end="url(#flecha)"/>
+  <line x1="940" y1="841" x2="1015" y2="841" stroke="#1e3a5f" stroke-width="2" marker-end="url(#flecha)"/>
 
-  <rect x="1020" y="795" width="90" height="92" rx="8" fill="#fff" stroke="#7c2155" stroke-width="2"/>
+  <rect x="1020" y="795" width="90" height="92" rx="8" fill="#fff" stroke="#1e3a5f" stroke-width="2"/>
   <text x="1065" y="819" text-anchor="middle" font-size="12" font-weight="bold">ESP32</text>
   <text x="1065" y="845" text-anchor="middle" font-size="11">GPIO 32 / 33</text>
   <text x="1065" y="865" text-anchor="middle" font-size="11">GPIO 34</text>
@@ -163,5 +163,5 @@
   <text x="98" y="952" font-size="11.5">Documentado por el equipo</text>
   <line x1="300" y1="948" x2="350" y2="948" stroke="#b45309" stroke-width="2" stroke-dasharray="6 3"/>
   <text x="358" y="952" font-size="11.5" fill="#b45309">⚠ Mejora recomendada (ver RECOMENDACIONES_ELECTRICAS.md)</text>
-  <text x="1110" y="952" text-anchor="end" font-size="10.5" fill="#6b5b53">Control de Inserción de Trama · Gateway ESP32</text>
+  <text x="1110" y="952" text-anchor="end" font-size="10.5" fill="#6b7684">Control de Inserción de Trama · Gateway ESP32</text>
 </svg>

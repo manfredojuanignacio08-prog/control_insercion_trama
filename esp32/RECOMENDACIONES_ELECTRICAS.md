@@ -115,9 +115,9 @@ usar para comandarlas y qué no.
   papel interrumpa el haz, lo hace un interruptor electrónico. El sistema
   conmuta entonces la señal del lector, no la corriente de la bobina, y las
   plaquetas del telar quedan intactas.
-- **Relé de estado sólido (SSR), uno por lector.** Un relé mecánico común no
-  sirve para esta tarea: el telar hace unas 3 pasadas por segundo y cada bobina
-  puede conmutar una vez por pasada, lo que da unas 96.000 conmutaciones por
+- **Relé de estado sólido (SSR), uno por lector óptico, seis en total.** Un relé mecánico común no
+  sirve para esta tarea: el telar hace 5 pasadas por segundo y cada bobina
+  puede conmutar una vez por pasada, lo que da unas 144.000 conmutaciones por
   turno. La vida típica de un relé mecánico con carga ronda las 100.000, así
   que se gastaría en un turno de trabajo. Los relés mecánicos del Bloque A
   quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas
@@ -135,8 +135,7 @@ usar para comandarlas y qué no.
   que internamente ya lleva el optoacoplador más una etapa de triac.
 - **Antes de comprar hay que medir** la tensión y la corriente en la salida de
   un lector óptico, que definen el SSR, y la velocidad real de la máquina. Como
-  referencia, los telares de rapier de esta generación trabajan entre 200 y 260
-  pasadas por minuto.
+  referencia, los telares de rapier de esta generación trabajan 300 pasadas por minuto.
 
 ## 7. Protecciones que ya quedaron aplicadas en el firmware
 
@@ -158,7 +157,7 @@ relés):
 | Ítem | Cantidad | Para qué |
 |---|---|---|
 | Resistencia 10 kΩ | 6 | Polarización de IN1/IN2/IN3 (3 relés) y de los 3 canales de sensado (punto 1). La del canal de Retroceder va a GND, no a 3V3. |
-| Relé de estado sólido (SSR) o MOC3041 + BT136 | 3 | Comandan las bobinas de selección de 24 V AC en el Nivel 2 (punto 6). Un relé mecánico se gastaría en un turno por la frecuencia de conmutación. |
+| Relé de estado sólido (SSR) o MOC3041 + BT136 | 6 | Comandan las bobinas de selección de 24 V AC en el Nivel 2 (punto 6). Un relé mecánico se gastaría en un turno por la frecuencia de conmutación. |
 | Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
 | Optoacoplador PC817 + puente DB157 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |
 | Capacitor electrolítico 22–47 µF 50 V | 3 | En paralelo a la salida del puente, antes de la resistencia. Aplana el AC rectificado: sin él el LED del optoacoplador pulsa 100 veces por segundo y el firmware lee varias pulsaciones donde hubo una sola. Es crítico en el canal de Retroceder, donde cada evento repetido retrocede una pasada de más. TIENE POLARIDAD. |
