@@ -1,9 +1,9 @@
-# Firmware ESP32 — Control de Inserción de Trama (Gateway)
+# Firmware ESP32, Control de Inserción de Trama (Gateway)
 
 Este firmware está hecho **a medida del hardware documentado por el
 equipo** ("Documentación Eléctrica Telar - ESP32"): el ESP32 actúa como
 **gateway de control remoto** sobre un telar automático ya operativo. No
-reemplaza la lógica de la máquina — le "aprieta los botones".
+reemplaza la lógica de la máquina (le "aprieta los botones").
 
 **Cómo:** tres relés optoacoplados conectados **en paralelo** con los
 botones físicos de **Marcha** (GPIO 25 → IN1), **Pausa** (GPIO 26 → IN2)
@@ -11,7 +11,7 @@ y **Retroceder** (GPIO 27 → IN3). Un pulso breve del relé equivale a una
 pulsación manual, y la botonera física sigue funcionando exactamente
 igual.
 
-**Idea clave:** el ESP32 sondea `GET /api/telares/1` — el mismo endpoint
+**Idea clave:** el ESP32 sondea `GET /api/telares/1`, el mismo endpoint
 que consumen la web y la app. Cuando alguien asigna un patrón desde la
 web/app (estado pasa a `tejiendo`), el ESP32 pulsa Marcha en la máquina
 real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
@@ -109,12 +109,12 @@ El telar tiene, en la práctica, dos "máquinas": la de **accionamiento**
 (arranca/para) y la **lectora de secuencia** (el Jacquard con tarjetas
 perforadas, que dicta el dibujo pasada por pasada).
 
-- **Nivel 1 — Arranque y parada (lo que hace el ESP32 hoy):** darle Play y
+- **Nivel 1, Arranque y parada (lo que hace el ESP32 hoy):** darle Play y
   Pausa al telar con los relés. Resuelto, sin inconvenientes de fondo.
-- **Nivel 2 — Dictar la secuencia completa (evolución futura):** reemplazar
+- **Nivel 2, Dictar la secuencia completa (evolución futura):** reemplazar
   las tarjetas perforadas del Jacquard, lo que implica un retrofit del
   mecanismo. Fuera del alcance de esta etapa.
 
-El detalle completo de esta distinción —clave para entender el alcance del
-proyecto y para la presentación— está en **`NIVELES_DE_CONTROL.md`**, en
+El detalle completo de esta distinción -clave para entender el alcance del
+proyecto y para la presentación- está en **`NIVELES_DE_CONTROL.md`**, en
 esta misma carpeta.

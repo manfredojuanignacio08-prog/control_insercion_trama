@@ -1,5 +1,5 @@
 /*
- * config.h — Configuración del dispositivo
+ * config.h, Configuración del dispositivo
  *
  * Completar estos valores ANTES de subir el sketch a la placa.
  * Este archivo está separado del .ino para poder compartir el código sin
@@ -20,7 +20,7 @@
 //
 // OJO: tiene que ser la URL del BACKEND (Node/Express), NO la de la base de datos.
 // El ESP32 nunca habla directo con la base de datos: siempre pasa por la
-// API, igual que la web y la app — así todas las reglas de negocio
+// API, igual que la web y la app, así todas las reglas de negocio
 // (transacciones, validaciones, bloqueos) se aplican también al hardware.
 #define API_BASE_URL  "http://192.168.1.50:3000"
 
@@ -45,7 +45,7 @@
 // si el relé queda SUELTO, es activo-bajo (true); si queda PEGADO (con el
 // LED encendido), es activo-alto (false).
 //
-// IMPORTANTE — la resistencia de cada canal depende de esto:
+// IMPORTANTE, la resistencia de cada canal depende de esto:
 //   activo-bajo (true)  → pull-UP de 10 kΩ a 3.3V  (lo mantiene suelto)
 //   activo-alto (false) → pull-DOWN de 10 kΩ a GND (lo mantiene suelto)
 // Si se pone la resistencia al revés, el relé arranca PEGADO.

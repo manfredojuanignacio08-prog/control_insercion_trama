@@ -1,6 +1,6 @@
 /*
  * ============================================================
- *  Control de Inserción de Trama — Firmware ESP32 (Gateway)
+ *  Control de Inserción de Trama, Firmware ESP32 (Gateway)
  * ============================================================
  *
  *  Este firmware está hecho A MEDIDA del hardware documentado en
@@ -26,12 +26,12 @@
  *      Es decir: asignar un patrón desde la web/app arranca la máquina
  *      real, y el botón "Pausa" de la web/app la pausa. Los botones
  *      físicos del telar siguen funcionando igual (la conexión es en
- *      paralelo). Nota: el telar real tiene 3 botones — Marcha, Pausa y
- *      Retroceder — no existe un "Detener" físico distinto, por eso la
+ *      paralelo). Nota: el telar real tiene 3 botones, Marcha, Pausa y
+ *      Retroceder, no existe un "Detener" físico distinto, por eso la
  *      web tampoco lo tiene: el único botón de corte es "Pausa".
  *   3b. Además, sondea "retroceder_seq". Cada vez que ese número cambia
  *       respecto al último conocido, pulsa el relé de RETROCEDER (GPIO
- *       27) una sola vez — es una acción puntual (corregir tras un corte
+ *       27) una sola vez, es una acción puntual (corregir tras un corte
  *       de hilo), no un estado persistente como Marcha/Pausa.
  *   3c. Los MISMOS tres botones se sensan además en sentido inverso: si un
  *       operario los aprieta a mano en la máquina, el ESP32 se entera y
@@ -87,7 +87,7 @@ const int PIN_LED             = 2;   // LED integrado (indicador de estado)
 
 // La mayoría de los módulos de relé optoacoplados de 5V se ACTIVAN CON
 // NIVEL BAJO (LOW = relé cerrado). Si el tuyo es al revés, cambiá esto
-// en config.h y listo — el resto del código se adapta solo.
+// en config.h y listo (el resto del código se adapta solo).
 // Cada relé puede tener su propia polaridad (ver config.h): en este equipo
 // el módulo de 2 canales es activo-bajo y el individual de Retroceder es
 // activo-alto. Estas funciones devuelven el nivel correcto según el pin,
@@ -184,7 +184,7 @@ void IRAM_ATTR isrRetroceder() {
 // Setup
 // ------------------------------------------------------------
 void setup() {
-  // ARRANQUE SEGURO DE RELÉS — el orden importa:
+  // ARRANQUE SEGURO DE RELÉS, el orden importa:
   // primero se escribe el nivel inactivo y RECIÉN DESPUÉS se configura el
   // pin como salida. Si se hace al revés, hay un instante en que el pin
   // queda flotando/bajo y el relé da un pulso fantasma al encender.
@@ -392,12 +392,12 @@ void sincronizarConBackend() {
 }
 
 // ------------------------------------------------------------
-// POST /api/telares/{id}/evento-fisico — avisa un uso manual de
+// POST /api/telares/{id}/evento-fisico, avisa un uso manual de
 // un botón, para que la web refleje el estado real del telar
 // ------------------------------------------------------------
 // Devuelve true solo si el backend confirmó que recibió el aviso.
 // Importa: si esto falla y se descarta el evento, la web nunca se entera
-// de que la posición quedó desincronizada — que es justo el problema que
+// de que la posición quedó desincronizada, que es justo el problema que
 // este sensado tiene que evitar. Por eso el loop reintenta.
 bool reportarEventoFisico(const char* tipo) {
   if (WiFi.status() != WL_CONNECTED) return false;
@@ -425,7 +425,7 @@ bool reportarEventoFisico(const char* tipo) {
 }
 
 // ------------------------------------------------------------
-// Pulso de relé — simula apretar y soltar el botón físico
+// Pulso de relé, simula apretar y soltar el botón físico
 // ------------------------------------------------------------
 // El diseño garantiza que el relé NUNCA queda pegado: el apagado no
 // depende de ninguna condición externa, es una secuencia fija.
@@ -448,7 +448,7 @@ void pulsarRele(int pin) {
 }
 
 // ------------------------------------------------------------
-// POST /api/errores — dejar registro de problemas del dispositivo
+// POST /api/errores, dejar registro de problemas del dispositivo
 // ------------------------------------------------------------
 void reportarError(const String& titulo, const String& detalle) {
   if (WiFi.status() != WL_CONNECTED) return;

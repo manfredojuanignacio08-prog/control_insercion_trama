@@ -19,7 +19,7 @@ def _leer(ruta_rel):
 
 ino = _leer('esp32/control_trama_esp32/control_trama_esp32.ino')
 cfg = _leer('esp32/control_trama_esp32/config.h')
-svg = _leer('diagramas/diagrama_conexion_electrica.svg')
+svg = _leer('diagramas/hardware/diagrama_conexion_electrica.svg')
 doc = _leer('esp32/README.md')   # la referencia escrita del diseño vive acá
 
 checks = []

@@ -67,7 +67,7 @@ telar = TelarSimulado()
 esp = ESP32Simulado(telar)
 
 print("="*66)
-print("  SIMULACIÓN DEL FLUJO LÓGICO — Nivel 1 (Marcha/Pausa)")
+print("  SIMULACIÓN DEL FLUJO LÓGICO, Nivel 1 (Marcha/Pausa)")
 print("="*66)
 print(f"\n  Arranque seguro: pin_marcha={esp.pin_marcha}, pin_pausa={esp.pin_pausa} (ambos INACTIVOS ✓)\n")
 

@@ -36,7 +36,7 @@ def patron_a_secuencia_marcos(matriz, n_marcos):
     return secuencia
 
 print("="*66)
-print("  SIMULACIÓN DEL FLUJO LÓGICO — Nivel 2 (marcos / dobby)")
+print("  SIMULACIÓN DEL FLUJO LÓGICO, Nivel 2 (marcos / dobby)")
 print("="*66)
 
 # Patrón de ejemplo: una RAYA repetitiva (como las telas de las fotos).
