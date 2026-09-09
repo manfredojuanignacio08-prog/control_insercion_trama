@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" font-family="Arial, Helvetica, sans-serif">
+<rect width="980" height="560" fill="#F6F8FA"/>
+<text x="490" y="30" text-anchor="middle" font-size="17" font-weight="bold" fill="#1E3A5F">Bloque C, Canal del sensor de pasada</text>
+<text x="490" y="49" text-anchor="middle" font-size="10.5" fill="#6B7684">Del sensor inductivo al pin del ESP32, con aislamiento óptico entre ambos lados</text>
+
+<!-- zona telar -->
+<rect x="24" y="72" width="300" height="360" rx="9" fill="#F2F5F8" stroke="#9C5C0A" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="174" y="93" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#9C5C0A">LADO TELAR, alimentación de la máquina</text>
+
+<!-- sensor -->
+<rect x="56" y="112" width="236" height="86" rx="7" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="174" y="134" text-anchor="middle" font-size="12" font-weight="bold" fill="#1E3A5F">SENSOR INDUCTIVO</text>
+<text x="174" y="150" text-anchor="middle" font-size="10" fill="#3F4B5C">LJ12A3-4-Z/BX · NPN normal abierto</text>
+<text x="174" y="167" text-anchor="middle" font-size="9.5" fill="#6B7684">Detecta metal a 2-3 mm · alcance 4 mm</text>
+<text x="174" y="184" text-anchor="middle" font-size="9.5" fill="#6B7684">Necesita CONTINUA de 6 a 36 V</text>
+
+<!-- tres cables -->
+<circle cx="86" cy="212" r="4.5" fill="#8B4513"/><text x="98" y="216" font-size="10" font-weight="bold">MARRÓN  ( + )</text>
+<circle cx="86" cy="238" r="4.5" fill="#2C5AA0"/><text x="98" y="242" font-size="10" font-weight="bold">AZUL  ( − )</text>
+<circle cx="86" cy="264" r="4.5" fill="#1F2937"/><text x="98" y="268" font-size="10" font-weight="bold">NEGRO  (señal)</text>
+
+<!-- fuente del telar -->
+<rect x="56" y="296" width="236" height="58" rx="6" fill="#E8EDF1" stroke="#CDD8E0"/>
+<text x="174" y="314" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1E3A5F">24 V ALTERNA DEL TELAR</text>
+<text x="174" y="330" text-anchor="middle" font-size="9.5" fill="#3F4B5C">Puente DB157 + capacitor 470 µF 50 V</text>
+<text x="174" y="345" text-anchor="middle" font-size="9" fill="#9C5C0A" font-weight="bold">Da unos 30-34 V DC · MEDIR: tope del sensor 36 V</text>
+<line x1="86" y1="212" x2="86" y2="296" stroke="#8B4513" stroke-width="2"/>
+<line x1="110" y1="238" x2="110" y2="296" stroke="#2C5AA0" stroke-width="2"/>
+
+<text x="174" y="378" text-anchor="middle" font-size="9.5" fill="#9C5C0A" font-weight="bold">Este negativo NO se une al del ESP32</text>
+<text x="174" y="393" text-anchor="middle" font-size="9" fill="#6B7684">Unirlos anula el aislamiento y expone el microcontrolador</text>
+<text x="174" y="415" text-anchor="middle" font-size="9" fill="#6B7684" font-style="italic">Al gabinete van solo dos hilos: negro y azul</text>
+
+<!-- resistencia -->
+<line x1="324" y1="212" x2="380" y2="212" stroke="#8B4513" stroke-width="2"/>
+<rect x="380" y="200" width="66" height="24" rx="3" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.5"/>
+<text x="413" y="216" text-anchor="middle" font-size="10" font-weight="bold">R1</text>
+<text x="413" y="240" text-anchor="middle" font-size="9" fill="#6B7684">ver tabla</text>
+<line x1="446" y1="212" x2="512" y2="212" stroke="#1F2937" stroke-width="2"/>
+<line x1="324" y1="264" x2="512" y2="264" stroke="#1F2937" stroke-width="2"/>
+<text x="418" y="278" text-anchor="middle" font-size="9" fill="#6B7684">negro (señal)</text>
+
+<!-- optoacoplador -->
+<rect x="512" y="150" width="170" height="180" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="597" y="174" text-anchor="middle" font-size="12" font-weight="bold" fill="#1E3A5F">PC817</text>
+<text x="597" y="190" text-anchor="middle" font-size="9.5" fill="#6B7684">optoacoplador</text>
+<line x1="597" y1="200" x2="597" y2="320" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="4 3"/>
+<text x="555" y="216" text-anchor="middle" font-size="9.5" font-weight="bold">pin 1</text>
+<text x="555" y="264" text-anchor="middle" font-size="9.5" font-weight="bold">pin 2</text>
+<text x="643" y="216" text-anchor="middle" font-size="9.5" font-weight="bold">pin 4</text>
+<text x="643" y="264" text-anchor="middle" font-size="9.5" font-weight="bold">pin 3</text>
+<text x="555" y="306" text-anchor="middle" font-size="8.5" fill="#6B7684">LED</text>
+<text x="643" y="306" text-anchor="middle" font-size="8.5" fill="#6B7684">fototransistor</text>
+<text x="597" y="344" text-anchor="middle" font-size="9" fill="#9C5C0A" font-weight="bold">frontera de aislamiento</text>
+
+<!-- lado ESP32 -->
+<rect x="700" y="72" width="256" height="360" rx="9" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="828" y="93" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1E3A5F">LADO ESP32, 3,3 V del gabinete</text>
+
+<line x1="682" y1="212" x2="740" y2="212" stroke="#1F2937" stroke-width="2"/>
+<line x1="740" y1="212" x2="740" y2="150" stroke="#1F2937" stroke-width="2"/>
+<rect x="708" y="120" width="64" height="24" rx="3" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.5"/>
+<text x="740" y="136" text-anchor="middle" font-size="10" font-weight="bold">10 kΩ</text>
+<line x1="740" y1="120" x2="740" y2="106" stroke="#1F2937" stroke-width="2"/>
+<text x="740" y="102" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E3A5F">3,3 V</text>
+
+<line x1="740" y1="212" x2="820" y2="212" stroke="#1F2937" stroke-width="2"/>
+<rect x="820" y="176" width="120" height="72" rx="6" fill="#1E3A5F"/>
+<text x="880" y="200" text-anchor="middle" font-size="11" font-weight="bold" fill="#FFFFFF">ESP32</text>
+<text x="880" y="217" text-anchor="middle" font-size="10" fill="#DCE7F0">pin de entrada</text>
+<text x="880" y="235" text-anchor="middle" font-size="9" fill="#7FA8C9">libre, con interrupción</text>
+
+<line x1="682" y1="264" x2="880" y2="264" stroke="#1F2937" stroke-width="2"/>
+<line x1="880" y1="248" x2="880" y2="264" stroke="#1F2937" stroke-width="2"/>
+<text x="880" y="282" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E3A5F">GND del sistema</text>
+
+<text x="828" y="320" text-anchor="middle" font-size="9.5" fill="#3F4B5C">En reposo el pin queda en alto por la resistencia.</text>
+<text x="828" y="336" text-anchor="middle" font-size="9.5" fill="#3F4B5C">Cuando el sensor detecta, el optoacoplador conduce</text>
+<text x="828" y="352" text-anchor="middle" font-size="9.5" fill="#3F4B5C">y el pin cae a bajo: ese flanco es una pasada.</text>
+<text x="828" y="378" text-anchor="middle" font-size="9" fill="#6B7684" font-style="italic">A 300 pasadas por minuto son 5 pulsos por segundo</text>
+
+<!-- tabla de resistencia -->
+<rect x="24" y="452" width="932" height="88" rx="7" fill="#FFFFFF" stroke="#CDD8E0"/>
+<text x="42" y="474" font-size="11" font-weight="bold" fill="#1E3A5F">Valor de R1, según la tensión que entregue el telar</text>
+<text x="42" y="496" font-size="10" fill="#3F4B5C">Rectificando los 24 V AC del telar quedan unos 30 a 34 V DC  →  R1 = 3,3 kΩ de 1/2 W          ·          Fórmula: R1 = (tensión medida − 1,2 V) ÷ 0,010 A</text>
+<text x="42" y="516" font-size="9.5" fill="#6B7684">El 1,2 V es la caída del LED del optoacoplador y los 10 mA la corriente que se busca. A 34 V la resistencia disipa 0,33 W, por eso va de 1/2 W.</text>
+<text x="42" y="532" font-size="9.5" fill="#9C5C0A" font-weight="bold">Medir la continua rectificada con la máquina en marcha. Si superara los 36 V hay que bajarla: el sensor no tolera más.</text>
+</svg>

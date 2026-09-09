@@ -1,5 +1,5 @@
 -- ============================================================
--- BASE DE DATOS COMPLETA — Control de Inserción de Trama
+-- BASE DE DATOS COMPLETA, Control de Inserción de Trama
 -- PostgreSQL / Neon
 --
 -- QUÉ ES ESTE ARCHIVO
@@ -7,7 +7,7 @@
 -- 100% lista y compatible con el backend. Sirve para los dos casos:
 --   A) Base nueva, vacía: crea las 4 tablas completas.
 --   B) Base que ya existía antes (con datos reales cargados): no rompe ni
---      borra nada — detecta lo que ya existe y solo agrega/corrige lo que falta.
+--      borra nada (detecta lo que ya existe y solo agrega/corrige lo que falta).
 -- Es seguro correrlo más de una vez. No hay forma de que borre datos reales.
 --
 -- CÓMO USARLO: ver docs/Como_Crear_La_Base_De_Datos.md (paso a paso, 100%
@@ -32,7 +32,7 @@
 --     curRow/curCol/curPass del frontend), para soportar "retroceder un
 --     paso" sin reconstruir nada.
 --   - El tejido no tiene "final": al llegar a la última celda vuelve a la
---     fila 0 y sigue en bucle infinito (así es un telar real) — por eso
+--     fila 0 y sigue en bucle infinito (así es un telar real), por eso
 --     vueltas_completadas cuenta cuántas veces se repitió el patrón entero.
 --
 -- Nota: la base real del equipo (Neon) se creó sin estas columnas.
@@ -117,7 +117,7 @@ EXECUTE FUNCTION set_modificado_at();
 
 -- ── migracion_001_matriz_ligamento.sql ──
 -- ============================================================
--- MIGRACIÓN 001 — Ajustar la base de datos existente (Neon del equipo)
+-- MIGRACIÓN 001, Ajustar la base de datos existente (Neon del equipo)
 -- para que coincida con el backend.
 --
 -- A diferencia de schema.sql (que crea tablas nuevas desde cero con
@@ -191,7 +191,7 @@ BEFORE UPDATE ON patrones
 FOR EACH ROW
 EXECUTE FUNCTION set_modificado_at();
 
--- 4) OPCIONAL — completar matriz_ligamento en patrones que ya existían
+-- 4) OPCIONAL, completar matriz_ligamento en patrones que ya existían
 -- antes de esta migración (quedaron en NULL al agregar la columna).
 -- Usa la misma regla que el backend: cada celda con pasadas > 0 pasa a ser 1.
 -- Si no se corre esto, esos patrones viejos simplemente muestran
@@ -214,7 +214,7 @@ BEGIN
 END $$;
 
 -- ============================================================
--- Verificación rápida (opcional, solo lectura) — correr después y revisar
+-- Verificación rápida (opcional, solo lectura), correr después y revisar
 -- que patrones tenga la columna y que el conteo de NULL sea 0:
 --
 -- SELECT count(*) AS total, count(matriz_ligamento) AS con_ligamento FROM patrones;
@@ -222,7 +222,7 @@ END $$;
 
 -- ── migracion_002_repeticiones_y_posicion.sql ──
 -- ============================================================
--- MIGRACIÓN 002 — Posición de tejido para soportar "retroceder un paso"
+-- MIGRACIÓN 002, Posición de tejido para soportar "retroceder un paso"
 --
 -- Corrección de diseño: la primera versión de esta migración había
 -- agregado patrones.repeticiones_filas (repetir una fila completa N veces)
@@ -230,7 +230,7 @@ END $$;
 -- funciona en realidad el editor: la repetición ya existe A NIVEL DE
 -- CELDA (cada valor de matriz_pasadas ya es "cuántas veces se repite esa
 -- celda"), y el patrón se teje en bucle infinito hasta que alguien lo
--- detiene — no tiene un "final". Esta versión corrige eso.
+-- detiene (no tiene un "final"). Esta versión corrige eso.
 --
 -- Agrega a historial_produccion:
 --   - fila_actual, columna_actual, pasada_actual: posición exacta de la
@@ -241,7 +241,7 @@ END $$;
 --
 -- Si una base ya había corrido la versión anterior de esta misma
 -- migración (con repeticiones_filas / repeticion_actual), esos campos se
--- eliminan acá — es seguro, no se perdió ningún dato real porque esa
+-- eliminan acá, es seguro, no se perdió ningún dato real porque esa
 -- funcionalidad nunca llegó a usarse en producción.
 --
 -- 100% seguro de correr contra una base con datos reales. Se puede correr

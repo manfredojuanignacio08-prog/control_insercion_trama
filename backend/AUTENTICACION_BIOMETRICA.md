@@ -1,4 +1,4 @@
-# Login biométrico por huella dactilar — WebAuthn
+# Login biométrico por huella dactilar, WebAuthn
 
 El sistema incluye un login biométrico: el operario entra con su **huella
 dactilar**, en vez de una contraseña. Está implementado con el
@@ -18,7 +18,7 @@ servidor.** Esto suele sorprender, así que vale explicarlo bien:
   queda encerrada en el hardware del teléfono y nunca sale) y una **pública**
   (que se manda al servidor).
 - Para entrar, el dispositivo **firma** un desafío aleatorio con su llave
-  privada — y para desbloquear esa llave, el usuario pone su huella o su
+  privada, y para desbloquear esa llave, el usuario pone su huella o su
   huella. El servidor verifica la firma con la llave pública que ya tenía.
 - Resultado: el servidor confirma que es el usuario correcto **sin ver jamás
   su huella**. Lo único que guarda son llaves públicas, que no
@@ -30,17 +30,17 @@ solo usuarios y las llaves públicas de sus dispositivos.
 ## Qué se agregó
 
 ### Base de datos (3 tablas nuevas)
-- **`usuarios`** — los usuarios del sistema (usuario, nombre, un id interno
+- **`usuarios`**, los usuarios del sistema (usuario, nombre, un id interno
   para WebAuthn).
-- **`credenciales_biometricas`** — las llaves públicas de cada dispositivo
+- **`credenciales_biometricas`**, las llaves públicas de cada dispositivo
   que un usuario registró (su huella en el celular, en la notebook, etc.). Un
   usuario puede tener varias.
-- **`desafios_webauthn`** — los desafíos temporales de un solo uso que se
+- **`desafios_webauthn`**, los desafíos temporales de un solo uso que se
   emiten en cada registro/login y vencen a los 5 minutos (para evitar que se
   reutilicen).
 
 Ver `src/db/migracion_003_login_biometrico.sql` (y las mismas tablas están en
-`src/db/schema.sql`, así que `npm run init-db` ya las crea).
+`backend/src/db/schema.sql`, así que `npm run init-db` ya las crea).
 
 ### Backend (4 endpoints)
 Bajo `/api/auth`, en dos pasos cada operación (así funciona WebAuthn):
@@ -84,7 +84,7 @@ la biometría y aparece un error tipo *"The RP ID is invalid for this domain"*
 o *"insecure context"*. No es un bug del sistema: es una regla de seguridad
 del estándar WebAuthn.
 
-**El RP ID se detecta solo:** el backend ya no usa un valor fijo — lo deriva
+**El RP ID se detecta solo:** el backend ya no usa un valor fijo, lo deriva
 del dominio desde el que se abre la página, así funciona igual en localhost,
 por IP o por dominio real, sin configurar nada. El único requisito que queda
 es el del contexto seguro (HTTPS o localhost).
@@ -123,7 +123,7 @@ punta a punta (backend + base de datos + los endpoints que la web consume).
 La gestión de sesión posterior al login (por ejemplo, emitir un token para
 mantener la sesión abierta, o proteger cada endpoint exigiendo estar logueado)
 es un paso adicional que se puede sumar según cómo el equipo quiera manejar
-los permisos — la base para hacerlo ya está puesta.
+los permisos (la base para hacerlo ya está puesta).
 
 ---
 

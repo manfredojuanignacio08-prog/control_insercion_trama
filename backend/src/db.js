@@ -38,7 +38,7 @@ connectionConfig.idleTimeoutMillis = 30_000;
 connectionConfig.statement_timeout = 15_000;
 // idle_in_transaction_session_timeout: si una transacción se queda "a
 // mitad de camino" (BEGIN sin COMMIT/ROLLBACK) sin hacer nada, Postgres la
-// mata sola después de este tiempo — evita que una conexión rota deje un
+// mata sola después de este tiempo, evita que una conexión rota deje un
 // bloqueo colgado para siempre.
 connectionConfig.idle_in_transaction_session_timeout = 10_000;
 connectionConfig.query_timeout = 15_000;

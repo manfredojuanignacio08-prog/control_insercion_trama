@@ -1,4 +1,4 @@
-# ⚠️ CARPETA DE REFERENCIA — NO FUNCIONAL POR AHORA
+# ⚠️ CARPETA DE REFERENCIA, NO FUNCIONAL POR AHORA
 
 Esta carpeta contiene una **base de arquitectura para una eventual app
 Android**, guardada **solo como referencia para el futuro**. 
@@ -13,7 +13,7 @@ Este código Android:
 - **No está compilado ni probado** en Android Studio.
 - **No se mantiene** al día con los cambios del resto del proyecto.
 - Queda acá por si en algún momento se decide retomar la idea de una app
-  nativa — en ese caso, sirve de punto de partida (ya tiene la estructura
+  nativa, en ese caso, sirve de punto de partida (ya tiene la estructura
   de datos, la conexión a la API y las pantallas base esbozadas).
 
 Si estás evaluando o usando el proyecto ahora, **podés ignorar esta carpeta

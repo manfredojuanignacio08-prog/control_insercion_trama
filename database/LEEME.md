@@ -1,6 +1,6 @@
 # Scripts SQL de referencia
 
-- `01_base_de_datos_completa.sql` — esquema completo para **PostgreSQL /
+- `01_base_de_datos_completa.sql`, esquema completo para **PostgreSQL /
   Neon** (el motor del proyecto). Es material de referencia: para crear
   las tablas en la práctica conviene usar `npm run init-db` desde la
   carpeta `backend/`, que ejecuta `backend/src/db/schema.sql` (la fuente de

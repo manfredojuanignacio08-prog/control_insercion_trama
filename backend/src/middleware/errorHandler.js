@@ -36,7 +36,7 @@ export function errorHandler(err, req, res, next) {
   // Para errores con status conocido (404/400/409 que lanzamos nosotros),
   // el mensaje es seguro y útil. Para un 500 inesperado en producción, no
   // exponemos el mensaje interno (podría filtrar nombres de tablas, rutas,
-  // etc.) — se loguea completo arriba, pero al cliente le va un texto genérico.
+  // etc.) (se loguea completo arriba, pero al cliente le va un texto genérico).
   const status = err.status || 500;
   if (status >= 500 && process.env.NODE_ENV === 'production') {
     return res.status(status).json({ error: 'Error interno del servidor' });

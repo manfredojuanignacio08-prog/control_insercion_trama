@@ -167,7 +167,7 @@ export async function detenerTelar(req, res, next) {
 // reporta pasadas físicas completadas). "pasos" permite reportar varias de
 // una sola vez, para no llamar a la base de datos en cada pasada individual.
 // El patrón no tiene "final": al llegar a la última celda, vuelve a la fila 0
-// y sigue (igual que la simulación del editor) — por eso no hay "completado",
+// y sigue (igual que la simulación del editor), por eso no hay "completado",
 // en cambio se informa vueltas_completadas si dio una vuelta entera o más.
 export async function avanzarTelar(req, res, next) {
   const client = await pool.connect();

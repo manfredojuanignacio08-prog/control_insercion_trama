@@ -1,5 +1,5 @@
 -- ============================================================
--- MIGRACIÓN 001 — Ajustar la base de datos existente (Neon del equipo)
+-- MIGRACIÓN 001, Ajustar la base de datos existente (Neon del equipo)
 -- para que coincida con el backend.
 --
 -- A diferencia de schema.sql (que crea tablas nuevas desde cero con
@@ -73,7 +73,7 @@ BEFORE UPDATE ON patrones
 FOR EACH ROW
 EXECUTE FUNCTION set_modificado_at();
 
--- 4) OPCIONAL — completar matriz_ligamento en patrones que ya existían
+-- 4) OPCIONAL, completar matriz_ligamento en patrones que ya existían
 -- antes de esta migración (quedaron en NULL al agregar la columna).
 -- Usa la misma regla que el backend: cada celda con pasadas > 0 pasa a ser 1.
 -- Si no se corre esto, esos patrones viejos simplemente muestran
@@ -96,7 +96,7 @@ BEGIN
 END $$;
 
 -- ============================================================
--- Verificación rápida (opcional, solo lectura) — correr después y revisar
+-- Verificación rápida (opcional, solo lectura), correr después y revisar
 -- que patrones tenga la columna y que el conteo de NULL sea 0:
 --
 -- SELECT count(*) AS total, count(matriz_ligamento) AS con_ligamento FROM patrones;

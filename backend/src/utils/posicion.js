@@ -1,5 +1,5 @@
 /**
- * MODELO DE TEJIDO — una FILA es una PASADA.
+ * MODELO DE TEJIDO, una FILA es una PASADA.
  *
  * Así trabaja el dobby del telar: en cada pasada, la fila del patrón define
  * QUÉ MARCOS suben. Cada columna de la fila es una bobina/electroimán:

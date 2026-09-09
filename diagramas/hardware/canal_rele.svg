@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 640" font-family="Arial, Helvetica, sans-serif">
+<rect width="980" height="640" fill="#F6F8FA"/>
+<text x="490" y="30" text-anchor="middle" font-size="17" font-weight="bold" fill="#1E3A5F">Bloque D, Canal del relé AQY212GH</text>
+<text x="490" y="49" text-anchor="middle" font-size="10.5" fill="#6B7684">Uno por lector óptico · seis canales idénticos, uno por bobina de selección</text>
+
+<!-- ESP32 -->
+<rect x="24" y="76" width="290" height="286" rx="9" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="169" y="97" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1E3A5F">LADO CONTROL, 3,3 V del gabinete</text>
+<rect x="52" y="120" width="130" height="76" rx="6" fill="#1E3A5F"/>
+<text x="117" y="146" text-anchor="middle" font-size="11" font-weight="bold" fill="#FFFFFF">ESP32</text>
+<text x="117" y="164" text-anchor="middle" font-size="10" fill="#DCE7F0">pin de salida</text>
+<text x="117" y="182" text-anchor="middle" font-size="8.5" fill="#7FA8C9">18 · 19 · 21 · 22 · 23 · 4</text>
+
+<line x1="182" y1="152" x2="238" y2="152" stroke="#1F2937" stroke-width="2"/>
+<rect x="238" y="140" width="66" height="24" rx="3" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="271" y="156" text-anchor="middle" font-size="10" font-weight="bold">330 Ω</text>
+<text x="271" y="132" text-anchor="middle" font-size="8.5" fill="#6B7684">1/4 W</text>
+
+<line x1="212" y1="152" x2="212" y2="240" stroke="#1F2937" stroke-width="2"/>
+<rect x="180" y="240" width="64" height="24" rx="3" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="212" y="256" text-anchor="middle" font-size="10" font-weight="bold">10 kΩ</text>
+<line x1="212" y1="264" x2="212" y2="304" stroke="#1F2937" stroke-width="2"/>
+<line x1="188" y1="304" x2="236" y2="304" stroke="#1F2937" stroke-width="2.4"/>
+<line x1="196" y1="311" x2="228" y2="311" stroke="#1F2937" stroke-width="2"/>
+<line x1="205" y1="318" x2="219" y2="318" stroke="#1F2937" stroke-width="1.6"/>
+<text x="212" y="336" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#1E3A5F">GND</text>
+<text x="169" y="352" text-anchor="middle" font-size="8.5" fill="#6B7684">arranque seguro</text>
+
+<!-- relé -->
+<rect x="352" y="120" width="240" height="230" rx="9" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2.2"/>
+<text x="472" y="146" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E3A5F">AQY212GH</text>
+<text x="472" y="163" text-anchor="middle" font-size="9.5" fill="#6B7684">relé PhotoMOS · DIP de 4 patas</text>
+<text x="472" y="178" text-anchor="middle" font-size="9" fill="#6B7684">60 V · 1 A · sin corriente mínima</text>
+<circle cx="372" cy="140" r="4" fill="#1E3A5F"/>
+<text x="384" y="144" font-size="8" fill="#6B7684">punto = pata 1</text>
+<line x1="472" y1="192" x2="472" y2="336" stroke="#CDD8E0" stroke-width="1.6" stroke-dasharray="4 3"/>
+<text x="472" y="352" text-anchor="middle" font-size="9" font-weight="bold" fill="#9C5C0A">frontera de aislamiento</text>
+<rect x="376" y="200" width="80" height="60" rx="4" fill="#DCE7F0"/>
+<text x="416" y="224" text-anchor="middle" font-size="9.5" font-weight="bold">1  ánodo</text>
+<text x="416" y="248" text-anchor="middle" font-size="9.5" font-weight="bold">2  cátodo</text>
+<text x="416" y="278" text-anchor="middle" font-size="8.5" fill="#6B7684">LED interno</text>
+<rect x="488" y="200" width="80" height="60" rx="4" fill="#DCE7F0"/>
+<text x="528" y="224" text-anchor="middle" font-size="9.5" font-weight="bold">3  salida</text>
+<text x="528" y="248" text-anchor="middle" font-size="9.5" font-weight="bold">4  salida</text>
+<text x="528" y="278" text-anchor="middle" font-size="8.5" fill="#6B7684">dos MOSFET</text>
+<text x="528" y="292" text-anchor="middle" font-size="8.5" fill="#6B7684">sin polaridad</text>
+
+<line x1="304" y1="152" x2="376" y2="212" stroke="#1F2937" stroke-width="2"/>
+<line x1="212" y1="152" x2="212" y2="152" stroke="#1F2937" stroke-width="2"/>
+<line x1="248" y1="304" x2="340" y2="304" stroke="#1F2937" stroke-width="2"/>
+<line x1="340" y1="304" x2="340" y2="240" stroke="#1F2937" stroke-width="2"/>
+<line x1="340" y1="240" x2="376" y2="240" stroke="#1F2937" stroke-width="2"/>
+
+<!-- lector óptico -->
+<rect x="640" y="76" width="316" height="286" rx="9" fill="#F2F5F8" stroke="#9C5C0A" stroke-width="1.6" stroke-dasharray="6 4"/>
+<text x="798" y="97" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#9C5C0A">LADO TELAR, circuito del lector óptico</text>
+<rect x="668" y="124" width="260" height="72" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="798" y="148" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1E3A5F">LECTOR ÓPTICO</text>
+<text x="798" y="165" text-anchor="middle" font-size="9.5" fill="#3F4B5C">Hoy lo interrumpe la cinta de papel</text>
+<text x="798" y="181" text-anchor="middle" font-size="9.5" fill="#3F4B5C">24 V alterna · consumo A MEDIR</text>
+<line x1="568" y1="212" x2="668" y2="212" stroke="#9C5C0A" stroke-width="2"/>
+<line x1="568" y1="240" x2="668" y2="240" stroke="#9C5C0A" stroke-width="2"/>
+<line x1="668" y1="196" x2="668" y2="212" stroke="#9C5C0A" stroke-width="2"/>
+<line x1="700" y1="196" x2="700" y2="240" stroke="#9C5C0A" stroke-width="2"/>
+<rect x="668" y="256" width="260" height="88" rx="6" fill="#E8EDF1" stroke="#CDD8E0"/>
+<text x="798" y="277" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1E3A5F">PLAQUETAS ROJ ELECTROTEX</text>
+<text x="798" y="294" text-anchor="middle" font-size="9.5" fill="#3F4B5C">Reciben la señal del lector y accionan</text>
+<text x="798" y="309" text-anchor="middle" font-size="9.5" fill="#3F4B5C">la bobina de selección correspondiente</text>
+<text x="798" y="330" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#9C5C0A">No se tocan: siguen funcionando igual</text>
+
+<!-- serie vs paralelo -->
+<rect x="24" y="384" width="460" height="150" rx="7" fill="#FFFFFF" stroke="#CDD8E0"/>
+<text x="42" y="406" font-size="11" font-weight="bold" fill="#1E3A5F">Si el agujero del papel CIERRA el circuito</text>
+<text x="42" y="426" font-size="10" fill="#3F4B5C">El relé va EN PARALELO con el lector.</text>
+<line x1="60" y1="452" x2="130" y2="452" stroke="#1F2937" stroke-width="2"/>
+<rect x="130" y="440" width="70" height="24" rx="3" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.5"/>
+<text x="165" y="456" text-anchor="middle" font-size="9">lector</text>
+<line x1="200" y1="452" x2="270" y2="452" stroke="#1F2937" stroke-width="2"/>
+<line x1="95" y1="452" x2="95" y2="490" stroke="#1E3A5F" stroke-width="2"/>
+<line x1="95" y1="490" x2="235" y2="490" stroke="#1E3A5F" stroke-width="2"/>
+<line x1="235" y1="490" x2="235" y2="452" stroke="#1E3A5F" stroke-width="2"/>
+<rect x="130" y="478" width="70" height="24" rx="3" fill="#DCE7F0" stroke="#1E3A5F" stroke-width="1.5"/>
+<text x="165" y="494" text-anchor="middle" font-size="9" font-weight="bold">relé</text>
+<text x="42" y="522" font-size="9.5" fill="#6B7684">Cerrar el relé equivale a que pase un agujero.</text>
+
+<rect x="496" y="384" width="460" height="150" rx="7" fill="#FFFFFF" stroke="#CDD8E0"/>
+<text x="514" y="406" font-size="11" font-weight="bold" fill="#1E3A5F">Si el agujero del papel ABRE el circuito</text>
+<text x="514" y="426" font-size="10" fill="#3F4B5C">El relé va EN SERIE, intercalado en un hilo.</text>
+<line x1="532" y1="466" x2="600" y2="466" stroke="#1F2937" stroke-width="2"/>
+<rect x="600" y="454" width="70" height="24" rx="3" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.5"/>
+<text x="635" y="470" text-anchor="middle" font-size="9">lector</text>
+<line x1="670" y1="466" x2="720" y2="466" stroke="#1F2937" stroke-width="2"/>
+<rect x="720" y="454" width="70" height="24" rx="3" fill="#DCE7F0" stroke="#1E3A5F" stroke-width="1.5"/>
+<text x="755" y="470" text-anchor="middle" font-size="9" font-weight="bold">relé</text>
+<line x1="790" y1="466" x2="860" y2="466" stroke="#1F2937" stroke-width="2"/>
+<text x="514" y="512" font-size="9.5" fill="#6B7684">Abrir el relé equivale al agujero. Hay que cortar un hilo</text>
+<text x="514" y="526" font-size="9.5" fill="#6B7684">del lector: marcarlo con cinta antes de cortarlo.</text>
+
+<rect x="24" y="552" width="932" height="72" rx="7" fill="#F2F5F8" stroke="#9C5C0A" stroke-width="1.4"/>
+<text x="42" y="574" font-size="10.5" font-weight="bold" fill="#9C5C0A">Antes de comprar los seis relés: medir la salida de un lector óptico con el telar encendido.</text>
+<text x="42" y="592" font-size="9.5" fill="#3F4B5C">Hay que conocer tres cosas: la tensión, la corriente, y si el agujero abre o cierra el circuito. Con esos datos queda definido el conexionado.</text>
+<text x="42" y="610" font-size="9.5" fill="#3F4B5C">Comprar UNA unidad, armar un canal completo, probarlo en la máquina y recién entonces comprar las cinco restantes.</text>
+</svg>

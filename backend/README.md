@@ -1,4 +1,4 @@
-# Backend — Control de Inserción de Trama
+# Backend, Control de Inserción de Trama
 
 Backend en **Node.js + Express + PostgreSQL** para el sistema de control de inserción
 de trama. Implementa la Fase 1 y 2 del plan (ver `Analisis_Frontend_y_Plan_Backend.md`):
@@ -24,7 +24,7 @@ Con la base ya creada en Postgres (`CREATE DATABASE control_trama;`) y el `.env`
 npm run init-db
 ```
 
-Esto ejecuta `src/db/schema.sql` (crea las tablas `patrones`, `telares`,
+Esto ejecuta `backend/src/db/schema.sql` (crea las tablas `patrones`, `telares`,
 `historial_produccion`, `errores_log`, índices y el trigger de `modificado_at`).
 Es seguro correrlo de nuevo: usa `CREATE TABLE IF NOT EXISTS`.
 
@@ -36,7 +36,7 @@ npm start        # modo normal
 ```
 
 Por defecto en `http://localhost:3000`. El backend expone la **API REST** y
-además **sirve la página web** desde `public/` — esa web (diseñada para el
+además **sirve la página web** desde `public/`, esa web (diseñada para el
 celular) es la interfaz de uso real del proyecto y ya está conectada a esta
 misma API. Al abrir `http://localhost:3000` en el navegador, la web carga
 completa.
@@ -50,7 +50,7 @@ logs en formato `combined` cuando `NODE_ENV=production`, validación estricta
 de los datos que llegan, y apagado prolijo (cierra el pool de Postgres antes
 de salir cuando el proceso recibe `SIGTERM`/`SIGINT`).
 
-### Opción A — Docker (recomendado, todo incluido)
+### Opción A, Docker (recomendado, todo incluido)
 
 ```bash
 docker compose up -d --build
@@ -61,7 +61,7 @@ deja todo escuchando en `http://localhost:3000`. Para producción real, antes
 de este paso cambiá las credenciales de `docker-compose.yml` (o llevalas a
 variables de entorno del host) y no las dejes en `postgres/postgres`.
 
-### Opción B — PM2 en un servidor propio (VPS, on-premise en planta)
+### Opción B, PM2 en un servidor propio (VPS, on-premise en planta)
 
 ```bash
 npm install --omit=dev
@@ -109,26 +109,26 @@ en vez de la del proxy.
 ### Patrones (biblioteca)
 | Método | Ruta | Body | Descripción |
 |---|---|---|---|
-| GET | `/api/patrones?buscar=texto` | — | Lista (filtra por nombre, ILIKE) |
-| GET | `/api/patrones/:id` | — | Detalle |
+| GET | `/api/patrones?buscar=texto` |, | Lista (filtra por nombre, ILIKE) |
+| GET | `/api/patrones/:id` |, | Detalle |
 | POST | `/api/patrones` | `{nombre, filas, columnas, matriz_pasadas, matriz_ligamento?, colores_filas?, metadata?}` | Crea. Si no mandás `matriz_ligamento`, se deriva automáticamente (`pasadas>0 → 1`) |
 | PUT | `/api/patrones/:id` | igual que POST | Reemplaza el patrón |
-| DELETE | `/api/patrones/:id` | — | Borra (falla con 409 si tiene historial asociado) |
+| DELETE | `/api/patrones/:id` |, | Borra (falla con 409 si tiene historial asociado) |
 
 ### Telares
 | Método | Ruta | Body | Descripción |
 |---|---|---|---|
-| GET | `/api/telares` | — | Lista con nombre del patrón actual |
-| GET | `/api/telares/:id` | — | Detalle |
+| GET | `/api/telares` |, | Lista con nombre del patrón actual |
+| GET | `/api/telares/:id` |, | Detalle |
 | POST | `/api/telares` | `{codigo, nombre?}` | Crea un telar nuevo |
 | POST | `/api/telares/:id/asignar-patron` | `{patron_id}` | Asigna patrón, abre fila en `historial_produccion`. Si había una producción en curso, la cierra como `detenido_manual` automáticamente. Arranca en `fila_actual=0, columna_actual=0, pasada_actual=0` |
 | POST | `/api/telares/:id/detener` | `{pasadas_totales?, alertas_disparadas?}` | Cierra la producción en curso (409 si no había ninguna). Si no se manda `pasadas_totales`, conserva el contador ya acumulado por `/avanzar` |
-| POST | `/api/telares/:id/avanzar` | `{pasos?}` (default 1) | Avanza N pasadas físicas de tejido (pensado para el ESP32) — espejo exacto de `doTick()` del frontend: respeta cuántas pasadas tiene cada celda de `matriz_pasadas`, cruza de fila sola, y al terminar el patrón vuelve a la fila 0 y sigue (bucle infinito, suma a `vueltas_completadas`) |
-| POST | `/api/telares/:id/retroceder` | `{pasos?}` (default 1) | Retrocede N pasos sin reconstruir nada — espejo exacto de `rollback()` del frontend, usa `fila_actual`/`columna_actual` ya guardados. No retrocede más allá del inicio (`al_inicio: true`) |
-| POST | `/api/telares/:id/retroceder-fisico` | — | Pulsa el relé del botón **físico** Retroceder del telar (mueve la máquina de verdad). No confundir con `/retroceder`, que solo mueve el cursor del patrón en la web. Incrementa `retroceder_seq`; el ESP32 detecta el cambio al sondear y da el pulso |
+| POST | `/api/telares/:id/avanzar` | `{pasos?}` (default 1) | Avanza N pasadas físicas de tejido (pensado para el ESP32) (espejo exacto de `doTick()` del frontend): respeta cuántas pasadas tiene cada celda de `matriz_pasadas`, cruza de fila sola, y al terminar el patrón vuelve a la fila 0 y sigue (bucle infinito, suma a `vueltas_completadas`) |
+| POST | `/api/telares/:id/retroceder` | `{pasos?}` (default 1) | Retrocede N pasos sin reconstruir nada (espejo exacto de `rollback()` del frontend, usa `fila_actual`/`columna_actual` ya guardados). No retrocede más allá del inicio (`al_inicio: true`) |
+| POST | `/api/telares/:id/retroceder-fisico` |, | Pulsa el relé del botón **físico** Retroceder del telar (mueve la máquina de verdad). No confundir con `/retroceder`, que solo mueve el cursor del patrón en la web. Incrementa `retroceder_seq`; el ESP32 detecta el cambio al sondear y da el pulso |
 | POST | `/api/telares/:id/evento-fisico` | `{tipo: 'marcha'\|'pausa'\|'retroceder'}` | Lo llama el ESP32 cuando **sensa** (no acciona) que un operario apretó a mano un botón del telar. Actualiza el estado real: `marcha`→`tejiendo`, `pausa`→`pausado`, `retroceder`→ mueve la posición una pasada atrás. Sin esto, alguien podía arrancar el telar a mano y la web seguía mostrando "detenido" |
 | POST | `/api/telares/:id/confirmar-posicion` | `{visto_hasta?}` | El operario ya revisó el telar y confirma la posición: limpia `posicion_incierta`. Si se manda `visto_hasta` (timestamp del evento que la web mostró) y llegó otro evento después, responde **409** en vez de tapar el aviso nuevo |
-| GET | `/api/telares/:id/historial` | — | Historial de ese telar |
+| GET | `/api/telares/:id/historial` |, | Historial de ese telar |
 
 ### Historial global y errores
 | Método | Ruta | Descripción |
@@ -158,7 +158,7 @@ src/
 │   └── migrate.js                                Corre TODAS las migracion_*.sql en orden
 ├── utils/
 │   ├── ligamento.js        Deriva matriz_ligamento desde matriz_pasadas
-│   ├── posicion.js         Lógica pura de avanzar/retroceder — espejo 1:1 de doTick()/rollback() del frontend
+│   ├── posicion.js         Lógica pura de avanzar/retroceder (espejo 1):1 de doTick()/rollback() del frontend
 │   └── validacion.js       Validación de patrones
 ├── middleware/errorHandler.js  Manejo centralizado de errores (404/400/409/500)
 ├── controllers/             Lógica de negocio por entidad
@@ -170,7 +170,7 @@ src/
 - `matriz_pasadas` (enteros) y `matriz_ligamento` (binario) son **campos separados**.
 - **Una FILA es una PASADA.** En cada pasada, la fila del patrón define qué
   marcos suben: cada columna es una bobina/electroimán del dobby. Las
-  columnas NO se recorren una por una — son simultáneas dentro de la misma
+  columnas NO se recorren una por una, son simultáneas dentro de la misma
   pasada. Lo que avanza es la fila.
 - La repetición es **de fila entera**: si una fila tiene números mayores a 1,
   esa pasada se repite esa cantidad de veces antes de pasar a la siguiente
@@ -178,14 +178,14 @@ src/
   `matriz_pasadas` ya guardaba esos números.
 - `historial_produccion.fila_actual` / `pasada_actual` guardan la posición de
   la producción en curso (mismo significado que `curRow`/`curPass` del
-  frontend) — soportan "retroceder una pasada" sin reconstruir nada.
+  frontend) (soportan "retroceder una pasada" sin reconstruir nada).
   `columna_actual` se conserva por compatibilidad pero ya no marca posición:
   siempre vale 0. `vueltas_completadas` cuenta cuántas veces se
   tejió el patrón entero (no hay "final": es un bucle infinito, igual que
   un telar real, hasta que se detiene manualmente).
 - Esquema **multi-telar desde el día 1**; el piloto puede arrancar con un solo
   registro en `telares` sin que eso implique ninguna migración después.
-- **Sin autenticación** en esta versión — no hay tabla de usuarios.
+- **Sin autenticación** en esta versión (no hay tabla de usuarios).
 - `asignar-patron`, `detener`, `avanzar` y `retroceder` corren dentro de una
   **transacción** con `FOR UPDATE` para evitar condiciones de carrera si dos
   requests llegan casi al mismo tiempo.
@@ -194,7 +194,7 @@ src/
 
 1. **Selector visual de telar/máquina**: hoy se usa automáticamente el único
    telar que existe (creado solo si no hay ninguno). El día que haya más de
-   uno, agregar el selector en la web — la lógica de conexión
+   uno, agregar el selector en la web, la lógica de conexión
    (`asignar-patron`, `avanzar`, `retroceder`) ya está lista para trabajar
    con cualquier id de telar, no hay que tocar el backend para eso.
 2. **Pantalla de historial de producción**: la base ya tiene los datos

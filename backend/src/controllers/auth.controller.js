@@ -27,7 +27,7 @@ import { pool } from '../db.js';
 // ─── Configuración del "Relying Party" (el sitio) ─────────────────────
 // WebAuthn exige que el "RP ID" coincida con el dominio DESDE EL QUE SE ABRE
 // la página. Si lo dejáramos fijo en "localhost", fallaría apenas se accede
-// desde el celular por IP (ej. 192.168.1.50) o desde un dominio real — que
+// desde el celular por IP (ej. 192.168.1.50) o desde un dominio real, que
 // es justo el error "The RP ID localhost is invalid for this domain".
 //
 // Por eso lo derivamos del propio pedido (del header Origin/Host que manda
@@ -102,7 +102,7 @@ async function limpiarDesafiosVencidos() {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  REGISTRO — asociar la huella dactilar de un dispositivo a un usuario
+//  REGISTRO, asociar la huella dactilar de un dispositivo a un usuario
 // ══════════════════════════════════════════════════════════════════════
 
 /**
@@ -280,7 +280,7 @@ export async function verificarRegistro(req, res, next) {
 }
 
 // ══════════════════════════════════════════════════════════════════════
-//  LOGIN — entrar usando la huella dactilar ya registrada
+//  LOGIN, entrar usando la huella dactilar ya registrada
 // ══════════════════════════════════════════════════════════════════════
 
 /**

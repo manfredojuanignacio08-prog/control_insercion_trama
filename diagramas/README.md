@@ -1,58 +1,41 @@
 # Diagramas del proyecto
 
-Los dos diagramas del sistema, juntos en un solo lugar (SVG vectorial +
-PNG en alta resolución, listos para imprimir o pegar en Word/PowerPoint).
+Cada diagrama está en SVG, que es el original y se puede editar, y en PNG para
+insertarlo en documentos.
 
-## 1. `diagrama_logico_arquitectura.svg` / `.png`
+## `hardware/`, cómo se conecta
 
-**Diagrama lógico**: cómo se conectan entre sí los componentes del
-sistema — la página web, backend, base de datos, ESP32 y telar físico — y
-qué protocolo usa cada conexión (API REST, SQL, sondeo HTTP, pulso de
-relé). Incluye la aclaración de que la web de demostración no es parte
-del producto.
+### `diagrama_conexion_electrica.svg`
+El nodo de control del Bloque A: los tres relés hacia la botonera, la etapa de
+sensado con sus optoacopladores, la fuente y el fusible de línea. Es el que hay
+que tener a mano al armar la placa.
 
-Útil para explicar la **arquitectura** del proyecto: quién le habla a
-quién y por qué.
+### `canal_sensor.svg`
+Un canal del sensor de pasada del Bloque C, de punta a punta: el sensor
+inductivo, la rectificación de los 24 V de alterna del telar, el optoacoplador
+y el pin del microcontrolador. Incluye la tabla para calcular la resistencia
+según la tensión que se mida.
 
-## 2. `diagrama_conexion_electrica.svg` / `.png`
+### `canal_rele.svg`
+Un canal de la selección del dibujo del Bloque D: el relé PhotoMOS AQY212GH con
+sus cuatro patas, las dos resistencias y las dos formas posibles de conectarlo
+al lector óptico, en serie o en paralelo.
 
-**Diagrama físico/eléctrico**: el cableado real del ESP32 — las 4 etapas
-del circuito (alimentación con fuente propia HLK-5M05 desde 220V, lógica a
-3.3V hacia los 3 relés, actuación sobre la botonera de 24V AC, y sensado
-por optoacopladores de esos mismos tres botones, para detectar el uso manual), con las
-mejoras de protección recomendadas marcadas en ámbar. Es una copia del mismo archivo
-que está en `esp32/`, puesto acá también para tener ambos diagramas juntos.
+### `diagrama_nivel2_marcos.svg`
+Vista de conjunto del Nivel 2: cómo el microcontrolador comanda los seis
+lectores ópticos que hoy lee la cinta de papel.
 
-Útil para explicar cómo está **cableado** el ESP32 al telar, componente
-por componente.
+## `sistema/`, cómo funciona
 
-## 3. `arbol_problemas_soluciones.svg` / `.png`
+### `diagrama_logico_arquitectura.svg`
+El recorrido completo de una orden, desde que el operario toca un botón en la
+aplicación hasta que el relé cierra el contacto en la máquina.
 
-**Árbol de problemas y soluciones**: la lógica que justifica el proyecto.
-A la izquierda, el árbol de problemas (problema central, sus causas/raíces y
-sus efectos); a la derecha, el árbol de soluciones (el objetivo y cómo cada
-causa se convirtió en una acción concreta); y abajo, el recorrido de 6 pasos
-de cómo se fue llegando a la solución. El mismo contenido en texto está en
-`docs/Arbol_Problemas_y_Soluciones.md`.
+### `arbol_problemas_soluciones.svg`
+El árbol de causas y efectos del problema que resuelve el proyecto, con las
+soluciones propuestas para cada causa.
 
-Útil para explicar **por qué** se hizo el proyecto y cómo se razonó la
-solución.
+## Cómo regenerar los PNG
 
-## 4. `diagrama_nivel2_marcos`
-
-**Etapa de marcos del Nivel 2 (evolución).** Muestra cómo el ESP32 dictaría
-la secuencia del dibujo moviendo los marcos del telar: backend → ESP32 →
-GPIO del ESP32 → relés de estado sólido (SSR) → los lectores ópticos del telar
-→ telar. Es el diagrama del Nivel 2 (control del tejido), a diferencia del
-eléctrico que es el Nivel 1 (arranque/pausa).
-
-## Cuál mirar según la pregunta
-
-| Si preguntan... | Mirar |
-|---|---|
-| "¿Cómo se conecta la app con la base de datos?" | Diagrama lógico |
-| "¿Por qué el ESP32 no rompe el backend al agregarlo?" | Diagrama lógico |
-| "¿Cómo está cableado el ESP32 al telar?" | Diagrama eléctrico |
-| "¿Qué protecciones eléctricas tiene el circuito?" | Diagrama eléctrico |
-| "¿Por qué se hizo el proyecto? ¿Cómo llegaron a la solución?" | Árbol de problemas y soluciones |
-| "¿Cómo controlaría el ESP32 los marcos para tejer el dibujo?" | Nivel 2 (marcos) |
+Los PNG se obtienen de los SVG. Si se edita un SVG hay que volver a exportarlo,
+porque los documentos usan el PNG.

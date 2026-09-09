@@ -1,6 +1,6 @@
 
 /* ─────────────────────────────────────────────
-   TOKENS — paleta crema/gris (sin blanco/negro puro)
+   TOKENS, paleta crema/gris (sin blanco/negro puro)
 ───────────────────────────────────────────── */
 :root {
   --rose:     #1E3A5F;
@@ -19,7 +19,7 @@
   --red:      #8B1F1F;
 
   --bg:      var(--cream);
-  --srf:     #F9F6F0;
+  --srf:     #EDF1F5;
   --srf2:    var(--cream-dk);
   --bd:      var(--cream-bd);
   --tx:      var(--gray-dk);
@@ -30,8 +30,8 @@
   --acc-lt:  var(--rose-xs);
 
   --r-sm: 8px; --r-md: 12px; --r-lg: 18px; --r-xl: 24px;
-  --sh-sm: 0 1px 4px rgba(124,33,85,.10), 0 2px 12px rgba(124,33,85,.06);
-  --sh-md: 0 3px 14px rgba(124,33,85,.13), 0 6px 28px rgba(124,33,85,.07);
+  --sh-sm: 0 1px 4px rgba(30,58,95,.10), 0 2px 12px rgba(30,58,95,.06);
+  --sh-md: 0 3px 14px rgba(30,58,95,.13), 0 6px 28px rgba(30,58,95,.07);
 
   --font-body: 'Century Gothic', CenturyGothic, AppleGothic, 'Questrial', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-display: 'Century Gothic', CenturyGothic, AppleGothic, 'Questrial', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -40,13 +40,13 @@
   --bg:    #131A24;
   --srf:   #1F2937;
   --srf2:  #2C3846;
-  --bd:    rgba(245,240,235,.22);
+  --bd:    rgba(237,241,245,.22);
   --tx:    #F0F4F8;
   --tx2:   #B8C4D0;
   --tx3:   #8895A3;
   --acc:   #8FB8DC;
   --acc-md:#6E9BC4;
-  --acc-lt:rgba(224,165,204,.20);
+  --acc-lt:rgba(125,160,200,.20);
   --sh-sm: 0 1px 4px rgba(0,0,0,.35);
   --sh-md: 0 3px 14px rgba(0,0,0,.45);
 }
@@ -127,10 +127,10 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
   scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
 
 /* ─────────────────────────────────────────────
-   ██ SCREEN: INICIO — HERO
+   ██ SCREEN: INICIO, HERO
 ───────────────────────────────────────────── */
 .hero{
-  background:linear-gradient(150deg, var(--rose) 0%, #A04478 55%, #7FA8C9 100%);
+  background:linear-gradient(150deg, var(--rose) 0%, #3D6B96 55%, #7FA8C9 100%);
   padding:36px 24px 32px;
   display:flex;flex-direction:column;align-items:center;gap:0;
   position:relative;overflow:hidden;
@@ -154,10 +154,10 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
   display:flex;align-items:center;justify-content:center;
   margin-bottom:20px;
   filter:drop-shadow(0 6px 24px rgba(0,0,0,.28));
-  background:rgba(245,240,235,.90);
+  background:rgba(237,241,245,.94);
   border-radius:20px;
   padding:14px 24px;
-  box-shadow:0 4px 24px rgba(0,0,0,.22), 0 0 0 1px rgba(245,240,235,.25);
+  box-shadow:0 4px 24px rgba(0,0,0,.22), 0 0 0 1px rgba(237,241,245,.28);
 }
 .hero-logo-img{
   width:210px;
@@ -249,15 +249,15 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
 
 /* ── Ajustes de contraste para modo oscuro ─────────────────────────
    En modo oscuro, varios elementos usaban rosa oscuro hardcodeado
-   (rgba(124,33,85,...)) que casi no se veía sobre el fondo oscuro.
+   (rgba(30,58,95,...)) que casi no se veía sobre el fondo oscuro.
    Acá se reemplazan por versiones más claras y con más presencia. */
-[data-theme="dark"] .grid-row.active-row{background:rgba(224,165,204,.14)}
+[data-theme="dark"] .grid-row.active-row{background:rgba(125,160,200,.14)}
 [data-theme="dark"] .grid-row.active-row .g-cell.on{
-  box-shadow:0 0 0 2px rgba(224,165,204,.55);
+  box-shadow:0 0 0 2px rgba(125,160,200,.55);
 }
 /* La franja de color de fila y las celdas encendidas necesitan un borde
    claro para despegarse del fondo oscuro. */
-[data-theme="dark"] .g-cell{border-color:rgba(245,240,235,.28)}
+[data-theme="dark"] .g-cell{border-color:rgba(237,241,245,.28)}
 [data-theme="dark"] .g-cell.on{
   border-color:var(--acc);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);
@@ -277,7 +277,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
    casi sin ícono visible. Les damos una superficie más clara y un ícono
    con buen contraste, más un borde para que se despeguen del fondo. */
 [data-theme="dark"] .ctrl-pause{
-  background:#2C3846;color:var(--acc);border:1.5px solid rgba(224,165,204,.45);
+  background:#2C3846;color:var(--acc);border:1.5px solid rgba(125,160,200,.45);
 }
 [data-theme="dark"] .ctrl-back-fisico{
   background:#2C3846;color:#E88989;border:1.5px solid rgba(232,137,137,.40);
@@ -288,7 +288,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
    note lleno y con marco. */
 [data-theme="dark"] .hero-logo-wrap{
   background:#F0F4F8;
-  box-shadow:0 4px 24px rgba(0,0,0,.45), 0 0 0 2px rgba(245,240,235,.55);
+  box-shadow:0 4px 24px rgba(0,0,0,.45), 0 0 0 2px rgba(237,241,245,.55);
 }
 /* El logo chico de la barra superior también sobre un chip claro */
 [data-theme="dark"] .tb-logo{
@@ -302,7 +302,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
   background:var(--acc);color:#3D1030;  /* texto oscuro sobre rosa claro */
 }
 [data-theme="dark"] .save-secondary{
-  background:#2C3846;color:#F0F4F8;border:1px solid rgba(245,240,235,.30);
+  background:#2C3846;color:#F0F4F8;border:1px solid rgba(237,241,245,.30);
 }
 /* El "Limpiar" de la biblioteca usaba --rose (rosa oscuro), invisible en
    fondo oscuro. Lo pasamos al acento claro. Lleva !important porque el
@@ -400,7 +400,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
   flex-shrink:0;font-variant-numeric:tabular-nums;
 }
 .grid-row{display:flex;align-items:center;margin-bottom:2px;border-radius:5px}
-.grid-row.active-row{background:rgba(124,33,85,.09)}
+.grid-row.active-row{background:rgba(30,58,95,.09)}
 .g-row-n{
   width:30px;font-size:9px;font-weight:700;color:var(--tx3);
   text-align:right;padding-right:6px;flex-shrink:0;
@@ -419,7 +419,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
 .g-cell.on{background:var(--acc);border-color:var(--acc);color:var(--on-rose)}
 
 .grid-row.active-row .g-cell.on{
-  box-shadow:0 0 0 2px rgba(124,33,85,.35);
+  box-shadow:0 0 0 2px rgba(30,58,95,.35);
 }
 
 .editor-tools{
@@ -464,7 +464,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
 .ctrl-pause{background:var(--srf2);color:var(--acc);
   border:1.5px solid var(--bd)}
 .ctrl-play{background:var(--acc);color:var(--on-rose);
-  box-shadow:0 2px 10px rgba(124,33,85,.4)}
+  box-shadow:0 2px 10px rgba(30,58,95,.4)}
 .ctrl-back-fisico{background:var(--srf2);color:var(--red);
   border:1.5px solid rgba(139,31,31,.35)}
 
@@ -479,7 +479,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
 }
 .save-btn:active{opacity:.85;transform:scale(.98)}
 .save-primary{background:var(--acc);color:var(--on-rose);
-  box-shadow:0 2px 10px rgba(124,33,85,.3)}
+  box-shadow:0 2px 10px rgba(30,58,95,.3)}
 .save-secondary{background:var(--srf2);color:var(--tx2);
   border:1px solid var(--bd)}
 
@@ -699,7 +699,7 @@ input::-webkit-inner-spin-button{-webkit-appearance:none}
   align-items: center;
   justify-content: center;
   color: var(--on-rose);
-  box-shadow: 0 4px 12px rgba(124,33,85,0.25);
+  box-shadow: 0 4px 12px rgba(30,58,95,0.25);
   flex-shrink: 0;
 }
 .cd-icon-wrap svg { width: 26px; height: 26px; }

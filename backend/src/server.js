@@ -37,7 +37,7 @@ if (process.env.TRUST_PROXY === 'true') {
 //
 // IMPORTANTE: helmet, si no se le dice explícitamente lo contrario, pone
 // "script-src-attr: 'none'" por defecto (parte de su set de directivas
-// recomendadas) — eso bloquea TODOS los onclick="..." escritos en el HTML,
+// recomendadas) (eso bloquea TODOS los onclick=")..." escritos en el HTML,
 // aunque scriptSrc sí permita 'unsafe-inline'. Por eso hace falta declarar
 // scriptSrcAttr explícitamente acá.
 app.use(
@@ -71,7 +71,7 @@ app.use(morgan(isProd ? 'combined' : 'dev'));
 
 // Limita abuso de la API (ajustable por .env). No aplica a los archivos estáticos
 // ni a avanzar/retroceder (esas dos tienen su propio límite, mucho más
-// generoso, en telares.routes.js — se llaman en cada paso de la animación).
+// generoso, en telares.routes.js (se llaman en cada paso de la animación)).
 //
 // Tampoco aplica al sondeo del ESP32 (GET /telares/:id?origen=esp32): el
 // firmware consulta cada 2,5s, o sea ~360 pedidos cada 15 minutos, por

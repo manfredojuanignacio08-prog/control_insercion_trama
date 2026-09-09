@@ -5,7 +5,7 @@ import * as telaresController from '../controllers/telares.controller.js';
 const router = express.Router();
 
 // avanzar/retroceder se llaman en CADA paso de la animación de tejido
-// (cada 100-500ms mientras Play está activo) — el límite general de la API
+// (cada 100-500ms mientras Play está activo), el límite general de la API
 // (300 cada 15 min, pensado para uso normal) se agota en un par de minutos
 // con eso. Estas dos rutas tienen su propio límite, mucho más generoso
 // (hasta ~20 solicitudes por segundo sostenidas), pensado específicamente
@@ -31,7 +31,7 @@ router.post('/:id/avanzar', playbackLimiter, telaresController.avanzarTelar);
 router.post('/:id/retroceder', playbackLimiter, telaresController.retrocederTelar);
 // Botón físico real del telar (Retroceder). A diferencia de la ruta de
 // arriba (llamada en cada paso de la animación), esta es una acción
-// puntual que el operador dispara a mano de vez en cuando — no necesita
+// puntual que el operador dispara a mano de vez en cuando, no necesita
 // el límite generoso de playbackLimiter, con el general de la API alcanza.
 router.post('/:id/retroceder-fisico', telaresController.retrocederFisico);
 // Sensado (no control) de los 3 botones: el ESP32 avisa un uso manual,

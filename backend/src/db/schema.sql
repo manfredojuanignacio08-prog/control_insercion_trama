@@ -15,7 +15,7 @@
 --     curRow/curCol/curPass del frontend), para soportar "retroceder un
 --     paso" sin reconstruir nada.
 --   - El tejido no tiene "final": al llegar a la última celda vuelve a la
---     fila 0 y sigue en bucle infinito (así es un telar real) — por eso
+--     fila 0 y sigue en bucle infinito (así es un telar real), por eso
 --     vueltas_completadas cuenta cuántas veces se repitió el patrón entero.
 --
 -- Nota: la base real del equipo (Neon) se creó sin estas columnas.
@@ -98,7 +98,7 @@ FOR EACH ROW
 EXECUTE FUNCTION set_modificado_at();
 
 -- ============================================================
--- Login biométrico (huella dactilar) con WebAuthn — ver
+-- Login biométrico (huella dactilar) con WebAuthn, ver
 -- migracion_003_login_biometrico.sql para el detalle y las notas de
 -- seguridad. Resumen: la biometría NUNCA se guarda ni viaja al servidor;
 -- solo se guardan las claves públicas de los dispositivos registrados.
