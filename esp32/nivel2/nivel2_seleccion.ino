@@ -115,6 +115,7 @@ bool descargarDibujo() {
 
 // ============================================================================
 //  Consultar si el telar tiene que estar tejiendo
+//  Se lee de /telares/{id}, el mismo endpoint que usa el firmware del Nivel 1.
 // ============================================================================
 void consultarEstado() {
   if (WiFi.status() != WL_CONNECTED) {
@@ -129,7 +130,7 @@ void consultarEstado() {
   }
 
   HTTPClient http;
-  http.begin(String(API_BASE) + "/telares/" + String(TELAR_ID) + "/estado");
+  http.begin(String(API_BASE) + "/telares/" + String(TELAR_ID));
   http.setTimeout(6000);
   const int codigo = http.GET();
 
