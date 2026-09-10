@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 980" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 980" font-family="IBM Plex Sans, system-ui, sans-serif">
   <defs>
     <marker id="fp" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#8B1F1F"/></marker>
     <marker id="fs" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#2E6E4A"/></marker>
   </defs>
 
   <rect width="1400" height="980" fill="#f6f8fa"/>
-  <text x="700" y="40" text-anchor="middle" font-size="24" font-weight="bold" fill="#1e3a5f">Árbol de problemas y soluciones</text>
+  <text font-family="Questrial, IBM Plex Sans, sans-serif" x="700" y="40" text-anchor="middle" font-size="24" font-weight="bold" fill="#1e3a5f">Árbol de problemas y soluciones</text>
   <text x="700" y="64" text-anchor="middle" font-size="14" fill="#6b7684">Cómo se llegó a la solución del proyecto · Control de Inserción de Trama</text>
 
   <!-- Divisoria vertical -->
@@ -13,7 +13,7 @@
 
   <!-- ══════════════ LADO IZQUIERDO: PROBLEMAS ══════════════ -->
   <rect x="30" y="86" width="640" height="34" rx="8" fill="#8B1F1F"/>
-  <text x="350" y="109" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">ÁRBOL DE PROBLEMAS</text>
+  <text font-family="Questrial, IBM Plex Sans, sans-serif" x="350" y="109" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">ÁRBOL DE PROBLEMAS</text>
 
   <!-- EFECTOS (copa, arriba) -->
   <text x="350" y="146" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#8B1F1F">🍂 EFECTOS (consecuencias)</text>
@@ -74,7 +74,7 @@
 
   <!-- ══════════════ LADO DERECHO: SOLUCIONES ══════════════ -->
   <rect x="730" y="86" width="640" height="34" rx="8" fill="#2E6E4A"/>
-  <text x="1050" y="109" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">ÁRBOL DE SOLUCIONES</text>
+  <text font-family="Questrial, IBM Plex Sans, sans-serif" x="1050" y="109" text-anchor="middle" font-size="16" font-weight="bold" fill="#fff">ÁRBOL DE SOLUCIONES</text>
 
   <!-- FINES (copa) -->
   <text x="1050" y="146" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#2E6E4A">🍎 FINES (beneficios)</text>
@@ -137,7 +137,7 @@
 
   <!-- ══════════════ ABAJO: CÓMO SE LLEGÓ A LA SOLUCIÓN ══════════════ -->
   <rect x="30" y="452" width="1340" height="30" rx="8" fill="#1e3a5f"/>
-  <text x="700" y="473" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">CÓMO SE LLEGÓ A LA SOLUCIÓN (el recorrido)</text>
+  <text font-family="Questrial, IBM Plex Sans, sans-serif" x="700" y="473" text-anchor="middle" font-size="15" font-weight="bold" fill="#fff">CÓMO SE LLEGÓ A LA SOLUCIÓN (el recorrido)</text>
 
   <!-- pasos como cadena horizontal -->
   <g font-size="11">
@@ -203,7 +203,7 @@
 
   <!-- Resultado final -->
   <rect x="200" y="620" width="1000" height="70" rx="10" fill="#2E6E4A"/>
-  <text x="700" y="647" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">RESULTADO</text>
+  <text font-family="Questrial, IBM Plex Sans, sans-serif" x="700" y="647" text-anchor="middle" font-size="14" font-weight="bold" fill="#fff">RESULTADO</text>
   <text x="700" y="668" text-anchor="middle" font-size="12" fill="#fff">El problema central quedó resuelto de punta a punta: se diseña en la web, se guarda en la base de datos a través</text>
   <text x="700" y="684" text-anchor="middle" font-size="12" fill="#fff">del backend, y -en la etapa de hardware- se ejecuta en el telar real mediante el ESP32.</text>
 

@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1086" font-family="IBM Plex Sans, system-ui, sans-serif">
+<rect width="1000" height="1086" fill="#F6F8FA"/>
+<defs><marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D6B96"/></marker></defs>
+<text x="40" y="34" font-size="17" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Bloque de autenticación: usuarios y acceso por huella</text>
+<path d="M 340 597 C 370 597, 370 903, 400 903" fill="none" stroke="#3D6B96" stroke-width="2" marker-end="url(#f)"/>
+<path d="M 190 510 C 190 391, 550 391, 550 272" fill="none" stroke="#3D6B96" stroke-width="2" marker-end="url(#f)"/>
+<path d="M 340 597 C 500 597, 500 585, 660 585" fill="none" stroke="#3D6B96" stroke-width="2" marker-end="url(#f)"/>
+<rect x="40" y="510" width="300" height="174" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.5"/>
+<path d="M 40 544.0 h 300 v -26 a 8 8 0 0 0 -8 -8 h -284 a 8 8 0 0 0 -8 8 z" fill="#1E3A5F"/>
+<text x="58" y="533.0" font-size="14" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">usuarios</text>
+<text x="58" y="563.0" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, monospace">PK</text>
+<text x="84" y="563.0" font-size="11.5" fill="#1F2937">id</text>
+<text x="322" y="563.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">serial</text>
+<rect x="41" y="572" width="298" height="28" fill="#EDF1F5"/>
+<text x="58" y="591.0" font-size="11.5" fill="#1F2937">nombre</text>
+<text x="322" y="591.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<text x="58" y="619.0" font-size="11.5" fill="#1F2937">nombre_usuario</text>
+<text x="322" y="619.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text UNIQUE</text>
+<rect x="41" y="628" width="298" height="28" fill="#EDF1F5"/>
+<text x="58" y="647.0" font-size="11.5" fill="#1F2937">codigo_recuperacion</text>
+<text x="322" y="647.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<text x="58" y="675.0" font-size="11.5" fill="#1F2937">creado_at</text>
+<text x="322" y="675.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<rect x="400" y="760" width="300" height="286" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.5"/>
+<path d="M 400 794.0 h 300 v -26 a 8 8 0 0 0 -8 -8 h -284 a 8 8 0 0 0 -8 8 z" fill="#1E3A5F"/>
+<text x="418" y="783.0" font-size="14" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">credenciales_biometricas</text>
+<text x="418" y="813.0" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, monospace">PK</text>
+<text x="444" y="813.0" font-size="11.5" fill="#1F2937">id</text>
+<text x="682" y="813.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">serial</text>
+<rect x="401" y="822" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="841.0" font-size="9" font-weight="700" fill="#3D6B96" font-family="IBM Plex Mono, monospace">FK</text>
+<text x="444" y="841.0" font-size="11.5" fill="#1F2937">usuario_id</text>
+<text x="682" y="841.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">-&gt; usuarios.id</text>
+<text x="418" y="869.0" font-size="11.5" fill="#1F2937">credencial_id</text>
+<text x="682" y="869.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text UNIQUE</text>
+<rect x="401" y="878" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="897.0" font-size="11.5" fill="#1F2937">clave_publica</text>
+<text x="682" y="897.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<text x="418" y="925.0" font-size="11.5" fill="#1F2937">encimera</text>
+<text x="682" y="925.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">bigint</text>
+<rect x="401" y="934" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="953.0" font-size="11.5" fill="#1F2937">tipo_dispositivo</text>
+<text x="682" y="953.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<text x="418" y="981.0" font-size="11.5" fill="#1F2937">apodo</text>
+<text x="682" y="981.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<rect x="401" y="990" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="1009.0" font-size="11.5" fill="#1F2937">creado_at</text>
+<text x="682" y="1009.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<text x="418" y="1037.0" font-size="11.5" fill="#1F2937">ultimo_uso</text>
+<text x="682" y="1037.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<rect x="400" y="70" width="300" height="202" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.5"/>
+<path d="M 400 104.0 h 300 v -26 a 8 8 0 0 0 -8 -8 h -284 a 8 8 0 0 0 -8 8 z" fill="#1E3A5F"/>
+<text x="418" y="93.0" font-size="14" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">desafios_webauthn</text>
+<text x="418" y="123.0" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, monospace">PK</text>
+<text x="444" y="123.0" font-size="11.5" fill="#1F2937">id</text>
+<text x="682" y="123.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">serial</text>
+<rect x="401" y="132" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="151.0" font-size="9" font-weight="700" fill="#3D6B96" font-family="IBM Plex Mono, monospace">FK</text>
+<text x="444" y="151.0" font-size="11.5" fill="#1F2937">usuario_id</text>
+<text x="682" y="151.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">-&gt; usuarios.id</text>
+<text x="418" y="179.0" font-size="11.5" fill="#1F2937">desafio</text>
+<text x="682" y="179.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<rect x="401" y="188" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="207.0" font-size="11.5" fill="#1F2937">tipo</text>
+<text x="682" y="207.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<text x="418" y="235.0" font-size="11.5" fill="#1F2937">vence_at</text>
+<text x="682" y="235.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<rect x="401" y="244" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="263.0" font-size="11.5" fill="#1F2937">creado_at</text>
+<text x="682" y="263.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<rect x="660" y="484" width="300" height="202" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.5"/>
+<path d="M 660 518.0 h 300 v -26 a 8 8 0 0 0 -8 -8 h -284 a 8 8 0 0 0 -8 8 z" fill="#1E3A5F"/>
+<text x="678" y="507.0" font-size="14" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">invitaciones</text>
+<text x="678" y="537.0" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, monospace">PK</text>
+<text x="704" y="537.0" font-size="11.5" fill="#1F2937">id</text>
+<text x="942" y="537.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">serial</text>
+<rect x="661" y="546" width="298" height="28" fill="#EDF1F5"/>
+<text x="678" y="565.0" font-size="9" font-weight="700" fill="#3D6B96" font-family="IBM Plex Mono, monospace">FK</text>
+<text x="704" y="565.0" font-size="11.5" fill="#1F2937">generado_por</text>
+<text x="942" y="565.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">-&gt; usuarios.id</text>
+<text x="678" y="593.0" font-size="11.5" fill="#1F2937">codigo</text>
+<text x="942" y="593.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text UNIQUE</text>
+<rect x="661" y="602" width="298" height="28" fill="#EDF1F5"/>
+<text x="678" y="621.0" font-size="11.5" fill="#1F2937">usado</text>
+<text x="942" y="621.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">boolean</text>
+<text x="678" y="649.0" font-size="11.5" fill="#1F2937">vence_at</text>
+<text x="942" y="649.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<rect x="661" y="658" width="298" height="28" fill="#EDF1F5"/>
+<text x="678" y="677.0" font-size="11.5" fill="#1F2937">creado_at</text>
+<text x="942" y="677.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+</svg>

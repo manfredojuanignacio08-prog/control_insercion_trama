@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="IBM Plex Sans, system-ui, sans-serif">
   <defs>
     <marker id="fl" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#2B6CB0"/></marker>
     <marker id="flg" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#1f7a3d"/></marker>
   </defs>
 
   <rect width="1000" height="640" fill="#f6f8fa"/>
-  <text x="500" y="34" text-anchor="middle" font-size="20" font-weight="bold" fill="#1e3a5f">Nivel 2, Etapa de control de marcos (Dobby)</text>
+  <text font-family="Questrial, IBM Plex Sans, sans-serif" x="500" y="34" text-anchor="middle" font-size="20" font-weight="bold" fill="#1e3a5f">Nivel 2, Etapa de control de marcos (Dobby)</text>
   <text x="500" y="56" text-anchor="middle" font-size="12.5" fill="#6b7684">Cómo el ESP32 dicta la secuencia del dibujo moviendo los marcos del telar · interviniendo las bobinas de selección ya instaladas</text>
 
   <!-- BACKEND -->
@@ -70,7 +70,7 @@
 
   <!-- TELAR -->
   <rect x="50" y="356" width="900" height="96" rx="10" fill="#edf7ee" stroke="#1f7a3d" stroke-width="2.5"/>
-  <text x="500" y="382" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f7a3d">TELAR, Marcos (cada uno sube o baja un grupo de hilos)</text>
+  <text font-family="Questrial, IBM Plex Sans, sans-serif" x="500" y="382" text-anchor="middle" font-size="14" font-weight="bold" fill="#1f7a3d">TELAR, Marcos (cada uno sube o baja un grupo de hilos)</text>
   <text x="500" y="404" text-anchor="middle" font-size="11">En cada pasada, el ESP32 decide qué marcos suben. Esa combinación forma el dibujo.</text>
   <text x="500" y="421" text-anchor="middle" font-size="11">Un patrón repetitivo = una secuencia corta de combinaciones de marcos, que se repite en bucle.</text>
   <text x="500" y="440" text-anchor="middle" font-size="10.5" font-style="italic" fill="#1f7a3d">Esta etapa reemplaza la función de la cinta de papel perforada del dobby mecánico.</text>

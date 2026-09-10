@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1420 962" font-family="IBM Plex Sans, system-ui, sans-serif">
+<rect width="1420" height="962" fill="#F6F8FA"/>
+<defs><marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D6B96"/></marker></defs>
+<text x="40" y="34" font-size="17" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Bloque de negocio: dibujos, telares y producción</text>
+<path d="M 190 450 C 190 371, 550 371, 550 292" fill="none" stroke="#3D6B96" stroke-width="2" marker-end="url(#f)"/>
+<path d="M 340 593 C 550 593, 550 751, 760 751" fill="none" stroke="#3D6B96" stroke-width="2" marker-end="url(#f)"/>
+<path d="M 550 292 C 550 436, 920 436, 920 580" fill="none" stroke="#3D6B96" stroke-width="2" marker-end="url(#f)"/>
+<path d="M 700 191 C 890 191, 890 171, 1080 171" fill="none" stroke="#3D6B96" stroke-width="2" marker-end="url(#f)"/>
+<rect x="40" y="450" width="300" height="286" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.5"/>
+<path d="M 40 484.0 h 300 v -26 a 8 8 0 0 0 -8 -8 h -284 a 8 8 0 0 0 -8 8 z" fill="#1E3A5F"/>
+<text x="58" y="473.0" font-size="14" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">patrones</text>
+<text x="58" y="503.0" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, monospace">PK</text>
+<text x="84" y="503.0" font-size="11.5" fill="#1F2937">id</text>
+<text x="322" y="503.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">serial</text>
+<rect x="41" y="512" width="298" height="28" fill="#EDF1F5"/>
+<text x="58" y="531.0" font-size="11.5" fill="#1F2937">nombre</text>
+<text x="322" y="531.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text UNIQUE</text>
+<text x="58" y="559.0" font-size="11.5" fill="#1F2937">filas</text>
+<text x="322" y="559.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">integer</text>
+<rect x="41" y="568" width="298" height="28" fill="#EDF1F5"/>
+<text x="58" y="587.0" font-size="11.5" fill="#1F2937">columnas</text>
+<text x="322" y="587.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">integer</text>
+<text x="58" y="615.0" font-size="11.5" fill="#1F2937">matriz_pasadas</text>
+<text x="322" y="615.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">jsonb</text>
+<rect x="41" y="624" width="298" height="28" fill="#EDF1F5"/>
+<text x="58" y="643.0" font-size="11.5" fill="#1F2937">colores_filas</text>
+<text x="322" y="643.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">jsonb</text>
+<text x="58" y="671.0" font-size="11.5" fill="#1F2937">metadata</text>
+<text x="322" y="671.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">jsonb</text>
+<rect x="41" y="680" width="298" height="28" fill="#EDF1F5"/>
+<text x="58" y="699.0" font-size="11.5" fill="#1F2937">creado_at</text>
+<text x="322" y="699.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<text x="58" y="727.0" font-size="11.5" fill="#1F2937">modificado_at</text>
+<text x="322" y="727.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<rect x="400" y="90" width="300" height="202" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.5"/>
+<path d="M 400 124.0 h 300 v -26 a 8 8 0 0 0 -8 -8 h -284 a 8 8 0 0 0 -8 8 z" fill="#1E3A5F"/>
+<text x="418" y="113.0" font-size="14" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">telares</text>
+<text x="418" y="143.0" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, monospace">PK</text>
+<text x="444" y="143.0" font-size="11.5" fill="#1F2937">id</text>
+<text x="682" y="143.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">serial</text>
+<rect x="401" y="152" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="171.0" font-size="11.5" fill="#1F2937">codigo</text>
+<text x="682" y="171.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text UNIQUE</text>
+<text x="418" y="199.0" font-size="11.5" fill="#1F2937">nombre</text>
+<text x="682" y="199.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<rect x="401" y="208" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="227.0" font-size="11.5" fill="#1F2937">estado</text>
+<text x="682" y="227.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<text x="418" y="255.0" font-size="9" font-weight="700" fill="#3D6B96" font-family="IBM Plex Mono, monospace">FK</text>
+<text x="444" y="255.0" font-size="11.5" fill="#1F2937">patron_actual_id</text>
+<text x="682" y="255.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">-&gt; patrones.id</text>
+<rect x="401" y="264" width="298" height="28" fill="#EDF1F5"/>
+<text x="418" y="283.0" font-size="11.5" fill="#1F2937">creado_at</text>
+<text x="682" y="283.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<rect x="760" y="580" width="320" height="342" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.5"/>
+<path d="M 760 614.0 h 320 v -26 a 8 8 0 0 0 -8 -8 h -304 a 8 8 0 0 0 -8 8 z" fill="#1E3A5F"/>
+<text x="778" y="603.0" font-size="14" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">produccion_historial</text>
+<text x="778" y="633.0" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, monospace">PK</text>
+<text x="804" y="633.0" font-size="11.5" fill="#1F2937">id</text>
+<text x="1062" y="633.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">serial</text>
+<rect x="761" y="642" width="318" height="28" fill="#EDF1F5"/>
+<text x="778" y="661.0" font-size="9" font-weight="700" fill="#3D6B96" font-family="IBM Plex Mono, monospace">FK</text>
+<text x="804" y="661.0" font-size="11.5" fill="#1F2937">telar_id</text>
+<text x="1062" y="661.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">-&gt; telares.id</text>
+<text x="778" y="689.0" font-size="9" font-weight="700" fill="#3D6B96" font-family="IBM Plex Mono, monospace">FK</text>
+<text x="804" y="689.0" font-size="11.5" fill="#1F2937">patron_id</text>
+<text x="1062" y="689.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">-&gt; patrones.id</text>
+<rect x="761" y="698" width="318" height="28" fill="#EDF1F5"/>
+<text x="778" y="717.0" font-size="11.5" fill="#1F2937">fecha_inicio</text>
+<text x="1062" y="717.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<text x="778" y="745.0" font-size="11.5" fill="#1F2937">fecha_fin</text>
+<text x="1062" y="745.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+<rect x="761" y="754" width="318" height="28" fill="#EDF1F5"/>
+<text x="778" y="773.0" font-size="11.5" fill="#1F2937">pasadas_totales</text>
+<text x="1062" y="773.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">integer</text>
+<text x="778" y="801.0" font-size="11.5" fill="#1F2937">fila_actual</text>
+<text x="1062" y="801.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">integer</text>
+<rect x="761" y="810" width="318" height="28" fill="#EDF1F5"/>
+<text x="778" y="829.0" font-size="11.5" fill="#1F2937">columna_actual</text>
+<text x="1062" y="829.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">integer</text>
+<text x="778" y="857.0" font-size="11.5" fill="#1F2937">pasada_actual</text>
+<text x="1062" y="857.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">integer</text>
+<rect x="761" y="866" width="318" height="28" fill="#EDF1F5"/>
+<text x="778" y="885.0" font-size="11.5" fill="#1F2937">vueltas_completadas</text>
+<text x="1062" y="885.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">integer</text>
+<text x="778" y="913.0" font-size="11.5" fill="#1F2937">estado</text>
+<text x="1062" y="913.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<rect x="1080" y="70" width="300" height="202" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.5"/>
+<path d="M 1080 104.0 h 300 v -26 a 8 8 0 0 0 -8 -8 h -284 a 8 8 0 0 0 -8 8 z" fill="#1E3A5F"/>
+<text x="1098" y="93.0" font-size="14" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">registro_de_errores</text>
+<text x="1098" y="123.0" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, monospace">PK</text>
+<text x="1124" y="123.0" font-size="11.5" fill="#1F2937">id</text>
+<text x="1362" y="123.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">serial</text>
+<rect x="1081" y="132" width="298" height="28" fill="#EDF1F5"/>
+<text x="1098" y="151.0" font-size="9" font-weight="700" fill="#3D6B96" font-family="IBM Plex Mono, monospace">FK</text>
+<text x="1124" y="151.0" font-size="11.5" fill="#1F2937">telar_id</text>
+<text x="1362" y="151.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">-&gt; telares.id</text>
+<text x="1098" y="179.0" font-size="11.5" fill="#1F2937">titulo</text>
+<text x="1362" y="179.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<rect x="1081" y="188" width="298" height="28" fill="#EDF1F5"/>
+<text x="1098" y="207.0" font-size="11.5" fill="#1F2937">mensaje</text>
+<text x="1362" y="207.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<text x="1098" y="235.0" font-size="11.5" fill="#1F2937">codigo</text>
+<text x="1362" y="235.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">text</text>
+<rect x="1081" y="244" width="298" height="28" fill="#EDF1F5"/>
+<text x="1098" y="263.0" font-size="11.5" fill="#1F2937">creado_at</text>
+<text x="1362" y="263.0" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, monospace">timestamptz</text>
+</svg>
