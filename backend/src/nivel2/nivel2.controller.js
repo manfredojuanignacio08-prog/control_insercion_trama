@@ -72,7 +72,7 @@ export async function reportarPasadas(req, res, next) {
     // reportes seguidos no se pisen entre sí.
     const { rows } = await cliente.query(
       `SELECT id, pasadas_totales
-         FROM produccion_historial
+         FROM historial_produccion
         WHERE telar_id = $1 AND estado = 'en_curso'
         ORDER BY fecha_inicio DESC
         LIMIT 1
@@ -100,7 +100,7 @@ export async function reportarPasadas(req, res, next) {
     }
 
     await cliente.query(
-      `UPDATE produccion_historial
+      `UPDATE historial_produccion
           SET pasadas_totales = $1,
               fila_actual = COALESCE($2, fila_actual)
         WHERE id = $3`,

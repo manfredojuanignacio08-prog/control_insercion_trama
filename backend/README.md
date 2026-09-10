@@ -155,6 +155,7 @@ src/
 │   ├── migracion_006_ping_esp32.sql             Migración: ultimo_ping_esp32 (heartbeat del ESP32)
 │   ├── migracion_007_retroceder_fisico.sql      Migración: retroceder_seq (botón físico Retroceder)
 │   ├── migracion_008_evento_fisico.sql          Migración: posicion_incierta + ultimo_evento_manual (sensado de los botones)
+- `migracion_009_rango_dimensiones.sql`: acota filas y columnas al rango 2 a 32, el mismo que valida el editor y que soporta el firmware.
 │   └── migrate.js                                Corre TODAS las migracion_*.sql en orden
 ├── utils/
 │   ├── ligamento.js        Deriva matriz_ligamento desde matriz_pasadas

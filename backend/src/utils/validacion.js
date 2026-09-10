@@ -10,10 +10,15 @@ export function validarPatron(body) {
     errores.push('nombre es requerido y debe ser texto.');
   }
 
-  const filasOk = Number.isInteger(filas) && filas > 0;
-  const columnasOk = Number.isInteger(columnas) && columnas > 0;
-  if (!filasOk) errores.push('filas debe ser un entero positivo.');
-  if (!columnasOk) errores.push('columnas debe ser un entero positivo.');
+  // El rango 2 a 32 no es arbitrario: es el que valida el editor de la aplicación
+  // y el que soporta el firmware, cuyo MAX_FILAS es 32. Aceptar valores fuera de
+  // ese rango produciría dibujos que el operario no puede ver ni el telar ejecutar.
+  const MIN_DIM = 2;
+  const MAX_DIM = 32;
+  const filasOk = Number.isInteger(filas) && filas >= MIN_DIM && filas <= MAX_DIM;
+  const columnasOk = Number.isInteger(columnas) && columnas >= MIN_DIM && columnas <= MAX_DIM;
+  if (!filasOk) errores.push(`filas debe ser un entero entre ${MIN_DIM} y ${MAX_DIM}.`);
+  if (!columnasOk) errores.push(`columnas debe ser un entero entre ${MIN_DIM} y ${MAX_DIM}.`);
 
   if (!Array.isArray(matriz_pasadas)) {
     errores.push('matriz_pasadas debe ser un array de arrays de números.');

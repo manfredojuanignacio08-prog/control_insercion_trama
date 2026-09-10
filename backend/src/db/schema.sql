@@ -26,8 +26,8 @@
 CREATE TABLE IF NOT EXISTS patrones (
   id                SERIAL PRIMARY KEY,
   nombre            TEXT NOT NULL UNIQUE,
-  filas             INTEGER NOT NULL CHECK (filas > 0),
-  columnas          INTEGER NOT NULL CHECK (columnas > 0),
+  filas             INTEGER NOT NULL CHECK (filas BETWEEN 2 AND 32),
+  columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 2 AND 32),
   matriz_pasadas    JSONB NOT NULL,   -- array de arrays de enteros: pasadas por celda (lo que programa el editor hoy)
   matriz_ligamento  JSONB,            -- array de arrays binarios (0/1): lizo arriba/abajo, estructura textil (opcional)
   colores_filas     JSONB,            -- array de colores hex, uno por fila
