@@ -37,14 +37,18 @@
 <div id="login-overlay" style="position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
   <div style="max-width:340px;width:100%;">
     <div style="width:88px;height:88px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:var(--acc-lt);border-radius:22px;">
-      <svg width="52" height="52" viewBox="0 0 48 48" fill="none" stroke="var(--acc)" stroke-width="3" stroke-linecap="round">
-        <!-- Trama tejida: hilos de urdimbre (verticales) y trama (horizontales) -->
-        <line x1="12" y1="6" x2="12" y2="42"/>
-        <line x1="24" y1="6" x2="24" y2="42"/>
-        <line x1="36" y1="6" x2="36" y2="42"/>
-        <line x1="6" y1="14" x2="42" y2="14"/>
-        <line x1="6" y1="24" x2="42" y2="24"/>
-        <line x1="6" y1="34" x2="42" y2="34"/>
+      <svg width="54" height="54" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <!-- Tejido: la urdimbre en vertical y la trama pasando por encima y por debajo -->
+        <g stroke="var(--acc)" stroke-width="3.4" stroke-linecap="round" opacity=".38">
+          <line x1="13" y1="8" x2="13" y2="40"/>
+          <line x1="24" y1="8" x2="24" y2="40"/>
+          <line x1="35" y1="8" x2="35" y2="40"/>
+        </g>
+        <g stroke="var(--acc)" stroke-width="3.8" stroke-linecap="round" fill="none">
+          <path d="M7 15 q6 -5 11 0 q6 5 11 0 q6 -5 11 0"/>
+          <path d="M7 24 q6 5 11 0 q6 -5 11 0 q6 5 11 0"/>
+          <path d="M7 33 q6 -5 11 0 q6 5 11 0 q6 -5 11 0"/>
+        </g>
       </svg>
     </div>
     <h1 style="font-size:22px;color:var(--tx);margin:0 0 6px;">Control de Inserción de Trama</h1>
@@ -56,7 +60,7 @@
 
     <button onclick="hacerLogin()" id="btn-login"
       style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px;font-family:inherit;">
-      👆 Entrar con huella dactilar
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="vertical-align:-2px;margin-right:6px" aria-hidden="true"><path d="M12 11v3.5M8.5 9.5a3.5 3.5 0 0 1 7 0v5M5.5 11a6.5 6.5 0 0 1 13 0v3M15.5 19.5a10 10 0 0 0 1-4.5"/><path d="M8.5 19a8 8 0 0 0 1-4"/></svg>Entrar con huella dactilar
     </button>
 
     <button onclick="hacerRegistro()" id="btn-registro"
@@ -315,8 +319,8 @@
     <div class="editor-tools">
       <button class="tool-btn" onclick="clearGrid()">Limpiar</button>
       <!-- Botón cargar eliminado -->
-      <button class="btn-small" onclick="openColorSimulator()" title="Cambiar color del hilo" style="padding:6px 10px;background:var(--rose-md);color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-size:11px;font-weight:600;margin-left:4px;">🎨</button>
-      <button class="btn-small" onclick="exportDrawToPDF()" title="Descargar ficha técnica" style="padding:6px 10px;background:var(--amber);color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-size:11px;font-weight:600;margin-left:4px;">📄</button>
+      <button class="btn-small" onclick="openColorSimulator()" title="Cambiar color del hilo" style="padding:6px 10px;background:var(--rose-md);color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-size:11px;font-weight:600;margin-left:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg></button>
+      <button class="btn-small" onclick="exportDrawToPDF()" title="Descargar ficha técnica" style="padding:6px 10px;background:var(--amber);color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-size:11px;font-weight:600;margin-left:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></button>
     </div>
 
     <div class="editor-play" id="play-bar">
@@ -451,7 +455,7 @@ async function hacerRegistro() {
     if (r.recovery_code) {
       mostrarCodigoRecuperacion(r.recovery_code);
     } else {
-      setLoginMsg('✔ Huella registrada. Ya podés entrar.', 'ok');
+      setLoginMsg('Huella registrada. Ya podés entrar.', 'ok');
     }
   } catch (e) {
     setLoginMsg(traducirError(e), 'error');
@@ -485,14 +489,14 @@ async function copiarCodigoRecuperacion() {
   const btn = document.getElementById('btn-copiar-codigo');
   try {
     await navigator.clipboard.writeText(_codigoRecuperacionActual);
-    if (btn) btn.textContent = '✔ Copiado';
+    if (btn) btn.textContent = 'Copiado';
   } catch (e) {
     // Respaldo para navegadores/contextos sin API de portapapeles
     const tmp = document.createElement('textarea');
     tmp.value = _codigoRecuperacionActual;
     document.body.appendChild(tmp);
     tmp.select();
-    try { document.execCommand('copy'); if (btn) btn.textContent = '✔ Copiado'; }
+    try { document.execCommand('copy'); if (btn) btn.textContent = 'Copiado'; }
     catch (_) { if (btn) btn.textContent = 'Copialo a mano'; }
     document.body.removeChild(tmp);
   }
@@ -522,7 +526,7 @@ async function activarHuellaEnDispositivo() {
     // botón desaparece.
     origenSesion = 'huella';
     renderUsuarioActual();
-    toast('✔ Huella activada en este dispositivo');
+    toast('Huella activada en este dispositivo');
   } catch (e) {
     // Si el dispositivo ya estaba registrado, el navegador lo bloquea:
     // lo tratamos como "ya está activada".
@@ -574,7 +578,7 @@ async function hacerLogin() {
     const respuesta = await SimpleWebAuthnBrowser.startAuthentication({ optionsJSON: opciones });
     const r = await apiAuth('/login/verificar', { usuario, respuesta });
     setUsuarioActual(r.usuario || usuario, r.nombre, 'huella');
-    setLoginMsg('✔ Bienvenido, ' + (r.nombre || r.usuario), 'ok');
+    setLoginMsg('Bienvenido, ' + (r.nombre || r.usuario), 'ok');
     setTimeout(entrarAlSistema, 500);
   } catch (e) {
     setLoginMsg(traducirError(e), 'error');
@@ -694,7 +698,7 @@ async function hacerRecupero() {
   try {
     setRecMsg('Verificando código…');
     const r = await apiAuth('/recuperar', { usuario, codigo });
-    setRecMsg('✔ Código correcto. Entrando…', 'ok');
+    setRecMsg('Código correcto. Entrando…', 'ok');
     // Entrar DIRECTO a la app (no se re-registra la huella)
     setUsuarioActual(r.usuario || usuario, r.nombre, 'codigo');
     setTimeout(() => {
@@ -1431,7 +1435,7 @@ async function loadStore() {
     });
   } catch(e) {
     logError('Error al cargar', e.message, 'LOAD_STORE');
-    toast('⚠️ No se pudo conectar con el servidor');
+    toast('No se pudo conectar con el servidor');
     draws = [];
   }
 }
