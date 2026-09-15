@@ -69,6 +69,7 @@
  */
 
 #include <WiFi.h>
+#include <string.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <esp_task_wdt.h>
@@ -226,23 +227,42 @@ void setup() {
   conectarWifi();
 }
 
-void conectarWifi() {
-  Serial.printf("Conectando a la red %s", WIFI_SSID);
-  WiFi.mode(WIFI_STA);
-  WiFi.setSleep(false);  // evita microcortes de WiFi que atrasan el sondeo
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  int intentos = 0;
-  while (WiFi.status() != WL_CONNECTED && intentos < 60) {
+// Intenta una red concreta durante los segundos configurados.
+// Devuelve true si logró conectarse.
+static bool intentarRed(const char* ssid, const char* pass) {
+  if (ssid == nullptr || strlen(ssid) == 0) return false;   // red no configurada
+  Serial.printf("Conectando a la red %s", ssid);
+  WiFi.disconnect(true);
+  delay(100);
+  WiFi.begin(ssid, pass);
+  const unsigned long limite = millis() + (unsigned long)WIFI_ESPERA_SEG * 1000UL;
+  while (WiFi.status() != WL_CONNECTED && millis() < limite) {
     delay(400);
     Serial.print(".");
     esp_task_wdt_reset();  // que el watchdog no nos reinicie mientras conecta
-    intentos++;
   }
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.printf("\nConectado. IP del ESP32: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("\nConectado a %s. IP del ESP32: %s\n", ssid, WiFi.localIP().toString().c_str());
+    return true;
+  }
+  Serial.printf("\nNo se pudo conectar a %s.\n", ssid);
+  return false;
+}
+
+// Primero la red de la fábrica; si falla, el punto de acceso del celular.
+// Que el router se caiga no deja al sistema incomunicado: alcanza con que
+// el dueño encienda los datos compartidos y el nodo se engancha solo.
+void conectarWifi() {
+  WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);  // evita microcortes de WiFi que atrasan el sondeo
+
+  bool ok = intentarRed(WIFI_SSID, WIFI_PASSWORD);
+  if (!ok) ok = intentarRed(WIFI_SSID_ALT, WIFI_PASSWORD_ALT);
+
+  if (ok) {
     digitalWrite(PIN_LED, HIGH);
   } else {
-    Serial.println("\nNo se pudo conectar; se reintenta en el loop.");
+    Serial.println("Sin red. El telar sigue operable a mano; se reintenta en el loop.");
     digitalWrite(PIN_LED, LOW);
   }
 }

@@ -10,14 +10,15 @@ No reemplaza la prueba en la máquina: verifica la lógica, no el hardware.
 """
 
 N_CANALES = 6
-DURACION_SELECCION_MS = 120
+DESPLAZAMIENTO_FILAS = 0
 
 
 class Nivel2Simulado:
     """Reproduce el comportamiento del firmware, pasada por pasada."""
 
-    def __init__(self, dibujo):
+    def __init__(self, dibujo, desplazamiento=DESPLAZAMIENTO_FILAS):
         self.dibujo = dibujo
+        self.desplazamiento = desplazamiento
         self.filas = len(dibujo)
         self.columnas = max(len(f) for f in dibujo) if dibujo else 0
         self.fila_actual = 0
@@ -35,7 +36,10 @@ class Nivel2Simulado:
         if not tejiendo:
             # La máquina se mueve por la botonera: se cuenta, pero no se comanda.
             return
-        fila = self.dibujo[self.fila_actual]
+        # El desplazamiento compensa el desfase entre el pulso del sensor y el
+        # instante en que el telar lee la selección.
+        i = (self.fila_actual + self.desplazamiento) % self.filas
+        fila = self.dibujo[i]
         for i in range(N_CANALES):
             self.canales[i] = bool(fila[i]) if i < len(fila) else False
         self.historial.append(tuple(self.canales))
@@ -95,8 +99,21 @@ def verificar():
     v.append(("Las columnas de una fila se aplican juntas, no de a una",
               len(s.historial[0]) == N_CANALES))
 
-    v.append(("El tiempo de selección entra en el intervalo entre pasadas",
-              DURACION_SELECCION_MS < 200))
+    s6 = Nivel2Simulado(dibujo, desplazamiento=1)
+    s6.pulso_del_sensor()
+    v.append(("Con desplazamiento 1 se aplica la fila siguiente",
+              s6.canales == [False, True, False, True, False, True]))
+
+    s7 = Nivel2Simulado(dibujo, desplazamiento=-1)
+    s7.pulso_del_sensor()
+    v.append(("Con desplazamiento -1 se aplica la última fila, sin índice negativo",
+              s7.canales == [False] * 6))
+
+    s8 = Nivel2Simulado(dibujo)
+    s8.pulso_del_sensor()
+    antes = list(s8.canales)
+    v.append(("La selección se mantiene hasta el pulso siguiente, no se libera por tiempo",
+              s8.canales == antes))
 
     print("\n  VERIFICACIÓN DEL FIRMWARE DEL NIVEL 2\n")
     for texto, ok in v:

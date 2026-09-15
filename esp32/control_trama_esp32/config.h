@@ -10,8 +10,49 @@
 #define CONFIG_H
 
 // ---- Red Wi-Fi a la que se conecta el ESP32 ----
-#define WIFI_SSID     "NOMBRE_DE_TU_RED"
-#define WIFI_PASSWORD "PASSWORD_DE_TU_RED"
+// ---------------------------------------------------------------------------
+//  REDES WiFi
+//
+//  El nodo intenta primero la red de la fábrica. Si no la encuentra o no logra
+//  conectarse, prueba la segunda, pensada para el teléfono del dueño compartiendo
+//  datos. Así una caída del router no deja al sistema sin comunicación: basta con
+//  encender el punto de acceso del celular y el nodo se engancha solo.
+//
+//  ATENCIÓN: este archivo va al repositorio. Si el repositorio es público, la
+//  contraseña queda a la vista de cualquiera. Ver la nota al pie de este bloque.
+// ---------------------------------------------------------------------------
+#define WIFI_SSID          "Claro3747"
+#define WIFI_PASSWORD      "11335577"
+
+// Red de respaldo: punto de acceso del celular. Cuando se conozcan el nombre y la
+// clave que use el dueño, se completan acá. Si quedan vacíos, el nodo simplemente
+// reintenta la red principal.
+#define WIFI_SSID_ALT      ""
+#define WIFI_PASSWORD_ALT  ""
+
+// Segundos que espera en cada red antes de pasar a la otra.
+#define WIFI_ESPERA_SEG    15
+
+// ---------------------------------------------------------------------------
+//  SOBRE LA CONTRASEÑA Y EL REPOSITORIO
+//
+//  Este archivo contiene la clave real de la red de la fábrica. Si el repositorio
+//  de GitHub es público, cualquiera puede leerla, y quien la tenga entra a la red
+//  donde vive el backend y el resto de las computadoras de la planta.
+//
+//  Tres formas de resolverlo, de menos a más trabajo:
+//
+//  1) Poner el repositorio en privado. Es lo más rápido.
+//  2) Dejar este archivo fuera del control de versiones: agregarlo a .gitignore
+//     y versionar en su lugar un config.ejemplo.h con las claves en blanco.
+//     Cada integrante copia el ejemplo y completa sus datos.
+//  3) Pedirle al dueño una red separada para los equipos del telar, aislada de
+//     la administrativa. Es lo correcto en una planta, más allá del repositorio.
+//
+//  Mientras tanto, conviene al menos que la clave del WiFi no se repita en
+//  ningún otro servicio de la fábrica.
+// ---------------------------------------------------------------------------
+
 
 // ---- Dónde está corriendo el backend Node.js ----
 // SIN barra final. Ejemplos:

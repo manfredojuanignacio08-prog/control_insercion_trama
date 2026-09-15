@@ -13,6 +13,7 @@
 // ============================================================================
 
 #include <WiFi.h>
+#include <string.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <esp_task_wdt.h>
@@ -45,16 +46,26 @@ void log(const String& s) {
 // ============================================================================
 //  Red
 // ============================================================================
-void conectarWifi() {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
-  log("Conectando a la red...");
-  unsigned long inicio = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - inicio < 20000) {
+static bool intentarRed(const char* ssid, const char* pass) {
+  if (ssid == nullptr || strlen(ssid) == 0) return false;
+  log(String("Conectando a ") + ssid + "...");
+  WiFi.disconnect(true);
+  delay(100);
+  WiFi.begin(ssid, pass);
+  const unsigned long limite = millis() + (unsigned long)WIFI_ESPERA_SEG * 1000UL;
+  while (WiFi.status() != WL_CONNECTED && millis() < limite) {
     delay(400);
     esp_task_wdt_reset();
   }
-  log(WiFi.status() == WL_CONNECTED ? "Red conectada" : "Sin red: el sistema queda en reposo");
+  return WiFi.status() == WL_CONNECTED;
+}
+
+// Primero la red de la fábrica; si falla, el punto de acceso del celular.
+void conectarWifi() {
+  WiFi.mode(WIFI_STA);
+  bool ok = intentarRed(WIFI_SSID, WIFI_PASS);
+  if (!ok) ok = intentarRed(WIFI_SSID_ALT, WIFI_PASS_ALT);
+  log(ok ? "Red conectada" : "Sin red: el sistema queda en reposo");
 }
 
 // ============================================================================
@@ -224,9 +235,16 @@ void loop() {
 
     // Se aplica la fila que corresponde a esta pasada. Todos los canales a la
     // vez: las columnas de una fila son simultáneas, no se recorren.
-    seleccionAplicarFila(dibujo[filaActual], dibujoColumnas);
+    //
+    // DESPLAZAMIENTO_FILAS compensa el desfase entre el pulso del sensor y el
+    // instante en que el telar lee la selección. Queda en cero hasta que la
+    // primera prueba de tejido diga si hace falta corregir.
+    int filaAplicar = (filaActual + DESPLAZAMIENTO_FILAS) % dibujoFilas;
+    if (filaAplicar < 0) filaAplicar += dibujoFilas;   // el módulo de C conserva el signo
+
+    seleccionAplicarFila(dibujo[filaAplicar], dibujoColumnas);
     log("Pasada " + String(sensorPasadaTotal()) +
-        " · fila " + String(filaActual + 1) + "/" + String(dibujoFilas) +
+        " · fila " + String(filaAplicar + 1) + "/" + String(dibujoFilas) +
         " · " + seleccionEstadoTexto());
 
     // Avanzar a la siguiente. Al llegar al final se vuelve al principio: el
@@ -238,14 +256,11 @@ void loop() {
     }
   }
 
-  // ---- la señal se mantiene un rato y después se libera ----
-  static unsigned long aplicadaEn = 0;
-  if (tejiendo && aplicadaEn == 0 && sensorPasadaTotal() > 0) {
-    aplicadaEn = millis();
-  }
-  if (aplicadaEn > 0 && millis() - aplicadaEn >= DURACION_SELECCION_MS) {
-    aplicadaEn = 0;
-  }
+  // La señal NO se libera por tiempo: se mantiene hasta el pulso siguiente, que
+  // es cuando seleccionAplicarFila() escribe la fila nueva. Así reproduce lo que
+  // hacía el agujero del papel, que permanecía frente al lector toda la pasada.
+  // Los canales solo se apagan al pausar, al perder la red o al quedarse sin
+  // pulsos del sensor.
 
   // ---- el telar dejó de dar pulsos ----
   if (tejiendo && sensorPasadaSinSenal()) {

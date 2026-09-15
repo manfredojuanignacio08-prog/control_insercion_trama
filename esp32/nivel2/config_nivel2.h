@@ -11,8 +11,13 @@
 // ============================================================================
 
 // ---------------------------------------------------------------- Red y API
-#define WIFI_SSID          "A_CONFIRMAR"
-#define WIFI_PASS          "A_CONFIRMAR"
+// El nodo intenta primero la red de la fábrica y, si falla, el punto de acceso
+// del celular. Ver la nota sobre el repositorio público en config.h del Nivel 1.
+#define WIFI_SSID          "Claro3747"
+#define WIFI_PASS          "11335577"
+#define WIFI_SSID_ALT      ""
+#define WIFI_PASS_ALT      ""
+#define WIFI_ESPERA_SEG    15
 #define API_BASE           "https://control-trama-backend.onrender.com/api"
 #define TELAR_ID           8
 
@@ -51,11 +56,31 @@ static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22, 23, 4 };
 // A_CONFIRMAR: depende de la medición sobre el lector.
 #define CANAL_ACTIVO_EN_ALTO   true
 
-// Tiempo que la señal permanece aplicada en cada pasada. Con 300 pasadas por
-// minuto hay 200 ms entre una y otra; se deja un margen para que la plaqueta
-// del telar alcance a leerla.
-// A_CONFIRMAR: depende de cómo responda la plaqueta.
-static const unsigned long DURACION_SELECCION_MS = 120;
+// La selección NO se aplica por un tiempo fijo: se mantiene desde el pulso del
+// sensor hasta el pulso siguiente, que es exactamente lo que hacía el papel.
+// El agujero de la cinta permanecía frente al lector durante toda la pasada, no
+// un instante, así que la plaqueta veía una señal sostenida. Como la cinta se
+// retira, el relé ocupa su lugar y debe comportarse igual.
+//
+// Esto además se adapta solo si el telar cambia de velocidad: un tiempo fijo
+// dejaría la señal caída antes de terminar la pasada cuando la máquina va lenta.
+
+// ---------------------------------------------- Sincronización con la máquina
+// El telar lee la selección en un instante concreto de su ciclo, cuando abre la
+// calada. Con la cinta de papel esa coincidencia era mecánica y venía de fábrica.
+// Sin cinta, el momento lo define dónde quede montado el blanco metálico sobre
+// el eje que dispara el sensor inductivo.
+//
+// Si al tejer una prueba la tela sale corrida una pasada respecto del dibujo,
+// hay dos formas de corregirlo: rotar el blanco sobre el eje (ajuste mecánico,
+// el preferible), o compensar desde acá adelantando o atrasando filas.
+//
+//   0  → la fila que se aplica es la que corresponde a la pasada en curso
+//   1  → se adelanta una fila (usar si la tela sale una pasada atrasada)
+//  -1  → se atrasa una fila
+//
+// A_CONFIRMAR: se define con la primera prueba de tejido, no antes.
+static const int DESPLAZAMIENTO_FILAS = 0;
 
 // -------------------------------------------------------------- Diagnóstico
 #define LOG_SERIAL         true
