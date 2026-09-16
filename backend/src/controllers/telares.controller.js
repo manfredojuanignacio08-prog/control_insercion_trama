@@ -84,8 +84,21 @@ export async function asignarPatron(req, res, next) {
     const telar = await client.query('SELECT * FROM telares WHERE id = $1 FOR UPDATE', [id]);
     if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
 
-    const patron = await client.query('SELECT id FROM patrones WHERE id = $1', [patron_id]);
+    const patron = await client.query('SELECT id, nombre, columnas FROM patrones WHERE id = $1', [patron_id]);
     if (patron.rows.length === 0) throw notFound(`No existe el patrón con id ${patron_id}.`);
+
+    // Cada telar tiene una cantidad fija de elementos de selección: en el Vamatex
+    // C 201 son 6 bobinas. Un dibujo con más columnas que eso no se puede ejecutar
+    // completo, porque las columnas sobrantes no tienen a qué accionar.
+    //
+    // No se rechaza la asignación, porque mientras el Nivel 2 no esté instalado el
+    // dibujo lo define la cinta de papel y la cantidad de columnas es indistinta.
+    // Pero se devuelve el aviso para que la interfaz pueda mostrarlo.
+    const elementos = telar.rows[0].elementos_seleccion ?? 6;
+    let advertencia = null;
+    if (patron.rows[0].columnas > elementos) {
+      advertencia = `El dibujo "${patron.rows[0].nombre}" tiene ${patron.rows[0].columnas} columnas y este telar tiene ${elementos} elementos de selección. Al ejecutarlo, las columnas ${elementos + 1} en adelante no van a accionar nada.`;
+    }
 
     // Cierra cualquier producción en curso previa de este telar
     await client.query(
@@ -109,7 +122,7 @@ export async function asignarPatron(req, res, next) {
     );
 
     await client.query('COMMIT');
-    res.status(201).json(nuevoHistorial.rows[0]);
+    res.status(201).json(advertencia ? { ...nuevoHistorial.rows[0], advertencia } : nuevoHistorial.rows[0]);
   } catch (err) {
     await client.query('ROLLBACK');
     next(err);

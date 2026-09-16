@@ -3,6 +3,17 @@
 Este directorio contiene el firmware del **Nivel 2**: el conteo real de pasadas
 (Bloque C) y la selección del dibujo (Bloque D).
 
+## Depende del Bloque C
+
+El Nivel 2 **no puede funcionar sin el sensor de pasada instalado y validado**.
+No es una mejora opcional: el firmware aplica cada fila del dibujo cuando llega
+un pulso del sensor, porque es la única forma que tiene de saber que la máquina
+avanzó una pasada.
+
+Sin ese pulso, el nodo no tiene reloj: no sabe cuándo cambiar de fila y el dibujo
+no avanza. Por eso el orden de instalación es Bloque C primero, Bloque D después,
+aunque en la documentación aparezcan como bloques separados.
+
 ## Estado
 
 **No está instalado en la máquina.** Es código de desarrollo, escrito para poder

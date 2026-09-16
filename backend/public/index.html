@@ -1150,6 +1150,13 @@ function applySize() {
     toast('Las filas y columnas deben ser un número entre 2 y 32');
   }
 
+  // El telar tiene 6 elementos de selección (bobinas). Un dibujo con más columnas
+  // se guarda igual, pero al tejerlo las columnas sobrantes no accionan nada.
+  const ELEMENTOS_TELAR = 6;
+  if (Number.isInteger(cNum) && cNum > ELEMENTOS_TELAR) {
+    toast('Atención: el telar tiene ' + ELEMENTOS_TELAR + ' elementos de selección. Las columnas ' + (ELEMENTOS_TELAR + 1) + ' en adelante no van a accionar nada al tejer.');
+  }
+
   const r = Math.min(32, Math.max(2, rNum || 8));
   const c = Math.min(32, Math.max(2, cNum || 8));
   document.getElementById('in-rows').value = r;

@@ -48,7 +48,10 @@ CREATE TABLE IF NOT EXISTS telares (
   retroceder_seq    INTEGER NOT NULL DEFAULT 0,  -- migración 007: botón físico Retroceder
   posicion_incierta BOOLEAN NOT NULL DEFAULT false,  -- migración 008: uso manual de los botones del telar
   ultimo_evento_manual      TIMESTAMPTZ,          -- migración 008
-  ultimo_evento_manual_tipo TEXT                  -- migración 008: 'avanzar' | 'impulso'
+  ultimo_evento_manual_tipo TEXT,                 -- migración 008: 'avanzar' | 'impulso'
+  -- migración 010: cuántos elementos de selección (bobinas) tiene la máquina.
+  -- Un dibujo con más columnas que este número no puede ejecutarse completo.
+  elementos_seleccion INTEGER NOT NULL DEFAULT 6 CHECK (elementos_seleccion BETWEEN 1 AND 32)
 );
 
 CREATE TABLE IF NOT EXISTS historial_produccion (
