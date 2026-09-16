@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 880" font-family="IBM Plex Sans, system-ui, sans-serif">
+<rect width="1240" height="880" fill="#F6F8FA"/>
+<text x="620.0" y="34" text-anchor="middle" font-size="18" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Bloques A y C · Sistema completo del Nivel 1</text>
+<text x="620.0" y="54" text-anchor="middle" font-size="10.5" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">CONTROL DE LA BOTONERA · SENSADO · CONTEO DE PASADAS</text>
+<rect x="300" y="76" width="640" height="720" rx="10" fill="none" stroke="#CDD8E0" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="316" y="96" font-size="10" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">GABINETE IP65</text>
+<rect x="322" y="110" width="180" height="60" rx="8" fill="#EDF1F5" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="412.0" y="131" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">RED 220 V</text>
+<text x="412.0" y="148" text-anchor="middle" font-size="9" fill="#6B7684">Fusible lento 1 A</text>
+<line x1="502" y1="140" x2="530" y2="140" stroke="#1F2937" stroke-width="2.2"/>
+<rect x="530" y="110" width="190" height="60" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="625.0" y="131" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">FUENTE HLK-5M05</text>
+<text x="625.0" y="148" text-anchor="middle" font-size="9" fill="#6B7684">220 V → 5 V</text>
+<line x1="720" y1="140" x2="748" y2="140" stroke="#1F2937" stroke-width="2.2"/>
+<rect x="748" y="110" width="170" height="60" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="833.0" y="131" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">470 µF</text>
+<text x="833.0" y="148" text-anchor="middle" font-size="9" fill="#6B7684">Sostiene los 5 V</text>
+<line x1="330" y1="200" x2="920" y2="200" stroke="#1E3A5F" stroke-width="3"/>
+<text x="330" y="193" font-size="10" fill="#1E3A5F" font-weight="bold" font-family="IBM Plex Mono, ui-monospace, monospace">+5 V</text>
+<line x1="330" y1="770" x2="920" y2="770" stroke="#6B7684" stroke-width="3"/>
+<text x="330" y="764" font-size="10" fill="#6B7684" font-weight="bold" font-family="IBM Plex Mono, ui-monospace, monospace">GND</text>
+<line x1="833" y1="170" x2="833" y2="200" stroke="#1F2937" stroke-width="2"/>
+<rect x="490" y="240" width="270" height="130" rx="8" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="625.0" y="261" text-anchor="middle" font-size="13" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">ESP32 NodeMCU-32</text>
+<text x="625.0" y="278" text-anchor="middle" font-size="9" fill="#7FA8C9"></text>
+<text x="625.0" y="292" text-anchor="middle" font-size="9" fill="#7FA8C9">GPIO 25 · 26 · 27   →   relés</text>
+<text x="625.0" y="306" text-anchor="middle" font-size="9" fill="#7FA8C9">GPIO 32 · 33 · 34   ←   sensado de botones</text>
+<text x="625.0" y="320" text-anchor="middle" font-size="9" fill="#7FA8C9">GPIO 35   ←   sensor de pasada</text>
+<line x1="625" y1="200" x2="625" y2="240" stroke="#1F2937" stroke-width="2"/>
+<line x1="625" y1="370" x2="625" y2="770" stroke="#6B7684" stroke-width="2"/>
+<rect x="322" y="410" width="230" height="76" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="437.0" y="431" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">RELÉS ×3</text>
+<text x="437.0" y="448" text-anchor="middle" font-size="9" fill="#6B7684">2 canales + 1 individual</text>
+<text x="437.0" y="462" text-anchor="middle" font-size="9" fill="#6B7684">Marcha · Pausa · Retroceder</text>
+<rect x="322" y="516" width="230" height="110" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="437.0" y="537" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">SENSADO ×3</text>
+<text x="437.0" y="554" text-anchor="middle" font-size="9" fill="#6B7684">DB157 · 22-47 µF</text>
+<text x="437.0" y="568" text-anchor="middle" font-size="9" fill="#6B7684">2,2 kΩ 1 W · PC817</text>
+<text x="437.0" y="582" text-anchor="middle" font-size="9" fill="#6B7684">10 kΩ a 3,3 V</text>
+<rect x="690" y="410" width="230" height="110" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="805.0" y="431" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">CANAL DEL SENSOR</text>
+<text x="805.0" y="448" text-anchor="middle" font-size="9" fill="#6B7684">2,2 kΩ · PC817</text>
+<text x="805.0" y="462" text-anchor="middle" font-size="9" fill="#6B7684">10 kΩ a 3,3 V</text>
+<path d="M490 290 C 450 290, 440 400, 552 440" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<path d="M490 320 C 440 320, 430 520, 552 552" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<path d="M760 320 C 800 320, 810 400, 800 410" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="437" y1="200" x2="437" y2="410" stroke="#1E3A5F" stroke-width="2"/>
+<line x1="437" y1="626" x2="437" y2="770" stroke="#6B7684" stroke-width="2"/>
+<line x1="805" y1="520" x2="805" y2="770" stroke="#6B7684" stroke-width="2"/>
+<rect x="28" y="76" width="250" height="720" rx="10" fill="#FFF9F0" stroke="#9C5C0A" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="153" y="96" text-anchor="middle" font-size="10" font-weight="bold" fill="#9C5C0A" font-family="IBM Plex Mono, ui-monospace, monospace">TELAR</text>
+<rect x="48" y="410" width="210" height="76" rx="8" fill="#EDF1F5" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="153.0" y="431" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">BOTONERA</text>
+<text x="153.0" y="448" text-anchor="middle" font-size="9" fill="#6B7684">24 V alterna</text>
+<text x="153.0" y="462" text-anchor="middle" font-size="9" fill="#6B7684">Marcha · Pausa · Retroceder</text>
+<text x="153" y="506" text-anchor="middle" font-size="8.5" fill="#9C5C0A" font-weight="bold">Relés en PARALELO a cada botón</text>
+<path d="M258 440 C 290 440, 300 440, 322 442" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
+<path d="M258 465 C 290 465, 300 545, 322 550" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
+<rect x="48" y="150" width="210" height="120" rx="8" fill="#EDF1F5" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="153.0" y="171" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">ALIMENTACIÓN 24 V AC</text>
+<text x="153.0" y="188" text-anchor="middle" font-size="9" fill="#6B7684"></text>
+<text x="153.0" y="202" text-anchor="middle" font-size="9" fill="#6B7684">DB157 + 470 µF 50 V</text>
+<text x="153.0" y="216" text-anchor="middle" font-size="9" fill="#6B7684">Regulador 7824 → 24 V DC</text>
+<rect x="48" y="290" width="210" height="86" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="153.0" y="311" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">SENSOR INDUCTIVO</text>
+<text x="153.0" y="328" text-anchor="middle" font-size="9" fill="#6B7684">LJ12A3-4-Z/BX</text>
+<text x="153.0" y="342" text-anchor="middle" font-size="9" fill="#6B7684">Un pulso por pasada</text>
+<line x1="153" y1="270" x2="153" y2="290" stroke="#1F2937" stroke-width="2.2"/>
+<path d="M258 330 C 400 330, 600 360, 690 430" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
+<text x="470" y="352" text-anchor="middle" font-size="8.5" fill="#9C5C0A">señal del sensor, dos hilos</text>
+<rect x="962" y="76" width="250" height="720" rx="10" fill="#EDF1F5" stroke="#3D6B96" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="1087" y="96" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E3A5F" font-family="IBM Plex Mono, ui-monospace, monospace">QUÉ HACE CADA BLOQUE</text>
+<text x="982" y="130" font-size="11" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Bloque A · control</text>
+<text x="982" y="150" font-size="9" fill="#6B7684">Acciona los tres botones por relé</text>
+<text x="982" y="164" font-size="9" fill="#6B7684">y detecta cuándo alguien los usa</text>
+<text x="982" y="178" font-size="9" fill="#6B7684">a mano, con aislamiento óptico.</text>
+<text x="982" y="270" font-size="11" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Bloque C · conteo</text>
+<text x="982" y="290" font-size="9" fill="#6B7684">Cuenta las pasadas reales de la</text>
+<text x="982" y="304" font-size="9" fill="#6B7684">máquina en lugar de estimarlas</text>
+<text x="982" y="318" font-size="9" fill="#6B7684">por tiempo.</text>
+<text x="982" y="410" font-size="11" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Por qué importa</text>
+<text x="982" y="430" font-size="9" fill="#6B7684">El conteo validado habilita la</text>
+<text x="982" y="444" font-size="9" fill="#6B7684">parada automática por pieza y</text>
+<text x="982" y="458" font-size="9" fill="#6B7684">las estadísticas de producción.</text>
+<text x="982" y="550" font-size="11" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Y para el Nivel 2</text>
+<text x="982" y="570" font-size="9" fill="#6B7684">El mismo pulso marca cuándo</text>
+<text x="982" y="584" font-size="9" fill="#6B7684">aplicar cada fila del dibujo.</text>
+<text x="982" y="598" font-size="9" fill="#6B7684">Sin sensor, el Nivel 2 no funciona.</text>
+<rect x="28" y="812" width="1184" height="46" rx="6" fill="#F2F5F8" stroke="#9C5C0A" stroke-width="1.4"/>
+<text x="42" y="832" font-size="9.5" font-weight="bold" fill="#9C5C0A">Los dos bloques comparten el gabinete y el microcontrolador, pero sus alimentaciones están separadas.</text>
+<text x="42" y="847" font-size="9.5" fill="#1F2937">El Bloque A se alimenta de la red por su propia fuente; el Bloque C, de los 24 V que entrega el telar. Los negativos nunca se unen: el aislamiento lo dan los optoacopladores.</text>
+</svg>

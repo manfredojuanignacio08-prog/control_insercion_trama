@@ -10,6 +10,18 @@ El nodo de control del Bloque A: los tres relés hacia la botonera, la etapa de
 sensado con sus optoacopladores, la fuente y el fusible de línea. Es el que hay
 que tener a mano al armar la placa.
 
+### `diagrama_bloque_A.svg`
+El Bloque A completo: desde la entrada de red hasta la botonera, con la fuente, el
+capacitor de 5 V, los dos módulos de relé y la etapa de sensado de los tres canales.
+
+### `diagrama_bloque_C.svg`
+El Bloque C completo: la rectificación de los 24 V alterna del telar, el regulador,
+el sensor inductivo y el canal de aislamiento hasta el pin del microcontrolador.
+
+### `diagrama_bloques_A_y_C.svg`
+Los dos bloques juntos, para ver cómo comparten el gabinete y el microcontrolador
+manteniendo sus alimentaciones separadas.
+
 ### `canal_sensor.svg`
 Un canal del sensor de pasada del Bloque C, de punta a punta: el sensor
 inductivo, la rectificación de los 24 V de alterna del telar, el optoacoplador

@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 820" font-family="IBM Plex Sans, system-ui, sans-serif">
+<rect width="1080" height="820" fill="#F6F8FA"/>
+<text x="540.0" y="32" text-anchor="middle" font-size="17" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Bloque A · Nodo de control del telar</text>
+<text x="540.0" y="52" text-anchor="middle" font-size="10.5" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">220 V DE RED · TRES CANALES · MARCHA, PAUSA Y RETROCEDER</text>
+<rect x="28" y="70" width="1024" height="724" rx="10" fill="none" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="7 5"/>
+<text x="44" y="90" font-size="10" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">GABINETE IP65</text>
+<rect x="52" y="108" width="190" height="74" rx="8" fill="#EDF1F5" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="147.0" y="130" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">RED 220 V</text>
+<text x="147.0" y="148" text-anchor="middle" font-size="9.5" fill="#6B7684">Fase y neutro desde la pared</text>
+<text x="147.0" y="163" text-anchor="middle" font-size="9.5" fill="#6B7684">Cable de 1 mm²</text>
+<line x1="242" y1="145" x2="292" y2="145" stroke="#1F2937" stroke-width="2.4"/>
+<rect x="292" y="108" width="150" height="74" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="367.0" y="130" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">FUSIBLE</text>
+<text x="367.0" y="148" text-anchor="middle" font-size="9.5" fill="#6B7684">Lento, 1 A</text>
+<text x="367.0" y="163" text-anchor="middle" font-size="9.5" fill="#6B7684">En la fase</text>
+<line x1="442" y1="145" x2="492" y2="145" stroke="#1F2937" stroke-width="2.4"/>
+<rect x="492" y="108" width="200" height="74" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="592.0" y="130" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">FUENTE HLK-5M05</text>
+<text x="592.0" y="148" text-anchor="middle" font-size="9.5" fill="#6B7684">220 V → 5 V · 1 A</text>
+<text x="592.0" y="163" text-anchor="middle" font-size="9.5" fill="#6B7684">Entrada AC sin polaridad</text>
+<line x1="692" y1="145" x2="742" y2="145" stroke="#1F2937" stroke-width="2.4"/>
+<rect x="742" y="108" width="180" height="74" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="832.0" y="130" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">CAPACITOR 470 µF</text>
+<text x="832.0" y="148" text-anchor="middle" font-size="9.5" fill="#6B7684">Sostiene los 5 V cuando</text>
+<text x="832.0" y="163" text-anchor="middle" font-size="9.5" fill="#6B7684">engancha una bobina</text>
+<text x="832" y="197" text-anchor="middle" font-size="8.5" fill="#9C5C0A" font-weight="bold">Respetar la polaridad</text>
+<line x1="120" y1="286" x2="960" y2="286" stroke="#1E3A5F" stroke-width="3"/>
+<text x="120" y="279" font-size="10" fill="#1E3A5F" font-weight="bold" font-family="IBM Plex Mono, ui-monospace, monospace">+5 V</text>
+<line x1="120" y1="760" x2="960" y2="760" stroke="#6B7684" stroke-width="3"/>
+<text x="120" y="754" font-size="10" fill="#6B7684" font-weight="bold" font-family="IBM Plex Mono, ui-monospace, monospace">GND</text>
+<line x1="832" y1="182" x2="832" y2="286" stroke="#1F2937" stroke-width="2"/>
+<rect x="430" y="310" width="240" height="120" rx="8" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="550.0" y="332" text-anchor="middle" font-size="12.5" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">ESP32 NodeMCU-32</text>
+<text x="550.0" y="350" text-anchor="middle" font-size="9.5" fill="#7FA8C9">Alimentado con 5 V</text>
+<text x="550.0" y="365" text-anchor="middle" font-size="9.5" fill="#7FA8C9"></text>
+<text x="550.0" y="380" text-anchor="middle" font-size="9.5" fill="#7FA8C9">3 salidas a relé · 3 entradas de sensado</text>
+<text x="550" y="390" text-anchor="middle" font-size="9.5" fill="#7FA8C9" font-family="IBM Plex Mono, ui-monospace, monospace">GPIO 25 · 26 · 27   →   relés</text>
+<text x="550" y="406" text-anchor="middle" font-size="9.5" fill="#7FA8C9" font-family="IBM Plex Mono, ui-monospace, monospace">GPIO 32 · 33 · 34   ←   sensado</text>
+<line x1="550" y1="286" x2="550" y2="310" stroke="#1F2937" stroke-width="2"/>
+<line x1="550" y1="430" x2="550" y2="760" stroke="#6B7684" stroke-width="2"/>
+<rect x="90" y="466" width="290" height="86" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="235.0" y="488" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">MÓDULO RELÉ 2 CANALES</text>
+<text x="235.0" y="506" text-anchor="middle" font-size="9.5" fill="#6B7684">Songle · activo-bajo</text>
+<text x="235.0" y="521" text-anchor="middle" font-size="9.5" fill="#6B7684">Marcha (GPIO 25) y Pausa (GPIO 26)</text>
+<rect x="90" y="568" width="290" height="86" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="235.0" y="590" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">MÓDULO RELÉ INDIVIDUAL</text>
+<text x="235.0" y="608" text-anchor="middle" font-size="9.5" fill="#6B7684">Tongling · activo-alto</text>
+<text x="235.0" y="623" text-anchor="middle" font-size="9.5" fill="#6B7684">Retroceder (GPIO 27)</text>
+<text x="235" y="676" text-anchor="middle" font-size="9" fill="#9C5C0A" font-weight="bold">Polaridad opuesta: el firmware lo resuelve por pin</text>
+<path d="M430 355 C 400 355, 400 505, 380 509" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<path d="M430 380 C 395 380, 395 608, 380 611" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="235" y1="286" x2="235" y2="466" stroke="#1E3A5F" stroke-width="2"/>
+<line x1="235" y1="654" x2="235" y2="760" stroke="#6B7684" stroke-width="2"/>
+<rect x="720" y="466" width="260" height="188" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="850.0" y="488" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">ETAPA DE SENSADO</text>
+<text x="850.0" y="506" text-anchor="middle" font-size="9.5" fill="#6B7684">Un canal por botón, tres en total</text>
+<text x="850.0" y="521" text-anchor="middle" font-size="9.5" fill="#6B7684"></text>
+<text x="850.0" y="536" text-anchor="middle" font-size="9.5" fill="#6B7684">Puente DB157</text>
+<text x="850.0" y="551" text-anchor="middle" font-size="9.5" fill="#6B7684">Capacitor 22 a 47 µF</text>
+<text x="850.0" y="566" text-anchor="middle" font-size="9.5" fill="#6B7684">Resistencia 2,2 kΩ 1 W</text>
+<text x="850.0" y="581" text-anchor="middle" font-size="9.5" fill="#6B7684">Optoacoplador PC817</text>
+<text x="850.0" y="596" text-anchor="middle" font-size="9.5" fill="#6B7684">Resistencia 10 kΩ a 3,3 V</text>
+<path d="M670 380 C 700 380, 700 505, 720 509" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="850" y1="654" x2="850" y2="760" stroke="#6B7684" stroke-width="2"/>
+<rect x="28" y="796" width="1024" height="1" fill="none"/>
+<rect x="400" y="700" width="300" height="66" rx="8" fill="#EDF1F5" stroke="#CDD8E0" stroke-width="1.6"/>
+<text x="550.0" y="722" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">BOTONERA DEL TELAR</text>
+<text x="550.0" y="740" text-anchor="middle" font-size="9.5" fill="#6B7684">24 V en alterna · contacto seco</text>
+<text x="550.0" y="755" text-anchor="middle" font-size="9.5" fill="#6B7684">Los relés van en PARALELO a cada botón</text>
+<path d="M380 509 C 420 509, 420 710, 400 718" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
+<path d="M380 611 C 410 611, 410 718, 400 730" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
+<path d="M720 560 C 700 560, 700 718, 700 722" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
+<rect x="52" y="212" width="976" height="42" rx="6" fill="#F2F5F8" stroke="#9C5C0A" stroke-width="1.4"/>
+<text x="66" y="232" font-size="9.5" font-weight="bold" fill="#9C5C0A">La entrada de 220 V no se conecta con conectores dupont: va soldada con termocontraíble, con bornera a tornillo o con conector de palanca.</text>
+</svg>
