@@ -9,7 +9,7 @@ código al microcontrolador.
 No reemplaza la prueba en la máquina: verifica la lógica, no el hardware.
 """
 
-N_CANALES = 6
+N_CANALES = 4
 DESPLAZAMIENTO_FILAS = 0
 
 
@@ -45,6 +45,11 @@ class Nivel2Simulado:
         if getattr(self, 'proxima_es_retroceso', False):
             self.pasadas = max(0, self.pasadas - 1)
             self.proxima_es_retroceso = False
+            # La fila vuelve atrás: la próxima pasada hacia adelante repite la
+            # fila que el telar acaba de deshacer.
+            self.fila_actual -= 1
+            if self.fila_actual < 0:
+                self.fila_actual = self.filas - 1
             return
         self.pasadas += 1
         if not tejiendo:
@@ -66,23 +71,23 @@ class Nivel2Simulado:
 def verificar():
     # Un dibujo de prueba: 4 pasadas, 6 canales.
     dibujo = [
-        [1, 0, 1, 0, 1, 0],
-        [0, 1, 0, 1, 0, 1],
-        [1, 1, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0],   # una pasada sin ningún canal activo también es válida
+        [1, 0, 1, 0],
+        [0, 1, 0, 1],
+        [1, 1, 0, 0],
+        [0, 0, 0, 0],   # una pasada sin ningún canal activo también es válida
     ]
     v = []
 
     s = Nivel2Simulado(dibujo)
     s.pulso_del_sensor()
-    v.append(("La primera pasada aplica la fila 1", s.canales == [True, False, True, False, True, False]))
+    v.append(("La primera pasada aplica la fila 1", s.canales == [True, False, True, False]))
 
     s.pulso_del_sensor()
-    v.append(("La segunda pasada aplica la fila 2", s.canales == [False, True, False, True, False, True]))
+    v.append(("La segunda pasada aplica la fila 2", s.canales == [False, True, False, True]))
 
     s.pulso_del_sensor()
     s.pulso_del_sensor()
-    v.append(("Una fila sin canales activos no enciende nada", s.canales == [False] * 6))
+    v.append(("Una fila sin canales activos no enciende nada", s.canales == [False] * 4))
 
     s.pulso_del_sensor()
     v.append(("Al terminar el dibujo vuelve a la primera fila",
@@ -97,18 +102,18 @@ def verificar():
     s3 = Nivel2Simulado(dibujo)
     s3.pulso_del_sensor(tejiendo=False)
     v.append(("Con el telar movido a mano se cuenta la pasada pero no se comanda",
-              s3.pasadas == 1 and s3.canales == [False] * 6 and s3.fila_actual == 0))
+              s3.pasadas == 1 and s3.canales == [False] * 4 and s3.fila_actual == 0))
 
     s4 = Nivel2Simulado(dibujo)
     s4.pulso_del_sensor()
     s4.apagar_todo()
-    v.append(("Apagar todo deja los seis canales en reposo", s4.canales == [False] * 6))
+    v.append(("Apagar todo deja los cuatro canales en reposo", s4.canales == [False] * 4))
 
     dibujo_corto = [[1, 1], [0, 1]]
     s5 = Nivel2Simulado(dibujo_corto)
     s5.pulso_del_sensor()
     v.append(("Un dibujo con menos columnas que canales deja el resto en reposo",
-              s5.canales == [True, True, False, False, False, False]))
+              s5.canales == [True, True, False, False]))
 
     v.append(("Las columnas de una fila se aplican juntas, no de a una",
               len(s.historial[0]) == N_CANALES))
@@ -116,12 +121,12 @@ def verificar():
     s6 = Nivel2Simulado(dibujo, desplazamiento=1)
     s6.pulso_del_sensor()
     v.append(("Con desplazamiento 1 se aplica la fila siguiente",
-              s6.canales == [False, True, False, True, False, True]))
+              s6.canales == [False, True, False, True]))
 
     s7 = Nivel2Simulado(dibujo, desplazamiento=-1)
     s7.pulso_del_sensor()
     v.append(("Con desplazamiento -1 se aplica la última fila, sin índice negativo",
-              s7.canales == [False] * 6))
+              s7.canales == [False] * 4))
 
     s9 = Nivel2Simulado(dibujo)
     for _ in range(4):
@@ -139,6 +144,31 @@ def verificar():
     s10.pulso_del_sensor()
     v.append(("Tras un retroceso el pulso siguiente descuenta en vez de sumar",
               s10.pasadas == antes_retro - 1))
+
+    # Caso completo: tejer 5 pasadas, retroceder, y verificar que la pasada
+    # siguiente repita exactamente la fila que se deshizo.
+    s12 = Nivel2Simulado(dibujo)
+    for _ in range(5):
+        s12.pulso_del_sensor()
+    fila_deshecha = s12.historial[-1]
+    s12.avisar_retroceso()
+    s12.pulso_del_sensor()
+    s12.pulso_del_sensor()
+    v.append(("Tras un retroceso la pasada siguiente repite la misma fila",
+              s12.historial[-1] == fila_deshecha))
+    v.append(("Tras un retroceso el conteo queda donde corresponde",
+              s12.pasadas == 5))
+
+    # Al cambiar de dibujo el nodo arranca desde la primera fila del nuevo, no
+    # desde la posición en la que venía del anterior.
+    s13 = Nivel2Simulado(dibujo)
+    for _ in range(3):
+        s13.pulso_del_sensor()
+    otro = [[0, 0, 1, 1], [1, 1, 0, 0]]
+    s14 = Nivel2Simulado(otro)          # equivale a recargar con el dibujo nuevo
+    s14.pulso_del_sensor()
+    v.append(("Un dibujo nuevo empieza por su primera fila",
+              s14.canales == [False, False, True, True]))
 
     s11 = Nivel2Simulado(dibujo)
     s11.avisar_retroceso()

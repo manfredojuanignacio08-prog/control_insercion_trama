@@ -6,7 +6,7 @@
 // ============================================================================
 //  Bloque D, selección del dibujo
 //
-//  El telar tiene seis bobinas de selección, ya instaladas y funcionando. Hoy
+//  El C 401 tiene cuatro bobinas de selección, ya instaladas y funcionando. Hoy
 //  las comanda un lector óptico que lee la cinta de papel perforada: donde hay
 //  agujero, el haz pasa.
 //

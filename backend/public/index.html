@@ -294,6 +294,34 @@
     <div class="editor-namebar">
       <input class="name-in" id="insercion-name" placeholder="Nombre del dibujo..." value="Nueva Inserción">
       <span class="status-badge" id="ed-status">Nuevo</span>
+      <button class="ficha-btn" id="ficha-btn" aria-label="Ficha y estadísticas del dibujo" title="Ficha y estadísticas">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Ficha del dibujo: metros por pasada y estadísticas de producción -->
+    <div class="ficha" id="ficha" hidden>
+      <div class="ficha-h">
+        <b>Ficha del dibujo</b>
+        <button class="ficha-x" id="ficha-x" aria-label="Cerrar">&times;</button>
+      </div>
+
+      <div class="ficha-mpp">
+        <label for="mpp-in">Metros de tela por pasada</label>
+        <p class="ficha-ayuda">Cuánto avanza la tela en cada pasada. Depende de la densidad del tejido y lo sabe el operario. Con ese dato el sistema convierte las pasadas contadas en metros reales.</p>
+        <div class="ficha-fila">
+          <input type="number" id="mpp-in" step="0.0001" min="0.0001" max="1" placeholder="0,0005">
+          <button class="btn" id="mpp-guardar">Guardar</button>
+        </div>
+        <div class="ficha-eq" id="mpp-eq"></div>
+      </div>
+
+      <div class="ficha-est" id="ficha-est">
+        <div class="ficha-cargando">Cargando estadísticas...</div>
+      </div>
     </div>
 
     <div class="telar-status-bar" id="telar-status-bar">
@@ -1150,9 +1178,9 @@ function applySize() {
     toast('Las filas y columnas deben ser un número entre 2 y 32');
   }
 
-  // El telar tiene 6 elementos de selección (bobinas). Un dibujo con más columnas
+  // El telar tiene 4 elementos de selección (bobinas). Un dibujo con más columnas
   // se guarda igual, pero al tejerlo las columnas sobrantes no accionan nada.
-  const ELEMENTOS_TELAR = 6;
+  const ELEMENTOS_TELAR = 4;
   if (Number.isInteger(cNum) && cNum > ELEMENTOS_TELAR) {
     toast('Atención: el telar tiene ' + ELEMENTOS_TELAR + ' elementos de selección. Las columnas ' + (ELEMENTOS_TELAR + 1) + ' en adelante no van a accionar nada al tejer.');
   }
@@ -1904,6 +1932,96 @@ function logError(title, msg, code) {
     body: JSON.stringify({ titulo: title, mensaje: msg, codigo: code }),
   }).catch(() => {});
 }
+
+
+// ═══════════ FICHA DEL DIBUJO ═══════════
+// Metros por pasada y estadísticas de producción. Todo lo que muestra sale de
+// pasadas efectivamente contadas, no de estimaciones por tiempo.
+
+function fichaFormatearNumero(n, dec = 0) {
+  return Number(n).toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function fichaMostrarEquivalencia() {
+  const eq = document.getElementById('mpp-eq');
+  const v = parseFloat(document.getElementById('mpp-in').value);
+  if (!Number.isFinite(v) || v <= 0) { eq.textContent = ''; return; }
+  const porMetro = Math.round(1 / v);
+  eq.textContent = `Equivale a ${fichaFormatearNumero(porMetro)} pasadas por metro de tela.`;
+}
+
+async function fichaCargar() {
+  const cont = document.getElementById('ficha-est');
+  const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
+  if (!idActual) {
+    cont.innerHTML = '<div class="ficha-vacio">Guardá el dibujo para empezar a registrar estadísticas de producción.</div>';
+    document.getElementById('mpp-in').value = '';
+    fichaMostrarEquivalencia();
+    return;
+  }
+  cont.innerHTML = '<div class="ficha-cargando">Cargando estadísticas...</div>';
+  try {
+    const d = await apiFetch(`/patrones/${idActual}/estadisticas`);
+    document.getElementById('mpp-in').value = d.metros_por_pasada ?? '';
+    fichaMostrarEquivalencia();
+
+    if (d.producciones === 0) {
+      cont.innerHTML = '<div class="ficha-vacio">Este dibujo todavía no se tejió. Las estadísticas aparecen cuando se registre la primera producción.</div>';
+      return;
+    }
+    const fecha = (s) => s ? new Date(s).toLocaleDateString('es-AR') : '—';
+    let filas = [
+      ['Veces que se tejió', fichaFormatearNumero(d.producciones)],
+      ['Pasadas acumuladas', fichaFormatearNumero(d.pasadas_totales)],
+      ['Repeticiones del dibujo', fichaFormatearNumero(d.repeticiones_del_dibujo)],
+      ['Horas de máquina', fichaFormatearNumero(d.horas_de_maquina, 2)],
+      ['Primera vez', fecha(d.primera_vez)],
+      ['Última vez', fecha(d.ultima_vez)],
+    ];
+    if (d.metros_tejidos !== undefined) {
+      filas.splice(2, 0,
+        ['Metros tejidos', fichaFormatearNumero(d.metros_tejidos, 2) + ' m'],
+        ['Pieza más larga', fichaFormatearNumero(d.metros_mayor_produccion, 2) + ' m']);
+    }
+    let html = '<div class="ficha-grid">';
+    for (const [k, v] of filas) html += `<div class="ficha-dato"><span>${k}</span><b>${v}</b></div>`;
+    html += '</div>';
+    if (d.aviso) html += `<div class="ficha-aviso">${d.aviso}</div>`;
+    cont.innerHTML = html;
+  } catch (e) {
+    cont.innerHTML = `<div class="ficha-aviso">No se pudieron cargar las estadísticas: ${e.message}</div>`;
+  }
+}
+
+function fichaInicializar() {
+  const btn = document.getElementById('ficha-btn');
+  const panel = document.getElementById('ficha');
+  if (!btn || !panel) return;
+  btn.addEventListener('click', () => {
+    panel.hidden = !panel.hidden;
+    if (!panel.hidden) fichaCargar();
+  });
+  document.getElementById('ficha-x').addEventListener('click', () => { panel.hidden = true; });
+  document.getElementById('mpp-in').addEventListener('input', fichaMostrarEquivalencia);
+  document.getElementById('mpp-guardar').addEventListener('click', async () => {
+    const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
+    if (!idActual) { toast('Primero guardá el dibujo.'); return; }
+    const bruto = document.getElementById('mpp-in').value.trim();
+    const v = bruto === '' ? null : parseFloat(bruto);
+    try {
+      await apiFetch(`/patrones/${idActual}/metros-por-pasada`, {
+        method: 'PUT',
+        body: JSON.stringify({ metros_por_pasada: v }),
+      });
+      toast(v === null ? 'Se quitó el dato de metros por pasada.' : 'Metros por pasada guardados.');
+      fichaCargar();
+    } catch (e) {
+      toast(e.message);
+    }
+  });
+}
+
+fichaInicializar();
 
 </script>
 

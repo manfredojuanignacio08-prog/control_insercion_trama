@@ -45,11 +45,16 @@ static const unsigned long DEBOUNCE_PASADA_MS = 60;
 static const unsigned long TIMEOUT_SIN_PULSOS_MS = 3000;
 
 // ------------------------------------- Bloque D · selección del dibujo
-// Un relé PhotoMOS por lector óptico. Son seis, uno por bobina de selección.
+// Un relé PhotoMOS por lector óptico, uno por bobina de selección.
+//
+// El C 401 donde se implementa tiene cuatro bobinas. El relevamiento original se
+// hizo sobre un C 201 y se estimaban seis; la máquina de destino tiene cuatro.
+// Si en otro telar hubiera más, alcanza con ampliar este número y la lista de
+// pines, y poner elementos_seleccion en la base al valor que corresponda.
 // Cada pin va a la pata 1 del relé a través de una resistencia de 330 ohm,
 // con una de 10 kilohm del pin a masa para el arranque seguro.
-static const int  N_CANALES = 6;
-static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22, 23, 4 };
+static const int  N_CANALES = 4;
+static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 
 // Sentido de la señal. El relé PhotoMOS conduce cuando su LED recibe corriente,
 // o sea con el pin en alto. Queda como constante porque, según cómo esté

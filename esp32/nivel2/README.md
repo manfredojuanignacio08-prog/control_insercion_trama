@@ -14,6 +14,30 @@ papel perforada que comanda bobinas), así que el diseño se traslada. Antes de
 instalar hay que verificar sobre la máquina de destino: cuántas bobinas tiene, con
 qué tensión trabaja su botonera y si el lector óptico responde igual.
 
+## El retroceso y el sentido de giro
+
+El sensor inductivo no distingue si el eje gira hacia adelante o hacia atrás: ve
+la paleta pasar y entrega un pulso igual. Cuando el operario usa Retroceder, el
+telar deshace la última pasada y el sensor igual reporta movimiento.
+
+Sin corregirlo pasarían dos cosas a la vez: el contador subiría cuando en
+realidad bajó, y la fila del dibujo avanzaría cuando tenía que volver atrás. El
+error acumulado sería de dos pasadas y dos filas por cada retroceso.
+
+La corrección aprovecha que el Bloque A sensa el botón Retroceder. Al detectarlo
+se marca el pulso siguiente como retroceso: el contador descuenta y la fila
+retrocede, de modo que la próxima pasada hacia adelante repite exactamente la
+fila que se acaba de deshacer. Que la señal se repita es lo correcto: esa pasada
+se va a volver a tejer.
+
+## Cambio de dibujo en caliente
+
+El nodo compara en cada consulta el dibujo asignado al telar contra el que tiene
+cargado. Si difieren, descarga el nuevo y vuelve a su primera fila.
+
+Sin eso el nodo seguiría tejiendo el dibujo anterior después de que alguien
+asignara otro desde la aplicación, y nadie lo notaría hasta ver la pieza.
+
 ## Depende del Bloque C
 
 El Nivel 2 **no puede funcionar sin el sensor de pasada instalado y validado**.
@@ -52,7 +76,7 @@ son estimaciones y no deben darse por buenos.
 - `nivel2_seleccion.ino`, el programa principal
 - `config_nivel2.h`, parámetros y credenciales, en un solo lugar
 - `sensor_pasada.h`, el conteo de pasadas (Bloque C)
-- `seleccion_dibujo.h`, el comando de los seis canales (Bloque D)
+- `seleccion_dibujo.h`, el comando de los cuatro canales (Bloque D)
 
 ## Cómo probarlo sin el telar
 

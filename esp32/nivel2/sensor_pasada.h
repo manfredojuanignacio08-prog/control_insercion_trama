@@ -40,6 +40,7 @@ volatile bool esperandoReposo = false;
 // botón Retroceder. Al detectarlo se marca esta bandera y el pulso siguiente se
 // descuenta en lugar de sumarse.
 volatile bool proximaEsRetroceso = false;
+volatile bool ultimoPulsoFueRetroceso = false;
 
 void IRAM_ATTR isrPasada() {
   const unsigned long ahora = millis();
@@ -58,10 +59,18 @@ void IRAM_ATTR isrPasada() {
   if (proximaEsRetroceso) {
     if (pasadasContadas > 0) pasadasContadas--;
     proximaEsRetroceso = false;
+    ultimoPulsoFueRetroceso = true;
   } else {
     pasadasContadas++;
+    ultimoPulsoFueRetroceso = false;
   }
   hayPulsoNuevo = true;
+}
+
+// El bucle principal necesita saber si el pulso que acaba de llegar corresponde a
+// un retroceso: en ese caso la fila del dibujo tiene que volver atrás, no avanzar.
+bool sensorPasadaFueRetroceso() {
+  return ultimoPulsoFueRetroceso;
 }
 
 // Se llama desde el bucle principal: libera la traba cuando el sensor dejó de
@@ -102,11 +111,18 @@ void sensorPasadaSimular() {
 }
 
 // Devuelve true una sola vez por pulso, y limpia la marca.
-bool sensorPasadaHuboPulso() {
+//
+// El sentido del pulso (adelante o retroceso) se entrega en la misma operación,
+// dentro del mismo bloque sin interrupciones. Si se leyeran por separado, un
+// pulso que llegara entre las dos lecturas podría cambiar el sentido y el bucle
+// aplicaría la dirección equivocada: avanzaría la fila cuando debía retroceder.
+bool sensorPasadaHuboPulso(bool* fueRetroceso = nullptr) {
   noInterrupts();
   const bool hubo = hayPulsoNuevo;
+  const bool retro = ultimoPulsoFueRetroceso;
   hayPulsoNuevo = false;
   interrupts();
+  if (fueRetroceso != nullptr) *fueRetroceso = retro;
   return hubo;
 }
 

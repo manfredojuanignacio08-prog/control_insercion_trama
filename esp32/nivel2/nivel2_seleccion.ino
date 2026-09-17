@@ -30,6 +30,14 @@ bool  dibujo[MAX_FILAS][N_CANALES];
 int   dibujoFilas   = 0;
 int   dibujoColumnas = 0;
 int   filaActual    = 0;
+
+// Último valor visto de retroceder_seq. En -1 mientras no se leyó ninguno, para
+// no interpretar la primera lectura como un retroceso.
+long  retrocederSeqVisto = -1;
+
+// Id del dibujo que está cargado en memoria. Sirve para detectar que desde la
+// aplicación asignaron otro y hay que volver a descargarlo.
+long  patronCargado = 0;
 bool  tejiendo      = false;
 bool  hayDibujo     = false;
 
@@ -151,9 +159,51 @@ void consultarEstado() {
       const String estado = doc["estado"] | "detenido";
       const bool debeTejer = (estado == "tejiendo");
 
+      // El Nivel 2 corre en su propia placa y no sensa la botonera: esa parte es
+      // del Bloque A. Pero el backend sí registra cada Retroceder, venga de la
+      // aplicación o del botón físico, y lleva un contador que se incrementa con
+      // cada uno (retroceder_seq, migración 007).
+      //
+      // Comparando ese contador contra el último valor visto, esta placa se
+      // entera de que hubo un retroceso y le avisa al sensor, que descuenta la
+      // pasada y hace volver atrás la fila del dibujo en lugar de avanzarla.
+      const long seqActual = doc["retroceder_seq"] | 0L;
+      if (retrocederSeqVisto < 0) {
+        // Primera lectura: se toma como referencia, sin disparar nada.
+        retrocederSeqVisto = seqActual;
+      } else if (seqActual > retrocederSeqVisto) {
+        const long cuantos = seqActual - retrocederSeqVisto;
+        for (long k = 0; k < cuantos; k++) sensorPasadaAvisarRetroceso();
+        log("Retroceso detectado (" + String(cuantos) + "): el próximo pulso descuenta");
+        retrocederSeqVisto = seqActual;
+      }
+
+      // Si desde la aplicación asignaron otro dibujo, hay que volver a bajarlo.
+      // Sin esto el nodo seguiría tejiendo el anterior: la tela saldría con un
+      // patrón que nadie pidió y el operario no tendría forma de notarlo hasta
+      // ver la pieza terminada.
+      const long patronAhora = doc["patron_actual_id"] | 0L;
+      if (patronAhora != 0 && patronAhora != patronCargado) {
+        log("Cambió el dibujo asignado: se descarga el nuevo");
+        hayDibujo = false;
+        filaActual = 0;      // el dibujo nuevo arranca desde su primera fila
+
+        // Mientras no haya un dibujo válido cargado, las salidas van a reposo.
+        // Si se dejaran como estaban, los canales quedarían congelados en la
+        // última fila aplicada y el telar seguiría tejiendo esa misma
+        // combinación en cada pasada, hasta que la descarga tuviera éxito.
+        seleccionApagarTodo();
+
+        if (descargarDibujo()) {
+          patronCargado = patronAhora;
+        } else {
+          log("No se pudo descargar el dibujo nuevo: se reintenta en la próxima consulta");
+        }
+      }
+
       if (debeTejer && !tejiendo) {
         log("Arranca el tejido");
-        if (!hayDibujo) descargarDibujo();
+        if (!hayDibujo && descargarDibujo()) patronCargado = patronAhora;
       } else if (!debeTejer && tejiendo) {
         log("Se detiene el tejido");
         seleccionApagarTodo();
@@ -226,13 +276,14 @@ void loop() {
   }
 
   // ---- una pasada nueva ----
-  if (sensorPasadaHuboPulso()) {
+  bool pulsoFueRetroceso = false;
+  if (sensorPasadaHuboPulso(&pulsoFueRetroceso)) {
 
-    if (!tejiendo || !hayDibujo) {
-      // Llegó un pulso pero el sistema no está tejiendo: la máquina se está
-      // moviendo por la botonera. Se cuenta la pasada, pero no se toca nada.
-      return;
-    }
+    // Llegó un pulso pero el sistema no está tejiendo, o no hay dibujo cargado:
+    // la pasada se cuenta igual (el contador vive en la interrupción), pero no
+    // se comanda nada. Se usa una condición en lugar de un return para no
+    // saltear lo que viene después en el bucle.
+    if (tejiendo && hayDibujo) {
 
     // Se aplica la fila que corresponde a esta pasada. Todos los canales a la
     // vez: las columnas de una fila son simultáneas, no se recorren.
@@ -248,12 +299,23 @@ void loop() {
         " · fila " + String(filaAplicar + 1) + "/" + String(dibujoFilas) +
         " · " + seleccionEstadoTexto());
 
-    // Avanzar a la siguiente. Al llegar al final se vuelve al principio: el
-    // dibujo se repite en bucle, como la cinta de papel.
-    filaActual++;
-    if (filaActual >= dibujoFilas) {
-      filaActual = 0;
-      log("Vuelta completa del dibujo");
+    // Avanzar o retroceder según el sentido del movimiento.
+    //
+    // En un retroceso el telar deshace la última pasada, así que la fila tiene
+    // que volver atrás: la próxima pasada hacia adelante debe repetir la misma
+    // fila que se acaba de deshacer. Si en cambio avanzara, el dibujo quedaría
+    // dos filas adelantado respecto de la tela por cada retroceso.
+    if (pulsoFueRetroceso) {
+      filaActual--;
+      if (filaActual < 0) filaActual = dibujoFilas - 1;
+      log("Retroceso: la fila vuelve a " + String(filaActual + 1));
+    } else {
+      filaActual++;
+      if (filaActual >= dibujoFilas) {
+        filaActual = 0;
+        log("Vuelta completa del dibujo");
+      }
+    }
     }
   }
 

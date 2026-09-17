@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS patrones (
   colores_filas     JSONB,            -- array de colores hex, uno por fila
   metadata          JSONB,            -- ej: {"tipo": "Tafetán"}
   creado_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- migración 011: metros de tela que avanza el telar en una pasada, para este
+  -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
+  metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),
   modificado_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -51,7 +54,7 @@ CREATE TABLE IF NOT EXISTS telares (
   ultimo_evento_manual_tipo TEXT,                 -- migración 008: 'avanzar' | 'impulso'
   -- migración 010: cuántos elementos de selección (bobinas) tiene la máquina.
   -- Un dibujo con más columnas que este número no puede ejecutarse completo.
-  elementos_seleccion INTEGER NOT NULL DEFAULT 6 CHECK (elementos_seleccion BETWEEN 1 AND 32)
+  elementos_seleccion INTEGER NOT NULL DEFAULT 4 CHECK (elementos_seleccion BETWEEN 1 AND 32)
 );
 
 CREATE TABLE IF NOT EXISTS historial_produccion (

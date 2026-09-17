@@ -2,8 +2,8 @@
 -- Migración 010: elementos de selección por telar
 --
 -- El editor permite dibujar hasta 32 columnas, pero cada telar tiene
--- una cantidad fija de elementos de selección: en el Vamatex C 201 de
--- este proyecto son 6 bobinas. Las columnas que excedan ese número no
+-- una cantidad fija de elementos de selección: en el Vamatex C 401 donde
+-- se implementa son 4 bobinas. Las columnas que excedan ese número no
 -- tienen a qué accionar y el firmware las descarta.
 --
 -- Hasta ahora ese límite no estaba en ningún lado: ni en la base, ni en
@@ -15,7 +15,7 @@
 -- ============================================================
 
 ALTER TABLE telares
-  ADD COLUMN IF NOT EXISTS elementos_seleccion INTEGER NOT NULL DEFAULT 6
+  ADD COLUMN IF NOT EXISTS elementos_seleccion INTEGER NOT NULL DEFAULT 4
   CHECK (elementos_seleccion BETWEEN 1 AND 32);
 
 COMMENT ON COLUMN telares.elementos_seleccion IS

@@ -88,7 +88,7 @@ export async function asignarPatron(req, res, next) {
     if (patron.rows.length === 0) throw notFound(`No existe el patrón con id ${patron_id}.`);
 
     // Cada telar tiene una cantidad fija de elementos de selección: en el Vamatex
-    // C 201 son 6 bobinas. Un dibujo con más columnas que eso no se puede ejecutar
+    // C 201 son 4 bobinas. Un dibujo con más columnas que eso no se puede ejecutar
     // completo, porque las columnas sobrantes no tienen a qué accionar.
     //
     // No se rechaza la asignación, porque mientras el Nivel 2 no esté instalado el
