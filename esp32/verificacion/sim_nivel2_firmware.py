@@ -27,11 +27,25 @@ class Nivel2Simulado:
         self.canales = [False] * N_CANALES
         self.historial = []
 
+    def avisar_retroceso(self):
+        """El Bloque A detectó Retroceder: el próximo pulso descuenta."""
+        self.proxima_es_retroceso = True
+
     def apagar_todo(self):
         self.canales = [False] * N_CANALES
 
-    def pulso_del_sensor(self, tejiendo=True):
+    def pulso_del_sensor(self, tejiendo=True, en_reposo=True):
         """Un pulso del sensor equivale a una pasada de la máquina."""
+        # Si la paleta sigue enfrente del sensor, esto no es una pasada nueva:
+        # es la misma paleta oscilando con la máquina detenida.
+        if not en_reposo:
+            return
+        # El sensor no distingue el sentido de giro. Cuando el telar retrocede,
+        # el Bloque A avisa y el pulso siguiente se descuenta en lugar de sumarse.
+        if getattr(self, 'proxima_es_retroceso', False):
+            self.pasadas = max(0, self.pasadas - 1)
+            self.proxima_es_retroceso = False
+            return
         self.pasadas += 1
         if not tejiendo:
             # La máquina se mueve por la botonera: se cuenta, pero no se comanda.
@@ -108,6 +122,29 @@ def verificar():
     s7.pulso_del_sensor()
     v.append(("Con desplazamiento -1 se aplica la última fila, sin índice negativo",
               s7.canales == [False] * 6))
+
+    s9 = Nivel2Simulado(dibujo)
+    for _ in range(4):
+        s9.pulso_del_sensor()
+    p4 = s9.pasadas
+    s9.pulso_del_sensor(en_reposo=False)
+    v.append(("Con la paleta todavía enfrente no se cuenta una pasada nueva",
+              s9.pasadas == p4))
+
+    s10 = Nivel2Simulado(dibujo)
+    for _ in range(5):
+        s10.pulso_del_sensor()
+    antes_retro = s10.pasadas
+    s10.avisar_retroceso()
+    s10.pulso_del_sensor()
+    v.append(("Tras un retroceso el pulso siguiente descuenta en vez de sumar",
+              s10.pasadas == antes_retro - 1))
+
+    s11 = Nivel2Simulado(dibujo)
+    s11.avisar_retroceso()
+    s11.pulso_del_sensor()
+    v.append(("Un retroceso con el contador en cero no lo deja negativo",
+              s11.pasadas == 0))
 
     s8 = Nivel2Simulado(dibujo)
     s8.pulso_del_sensor()

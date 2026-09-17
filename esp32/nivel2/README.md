@@ -3,6 +3,17 @@
 Este directorio contiene el firmware del **Nivel 2**: el conteo real de pasadas
 (Bloque C) y la selección del dibujo (Bloque D).
 
+## Sobre el telar de destino
+
+La fábrica tiene once telares Vamatex de tres modelos: C 201, C 301 y C 401. El
+relevamiento y la documentación se hicieron sobre el C 201, pero la implementación
+se haría sobre un C 401.
+
+Los tres comparten la arquitectura de selección (lectora óptica sobre cinta de
+papel perforada que comanda bobinas), así que el diseño se traslada. Antes de
+instalar hay que verificar sobre la máquina de destino: cuántas bobinas tiene, con
+qué tensión trabaja su botonera y si el lector óptico responde igual.
+
 ## Depende del Bloque C
 
 El Nivel 2 **no puede funcionar sin el sensor de pasada instalado y validado**.

@@ -216,6 +216,7 @@ void loop() {
   esp_task_wdt_reset();
 
   sensorPasadaSimular();          // no hace nada si MODO_BANCO es false
+  sensorPasadaActualizar();       // libera la traba cuando la paleta pasó de largo
 
   // ---- consulta periódica al backend ----
   if (millis() - ultimaConsulta >= INTERVALO_CONSULTA_MS) {

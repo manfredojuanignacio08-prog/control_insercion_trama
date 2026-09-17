@@ -23,6 +23,24 @@ volatile bool          hayPulsoNuevo     = false;
 
 // La interrupción tiene que vivir en RAM interna: en el ESP32 es obligatorio,
 // porque la memoria flash puede estar ocupada cuando el pulso llega.
+// Cuando la máquina se detiene, puede quedar con la paleta justo enfrente del
+// sensor. La vibración residual hace que la detección oscile y, sin protección,
+// cada oscilación contaría como una pasada nueva. Por eso no alcanza con el
+// anti-rebote por tiempo: se exige además que el sensor haya vuelto a reposo
+// antes de aceptar el pulso siguiente.
+volatile bool esperandoReposo = false;
+
+// El sensor no distingue el sentido de giro: ve una paleta pasar y no sabe si la
+// máquina avanzó o retrocedió. Cuando el operario usa Retroceder, el telar hace
+// una pasada completa hacia atrás y el sensor igual entrega un pulso. Sin
+// corregirlo, el conteo subiría uno cuando en realidad bajó uno: un error de dos
+// pasadas por cada retroceso.
+//
+// La corrección aprovecha algo que el sistema ya tiene: el Bloque A sensa el
+// botón Retroceder. Al detectarlo se marca esta bandera y el pulso siguiente se
+// descuenta en lugar de sumarse.
+volatile bool proximaEsRetroceso = false;
+
 void IRAM_ATTR isrPasada() {
   const unsigned long ahora = millis();
 
@@ -30,9 +48,34 @@ void IRAM_ATTR isrPasada() {
   // 60 ms filtra los rebotes sin riesgo de descartar un pulso legítimo.
   if (ahora - ultimoPulsoMs < DEBOUNCE_PASADA_MS) return;
 
+  // Si el sensor todavía no volvió a reposo desde el pulso anterior, esto no es
+  // una pasada nueva sino la misma paleta oscilando frente al sensor.
+  if (esperandoReposo) return;
+
   ultimoPulsoMs = ahora;
-  pasadasContadas++;
+  esperandoReposo = true;
+
+  if (proximaEsRetroceso) {
+    if (pasadasContadas > 0) pasadasContadas--;
+    proximaEsRetroceso = false;
+  } else {
+    pasadasContadas++;
+  }
   hayPulsoNuevo = true;
+}
+
+// Se llama desde el bucle principal: libera la traba cuando el sensor dejó de
+// detectar metal, o sea cuando la paleta ya pasó de largo.
+void sensorPasadaActualizar() {
+  if (esperandoReposo && digitalRead(PIN_SENSOR_PASADA) == HIGH) {
+    esperandoReposo = false;
+  }
+}
+
+// El Bloque A avisa que se accionó Retroceder, sea por la aplicación o por el
+// botón físico. El pulso siguiente del sensor se descuenta en lugar de sumarse.
+void sensorPasadaAvisarRetroceso() {
+  proximaEsRetroceso = true;
 }
 
 void sensorPasadaIniciar() {

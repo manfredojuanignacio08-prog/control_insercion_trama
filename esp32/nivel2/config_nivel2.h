@@ -31,6 +31,10 @@
 // través de un optoacoplador, de modo que el pin cae a bajo cuando detecta.
 static const int  PIN_SENSOR_PASADA   = 35;   // solo entrada; lleva pull-up externa
 
+// El sensor se alimenta con los 12 a 14 V de continua que entrega el telar. No
+// hace falta rectificar (ya es continua) ni regular: el rango está lejos de los
+// 36 V que tolera el sensor. La resistencia del canal es de 1,2 kΩ.
+//
 // El telar trabaja a 300 pasadas por minuto, es decir 5 por segundo, o sea un
 // pulso cada 200 ms. El anti-rebote tiene que ser bastante menor que eso para
 // no perder pulsos: 60 ms deja margen de sobra y filtra los rebotes.
