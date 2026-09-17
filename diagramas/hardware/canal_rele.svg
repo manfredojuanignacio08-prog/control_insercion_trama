@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 640" font-family="IBM Plex Sans, system-ui, sans-serif">
 <rect width="980" height="640" fill="#F6F8FA"/>
 <text font-family="Questrial, IBM Plex Sans, sans-serif" x="490" y="30" text-anchor="middle" font-size="17" font-weight="bold" fill="#1E3A5F">Bloque D, Canal del relé AQY212GH</text>
-<text x="490" y="49" text-anchor="middle" font-size="10.5" fill="#6B7684">Uno por lector óptico · seis canales idénticos, uno por bobina de selección</text>
+<text x="490" y="49" text-anchor="middle" font-size="10.5" fill="#6B7684">Uno por lector óptico · cuatro canales idénticos, uno por bobina de selección</text>
 
 <!-- ESP32 -->
 <rect x="24" y="76" width="290" height="286" rx="9" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.6" stroke-dasharray="6 4"/>

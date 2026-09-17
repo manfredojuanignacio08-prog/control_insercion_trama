@@ -39,7 +39,7 @@
 <text x="437.0" y="582" text-anchor="middle" font-size="9" fill="#6B7684">10 kΩ a 3,3 V</text>
 <rect x="690" y="410" width="230" height="110" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
 <text x="805.0" y="431" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">CANAL DEL SENSOR</text>
-<text x="805.0" y="448" text-anchor="middle" font-size="9" fill="#6B7684">2,2 kΩ · PC817</text>
+<text x="805.0" y="448" text-anchor="middle" font-size="9" fill="#6B7684">1,2 kΩ · PC817</text>
 <text x="805.0" y="462" text-anchor="middle" font-size="9" fill="#6B7684">10 kΩ a 3,3 V</text>
 <path d="M490 290 C 450 290, 440 400, 552 440" fill="none" stroke="#3D6B96" stroke-width="2"/>
 <path d="M490 320 C 440 320, 430 520, 552 552" fill="none" stroke="#3D6B96" stroke-width="2"/>
@@ -57,10 +57,10 @@
 <path d="M258 440 C 290 440, 300 440, 322 442" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
 <path d="M258 465 C 290 465, 300 545, 322 550" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
 <rect x="48" y="150" width="210" height="120" rx="8" fill="#EDF1F5" stroke="#CDD8E0" stroke-width="1.6"/>
-<text x="153.0" y="171" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">ALIMENTACIÓN 24 V AC</text>
+<text x="153.0" y="171" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">ALIMENTACIÓN 12 A 14 V DC</text>
 <text x="153.0" y="188" text-anchor="middle" font-size="9" fill="#6B7684"></text>
-<text x="153.0" y="202" text-anchor="middle" font-size="9" fill="#6B7684">DB157 + 470 µF 50 V</text>
-<text x="153.0" y="216" text-anchor="middle" font-size="9" fill="#6B7684">Regulador 7824 → 24 V DC</text>
+<text x="153.0" y="202" text-anchor="middle" font-size="9" fill="#6B7684">Ya viene en continua</text>
+<text x="153.0" y="216" text-anchor="middle" font-size="9" fill="#6B7684">Sin puente ni regulador</text>
 <rect x="48" y="290" width="210" height="86" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
 <text x="153.0" y="311" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">SENSOR INDUCTIVO</text>
 <text x="153.0" y="328" text-anchor="middle" font-size="9" fill="#6B7684">LJ12A3-4-Z/BX</text>
