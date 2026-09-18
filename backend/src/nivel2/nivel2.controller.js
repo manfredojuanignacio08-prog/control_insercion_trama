@@ -20,10 +20,17 @@ export async function obtenerPatronActual(req, res, next) {
     const telarId = Number(req.params.id);
     if (!Number.isInteger(telarId)) throw badRequest('El identificador del telar debe ser un número.');
 
+    // Se devuelve además la posición de la producción en curso. El nodo la
+    // necesita al arrancar: si se reinició por un corte o por el watchdog, su
+    // memoria volvió a cero y sin este dato retomaría el dibujo desde la primera
+    // fila, dejando un salto visible en la tela a mitad de una pieza.
     const { rows } = await pool.query(
-      `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas
+      `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas,
+              h.fila_actual, h.pasadas_totales
          FROM telares t
          JOIN patrones p ON p.id = t.patron_actual_id
+         LEFT JOIN historial_produccion h
+                ON h.telar_id = t.id AND h.estado = 'en_curso'
         WHERE t.id = $1`,
       [telarId]
     );
@@ -42,6 +49,10 @@ export async function obtenerPatronActual(req, res, next) {
       filas: p.filas,
       columnas: p.columnas,
       matriz_pasadas: p.matriz_pasadas,
+      // Posición de la producción en curso, para que el nodo retome donde quedó.
+      // En null si no hay producción abierta: ahí el nodo arranca desde el principio.
+      fila_actual: p.fila_actual ?? null,
+      pasadas_totales: p.pasadas_totales ?? null,
     });
   } catch (err) {
     next(err);
