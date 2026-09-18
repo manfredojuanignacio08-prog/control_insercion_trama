@@ -16,6 +16,13 @@ DESPLAZAMIENTO_FILAS = 0
 class Nivel2Simulado:
     """Reproduce el comportamiento del firmware, pasada por pasada."""
 
+    def retomar(self, fila, pasadas):
+        """Simula el arranque del nodo retomando lo guardado en el backend."""
+        if 0 <= fila < self.filas:
+            self.fila_actual = fila
+        if pasadas > 0:
+            self.pasadas = pasadas
+
     def __init__(self, dibujo, desplazamiento=DESPLAZAMIENTO_FILAS):
         self.dibujo = dibujo
         self.desplazamiento = desplazamiento
@@ -169,6 +176,26 @@ def verificar():
     s14.pulso_del_sensor()
     v.append(("Un dibujo nuevo empieza por su primera fila",
               s14.canales == [False, False, True, True]))
+
+    # Reinicio del nodo a mitad de una pieza: retoma fila y conteo del backend.
+    s15 = Nivel2Simulado(dibujo)
+    for _ in range(6):
+        s15.pulso_del_sensor()
+    fila_antes, pasadas_antes = s15.fila_actual, s15.pasadas
+    siguiente_esperada = s15.dibujo[fila_antes]
+
+    s16 = Nivel2Simulado(dibujo)          # nodo recién reiniciado, memoria en cero
+    s16.retomar(fila_antes, pasadas_antes)
+    s16.pulso_del_sensor()
+    v.append(("Tras reiniciarse, el nodo sigue el dibujo donde quedó",
+              list(s16.canales) == [bool(x) for x in siguiente_esperada]))
+    v.append(("Tras reiniciarse, el conteo continúa en vez de volver a cero",
+              s16.pasadas == pasadas_antes + 1))
+
+    s17 = Nivel2Simulado(dibujo)
+    s17.retomar(99, 50)                   # posición inválida para este dibujo
+    v.append(("Una posición guardada fuera de rango no se adopta",
+              s17.fila_actual == 0))
 
     s11 = Nivel2Simulado(dibujo)
     s11.avisar_retroceso()

@@ -38,6 +38,27 @@ cargado. Si difieren, descarga el nuevo y vuelve a su primera fila.
 Sin eso el nodo seguiría tejiendo el dibujo anterior después de que alguien
 asignara otro desde la aplicación, y nadie lo notaría hasta ver la pieza.
 
+## Reinicio del nodo a mitad de una pieza
+
+La posición del dibujo y el conteo de pasadas viven en la memoria del nodo, que
+se borra con cada reinicio: un corte de luz, una caída de tensión al enganchar
+una bobina, o el watchdog.
+
+Sin recuperación, el nodo retomaría el dibujo desde la primera fila con la pieza
+a medio tejer. La tela quedaría con un salto visible que nadie podría explicar.
+
+Por eso el nodo reporta su posición al backend en cada ciclo, y al arrancar la
+lee de vuelta desde el mismo endpoint que le entrega el dibujo. Si hay una
+producción en curso, retoma la fila y el conteo donde quedaron.
+
+El conteo importa tanto como la fila: el backend descarta los reportes menores
+que el valor guardado (esa es la protección contra reinicios), así que un nodo
+que empezara de cero vería sus reportes ignorados hasta alcanzar el número
+anterior.
+
+Cuando lo que cambia es el dibujo asignado, en cambio, se arranca desde la
+primera fila: ahí empezar de cero es lo correcto.
+
 ## Depende del Bloque C
 
 El Nivel 2 **no puede funcionar sin el sensor de pasada instalado y validado**.

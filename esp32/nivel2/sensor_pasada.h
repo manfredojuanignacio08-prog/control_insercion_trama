@@ -67,12 +67,6 @@ void IRAM_ATTR isrPasada() {
   hayPulsoNuevo = true;
 }
 
-// El bucle principal necesita saber si el pulso que acaba de llegar corresponde a
-// un retroceso: en ese caso la fila del dibujo tiene que volver atrás, no avanzar.
-bool sensorPasadaFueRetroceso() {
-  return ultimoPulsoFueRetroceso;
-}
-
 // Se llama desde el bucle principal: libera la traba cuando el sensor dejó de
 // detectar metal, o sea cuando la paleta ya pasó de largo.
 void sensorPasadaActualizar() {
@@ -110,6 +104,18 @@ void sensorPasadaSimular() {
   }
 }
 
+// Fija el contador en un valor conocido.
+//
+// Se usa al arrancar, para retomar una producción tras un reinicio del nodo con
+// el número que guardó el backend. Llamarla con cero equivale a un reinicio
+// manual del conteo, así que no hace falta una función aparte para eso.
+void sensorPasadaFijarTotal(unsigned long total) {
+  noInterrupts();
+  pasadasContadas = total;
+  hayPulsoNuevo   = false;
+  interrupts();
+}
+
 // Devuelve true una sola vez por pulso, y limpia la marca.
 //
 // El sentido del pulso (adelante o retroceso) se entrega en la misma operación,
@@ -131,13 +137,6 @@ unsigned long sensorPasadaTotal() {
   const unsigned long n = pasadasContadas;
   interrupts();
   return n;
-}
-
-void sensorPasadaReiniciar() {
-  noInterrupts();
-  pasadasContadas = 0;
-  hayPulsoNuevo   = false;
-  interrupts();
 }
 
 // Con el telar en marcha debería llegar un pulso cada 200 ms. Si pasa mucho más

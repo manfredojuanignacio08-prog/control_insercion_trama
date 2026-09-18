@@ -82,7 +82,12 @@ void conectarWifi() {
 //  El backend devuelve la matriz tal como la guardó la aplicación. Una fila es
 //  una pasada y cada celda es binaria: el canal se activa o no.
 // ============================================================================
-bool descargarDibujo() {
+bool descargarDibujo(bool retomarPosicion = false) {
+  // El watchdog es de 15 s y un ciclo puede encadenar varias consultas. Sin
+  // refrescarlo antes y después de cada una, una red lenta reiniciaría el nodo
+  // en bucle: cada arranque volvería a intentar y volvería a tardar lo mismo.
+  esp_task_wdt_reset();
+
   if (WiFi.status() != WL_CONNECTED) return false;
 
   HTTPClient http;
@@ -93,12 +98,14 @@ bool descargarDibujo() {
   if (codigo != 200) {
     log("No se pudo traer el dibujo, código " + String(codigo));
     http.end();
+  esp_task_wdt_reset();
     return false;
   }
 
   StaticJsonDocument<8192> doc;
   const DeserializationError err = deserializeJson(doc, http.getString());
   http.end();
+  esp_task_wdt_reset();
 
   if (err) {
     log("El dibujo llegó con un formato que no se pudo leer");
@@ -129,6 +136,28 @@ bool descargarDibujo() {
   hayDibujo = true;
   log("Dibujo cargado: " + String(dibujoFilas) + " pasadas × " +
       String(dibujoColumnas) + " canales");
+
+  // Al arrancar se retoma la posición que quedó guardada en el backend. Sin
+  // esto, un reinicio del nodo (corte de luz, watchdog) haría empezar el dibujo
+  // desde la primera fila con la pieza a medio tejer, dejando un salto visible.
+  //
+  // Cuando el cambio es de dibujo, en cambio, lo correcto es arrancar de cero:
+  // por eso el llamador decide con retomarPosicion.
+  if (retomarPosicion) {
+    const long filaGuardada = doc["fila_actual"] | -1L;
+    if (filaGuardada >= 0 && filaGuardada < dibujoFilas) {
+      filaActual = (int)filaGuardada;
+      log("Se retoma la producción en la fila " + String(filaActual + 1));
+    }
+    // El contador de pasadas también se retoma: el backend descarta los reportes
+    // menores que el valor guardado, así que si el nodo empezara de cero sus
+    // reportes quedarían ignorados hasta alcanzar el número anterior.
+    const long pasadasGuardadas = doc["pasadas_totales"] | -1L;
+    if (pasadasGuardadas > 0) {
+      sensorPasadaFijarTotal((unsigned long)pasadasGuardadas);
+      log("Se retoma el conteo en " + String(pasadasGuardadas) + " pasadas");
+    }
+  }
   return true;
 }
 
@@ -137,6 +166,11 @@ bool descargarDibujo() {
 //  Se lee de /telares/{id}, el mismo endpoint que usa el firmware del Nivel 1.
 // ============================================================================
 void consultarEstado() {
+  // El watchdog es de 15 s y un ciclo puede encadenar varias consultas. Sin
+  // refrescarlo antes y después de cada una, una red lenta reiniciaría el nodo
+  // en bucle: cada arranque volvería a intentar y volvería a tardar lo mismo.
+  esp_task_wdt_reset();
+
   if (WiFi.status() != WL_CONNECTED) {
     // Sin red no se acciona nada. El criterio es el mismo del Nivel 1: ante la
     // duda, el sistema no toca la máquina.
@@ -194,7 +228,8 @@ void consultarEstado() {
         // combinación en cada pasada, hasta que la descarga tuviera éxito.
         seleccionApagarTodo();
 
-        if (descargarDibujo()) {
+        // Dibujo distinto: arranca desde su primera fila, sin retomar nada.
+        if (descargarDibujo(false)) {
           patronCargado = patronAhora;
         } else {
           log("No se pudo descargar el dibujo nuevo: se reintenta en la próxima consulta");
@@ -203,7 +238,7 @@ void consultarEstado() {
 
       if (debeTejer && !tejiendo) {
         log("Arranca el tejido");
-        if (!hayDibujo && descargarDibujo()) patronCargado = patronAhora;
+        if (!hayDibujo && descargarDibujo(true)) patronCargado = patronAhora;
       } else if (!debeTejer && tejiendo) {
         log("Se detiene el tejido");
         seleccionApagarTodo();
@@ -212,12 +247,18 @@ void consultarEstado() {
     }
   }
   http.end();
+  esp_task_wdt_reset();
 }
 
 // ============================================================================
 //  Reportar el avance
 // ============================================================================
 void reportarPasadas(unsigned long total) {
+  // El watchdog es de 15 s y un ciclo puede encadenar varias consultas. Sin
+  // refrescarlo antes y después de cada una, una red lenta reiniciaría el nodo
+  // en bucle: cada arranque volvería a intentar y volvería a tardar lo mismo.
+  esp_task_wdt_reset();
+
   if (WiFi.status() != WL_CONNECTED) return;
 
   HTTPClient http;
@@ -233,6 +274,7 @@ void reportarPasadas(unsigned long total) {
 
   http.POST(cuerpo);
   http.end();
+  esp_task_wdt_reset();
 }
 
 // ============================================================================
@@ -256,7 +298,8 @@ void setup() {
   esp_task_wdt_add(NULL);
 
   conectarWifi();
-  descargarDibujo();
+  // Al arrancar se retoma lo que haya quedado guardado en el backend.
+  descargarDibujo(true);
 }
 
 // ============================================================================
