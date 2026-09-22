@@ -324,3 +324,44 @@ CREATE TABLE IF NOT EXISTS invitaciones (
   expira_at    TIMESTAMPTZ NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_invitaciones_hash ON invitaciones(codigo_hash);
+
+-- ============================================================
+-- Migraciones 012 y 013 (ver db/migracion_012_* y db/migracion_013_*):
+-- conteo del sensor vs. estimado, retrocesos, una sola producción abierta por telar.
+-- ============================================================
+ALTER TABLE historial_produccion ADD COLUMN IF NOT EXISTS pasadas_sensor   INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE historial_produccion ADD COLUMN IF NOT EXISTS conteo_validado  BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE historial_produccion ADD COLUMN IF NOT EXISTS pasadas_objetivo INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE telares ADD COLUMN IF NOT EXISTS ultimo_reporte_sensor TIMESTAMPTZ;
+ALTER TABLE telares ADD COLUMN IF NOT EXISTS retrocesos_contados   INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE telares ADD COLUMN IF NOT EXISTS motivo_pausa           TEXT;
+DROP INDEX IF EXISTS idx_historial_en_curso;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_historial_en_curso ON historial_produccion (telar_id) WHERE estado = 'en_curso';
+
+-- ============================================================
+-- Registro de migraciones
+--
+-- Este script ya incluye todas las migraciones. Se las registra en la misma
+-- tabla que usa el migrador del backend, para que un `npm run migrate` o el
+-- arranque del servidor posteriores no intenten aplicarlas otra vez.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS migraciones_aplicadas (
+  archivo     TEXT PRIMARY KEY,
+  aplicada_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+INSERT INTO migraciones_aplicadas (archivo) VALUES
+  ('migracion_001_matriz_ligamento.sql'),
+  ('migracion_002_repeticiones_y_posicion.sql'),
+  ('migracion_003_login_biometrico.sql'),
+  ('migracion_004_recupero_usuarios.sql'),
+  ('migracion_005_codigo_recuperacion_fijo.sql'),
+  ('migracion_006_ping_esp32.sql'),
+  ('migracion_007_retroceder_fisico.sql'),
+  ('migracion_008_evento_fisico.sql'),
+  ('migracion_009_rango_dimensiones.sql'),
+  ('migracion_010_elementos_seleccion.sql'),
+  ('migracion_011_metros_por_pasada.sql'),
+  ('migracion_012_conteo_sensor_y_retrocesos.sql'),
+  ('migracion_013_indice_unico_en_curso.sql')
+ON CONFLICT (archivo) DO NOTHING;
