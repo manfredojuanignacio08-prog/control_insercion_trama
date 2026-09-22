@@ -75,7 +75,9 @@ export function leerSesion(req) {
   try {
     const datos = JSON.parse(Buffer.from(cuerpo, 'base64url').toString('utf-8'));
     if (!datos.u || !datos.exp || Date.now() > datos.exp) return null;
-    return { usuario: datos.u, nombre: datos.n || datos.u };
+    const sesion = { usuario: datos.u, nombre: datos.n || datos.u };
+    if (datos.i === 1) sesion.invitado = true;   // solo las sesiones sin cuenta llevan la marca
+    return sesion;
   } catch {
     return null;
   }
@@ -88,9 +90,11 @@ function conexionSegura(req) {
 }
 
 /** Entrega la cookie de sesión al usuario que acaba de autenticarse. */
-export function emitirSesion(req, res, { usuario, nombre }) {
+export function emitirSesion(req, res, { usuario, nombre, invitado = false }) {
   const exp = Date.now() + HORAS * 3600 * 1000;
-  const cuerpo = Buffer.from(JSON.stringify({ u: usuario, n: nombre || usuario, exp })).toString('base64url');
+  const datos = { u: usuario, n: nombre || usuario, exp };
+  if (invitado) datos.i = 1;   // sesión de invitado: puede mirar y diseñar, no comandar el telar
+  const cuerpo = Buffer.from(JSON.stringify(datos)).toString('base64url');
   const valor = `${cuerpo}.${firmar(cuerpo)}`;
   const partes = [
     `${COOKIE}=${encodeURIComponent(valor)}`,
@@ -127,6 +131,29 @@ const noAutenticado = (res, mensaje) =>
 export function requerirSesion(req, res, next) {
   const s = leerSesion(req);
   if (!s) return noAutenticado(res, 'Tenés que iniciar sesión.');
+  req.usuario = s;
+  next();
+}
+
+/**
+ * Solo operarios registrados: las acciones que mueven la máquina real (marcha,
+ * pausa, avanzar, retroceder, asignar un dibujo, validar el conteo) y dar acceso
+ * a otras personas.
+ *
+ * El modo invitado existe para que alguien pueda recorrer la aplicación y diseñar
+ * dibujos sin registrar una huella (por ejemplo en una presentación). Pero un
+ * telar industrial no puede quedar comandado por cualquiera que abra la página:
+ * el invitado mira y dibuja, y para operar la máquina hay que iniciar sesión.
+ */
+export function requerirOperario(req, res, next) {
+  const s = leerSesion(req);
+  if (!s) return noAutenticado(res, 'Tenés que iniciar sesión.');
+  if (s.invitado) {
+    return res.status(403).json({
+      error: 'Estás como invitado: para controlar el telar hay que iniciar sesión con tu huella o tu código.',
+      codigo: 'SOLO_OPERARIO',
+    });
+  }
   req.usuario = s;
   next();
 }

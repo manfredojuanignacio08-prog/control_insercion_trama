@@ -210,10 +210,10 @@ globalThis.__q = (sql) => {
   if (/FROM usuarios WHERE usuario = \$1/.test(sql)) return { rows:[] };
   if (/COUNT\(\*\)::int AS n FROM usuarios/.test(sql)) return { rows:[{n:3}] };
   if (/FROM invitaciones WHERE codigo_hash/.test(sql)) return { rows:[{id:7}] };
-  if (/INSERT INTO usuarios/.test(sql)) return { rows:[{id:9, usuario:'invitado', webauthn_id:'CCCC'}] };
+  if (/INSERT INTO usuarios/.test(sql)) return { rows:[{id:9, usuario:'operario4', webauthn_id:'CCCC'}] };
   if (/FROM credenciales_biometricas WHERE usuario_id/.test(sql)) return { rows:[] };
 };
-x = await callA(A.iniciarRegistro, { body:{usuario:'invitado', invitacion:'TRAMA-XXXX'} });
+x = await callA(A.iniciarRegistro, { body:{usuario:'operario4', invitacion:'TRAMA-XXXX'} });
 assert.equal(x.r.code, 200);
 const consumo = x.log.find(l=>/UPDATE invitaciones SET usada = true/.test(l.sql)); assert.deepEqual(consumo.params, [9, 7]);
 // sesión

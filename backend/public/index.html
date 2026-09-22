@@ -79,6 +79,10 @@
       No puedo entrar con mi huella
     </button>
 
+    <button onclick="entrarSinLogin()" id="link-invitado" style="margin-top:10px;background:none;border:none;color:var(--tx3);font-size:12px;text-decoration:underline;cursor:pointer;display:block;width:100%;">
+      Continuar sin iniciar sesión
+    </button>
+
   </div>
 </div>
 
@@ -311,7 +315,7 @@
         <p class="ficha-ayuda">Cuánto avanza la tela en cada pasada. Depende de la densidad del tejido y lo sabe el operario. Con ese dato el sistema convierte las pasadas contadas en metros reales.</p>
         <div class="ficha-fila">
           <input type="number" id="mpp-in" step="0.0001" min="0.0001" max="1" placeholder="0,0005">
-          <button class="btn" id="mpp-guardar">Guardar</button>
+          <button class="save-btn save-primary ficha-guardar" id="mpp-guardar">Guardar</button>
         </div>
         <div class="ficha-eq" id="mpp-eq"></div>
       </div>
@@ -637,8 +641,20 @@ function entrarAlSistema() {
   }
 }
 
-// (Se eliminó "continuar sin iniciar sesión": la API exige sesión, así que entrar
-// como invitado solo mostraba una pantalla vacía llena de errores 401.)
+// Entrar sin cuenta. El servidor emite una sesión de invitado: con ella se puede
+// recorrer la aplicación y diseñar dibujos, pero no comandar el telar (marcha,
+// pausa, avanzar, retroceder, asignar un dibujo). Si el invitado intenta alguna de
+// esas acciones, el servidor responde 403 y la web le avisa que tiene que ingresar.
+async function entrarSinLogin() {
+  try {
+    const res = await fetch('/api/auth/invitado', { method: 'POST', credentials: 'same-origin' });
+    if (!res.ok) throw new Error('No se pudo entrar como invitado.');
+    setUsuarioActual(null, null);
+    entrarAlSistema();
+  } catch (e) {
+    setLoginMsg(e.message || 'No se pudo entrar como invitado.', 'err');
+  }
+}
 
 // ─── Usuario actual (sesión) ──────────────────────────────────────────
 // Guardamos en memoria quién inició sesión, para mostrarlo en Inicio y
@@ -783,6 +799,8 @@ async function apiFetch(path, options = {}) {
   if (!res.ok) {
     // 401: la sesión venció (o nunca hubo). Se vuelve a la pantalla de ingreso.
     if (res.status === 401) sesionVencida();
+    // 403 de invitado: la sesión sigue siendo válida, solo que esa acción es para operarios.
+    if (res.status === 403 && body.codigo === 'SOLO_OPERARIO') toast(body.error);
     const err = new Error(body.error || `Error del servidor (${res.status})`);
     err.status = res.status;
     err.codigo = body.codigo || null;
@@ -1817,8 +1835,10 @@ function renderLib() {
       </div>
       <div class="pat-actions">
         <button class="pat-btn load" onclick="loadDrawInEditor('${d.id}')">Cargar</button>
+        <button class="pat-btn est" onclick="libToggleEstadisticas('${d.id}')" id="est-btn-${d.id}">Estadísticas</button>
         <button class="pat-btn del" onclick="deleteDraw('${d.id}')">Eliminar</button>
       </div>
+      <div class="pat-est" id="est-${d.id}" hidden></div>
     </div>`;
   }).join('');
   draws.forEach(d => setTimeout(() => drawThumb(d), 40));
@@ -1950,7 +1970,8 @@ async function iniciarApp() {
     const res = await fetch('/api/auth/sesion', { credentials: 'same-origin' });
     const est = await res.json();
     if (est.autenticado) {
-      setUsuarioActual(est.usuario, est.nombre, 'huella');
+      if (est.invitado) setUsuarioActual(null, null);
+      else setUsuarioActual(est.usuario, est.nombre, 'huella');
       entrarAlSistema();
     }
   } catch (e) { /* sin red: queda el login */ }
@@ -2229,6 +2250,48 @@ function fichaInicializar() {
 
 fichaInicializar();
 
+
+// ═══════════ ESTADÍSTICAS EN LA BIBLIOTECA ═══════════
+// Cada tarjeta despliega un resumen de producción del dibujo. Se carga recién al
+// tocar el botón: si la biblioteca pidiera las estadísticas de todos los dibujos al
+// abrirse, haría una consulta por cada uno aunque nadie las mire.
+async function libToggleEstadisticas(id) {
+  const panel = document.getElementById('est-' + id);
+  const btn = document.getElementById('est-btn-' + id);
+  if (!panel) return;
+  if (!panel.hidden) { panel.hidden = true; btn.classList.remove('on'); return; }
+  panel.hidden = false; btn.classList.add('on');
+  panel.innerHTML = '<div class="pat-est-msg">Cargando…</div>';
+  try {
+    const d = await apiFetch(`/patrones/${id}/estadisticas`);
+    if (!d.producciones) {
+      panel.innerHTML = '<div class="pat-est-msg">Este dibujo todavía no se tejió.</div>';
+      return;
+    }
+    const validado = d.precision_conteo === 'sensor_validado';
+    const aprox = validado ? '' : '≈ ';
+    const datos = [
+      ['Veces tejido', fichaFormatearNumero(d.producciones)],
+      ['Pasadas', aprox + fichaFormatearNumero(d.pasadas_totales)],
+      ['Horas de máquina', fichaFormatearNumero(d.horas_de_maquina, 1)],
+    ];
+    if (d.metros_tejidos !== undefined && d.metros_tejidos !== null) {
+      datos.splice(2, 0, ['Metros', (d.metros_son_estimados ? '≈ ' : '') + fichaFormatearNumero(d.metros_tejidos, 1) + ' m']);
+    }
+    let html = '<div class="pat-est-grid">' +
+      datos.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join('') + '</div>';
+    if (d.metros_por_pasada == null) {
+      html += '<div class="pat-est-msg">Sin metros por pasada cargados: se pueden cargar desde el engranaje del editor.</div>';
+    } else if (!validado) {
+      html += '<div class="pat-est-msg">Valores aproximados hasta validar el conteo del sensor.</div>';
+    }
+    if (d.ultima_vez) html += `<div class="pat-est-msg">Última vez: ${new Date(d.ultima_vez).toLocaleDateString('es-AR')}</div>`;
+    panel.innerHTML = html;
+  } catch (e) {
+    panel.innerHTML = `<div class="pat-est-msg">No se pudieron cargar: ${esc(e.message)}</div>`;
+  }
+}
+
 </script>
 
 <!-- MODAL: SIMULADOR DE COLOR -->
@@ -2240,7 +2303,7 @@ fichaInicializar();
     </div>
     <div style="background:#1E3A5F;width:100%;height:100px;border-radius:var(--r-md);margin-bottom:16px;border:1px solid var(--bd);" id="color-sample"></div>
     <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Color del Hilo:</label>
-    <input type="color" id="thread-color" value="#1E3A5F" onchange="updateColorPreview()" style="width:100%;height:40px;border:none;border-radius:var(--r-md);cursor:pointer;margin-bottom:12px;">
+    <input type="color" id="thread-color" class="color-hilo" value="#1E3A5F" onchange="updateColorPreview()">
     
     <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Aplicar a:</label>
     <select id="row-select" style="width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--bd);background:var(--srf);color:var(--tx);margin-bottom:16px;font-family:inherit;">

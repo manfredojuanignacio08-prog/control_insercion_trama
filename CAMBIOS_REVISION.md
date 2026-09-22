@@ -129,3 +129,30 @@ Otros ajustes de esta pasada: el historial (`GET /api/historial` y `/telares/:id
 4. **HTTPS del ESP32:** sin `API_CA_CERT` cifra pero no verifica el servidor. Conviene pegar el certificado raíz del dominio.
 5. Render en capa gratuita se "duerme": la primera consulta puede tardar decenas de segundos y el ESP32 la trata como fallo (no acciona nada).
 6. Probar en una base de prueba las migraciones 009, 012 y 013 antes que en Neon.
+
+## Sexta pasada: modo invitado, base completa y ajustes visuales
+
+**"Continuar sin iniciar sesión" volvió, con permisos limitados.** La revisión anterior lo
+había quitado porque, con la API protegida, el invitado solo veía errores 401. Ahora el
+servidor le emite una **sesión de invitado** (`POST /api/auth/invitado`): puede recorrer la
+aplicación, ver la biblioteca y las estadísticas y diseñar dibujos, pero **no comandar el
+telar**. Las diez acciones que mueven la máquina (marcha, pausa, avanzar, retroceder,
+asignar, detener, validar el conteo...) y generar invitaciones pasan por `requerirOperario`,
+que al invitado le responde 403 `SOLO_OPERARIO`. La web muestra el aviso y lo deja adentro,
+sin mandarlo al ingreso. La sesión se reconoce al recargar. El nombre de usuario "invitado"
+queda reservado, y una sesión de invitado nunca cuenta como dueña de una cuenta para sumar
+huellas. Pruebas en `tests/invitado.test.mjs`.
+
+**`database/01_base_de_datos_completa.sql` estaba desactualizado:** era una versión vieja
+del script, con una nota sobre las migraciones 012 y 013 pero sin el contenido de varias
+migraciones (por ejemplo, no creaba `metros_por_pasada`). Se regeneró desde `schema.sql` más
+las trece migraciones, y registra al final las migraciones aplicadas. Verificado contra
+PostgreSQL real: la base armada con el script y la armada con `init-db` + `migrate` quedan
+idénticas (80 columnas, 29 restricciones, 21 índices). Si se agrega una migración nueva, el
+script hay que regenerarlo.
+
+**Ajustes visuales:** el selector del color del hilo mostraba un recuadro blanco en modo
+oscuro; el botón Guardar de la ficha del dibujo usaba una clase que no existe en la app; el
+botón principal en modo oscuro conservaba un texto bordó de la paleta vieja. Además, cada
+tarjeta de la biblioteca tiene ahora un botón **Estadísticas** que despliega el resumen de
+producción del dibujo.

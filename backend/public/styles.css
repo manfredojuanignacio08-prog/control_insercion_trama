@@ -249,7 +249,7 @@ font-family:var(--font-mono);}
 [data-theme="dark"] .theme-toggle-btn::after{transform:translateX(18px)}
 
 /* ── Ajustes de contraste para modo oscuro ─────────────────────────
-   En modo oscuro, varios elementos usaban rosa oscuro hardcodeado
+   En modo oscuro, varios elementos usaban el color de acento oscuro fijo
    (rgba(30,58,95,...)) que casi no se veía sobre el fondo oscuro.
    Acá se reemplazan por versiones más claras y con más presencia. */
 [data-theme="dark"] .grid-row.active-row{background:rgba(125,160,200,.14)}
@@ -297,15 +297,15 @@ font-family:var(--font-mono);}
 }
 
 /* (4) Botones "Guardar" / "Nuevo" y "Limpiar": en oscuro el texto quedaba
-   con muy poco contraste (texto claro sobre rosa claro, o rosa oscuro sobre
+   con muy poco contraste (texto claro sobre el acento claro, o acento oscuro sobre
    gris). Se corrige el color del texto para que se lea bien. */
 [data-theme="dark"] .save-primary{
-  background:var(--acc);color:#3D1030;  /* texto oscuro sobre rosa claro */
+  background:var(--acc);color:#0F2440;  /* texto azul muy oscuro sobre el azul claro del modo oscuro */
 }
 [data-theme="dark"] .save-secondary{
   background:#2C3846;color:#F0F4F8;border:1px solid rgba(237,241,245,.30);
 }
-/* El "Limpiar" de la biblioteca usaba --rose (rosa oscuro), invisible en
+/* El "Limpiar" de la biblioteca usaba el acento oscuro, invisible en
    fondo oscuro. Lo pasamos al acento claro. Lleva !important porque el
    color va inline en el HTML. */
 [data-theme="dark"] button.lib-clear{color:var(--acc) !important}
@@ -800,3 +800,31 @@ font-family:var(--font-mono);}
 .ficha-vacio,.ficha-cargando,.ficha-aviso{font-size:12.5px;color:var(--tx2);line-height:1.55}
 .ficha-aviso{margin-top:10px;padding:9px 11px;background:var(--panel);
   border-left:2px solid var(--acc);border-radius:0 8px 8px 0}
+
+/* ---------- Ficha del dibujo: el botón sigue el estilo de los de guardado ---------- */
+.ficha-guardar{flex:none;padding:9px 18px}
+
+/* ---------- Selector del color del hilo ----------
+   El control nativo del navegador dibuja un marco claro alrededor de la muestra.
+   En modo claro pasaba desapercibido, pero en modo oscuro quedaba un recuadro blanco.
+   Se quita el marco interno y se le pone el borde de la paleta. */
+.color-hilo{
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:42px; margin-bottom:12px; padding:3px;
+  border:1px solid var(--bd); border-radius:var(--r-md);
+  background:var(--srf2); cursor:pointer;
+}
+.color-hilo::-webkit-color-swatch-wrapper{padding:0}
+.color-hilo::-webkit-color-swatch{border:none; border-radius:calc(var(--r-md) - 3px)}
+.color-hilo::-moz-color-swatch{border:none; border-radius:calc(var(--r-md) - 3px)}
+
+/* ---------- Estadísticas dentro de la tarjeta de la biblioteca ---------- */
+.pat-btn.est.on{background:var(--srf2);color:var(--acc)}
+.pat-est{border-top:1px solid var(--bd);padding:12px 14px;background:var(--srf2)}
+.pat-est-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.pat-est-grid div{background:var(--srf);border:1px solid var(--bd);border-radius:var(--r-md);padding:8px 10px}
+.pat-est-grid span{display:block;font-family:var(--font-mono);font-size:9.5px;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--tx3);margin-bottom:3px}
+.pat-est-grid b{font-family:var(--font-display);font-size:15px;color:var(--tx)}
+.pat-est-msg{font-size:11.5px;color:var(--tx3);line-height:1.5;margin-top:8px}
+.pat-est-msg:first-child{margin-top:0}

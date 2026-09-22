@@ -9,10 +9,10 @@ import {
   generarInvitacion,
   estadoRegistro,
   estadoSesion,
-  logout,
+  logout, entrarComoInvitado,
 } from '../controllers/auth.controller.js';
 import rateLimit from 'express-rate-limit';
-import { requerirSesion } from '../middleware/auth.js';
+import { requerirOperario } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -29,6 +29,7 @@ const limiteIntentos = rateLimit({
 // ¿Este navegador ya tiene sesión? / cerrar sesión
 router.get('/sesion', estadoSesion);
 router.post('/logout', logout);
+router.post('/invitado', entrarComoInvitado);
 
 // Estado del registro (¿abierto o requiere invitación?)
 router.get('/estado-registro', estadoRegistro);
@@ -48,6 +49,6 @@ router.post('/recuperar', limiteIntentos, recuperarUsuario);
 router.post('/recuperacion/ver', limiteIntentos, regenerarCodigoRecuperacion);
 
 // Generar código de invitación para sumar un usuario nuevo (a futuro)
-router.post('/invitacion', requerirSesion, generarInvitacion);
+router.post('/invitacion', requerirOperario, generarInvitacion);
 
 export default router;

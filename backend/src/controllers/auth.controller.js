@@ -129,6 +129,10 @@ export async function iniciarRegistro(req, res, next) {
       return res.status(400).json({ error: 'El usuario debe tener al menos 3 caracteres.' });
     }
     const nom = usuario.trim();
+    // "invitado" es el nombre de la sesión sin cuenta: no puede usarse para registrarse.
+    if (nom.toLowerCase() === 'invitado') {
+      return res.status(400).json({ error: 'Ese nombre de usuario está reservado. Elegí otro.' });
+    }
 
     // Buscar el usuario
     let { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [nom]);
@@ -146,7 +150,9 @@ export async function iniciarRegistro(req, res, next) {
       );
       const reciente = Date.now() - new Date(user.creado_at).getTime() < RECLAMO_REGISTRO_MIN * 60 * 1000;
       const sesion = leerSesion(req);
-      const esElMismo = sesion && sesion.usuario === user.usuario;
+      // Una sesión de invitado nunca cuenta como "el mismo usuario", aunque alguien
+      // hubiera registrado una cuenta con ese nombre.
+      const esElMismo = sesion && !sesion.invitado && sesion.usuario === user.usuario;
       if (!esElMismo && !(yaTiene.length === 0 && reciente)) {
         return res.status(403).json({
           error: 'Ese usuario ya existe. Para sumar una huella a esta cuenta, entrá primero con tu huella o tu código de recuperación.',
@@ -611,7 +617,17 @@ export async function estadoRegistro(req, res, next) {
  */
 export function estadoSesion(req, res) {
   const s = leerSesion(req);
-  res.json(s ? { autenticado: true, usuario: s.usuario, nombre: s.nombre } : { autenticado: false });
+  res.json(s ? { autenticado: true, usuario: s.usuario, nombre: s.nombre, invitado: Boolean(s.invitado) } : { autenticado: false });
+}
+
+/**
+ * POST /api/auth/invitado
+ * Entra sin cuenta: emite una sesión marcada como invitado. Permite recorrer la
+ * aplicación y diseñar dibujos, pero no comandar el telar (ver requerirOperario).
+ */
+export function entrarComoInvitado(req, res) {
+  emitirSesion(req, res, { usuario: 'invitado', nombre: 'Invitado', invitado: true });
+  res.json({ autenticado: true, usuario: 'invitado', nombre: 'Invitado', invitado: true });
 }
 
 /** POST /api/auth/logout, borra la cookie de sesión. */
