@@ -231,7 +231,7 @@ Es 100% seguro de correr contra una base con datos reales: todo usa
 correr más de una vez sin error.
 
 **Cómo se probó** (antes de entregarla): se recreó una base desde cero usando
-el script SQL **literal** que figura en `Documentacion_BaseDeDatos_Telar.docx`
+el script SQL **literal** que figura en `database/01_base_de_datos_completa.sql`
 (sin nada nuestro), se cargaron 2 patrones de prueba sin `matriz_ligamento`, se
 corrió la migración, y se confirmó que: la columna quedó agregada, los 2
 patrones viejos quedaron con `matriz_ligamento` completado automáticamente, los
@@ -242,7 +242,7 @@ intacta) pudo leer y escribir contra esa base migrada sin ningún error.
 
 ## 10. Decisiones que el equipo había dejado sin resolver, ya implementadas
 
-`Documentacion_BaseDeDatos_Telar.docx` listaba estos dos puntos como pendientes.
+`database/01_base_de_datos_completa.sql` listaba estos dos puntos como pendientes.
 El usuario pidió resolverlos eligiendo la opción más eficiente para producción
 real en fábrica, y luego corrigió mi primera implementación al aclarar cómo
 funciona realmente el tejido (la versión final quedó así):

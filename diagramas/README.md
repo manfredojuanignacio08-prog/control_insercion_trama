@@ -34,7 +34,7 @@ sus cuatro patas, las dos resistencias y las dos formas posibles de conectarlo
 al lector óptico, en serie o en paralelo.
 
 ### `diagrama_nivel2_marcos.svg`
-Vista de conjunto del Nivel 2: cómo el microcontrolador comanda los seis
+Vista de conjunto del Nivel 2: cómo el microcontrolador comanda los cuatro
 lectores ópticos que hoy lee la cinta de papel.
 
 ## `sistema/`, cómo funciona

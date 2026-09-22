@@ -71,8 +71,8 @@ control_insercion_trama_completo/
 ## 3. Cómo levantar todo
 
 > **Importante sobre la base de datos:** el equipo ya tiene una base compartida
-> en **Neon** con las 4 tablas creadas (ver
-> `docs/Documentacion_BaseDeDatos_Telar.docx`). Para usar esa base real, hay
+> en **Neon** con las tablas del sistema ya creadas (el esquema completo está en
+> `database/01_base_de_datos_completa.sql`). Para usar esa base real, hay
 > que pedir la contraseña de conexión y completarla en `DATABASE_URL` (se
 > explica en el Paso 2 de la sección 3.5). Las opciones de abajo (Docker o
 > manual) también permiten levantar una base **propia, local, solo para

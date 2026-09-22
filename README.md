@@ -7,6 +7,8 @@ web pensada para el celular**; un **backend** guarda y coordina todo en una
 **telar físico**.
 
 
+> **Antes de instalar en el telar (Vamatex C 401, cuatro bobinas), leer [`PUESTA_EN_MARCHA.md`](PUESTA_EN_MARCHA.md)**: claves del sistema, medición con osciloscopio, validación del conteo y lista de primera puesta en marcha. Los cambios de la última revisión están en [`CAMBIOS_REVISION.md`](CAMBIOS_REVISION.md).
+
 ## Estructura del repositorio
 
 ```
