@@ -4,6 +4,9 @@
   "description": "Backend (Node.js + Express + PostgreSQL) para el sistema de Control de Inserción de Trama",
   "type": "module",
   "main": "src/server.js",
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",

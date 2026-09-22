@@ -176,7 +176,11 @@ esa cookie o, en el caso de los ESP32, la clave de dispositivo (`X-Device-Key`).
 
 - `GET /api/auth/sesion`: la web lo consulta al abrir para no pedir el login de nuevo.
 - `POST /api/auth/logout`: borra la cookie.
-- La opción "Continuar sin iniciar sesión" se eliminó de la pantalla de ingreso.
+- `POST /api/auth/invitado`: entrar sin cuenta ("Continuar sin iniciar sesión"). Emite una
+  sesión marcada como invitado, que permite ver todo y diseñar dibujos pero **no comandar el
+  telar**: las acciones que mueven la máquina y las invitaciones pasan por `requerirOperario`,
+  que al invitado le responde 403 con código `SOLO_OPERARIO`. El nombre "invitado" queda
+  reservado para el registro.
 - Sumar una huella a un usuario que ya existe exige haber iniciado sesión como ese usuario
   (si no, cualquiera que supiera el nombre podía registrar su huella en esa cuenta).
 - El código de invitación se consume al crear el usuario (antes se perdía entre los dos pasos

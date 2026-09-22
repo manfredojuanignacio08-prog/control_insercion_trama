@@ -158,6 +158,12 @@ export function requerirOperario(req, res, next) {
   next();
 }
 
+/** Operario registrado O dispositivo (ESP32): escrituras que hacen los dos pero no un invitado. */
+export function requerirOperarioODispositivo(req, res, next) {
+  if (esDispositivoValido(req)) { req.esDispositivo = true; return next(); }
+  return requerirOperario(req, res, next);
+}
+
 /** Solo dispositivos (ESP32): avisos que solo tiene sentido que mande el hardware. */
 export function requerirDispositivo(req, res, next) {
   if (!esDispositivoValido(req)) return noAutenticado(res, 'Clave de dispositivo inválida o ausente.');

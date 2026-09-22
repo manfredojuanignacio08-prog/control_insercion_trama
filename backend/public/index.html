@@ -870,6 +870,10 @@ async function obtenerOCrearTelarPorDefecto() {
       // TELAR_ID del firmware del ESP32 (config.h), que está fijo, o la web
       // terminaría mostrando un telar y el ESP32 accionando otro.
       telarPorDefectoId = telares[0].id;
+    } else if (origenSesion === 'invitado') {
+      // Un invitado no puede dar de alta el telar. Sin esta condición, al entrar a una
+      // base vacía vería el aviso de "no podés controlar el telar" sin haber tocado nada.
+      return;
     } else {
       const nuevo = await apiFetch('/telares', {
         method: 'POST',
@@ -1446,6 +1450,12 @@ function terminarTrabajo() {
 }
 
 async function startPlay() {
+  // Reproducir pone en marcha el telar real: un invitado recibe siempre el mismo aviso,
+  // haya o no un telar cargado en la base, y no se dispara ninguna llamada.
+  if (origenSesion === 'invitado') {
+    toast('Estás como invitado: para poner el telar en marcha hay que iniciar sesión con tu huella o tu código.');
+    return;
+  }
   if (isPlaying) return;
 
   // Asegurar que el patrón ya esté guardado (necesita id para poder asignarse a un telar)
@@ -1490,6 +1500,7 @@ async function startPlay() {
         try {
           await apiFetch(`/telares/${telarPorDefectoId}/reanudar`, { method: 'POST', body: JSON.stringify({}) });
         } catch (e) {
+          if (e.codigo === 'SOLO_OPERARIO') throw e;   // invitado: se corta acá
           // 409 = no hay producción en curso (por ejemplo, si antes se usó
           // Detener). Se reasigna el patrón para abrir una nueva.
           await apiFetch(`/telares/${telarPorDefectoId}/asignar-patron`, {
@@ -1501,6 +1512,10 @@ async function startPlay() {
         trabajoEnCursoPatronId = String(editId);
       }
     } catch (e) {
+      // Un invitado no puede poner el telar en marcha: apiFetch ya mostró el aviso.
+      // No se arranca la animación, porque cada paso volvería a pedir avanzar, a ser
+      // rechazado y a mostrar el aviso de nuevo, dos veces por segundo.
+      if (e.codigo === 'SOLO_OPERARIO') return;
       logError('Error al asignar patrón al telar', e.message, 'ASIGNAR_TELAR');
     }
   }
@@ -1554,6 +1569,10 @@ function doTick() {
       apiFetch(`/telares/${telarPorDefectoId}/avanzar`, { method: 'POST', body: JSON.stringify({ pasos: 1 }) })
         .catch((e) => {
           if (e.codigo === 'SENSOR_ACTIVO') { sensorManda = true; return; }   // el sensor lleva la cuenta
+          if (e.codigo === 'SOLO_OPERARIO') {                                  // invitado: se frena
+            isPlaying = false; clearTimeout(playTimer); updPlayUI(); renderGrid();
+            return;
+          }
           logError('Error al avanzar', e.message, 'AVANZAR');
         });
     }
@@ -2148,7 +2167,10 @@ let errorHistory = [];
 function logError(title, msg, code) {
   const error = { timestamp: new Date().toLocaleTimeString('es-AR'), title, message: msg, code };
   errorHistory.push(error);
-  // Enviar al servidor de forma no bloqueante; si falla, queda solo en memoria
+  // Enviar al servidor de forma no bloqueante; si falla, queda solo en memoria.
+  // Un invitado no escribe en el registro de errores: es un registro de la máquina
+  // y del sistema, no de las pruebas de alguien que está mirando la aplicación.
+  if (origenSesion === 'invitado') return;
   apiFetch('/errores', {
     method: 'POST',
     body: JSON.stringify({ titulo: title, mensaje: msg, codigo: code }),

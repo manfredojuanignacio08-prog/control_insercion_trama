@@ -35,4 +35,10 @@ assert(!paso && r.c===403 && r.b.codigo==='SOLO_OPERARIO');
 paso=false; m.requerirOperario({headers:{cookie:operario}}, resp(), ()=>{paso=true}); assert(paso);
 const r2 = resp(); m.requerirOperario({headers:{}}, r2, ()=>{throw new Error('no debe pasar')}); assert.equal(r2.c, 401);
 
+// el registro de errores: el invitado no escribe; el operario y el ESP32 sí
+const r3 = resp(); paso=false;
+m.requerirOperarioODispositivo({headers:{cookie:invitado}}, r3, ()=>{paso=true}); assert(!paso && r3.c===403);
+paso=false; m.requerirOperarioODispositivo({headers:{'x-device-key':'clave-esp32-de-prueba'}}, resp(), ()=>{paso=true}); assert(paso);
+paso=false; m.requerirOperarioODispositivo({headers:{cookie:operario}}, resp(), ()=>{paso=true}); assert(paso);
+
 console.log('invitado OK');
