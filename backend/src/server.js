@@ -5,7 +5,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import helmet from 'helmet';
 import compression from 'compression';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import dotenv from 'dotenv';
 
 import patronesRouter from './routes/patrones.routes.js';
@@ -15,7 +15,7 @@ import erroresRouter from './routes/errores.routes.js';
 import authRouter from './routes/auth.routes.js';
 import nivel2Router from './nivel2/nivel2.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { requerirSesion, requerirSesionODispositivo, esDispositivoValido } from './middleware/auth.js';
+import { requerirSesion, requerirSesionODispositivo, esDispositivoValido, leerSesion } from './middleware/auth.js';
 import { aplicarMigraciones } from './db/migrator.js';
 import { pool } from './db.js';
 
@@ -104,6 +104,16 @@ const apiLimiter = rateLimit({
   skip: (req) =>
     /\/telares\/[^/]+\/(avanzar|retroceder)$/.test(req.path) ||
     esDispositivoValido(req),
+  // El cupo se cuenta por operario, no por IP. En la fábrica todos los celulares y la PC
+  // salen a Internet por el mismo router: contado por IP, cuatro pestañas abiertas (cada
+  // una consulta el estado del telar cada 4 s) agotaban el cupo de la planta entera y
+  // nadie podía usar la aplicación, ni siquiera para tocar Pausa. Los invitados y los
+  // pedidos sin sesión se siguen contando por IP.
+  keyGenerator: (req) => {
+    const s = leerSesion(req);
+    if (s && !s.invitado) return 'usuario:' + s.usuario;
+    return 'ip:' + ipKeyGenerator(req.ip);
+  },
   message: { error: 'Demasiadas solicitudes, intentá de nuevo más tarde.' },
 });
 app.use('/api', apiLimiter);
