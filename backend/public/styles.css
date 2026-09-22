@@ -468,6 +468,9 @@ font-family:var(--font-mono);}
   box-shadow:0 2px 10px rgba(30,58,95,.4)}
 .ctrl-back-fisico{background:var(--srf2);color:var(--red);
   border:1.5px solid rgba(139,31,31,.35)}
+/* Terminar trabajo: cierra la producción. Discreto a propósito, para no apretarlo sin querer. */
+.ctrl-stop{background:var(--srf2);color:var(--tx3);
+  border:1.5px solid var(--bd);font-size:15px}
 
 .editor-savebar{
   background:var(--srf);border-top:1px solid var(--bd);

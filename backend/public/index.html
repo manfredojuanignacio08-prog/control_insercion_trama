@@ -79,9 +79,6 @@
       No puedo entrar con mi huella
     </button>
 
-    <button onclick="entrarSinLogin()" style="margin-top:10px;background:none;border:none;color:var(--tx3);font-size:12px;text-decoration:underline;cursor:pointer;">
-      Continuar sin iniciar sesión
-    </button>
   </div>
 </div>
 
@@ -338,6 +335,11 @@
         <span id="telar-posicion-txt">Posición incierta</span>
         <button class="telar-confirmar-btn" onclick="confirmarPosicionTelar()" title="Confirmar posición real tras revisar el telar">Confirmar</button>
       </span>
+      <span class="telar-status-item" id="telar-conteo" style="display:none;">
+        <span class="telar-dot warn" id="telar-conteo-dot"></span>
+        <span id="telar-conteo-txt">Conteo del sensor sin validar</span>
+        <button class="telar-confirmar-btn" id="telar-conteo-btn" onclick="validarConteoTelar()" title="Confirmar que el conteo del sensor coincide con el contador mecánico del telar">Validar</button>
+      </span>
     </div>
 
     <div class="editor-grid-area" id="grid-area">
@@ -359,6 +361,7 @@
       <button class="ctrl-btn ctrl-pause" onclick="pausePlay()" title="Pausa">⏸</button>
       <button class="ctrl-btn ctrl-play" onclick="startPlay()" title="Iniciar">▶</button>
       <button class="ctrl-btn ctrl-back-fisico" onclick="retrocederFisico()" title="Retroceder telar (acción física real)">⏪</button>
+      <button class="ctrl-btn ctrl-stop" onclick="terminarTrabajo()" title="Terminar trabajo (cierra la producción: la próxima vez empieza de cero)">⏹</button>
     </div>
 
     <div class="editor-savebar">
@@ -441,6 +444,7 @@ function setLoginMsg(txt, tipo) {
 async function apiAuth(path, body) {
   const res = await fetch('/api/auth' + path, {
     method: 'POST',
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body || {}),
   });
@@ -625,14 +629,16 @@ function traducirError(e) {
 function entrarAlSistema() {
   document.getElementById('login-overlay').style.display = 'none';
   renderUsuarioActual();
+  iniciarApp();   // recién con sesión se cargan los dibujos y el telar
+  // Si el editor quedó a la vista (volvió el ingreso por sesión vencida), se reanuda el sondeo del telar.
+  if (document.getElementById('sc-editor').classList.contains('active') && !telarStatusTimer) {
+    actualizarEstadoTelar();
+    telarStatusTimer = setInterval(actualizarEstadoTelar, 4000);
+  }
 }
 
-// Opción de saltear el login (sistema abierto de uso interno; útil mientras
-// no haya usuarios cargados o para pruebas).
-function entrarSinLogin() {
-  setUsuarioActual(null, null); // entra como invitado
-  entrarAlSistema();
-}
+// (Se eliminó "continuar sin iniciar sesión": la API exige sesión, así que entrar
+// como invitado solo mostraba una pantalla vacía llena de errores 401.)
 
 // ─── Usuario actual (sesión) ──────────────────────────────────────────
 // Guardamos en memoria quién inició sesión, para mostrarlo en Inicio y
@@ -681,7 +687,8 @@ function renderUsuarioActual() {
 
 // Cierra la sesión y vuelve a la pantalla de login para volver a entrar
 function cerrarSesion() {
-  showConfirm('¿Cerrar sesión?', 'Vas a volver a la pantalla de ingreso.', () => {
+  showConfirm('¿Cerrar sesión?', 'Vas a volver a la pantalla de ingreso.', async () => {
+    try { await apiAuth('/logout', {}); } catch (e) { /* si falla, igual se vuelve al login */ }
     setUsuarioActual(null, null);
     // limpiar el login para el próximo ingreso
     const u = document.getElementById('login-usuario'); if (u) u.value = '';
@@ -767,17 +774,33 @@ let grid = [];
 // no hay problema de CORS ni hace falta poner ninguna URL absoluta.
 async function apiFetch(path, options = {}) {
   const res = await fetch('/api' + path, {
+    credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     ...options,
   });
   if (res.status === 204) return null;
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
+    // 401: la sesión venció (o nunca hubo). Se vuelve a la pantalla de ingreso.
+    if (res.status === 401) sesionVencida();
     const err = new Error(body.error || `Error del servidor (${res.status})`);
     err.status = res.status;
+    err.codigo = body.codigo || null;
     throw err;
   }
   return body;
+}
+
+// Vuelve al login sin recargar: se detiene el tejido en pantalla y se muestra el ingreso.
+function sesionVencida() {
+  if (appIniciada === false && document.getElementById('login-overlay').style.display !== 'none') return;
+  isPlaying = false;
+  clearTimeout(playTimer);
+  if (telarStatusTimer) { clearInterval(telarStatusTimer); telarStatusTimer = null; }   // sin sesión no hay nada que consultar
+  setUsuarioActual(null, null);
+  document.getElementById('recupero-overlay').style.display = 'none';
+  document.getElementById('login-overlay').style.display = 'flex';
+  setLoginMsg('Tu sesión venció. Volvé a entrar.', 'error');
 }
 
 // Convierte un patrón que viene de la API al formato interno del frontend.
@@ -879,7 +902,9 @@ async function sincronizarPatron() {
     return true;
   } catch (e) {
     creandoPatronPromise = null;
-    if (e.status === 409) {
+    if (e.codigo === 'PATRON_EN_PRODUCCION') {
+      toast('Este dibujo se está tejiendo: detené el trabajo para modificar la matriz');
+    } else if (e.status === 409) {
       toast('No se pudo sincronizar: ya existe un dibujo con ese nombre');
     } else {
       toast('No se pudo sincronizar con el servidor');
@@ -987,10 +1012,55 @@ async function actualizarEstadoTelar() {
       isPlaying = false;
       clearTimeout(playTimer);
       updPlayUI();
-      toast('El telar se pausó desde la botonera');
+      if (telar.motivo_pausa === 'sin_senal') {
+        // El sensor de pasada dejó de recibir pulsos con el telar "tejiendo": la
+        // máquina se frenó (paro, hilo cortado, falla) o el sensor falló.
+        showAlert('El telar dejó de dar pulsos', 'El sensor de pasada no detecta movimiento: la máquina se frenó o el sensor falló. Revisá el telar antes de reanudar.');
+      } else if (telar.motivo_pausa === 'reinicio') {
+        showAlert('El equipo del telar se reinició', 'El ESP32 arrancó de nuevo (corte de luz o traslado) y el tejido quedó en pausa. Verificá la posición y tocá ▶ para retomar donde quedó.');
+      } else {
+        toast('El telar se pausó desde la botonera');
+      }
     }
 
-    const [clase, texto] = mapaEstado[telar.estado] || ['', telar.estado || '-'];
+    // Con el sensor de pasada reportando, la posición y el conteo son los del sensor:
+    // la pantalla los sigue en vez de avanzar por reloj.
+    trabajoEnCursoPatronId = (telar.historial_actual_id && telar.patron_actual_id) ? String(telar.patron_actual_id) : null;
+
+    // ── Conteo del sensor: sin validar / validado ──
+    // Con el sensor del Nivel 2 reportando, el conteo es MEDIDO pero recién es confiable después de
+    // compararlo con el contador mecánico del telar. Mientras tanto se avisa, y se ofrece validarlo.
+    const itemConteo = document.getElementById('telar-conteo');
+    if (itemConteo) {
+      const dotC = document.getElementById('telar-conteo-dot');
+      const txtC = document.getElementById('telar-conteo-txt');
+      const btnC = document.getElementById('telar-conteo-btn');
+      if (telar.historial_actual_id && telar.origen_conteo === 'sensor') {
+        itemConteo.style.display = ''; dotC.className = 'telar-dot warn';
+        txtC.textContent = 'Conteo del sensor sin validar'; btnC.style.display = '';
+      } else if (telar.historial_actual_id && telar.origen_conteo === 'sensor_validado') {
+        itemConteo.style.display = ''; dotC.className = 'telar-dot ok';
+        txtC.textContent = 'Conteo del sensor validado'; btnC.style.display = 'none';
+      } else {
+        itemConteo.style.display = 'none';
+      }
+    }
+    sensorManda = !!telar.sensor_activo;
+    // Solo si el dibujo abierto en el editor ES el que está tejiendo el telar: si no, la fila del
+    // sensor se marcaría sobre una matriz que no tiene nada que ver.
+    if (sensorManda && String(editId) === String(telar.patron_actual_id) &&
+        telar.fila_actual !== null && telar.fila_actual !== undefined && telar.fila_actual < nR) {
+      curRow = telar.fila_actual; curCol = 0; curPass = 0;
+      renderGrid();
+    }
+
+    const [clase, texto0] = mapaEstado[telar.estado] || ['', telar.estado || '-'];
+    let texto = texto0;
+    if (telar.estado === 'pausado' && telar.motivo_pausa === 'sin_senal') texto = 'Pausado: sin señal del sensor';
+    if (telar.estado === 'pausado' && telar.motivo_pausa === 'reinicio') texto = 'Pausado: el equipo se reinició';
+    // Sin sensor de pasada, "tejiendo" es lo que ORDENÓ el sistema, no algo confirmado
+    // por la máquina (los botones se sensan, el estado real de la máquina no).
+    if (telar.estado === 'tejiendo' && telar.origen_conteo === 'estimado') texto = 'Tejiendo (sin confirmar por sensor)';
     dotTej.className = 'telar-dot' + (clase ? ' ' + clase : '');
     txtTej.textContent = texto;
     if (clase === 'ok') itemTej.classList.add('ok-txt');
@@ -1007,7 +1077,9 @@ async function actualizarEstadoTelar() {
       itemPos.style.display = '';
       const tipo = telar.ultimo_evento_manual_tipo || 'manual';
       const nombres = { marcha: 'Marcha', pausa: 'Pausa', retroceder: 'Retroceder' };
-      txtPos.textContent = `Posición incierta (botón ${nombres[tipo] || tipo} usado a mano)`;
+      txtPos.textContent = tipo === 'reinicio'
+        ? 'Posición incierta (el equipo se reinició en pleno tejido)'
+        : `Posición incierta (botón ${nombres[tipo] || tipo} usado a mano)`;
       // Se guarda cuál es el evento que el operario está viendo: al confirmar
       // se manda de vuelta, para no tapar un movimiento posterior.
       ultimoEventoManualVisto = telar.ultimo_evento_manual || null;
@@ -1235,14 +1307,8 @@ function updPlayUI() {
   const r  = curRow >= 0 ? curRow + 1 : '-';
   let info = `Fila ${r} / ${nR}`;
   
-  // Si estamos ejecutando, mostrar también la celda y pasada actual
-  if (isPlaying && curRow >= 0 && curRow < nR) {
-    const c = curCol >= 0 ? curCol + 1 : '-';
-    const p = curPass + 1;
-    const totalPasadas = (grid[curRow] && grid[curRow][curCol]) ? grid[curRow][curCol] : 1;
-    info += ` | Celda ${c} | Pasada ${p}/${totalPasadas}`;
-  }
-  
+  // Una fila = una pasada: no hay celda ni repetición que mostrar, solo la fila.
+
   if (isPlaying)                        { st.textContent = 'Tejiendo...'; setPlayBar('playing'); }
   else if (curRow > -1 && curRow < nR)  { st.textContent = 'En pausa'; setPlayBar('paused'); }
   else if (curRow >= nR)                { st.textContent = '¡Tejido completo!'; setPlayBar('done'); }
@@ -1261,6 +1327,12 @@ function edicionBloqueada() {
     toast('Pausá o detené la ejecución para poder editar la matriz');
     return true;
   }
+  // Pausado pero con el trabajo abierto: la posición guardada se refiere a ESTA matriz, así que
+  // cambiarla la invalidaría (y el backend lo rechaza). Se ofrece el camino: terminar el trabajo.
+  if (editId && trabajoEnCursoPatronId && String(editId) === trabajoEnCursoPatronId) {
+    toast('Este dibujo tiene un trabajo en curso: usá ⏹ para terminarlo si querés modificarlo');
+    return true;
+  }
   return false;
 }
 
@@ -1268,6 +1340,91 @@ function edicionBloqueada() {
 function aplicarBloqueoEdicion() {
   const ed = document.getElementById('sc-editor');
   if (ed) ed.classList.toggle('ejecutando', isPlaying);
+}
+
+// El operario confirma que el conteo del sensor coincidió con el contador mecánico del telar.
+// Solo tiene sentido después de compararlos durante un período largo (idealmente una jornada).
+function validarConteoTelar() {
+  if (!telarPorDefectoId) return;
+  showConfirm(
+    'Validar el conteo del sensor',
+    'Confirmá SOLO si el conteo del sistema coincidió con el contador mecánico del telar durante una jornada completa. Desde ahora los metros dejan de figurar como estimados.',
+    async () => {
+      try {
+        await apiFetch(`/telares/${telarPorDefectoId}/validar-conteo`, { method: 'POST', body: JSON.stringify({ confirmo: true }) });
+        toast('Conteo validado');
+        actualizarEstadoTelar();
+      } catch (e) {
+        toast('No se pudo validar el conteo: ' + e.message);
+      }
+    },
+    'Sí, coincide'
+  );
+}
+
+// Dibujo (id) que el telar tiene con una producción abierta (pausada o en marcha), o null.
+// Lo mantiene la consulta periódica al backend. Mientras exista, la matriz de ese dibujo no se
+// puede modificar (el backend también lo rechaza): la posición guardada dejaría de tener sentido.
+let trabajoEnCursoPatronId = null;
+
+// Recupera el trabajo en curso al abrir la página (o volver a entrar), para RETOMAR donde quedó.
+// La producción vive en el backend (dibujo asignado + fila_actual + conteo): cerrar la página, apagar
+// la PC o llevar el telar a la fábrica no la pierde. Sin esto la pantalla arrancaba en blanco y el
+// operario tenía que volver a elegir el dibujo, con la fila en 0.
+async function restaurarTrabajoEnCurso() {
+  if (!telarPorDefectoId) return;
+  try {
+    const telar = await apiFetch(`/telares/${telarPorDefectoId}`);
+    if (!telar.historial_actual_id || !telar.patron_actual_id) { trabajoEnCursoPatronId = null; return; }
+    trabajoEnCursoPatronId = String(telar.patron_actual_id);
+    const d = draws.find(x => String(x.id) === trabajoEnCursoPatronId);
+    if (!d) return;
+
+    loadDrawInEditor(d.id, true);
+    const fila = Number.isInteger(telar.fila_actual) && telar.fila_actual >= 0 && telar.fila_actual < nR ? telar.fila_actual : 0;
+    curRow = fila; curCol = 0; curPass = 0;
+    sensorManda = !!telar.sensor_activo;
+
+    if (telar.estado === 'tejiendo') {
+      // La página se cerró con el telar en marcha: se sigue mostrando. Sin sensor, el conteo por
+      // reloj no avanzó mientras estuvo cerrada, así que la fila puede estar atrasada.
+      isPlaying = true;
+      updPlayUI(); renderGrid(); doTick();
+      if (telar.origen_conteo === 'estimado') {
+        showAlert('Trabajo recuperado', `«${d.nombre}» sigue en marcha, en la fila ${fila + 1} de ${nR}. Sin sensor de pasada, el conteo se detiene mientras la página está cerrada: verificá la posición real en el telar.`);
+      }
+    } else {
+      updPlayUI(); renderGrid();
+      toast(`Trabajo recuperado: «${d.nombre}», fila ${fila + 1} de ${nR}. Tocá ▶ para retomar`);
+    }
+  } catch (e) {
+    logError('No se pudo recuperar el trabajo en curso', e.message, 'RESTAURAR');
+  }
+}
+
+// Cierra la producción del telar ("Terminar trabajo"). Es la única forma de poder modificar la
+// matriz de un dibujo que tiene un trabajo abierto, y hace que el próximo ▶ empiece desde cero.
+function terminarTrabajo() {
+  if (!telarPorDefectoId || !trabajoEnCursoPatronId) { toast('No hay un trabajo en curso'); return; }
+  showConfirm(
+    'Terminar el trabajo',
+    'Se cierra la producción de este dibujo: la próxima vez que toques ▶ empieza desde la fila 1 y no se puede retomar donde quedó. ¿Terminar?',
+    async () => {
+      isPlaying = false;
+      clearTimeout(playTimer);
+      try {
+        await apiFetch(`/telares/${telarPorDefectoId}/detener`, { method: 'POST', body: JSON.stringify({}) });
+        trabajoEnCursoPatronId = null;
+        curRow = -1; curCol = -1; curPass = 0;
+        updPlayUI(); renderGrid();
+        toast('Trabajo terminado');
+      } catch (e) {
+        updPlayUI();
+        toast('No se pudo terminar el trabajo: ' + e.message);
+      }
+    },
+    'Terminar'
+  );
 }
 
 async function startPlay() {
@@ -1283,6 +1440,19 @@ async function startPlay() {
   if (telarPorDefectoId) {
     try {
       const telar = await apiFetch(`/telares/${telarPorDefectoId}`);
+
+      // Si el telar tiene un trabajo abierto de OTRO dibujo, empezar este lo cierra y esa posición
+      // se pierde: antes de hacerlo, se pregunta.
+      if (String(telar.patron_actual_id) !== String(editId) && telar.historial_actual_id && telar.patron_actual_id) {
+        const otro = draws.find(x => String(x.id) === String(telar.patron_actual_id));
+        const seguir = await new Promise((resolve) => showConfirm(
+          'Hay un trabajo en curso',
+          `El telar tiene «${otro ? otro.nombre : 'otro dibujo'}» en la fila ${(telar.fila_actual || 0) + 1}. Si empezás este dibujo, ese trabajo se cierra y no se puede retomar. ¿Empezar igual?`,
+          () => resolve(true), 'Empezar igual', () => resolve(false)
+        ));
+        if (!seguir) return;
+      }
+
       if (String(telar.patron_actual_id) !== String(editId)) {
         // Patrón distinto (o ninguno): es un trabajo nuevo, arranca de cero.
         await apiFetch(`/telares/${telarPorDefectoId}/asignar-patron`, {
@@ -1290,9 +1460,15 @@ async function startPlay() {
           body: JSON.stringify({ patron_id: Number(editId) }),
         });
         curRow = 0; curCol = 0; curPass = 0; // arranca de cero, igual que en el backend
+        trabajoEnCursoPatronId = String(editId);
       } else {
         // Mismo patrón: se está retomando algo pausado. Se reanuda sin tocar
-        // la posición, para que el tejido siga donde había quedado.
+        // la posición, para que el tejido siga donde había quedado. La pantalla toma la
+        // fila del BACKEND (que es la verdadera): si la página se recargó, la fila local
+        // estaba en 0 y el dibujo se veía empezar de nuevo aunque el telar no.
+        if (telar.historial_actual_id && Number.isInteger(telar.fila_actual) && telar.fila_actual < nR) {
+          curRow = telar.fila_actual; curCol = 0; curPass = 0;
+        }
         try {
           await apiFetch(`/telares/${telarPorDefectoId}/reanudar`, { method: 'POST', body: JSON.stringify({}) });
         } catch (e) {
@@ -1304,6 +1480,7 @@ async function startPlay() {
           });
           curRow = 0; curCol = 0; curPass = 0;
         }
+        trabajoEnCursoPatronId = String(editId);
       }
     } catch (e) {
       logError('Error al asignar patrón al telar', e.message, 'ASIGNAR_TELAR');
@@ -1317,44 +1494,50 @@ async function startPlay() {
   doTick();
 }
 
-// Cuántas veces se repite una fila antes de pasar a la siguiente (mínimo 1).
-// Espejo de repeticionesDeFila() en backend/src/utils/posicion.js.
-function repeticionesDeFila(fila) {
-  if (!Array.isArray(fila) || fila.length === 0) return 1;
-  const max = Math.max(...fila.map(v => Number(v) || 0));
-  return max > 0 ? max : 1;
-}
-
 // UNA FILA = UNA PASADA.
-// En cada pasada, la fila del patrón define qué marcos suben: cada columna
-// es una bobina/electroimán del dobby. Las columnas NO se recorren una por
-// una (son simultáneas dentro de la misma pasada). Lo que avanza es la fila.
+// En cada pasada, la fila del dibujo define qué marcos suben: cada columna es una
+// bobina/electroimán del dobby. Las columnas NO se recorren una por una (son
+// simultáneas dentro de la misma pasada). Lo que avanza es la fila. Para repetir una
+// pasada, se dibuja la misma fila dos veces. Espejo de utils/posicion.js en el backend.
+//
+// OJO: este avance es un RELOJ (una pasada cada 500 ms), no la máquina. Mientras no
+// haya sensor de pasada, el conteo que se guarda es una estimación. Cuando el sensor
+// del Nivel 2 está reportando, el backend responde 409 SENSOR_ACTIVO y esta pantalla
+// deja de avanzar por su cuenta: sigue la posición que informa el sensor (se sincroniza
+// en actualizarEstadoTelar).
+let sensorManda = false;
+
 function doTick() {
   if (!isPlaying) return;
 
   const el = document.getElementById(`gr${curRow}`);
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-  const repeticiones = repeticionesDeFila(grid[curRow]);
-  const delayMs = 500; // una pasada del telar
+  // Con el sensor mandando, no se avanza por reloj: solo se espera la próxima
+  // sincronización de posición.
+  if (sensorManda) {
+    playTimer = setTimeout(doTick, 1000);
+    return;
+  }
+
+  const delayMs = 500; // una pasada del telar (estimada)
 
   playTimer = setTimeout(() => {
-    curPass++;
-    if (curPass >= repeticiones) {
-      curPass = 0;
-      curRow++;
-      if (curRow >= nR) {
-        curRow = 0;
-        curPass = 0;
-        toast('Reiniciando el dibujo...');
-      }
+    curRow++;
+    if (curRow >= nR) {
+      curRow = 0;
+      toast('Reiniciando el dibujo...');
     }
+    curPass = 0;
     curCol = 0; // dentro de una pasada las columnas son simultáneas
 
     updPlayUI(); renderGrid();
     if (telarPorDefectoId) {
       apiFetch(`/telares/${telarPorDefectoId}/avanzar`, { method: 'POST', body: JSON.stringify({ pasos: 1 }) })
-        .catch((e) => logError('Error al avanzar', e.message, 'AVANZAR'));
+        .catch((e) => {
+          if (e.codigo === 'SENSOR_ACTIVO') { sensorManda = true; return; }   // el sensor lleva la cuenta
+          logError('Error al avanzar', e.message, 'AVANZAR');
+        });
     }
     doTick();
   }, delayMs);
@@ -1426,20 +1609,16 @@ async function ejecutarRetroceso() {
     });
     if (r && r.fila_actual !== undefined && r.fila_actual !== null) {
       curRow = r.fila_actual;
-      curCol = r.columna_actual;
-      curPass = r.pasada_actual || 0;
+      curCol = 0;
+      curPass = 0;
     }
   } catch (e) {
     // Sin producción abierta el backend no tiene posición que mover: se
     // retrocede solo en pantalla para que el operario igual vea el cambio.
-    // Una fila = una pasada: si la fila se estaba repitiendo, se retrocede
-    // una repetición; si no, se vuelve a la fila anterior.
-    if (curPass > 0) {
-      curPass--;
-    } else if (curRow > 0) {
-      curRow--;
-      curPass = repeticionesDeFila(grid[curRow]) - 1;
-    }
+    // Una fila = una pasada: se vuelve a la fila anterior (desde la primera, a la
+    // última: el dibujo es un lazo, igual que en el backend).
+    curRow = curRow > 0 ? curRow - 1 : nR - 1;
+    curPass = 0;
     curCol = 0;
   }
   updPlayUI(); renderGrid();
@@ -1566,7 +1745,9 @@ function saveDraw() {
   document.getElementById('confirm').classList.add('open');
 }
 
-function loadDrawInEditor(id) {
+// `restaurando`: se está recuperando un trabajo en curso al abrir la página. En ese caso NO se
+// pausa el telar ni se avisa "inserción cargada": es el mismo trabajo que ya estaba andando.
+function loadDrawInEditor(id, restaurando = false) {
 	  const d = draws.find(x => x.id === id);
 	  if (!d) return;
 	  editId = d.id;
@@ -1580,10 +1761,10 @@ function loadDrawInEditor(id) {
 	  document.getElementById('in-cols').value = nC;
 	  document.getElementById('insercion-name').value = d.nombre;
 	  setStatus('Editando', false);
-	  pausePlay();
+	  if (!restaurando) pausePlay();
 	  renderGrid();
 	  goTo('sc-editor');
-	  toast(`Inserción cargada: ${d.nombre}`);
+	  if (!restaurando) toast(`Inserción cargada: ${d.nombre}`);
 	}
 
 function deleteDraw(id) {
@@ -1746,13 +1927,33 @@ function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-// Inicialización: cargar patrones desde la API antes de renderizar
-(async () => {
+// Inicialización: cargar patrones desde la API antes de renderizar.
+// Solo se ejecuta con sesión iniciada (la API rechaza todo lo demás con 401), y una sola vez.
+let appIniciada = false;
+async function iniciarApp() {
+  if (appIniciada) return;
+  appIniciada = true;
   await loadStore();
   await obtenerOCrearTelarPorDefecto();
   mkGrid(8, 8);
   updPlayUI();
   updateStats();
+  // Si el telar tiene un trabajo abierto (pausado, o tejiendo desde antes de cerrar la
+  // página), se recupera tal cual estaba: mismo dibujo, misma fila. No se empieza de nuevo.
+  await restaurarTrabajoEnCurso();
+}
+
+// Al abrir la página: si el navegador ya tiene una sesión válida (cookie), se entra directo;
+// si no, queda la pantalla de ingreso.
+(async () => {
+  try {
+    const res = await fetch('/api/auth/sesion', { credentials: 'same-origin' });
+    const est = await res.json();
+    if (est.autenticado) {
+      setUsuarioActual(est.usuario, est.nombre, 'huella');
+      entrarAlSistema();
+    }
+  } catch (e) { /* sin red: queda el login */ }
 })();
 
 
@@ -1936,7 +2137,7 @@ function logError(title, msg, code) {
 
 // ═══════════ FICHA DEL DIBUJO ═══════════
 // Metros por pasada y estadísticas de producción. Todo lo que muestra sale de
-// pasadas efectivamente contadas, no de estimaciones por tiempo.
+// pasadas contadas; si vienen del reloj de la aplicación (sin sensor) se marcan como estimadas.
 
 function fichaFormatearNumero(n, dec = 0) {
   return Number(n).toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
@@ -1970,9 +2171,13 @@ async function fichaCargar() {
       return;
     }
     const fecha = (s) => s ? new Date(s).toLocaleDateString('es-AR') : '—';
+    // Mientras el conteo no esté medido por el sensor y validado, se dice "estimadas":
+    // sale del reloj de la aplicación, no de la máquina.
+    const validado = d.precision_conteo === 'sensor_validado';
+    const est = validado ? '' : ' (estimadas)';
     let filas = [
       ['Veces que se tejió', fichaFormatearNumero(d.producciones)],
-      ['Pasadas acumuladas', fichaFormatearNumero(d.pasadas_totales)],
+      ['Pasadas acumuladas' + est, (validado ? '' : '≈ ') + fichaFormatearNumero(d.pasadas_totales)],
       ['Repeticiones del dibujo', fichaFormatearNumero(d.repeticiones_del_dibujo)],
       ['Horas de máquina', fichaFormatearNumero(d.horas_de_maquina, 2)],
       ['Primera vez', fecha(d.primera_vez)],
@@ -1980,12 +2185,13 @@ async function fichaCargar() {
     ];
     if (d.metros_tejidos !== undefined) {
       filas.splice(2, 0,
-        ['Metros tejidos', fichaFormatearNumero(d.metros_tejidos, 2) + ' m'],
-        ['Pieza más larga', fichaFormatearNumero(d.metros_mayor_produccion, 2) + ' m']);
+        ['Metros tejidos' + (d.metros_son_estimados ? ' (estimados)' : ''), (d.metros_son_estimados ? '≈ ' : '') + fichaFormatearNumero(d.metros_tejidos, 2) + ' m'],
+        ['Pieza más larga' + (d.metros_son_estimados ? ' (estimada)' : ''), (d.metros_son_estimados ? '≈ ' : '') + fichaFormatearNumero(d.metros_mayor_produccion, 2) + ' m']);
     }
     let html = '<div class="ficha-grid">';
     for (const [k, v] of filas) html += `<div class="ficha-dato"><span>${k}</span><b>${v}</b></div>`;
     html += '</div>';
+    if (d.aviso_precision) html += `<div class="ficha-aviso">${esc(d.aviso_precision)}</div>`;
     if (d.aviso) html += `<div class="ficha-aviso">${d.aviso}</div>`;
     cont.innerHTML = html;
   } catch (e) {

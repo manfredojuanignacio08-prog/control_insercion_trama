@@ -26,19 +26,28 @@ no un detalle.
 
 **Solución en dos capas (recomendadas las dos):**
 
-1. **Hardware (5 resistencias, centavos):** una resistencia **pull-up de
-   10 kΩ** desde cada IN a 3.3V (IN1, IN2 e IN3 (los tres relés)) más una
-   por cada entrada de sensado (GPIO 32 y 33). Mantienen los pines
-   en nivel inactivo durante el arranque, pase lo que pase con el
-   software. Es la protección más barata y efectiva de toda la lista.
+1. **Hardware (6 resistencias, centavos):** una resistencia de **10 kΩ** en
+   cada línea de los relés y en cada entrada de sensado. **El sentido depende de
+   la polaridad de cada módulo** (`RELE_*_ACTIVO_BAJO` en `config.h`), y ponerla
+   al revés hace que el relé arranque PEGADO:
+   - **IN1 (Marcha) e IN2 (Pausa)** (módulo de 2 canales, activo-bajo): **pull-up**
+     de 10 kΩ a 3.3V. Lo mantiene suelto.
+   - **IN3 (Retroceder)** (módulo individual, activo-alto): **pull-down** de 10 kΩ
+     a **GND**, NO a 3.3V. Con pull-up este relé arranca pegado.
+   - **Sensado, GPIO 32, 33 y 34** (los tres botones): **pull-up** de 10 kΩ a 3.3V,
+     una por canal. El GPIO 34 es solo de entrada y no tiene pull-up interna:
+     la externa es obligatoria.
+
+   Mantienen los pines en nivel inactivo durante el arranque, pase lo que pase
+   con el software. Es la protección más barata y efectiva de toda la lista.
 2. **Software (ya aplicado en el firmware):** se escribe el nivel inactivo
    en el pin **antes** de configurarlo como salida, y tras un reinicio el
    firmware **solo memoriza** el estado del backend sin pulsar nada, hasta
    detectar un cambio real.
 
-**Elección de pines (bien elegidos):** los cinco pines en uso -GPIO 25, 26 y
-27 para los relés (Marcha, Pausa, Retroceder) y GPIO 32 y 33 para el sensado
-del sensado- **no** son pines de arranque del ESP32 (los "strapping
+**Elección de pines (bien elegidos):** los seis pines en uso -GPIO 25, 26 y
+27 para los relés (Marcha, Pausa, Retroceder) y GPIO 32, 33 y 34 para el
+sensado de los tres botones- **no** son pines de arranque del ESP32 (los "strapping
 pins" 0, 2, 5, 12 y 15 cambian de nivel solos durante el boot). Mantenerlos;
 no mover ni los relés ni las entradas de sensado a un pin de arranque: un
 relé conectado ahí puede dar un pulso fantasma al encender la placa.
@@ -94,7 +103,7 @@ sin que haya ninguna falla real.
   COM1 trenzados entre sí; ídem canales 2 y 3) y **lejos de los cables de los
   motores** del telar. El ruido inductivo de los motores es la causa nº1
   de cuelgues de WiFi y reinicios en este tipo de montaje.
-- **Cables cortos en la etapa lógica** (3.3 V, IN1, IN2, IN3 y las dos
+- **Cables cortos en la etapa lógica** (3.3 V, IN1, IN2, IN3 y las tres
   entradas de sensado): cuanto más largos, más antena para el ruido.
 - **Tierra en estrella:** todos los GND (salida de la fuente, ESP32, módulo
   de relés) a un mismo punto físico, no encadenados uno tras otro.
@@ -115,7 +124,7 @@ usar para comandarlas y qué no.
   papel interrumpa el haz, lo hace un interruptor electrónico. El sistema
   conmuta entonces la señal del lector, no la corriente de la bobina, y las
   plaquetas del telar quedan intactas.
-- **Relé de estado sólido (SSR), uno por lector óptico, seis en total.** Un relé mecánico común no
+- **Relé de estado sólido (SSR), uno por lector óptico: cuatro en total (una por cada una de las cuatro bobinas de selección del telar).** Un relé mecánico común no
   sirve para esta tarea: el telar hace 5 pasadas por segundo y cada bobina
   puede conmutar una vez por pasada, lo que da unas 144.000 conmutaciones por
   turno. La vida típica de un relé mecánico con carga ronda las 100.000, así
@@ -150,7 +159,7 @@ relés):
 | Anti-doble-pulso (2 s mínimos entre comandos) | Doble pulsación por lecturas repetidas del backend |
 | Watchdog por hardware (15 s) | Cuelgues por ruido eléctrico: el ESP32 se reinicia solo, con relés en reposo |
 | Fail-safe sin red | Si se cae el WiFi o el backend, el ESP32 no actúa y la botonera física sigue mandando |
-| Polaridad configurable **por relé** (`RELE_*_ACTIVO_BAJO`) | Permite mezclar módulos activo-bajo y activo-alto en el mismo equipo. Ojo: la resistencia de cada canal depende de esto (pull-up a 3).3V para activo-bajo, pull-down a GND para activo-alto |
+| Polaridad configurable **por relé** (`RELE_*_ACTIVO_BAJO`) | Permite mezclar módulos activo-bajo y activo-alto en el mismo equipo. Ojo: la resistencia de cada canal depende de esto (pull-up a 3,3 V para activo-bajo, pull-down a GND para activo-alto |
 
 ## 8. Resumen de compras/cambios (todo protección, nada de sensores)
 

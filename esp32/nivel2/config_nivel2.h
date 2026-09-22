@@ -11,20 +11,39 @@
 // ============================================================================
 
 // ---------------------------------------------------------------- Red y API
-// El nodo intenta primero la red de la fábrica y, si falla, el punto de acceso
-// del celular. Ver la nota sobre el repositorio público en config.h del Nivel 1.
+// El nodo intenta primero la red de la fábrica y, si falla, el punto de acceso del
+// celular. Ver la nota sobre el repositorio público en config.h del Nivel 1.
+// Los nombres de las constantes son los mismos que en el Nivel 1.
 #define WIFI_SSID          "Claro3747"
-#define WIFI_PASS          "11335577"
+#define WIFI_PASSWORD      "11335577"
 #define WIFI_SSID_ALT      ""
-#define WIFI_PASS_ALT      ""
+#define WIFI_PASSWORD_ALT  ""
 #define WIFI_ESPERA_SEG    15
-#define API_BASE           "https://control-trama-backend.onrender.com/api"
+
+// Mismos valores que en config.h del Nivel 1: los dos nodos hablan con el mismo backend
+// y con el mismo telar. (Antes el Nivel 1 apuntaba a una PC local con TELAR_ID 1 y este
+// a Render con TELAR_ID 8, y uno de los dos accionaba/consultaba un telar equivocado.)
+// SIN barra final ni "/api": las rutas se arman en el programa.
+#define API_BASE_URL       "https://control-trama-backend.onrender.com"
 #define TELAR_ID           8
 
+// Clave del dispositivo: se manda en el header X-Device-Key. Tiene que ser IGUAL a
+// ESP32_DEVICE_KEY del .env del backend y a DEVICE_KEY del Nivel 1.
+#define DEVICE_KEY         "CAMBIAR_POR_LA_CLAVE_DE_ESP32_DEVICE_KEY"
+
+// Certificado raíz para verificar el HTTPS del backend (opcional). Ver config.h del Nivel 1.
+// #define API_CA_CERT "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
+
 // ------------------------------------------------------------ Modo de prueba
-// En true el programa no usa el sensor real: genera pulsos por su cuenta al
-// ritmo del telar, para poder verificar la lógica en el banco de trabajo.
-#define MODO_BANCO         true
+// En true el programa NO usa el sensor real: genera pulsos por su cuenta cada 200 ms,
+// sin ninguna relación con lo que hace la máquina. Es solo para verificar la lógica en
+// el banco de trabajo.
+//
+// DEBE QUEDAR EN false. Si este sketch se sube tal cual a la máquina con el modo banco
+// activado, las filas del dibujo se aplican al ritmo de un reloj interno, desfasadas del
+// telar, y la tela sale mal. Solo se pone en true a mano, para una prueba en el banco,
+// y se vuelve a false antes de instalar.
+#define MODO_BANCO         false
 
 // ------------------------------------------- Bloque C · sensor de pasada
 // El sensor entrega un pulso por vuelta del eje. Su señal llega al pin a
@@ -40,9 +59,20 @@ static const int  PIN_SENSOR_PASADA   = 35;   // solo entrada; lleva pull-up ext
 // no perder pulsos: 60 ms deja margen de sobra y filtra los rebotes.
 static const unsigned long DEBOUNCE_PASADA_MS = 60;
 
-// Si pasa este tiempo sin un solo pulso con el telar en marcha, algo anda mal:
-// el sensor se desalineó, se cortó un cable o la máquina se detuvo sola.
+// SENSOR COMO DETECTOR DE PARADA. Con el telar en marcha llega un pulso cada 200 ms. Si
+// pasa este tiempo sin un solo pulso, la máquina se frenó (paro de emergencia, hilo cortado,
+// falla) o el sensor dejó de detectar (se desalineó, se cortó un cable). El programa no
+// distingue cuál de las dos, pero en cualquiera de los dos casos hace lo mismo: apaga los
+// canales y avisa al backend (evento "sin_senal"), que pasa el telar a "pausado" en la web.
+// Antes la web mostraba "tejiendo" indefinidamente con la máquina parada.
 static const unsigned long TIMEOUT_SIN_PULSOS_MS = 3000;
+
+// Período de gracia al arrancar: desde que el sistema pone "tejiendo" hasta que la máquina
+// da su PRIMER pulso pasa un rato (el operario aprieta Marcha, el motor acelera). Sin esta
+// gracia, si el primer pulso tardaba más de 3 s, el firmware declaraba "sin señal" y
+// apagaba todo antes de que la máquina alcanzara a arrancar. Recién después del primer pulso
+// rige el timeout de arriba.
+static const unsigned long GRACIA_ARRANQUE_MS = 15000;
 
 // ------------------------------------- Bloque D · selección del dibujo
 // Un relé PhotoMOS por lector óptico, uno por bobina de selección.
@@ -51,6 +81,8 @@ static const unsigned long TIMEOUT_SIN_PULSOS_MS = 3000;
 // hizo sobre un C 201 y se estimaban seis; la máquina de destino tiene cuatro.
 // Si en otro telar hubiera más, alcanza con ampliar este número y la lista de
 // pines, y poner elementos_seleccion en la base al valor que corresponda.
+// Es la misma cifra que telares.elementos_seleccion en la base (por defecto 4): la
+// única fuente de verdad del backend. Confirmado por el equipo: son cuatro.
 // Cada pin va a la pata 1 del relé a través de una resistencia de 330 ohm,
 // con una de 10 kilohm del pin a masa para el arranque seguro.
 static const int  N_CANALES = 4;
@@ -90,6 +122,21 @@ static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 //
 // A_CONFIRMAR: se define con la primera prueba de tejido, no antes.
 static const int DESPLAZAMIENTO_FILAS = 0;
+
+// El desplazamiento de arriba corrige de a FILAS ENTERAS. Pero también puede haber un
+// desfase DENTRO de la pasada: el telar lee la selección en un instante de su ciclo
+// (cuando abre la calada), y el pulso del sensor llega en otro. Este retardo hace esperar
+// esos microsegundos entre el pulso y la aplicación de la fila. Se mide con osciloscopio:
+// pulso del sensor → ventana de lectura del lector óptico. Debe ser mucho menor que los
+// 200 ms de una pasada (máximo permitido: 50 ms). Cero = se aplica apenas llega el pulso.
+//
+// Ojo con la otra dirección: si la ventana de lectura llega ANTES de que el pulso más la
+// latencia del relé PhotoMOS (~1 ms) y del ESP32 alcancen a aplicar la fila, no se corrige
+// con un retardo: hay que adelantar la aplicación con DESPLAZAMIENTO_FILAS = 1 (aplicar en el
+// pulso N la fila N+1) o mover el blanco metálico sobre el eje.
+// A_CONFIRMAR: se define con la medición sobre la máquina.
+static const unsigned long RETARDO_APLICACION_US = 0;
+static_assert(RETARDO_APLICACION_US <= 50000UL, "RETARDO_APLICACION_US no puede pasar de 50 ms");
 
 // -------------------------------------------------------------- Diagnóstico
 #define LOG_SERIAL         true

@@ -14,6 +14,12 @@ Estos scripts verifican el diseño del sistema por software (sin hardware):
 Para correrlos: `python3 <script>.py` (desde el proyecto, ajustando las rutas
 de los archivos que leen si hiciera falta).
 
+- **`host/correr.sh`**, prueba la lógica REAL de `../nivel2/sensor_pasada.h` (retrocesos
+  acumulados, reclasificación del pulso de retroceso, período de gracia del sensor)
+  con un reloj simulado, y comprueba que los dos sketches compilan contra stubs
+  mínimos de Arduino. Es un chequeo de lógica y de sintaxis: no reemplaza compilar
+  con el core ESP32 real.
+
 **Importante:** estas verificaciones aseguran que el diseño es coherente y la
 lógica correcta, pero NO reemplazan la validación física con multímetro. Para
 eso está `../documentacion/CHECKLIST_VALIDACION.md`.

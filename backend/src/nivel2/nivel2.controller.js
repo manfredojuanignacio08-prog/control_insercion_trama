@@ -1,12 +1,18 @@
 // ============================================================================
 //  Nivel 2, controlador
-//  Endpoints que consume el firmware de selección del dibujo.
-//
-//  EN DESARROLLO: todavía no está montado en el servidor de producción.
+//  Endpoints que consume el firmware de selección del dibujo (ESP32 del Nivel 2).
+//  Están montados en server.js bajo /api/telares y exigen la clave de dispositivo.
 // ============================================================================
 
 import { pool } from '../db.js';
 import { badRequest, notFound } from '../middleware/errorHandler.js';
+
+// Cuánto puede bajar el conteo entre dos reportes sin que se considere un error.
+// Con Retroceder el telar deshace pasadas y el contador del sensor BAJA de verdad
+// (una por retroceso), así que un valor menor no siempre significa "el nodo se
+// reinició". Un descenso pequeño se acepta; uno grande casi seguro es un reinicio
+// del nodo que volvió a contar desde cero, y se ignora para no borrar tela tejida.
+const TOLERANCIA_RETROCESO = 25;
 
 /**
  * Devuelve la matriz del dibujo asignado a un telar.
@@ -26,7 +32,7 @@ export async function obtenerPatronActual(req, res, next) {
     // fila, dejando un salto visible en la tela a mitad de una pieza.
     const { rows } = await pool.query(
       `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas,
-              h.fila_actual, h.pasadas_totales
+              h.fila_actual, h.pasadas_sensor
          FROM telares t
          JOIN patrones p ON p.id = t.patron_actual_id
          LEFT JOIN historial_produccion h
@@ -52,7 +58,7 @@ export async function obtenerPatronActual(req, res, next) {
       // Posición de la producción en curso, para que el nodo retome donde quedó.
       // En null si no hay producción abierta: ahí el nodo arranca desde el principio.
       fila_actual: p.fila_actual ?? null,
-      pasadas_totales: p.pasadas_totales ?? null,
+      pasadas_sensor: p.pasadas_sensor ?? null,
     });
   } catch (err) {
     next(err);
@@ -65,16 +71,23 @@ export async function obtenerPatronActual(req, res, next) {
  * El firmware manda el acumulado, no un incremento: si se pierde un reporte por
  * un corte de red, el siguiente trae el número correcto igual. Con incrementos,
  * un reporte perdido quedaría perdido para siempre.
+ *
+ * Body: { pasadas_sensor, fila_actual }   (se acepta también "pasadas_totales" por
+ * compatibilidad con el firmware anterior).
+ *
+ * Escribe en pasadas_sensor, NO en pasadas_totales: esa columna es la estimación por
+ * reloj de la web, y durante la jornada de validación hay que poder comparar las dos.
  */
 export async function reportarPasadas(req, res, next) {
   const cliente = await pool.connect();
   try {
     const telarId = Number(req.params.id);
-    const { pasadas_totales, fila_actual } = req.body;
+    const pasadasSensor = req.body.pasadas_sensor ?? req.body.pasadas_totales;
+    const { fila_actual } = req.body;
 
     if (!Number.isInteger(telarId)) throw badRequest('El identificador del telar debe ser un número.');
-    if (!Number.isInteger(pasadas_totales) || pasadas_totales < 0) {
-      throw badRequest('pasadas_totales debe ser un número entero no negativo.');
+    if (!Number.isInteger(pasadasSensor) || pasadasSensor < 0) {
+      throw badRequest('pasadas_sensor debe ser un número entero no negativo.');
     }
 
     await cliente.query('BEGIN');
@@ -82,12 +95,13 @@ export async function reportarPasadas(req, res, next) {
     // Se bloquea la fila del historial mientras se actualiza, para que dos
     // reportes seguidos no se pisen entre sí.
     const { rows } = await cliente.query(
-      `SELECT id, pasadas_totales
-         FROM historial_produccion
-        WHERE telar_id = $1 AND estado = 'en_curso'
-        ORDER BY fecha_inicio DESC
+      `SELECT h.id, h.pasadas_sensor, p.filas
+         FROM historial_produccion h
+         JOIN patrones p ON p.id = h.patron_id
+        WHERE h.telar_id = $1 AND h.estado = 'en_curso'
+        ORDER BY h.fecha_inicio DESC
         LIMIT 1
-        FOR UPDATE`,
+        FOR UPDATE OF h`,
       [telarId]
     );
 
@@ -98,28 +112,39 @@ export async function reportarPasadas(req, res, next) {
 
     const actual = rows[0];
 
-    // El conteo solo puede avanzar. Si llega un número menor, es que el nodo se
-    // reinició y volvió a contar desde cero: se ignora en lugar de retroceder
-    // el historial, que representa tela realmente tejida.
-    if (pasadas_totales < actual.pasadas_totales) {
+    // Un descenso grande casi seguro es un reinicio del nodo que volvió a contar
+    // desde cero: se ignora en lugar de retroceder el historial, que representa
+    // tela realmente tejida. Se devuelve el valor guardado para que el nodo se
+    // reacomode a él.
+    if (actual.pasadas_sensor - pasadasSensor > TOLERANCIA_RETROCESO) {
       await cliente.query('ROLLBACK');
       return res.json({
         aplicado: false,
-        motivo: 'El conteo recibido es menor que el registrado: probablemente el nodo se reinició.',
-        pasadas_totales: actual.pasadas_totales,
+        motivo: 'El conteo recibido es mucho menor que el registrado: probablemente el nodo se reinició.',
+        pasadas_sensor: actual.pasadas_sensor,
       });
     }
 
+    const filaValida = Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas
+      ? fila_actual
+      : null;
+
     await cliente.query(
       `UPDATE historial_produccion
-          SET pasadas_totales = $1,
-              fila_actual = COALESCE($2, fila_actual)
+          SET pasadas_sensor = $1,
+              fila_actual = COALESCE($2, fila_actual),
+              columna_actual = 0,
+              pasada_actual = 0,
+              vueltas_completadas = $4
         WHERE id = $3`,
-      [pasadas_totales, Number.isInteger(fila_actual) ? fila_actual : null, actual.id]
+      [pasadasSensor, filaValida, actual.id, Math.floor(pasadasSensor / actual.filas)]
     );
 
+    // Heartbeat del sensor: mientras sea reciente, la web deja de avanzar por reloj.
+    await cliente.query('UPDATE telares SET ultimo_reporte_sensor = now() WHERE id = $1', [telarId]);
+
     await cliente.query('COMMIT');
-    res.json({ aplicado: true, pasadas_totales });
+    res.json({ aplicado: true, pasadas_sensor: pasadasSensor });
   } catch (err) {
     await cliente.query('ROLLBACK').catch(() => {});
     next(err);

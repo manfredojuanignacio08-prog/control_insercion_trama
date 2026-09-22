@@ -41,7 +41,11 @@ export function errorHandler(err, req, res, next) {
   if (status >= 500 && process.env.NODE_ENV === 'production') {
     return res.status(status).json({ error: 'Error interno del servidor' });
   }
-  res.status(status).json({ error: err.message || 'Error interno del servidor' });
+  // Si el error trae un `codigo` propio (ej: PATRON_EN_PRODUCCION), se pasa al cliente:
+  // la web lo usa para distinguir un 409 de otro sin depender del texto del mensaje.
+  const cuerpo = { error: err.message || 'Error interno del servidor' };
+  if (err.codigo) cuerpo.codigo = err.codigo;
+  res.status(status).json(cuerpo);
 }
 
 export function notFound(mensaje = 'Recurso no encontrado') {
@@ -56,8 +60,9 @@ export function badRequest(mensaje = 'Solicitud inválida') {
   return err;
 }
 
-export function conflict(mensaje = 'Conflicto con el estado actual') {
+export function conflict(mensaje = 'Conflicto con el estado actual', codigo = null) {
   const err = new Error(mensaje);
   err.status = 409;
+  if (codigo) err.codigo = codigo;
   return err;
 }

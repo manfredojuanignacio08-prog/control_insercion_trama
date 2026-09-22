@@ -1,19 +1,25 @@
 import { pool } from '../db.js';
 import { derivarLigamentoDesdePasadas } from '../utils/ligamento.js';
 import { validarPatron } from '../utils/validacion.js';
-import { notFound, badRequest } from '../middleware/errorHandler.js';
+import { notFound, badRequest, conflict } from '../middleware/errorHandler.js';
 
-// GET /api/patrones?buscar=texto
+
+// GET /api/patrones?buscar=texto&limit=500&offset=0
+// Con límite (por defecto 500, máximo 1000) para que la respuesta no crezca sin tope
+// a medida que se guardan dibujos.
 export async function listarPatrones(req, res, next) {
   try {
     const { buscar } = req.query;
+    const limite = Math.min(Math.max(parseInt(req.query.limit, 10) || 500, 1), 1000);
+    const desplazamiento = Math.max(parseInt(req.query.offset, 10) || 0, 0);
     const params = [];
     let query = 'SELECT * FROM patrones';
     if (buscar) {
       query += ' WHERE nombre ILIKE $1';
       params.push(`%${buscar}%`);
     }
-    query += ' ORDER BY modificado_at DESC';
+    params.push(limite, desplazamiento);
+    query += ` ORDER BY modificado_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`;
     const { rows } = await pool.query(query, params);
     res.json(rows);
   } catch (err) {
@@ -70,6 +76,34 @@ export async function actualizarPatron(req, res, next) {
 
     const errores = validarPatron(req.body);
     if (errores.length) throw badRequest(errores.join(' '));
+
+    // Un dibujo que se está tejiendo (o quedó pausado con la producción abierta) no
+    // puede cambiar de forma ni de contenido: fila_actual quedaría fuera de rango, y
+    // con el Nivel 2 instalado la tela saldría con un dibujo distinto al pedido, sin
+    // aviso. Nombre, colores y metadatos sí se pueden cambiar. Para modificar la
+    // matriz hay que detener el trabajo primero (eso libera el dibujo).
+    const actual = await pool.query('SELECT filas, columnas, matriz_pasadas FROM patrones WHERE id = $1', [id]);
+    if (actual.rows.length === 0) throw notFound(`No existe el patrón con id ${id}.`);
+    const previo = actual.rows[0];
+    const cambiaForma =
+      previo.filas !== filas ||
+      previo.columnas !== columnas ||
+      JSON.stringify(previo.matriz_pasadas) !== JSON.stringify(matriz_pasadas);
+    if (cambiaForma) {
+      const enUso = await pool.query(
+        `SELECT t.codigo
+           FROM telares t
+           JOIN historial_produccion h ON h.telar_id = t.id AND h.estado = 'en_curso'
+          WHERE t.patron_actual_id = $1 AND h.patron_id = $1`,
+        [id]
+      );
+      if (enUso.rows.length > 0) {
+        throw conflict(
+          `Este dibujo se está tejiendo en ${enUso.rows.map((r) => r.codigo).join(', ')}: no se puede modificar su matriz mientras la producción esté abierta. Detené el trabajo primero.`,
+          'PATRON_EN_PRODUCCION'
+        );
+      }
+    }
 
     const ligamento = matriz_ligamento ?? derivarLigamentoDesdePasadas(matriz_pasadas);
 
@@ -147,11 +181,21 @@ export async function actualizarMetrosPorPasada(req, res, next) {
 }
 
 /**
- * Estadísticas de producción de un dibujo, calculadas sobre el historial real.
+ * Estadísticas de producción de un dibujo, calculadas sobre el historial.
  *
- * Todo sale de pasadas efectivamente contadas, no de estimaciones. Los metros
- * solo se informan si el dibujo tiene cargado metros_por_pasada; si no, se
- * devuelven las pasadas y se avisa que falta ese dato.
+ * OJO con qué significa cada número. Hasta que el sensor de pasada (Nivel 2) esté
+ * instalado, las pasadas de cada producción salen del reloj de la web, no de la
+ * máquina: son una ESTIMACIÓN. Convertirlas en "metros tejidos" sin decirlo daría
+ * una falsa sensación de exactitud. Por eso:
+ *
+ *   - pasadas_estimadas → producciones sin sensor (conteo por reloj)
+ *   - pasadas_medidas   → producciones con sensor (pasadas_sensor)
+ *   - pasadas_validadas → las medidas cuyo conteo se validó contra el contador mecánico
+ *   - pasadas_totales   → la mejor cifra disponible de cada producción (sensor si hay, si no reloj)
+ *   - precision_conteo  → 'estimado' | 'sensor' | 'sensor_validado' | 'mixto'
+ *
+ * Los metros solo se informan si el dibujo tiene cargado metros_por_pasada, y llevan
+ * metros_son_estimados = true salvo que TODO el conteo esté validado.
  */
 export async function estadisticasPatron(req, res, next) {
   try {
@@ -160,15 +204,20 @@ export async function estadisticasPatron(req, res, next) {
     if (p.rows.length === 0) return res.status(404).json({ error: `No existe el patrón con id ${id}.` });
 
     const h = await pool.query(
-      `SELECT COUNT(*)::int                                   AS producciones,
-              COALESCE(SUM(pasadas_totales), 0)::int          AS pasadas_totales,
-              COALESCE(SUM(vueltas_completadas), 0)::int      AS repeticiones,
-              COALESCE(MAX(pasadas_totales), 0)::int          AS pasadas_mayor_produccion,
-              MIN(fecha_inicio)                               AS primera_vez,
-              MAX(COALESCE(fecha_fin, fecha_inicio))          AS ultima_vez,
+      `SELECT COUNT(*)::int                                            AS producciones,
+              COUNT(*) FILTER (WHERE pasadas_sensor > 0)::int          AS producciones_con_sensor,
+              COUNT(*) FILTER (WHERE pasadas_sensor > 0 AND conteo_validado)::int AS producciones_validadas,
+              COALESCE(SUM(pasadas_totales) FILTER (WHERE pasadas_sensor = 0), 0)::int AS pasadas_estimadas,
+              COALESCE(SUM(pasadas_sensor), 0)::int                    AS pasadas_medidas,
+              COALESCE(SUM(pasadas_sensor) FILTER (WHERE conteo_validado), 0)::int AS pasadas_validadas,
+              COALESCE(SUM(CASE WHEN pasadas_sensor > 0 THEN pasadas_sensor ELSE pasadas_totales END), 0)::int AS pasadas_totales,
+              COALESCE(MAX(CASE WHEN pasadas_sensor > 0 THEN pasadas_sensor ELSE pasadas_totales END), 0)::int AS pasadas_mayor_produccion,
+              COALESCE(SUM(vueltas_completadas), 0)::int               AS repeticiones,
+              MIN(fecha_inicio)                                        AS primera_vez,
+              MAX(COALESCE(fecha_fin, fecha_inicio))                   AS ultima_vez,
               COALESCE(SUM(
                 EXTRACT(EPOCH FROM (COALESCE(fecha_fin, now()) - fecha_inicio))
-              ), 0)::bigint                                   AS segundos_de_maquina
+              ), 0)::bigint                                            AS segundos_de_maquina
          FROM historial_produccion
         WHERE patron_id = $1`,
       [id]
@@ -176,11 +225,24 @@ export async function estadisticasPatron(req, res, next) {
     const s = h.rows[0];
     const mpp = p.rows[0].metros_por_pasada === null ? null : Number(p.rows[0].metros_por_pasada);
 
+    let precision = 'estimado';
+    if (s.producciones_con_sensor > 0) {
+      if (s.producciones_con_sensor === s.producciones) {
+        precision = s.producciones_validadas === s.producciones_con_sensor ? 'sensor_validado' : 'sensor';
+      } else {
+        precision = 'mixto';
+      }
+    }
+
     const out = {
       patron: { id: p.rows[0].id, nombre: p.rows[0].nombre, filas: p.rows[0].filas, columnas: p.rows[0].columnas },
       metros_por_pasada: mpp,
       producciones: s.producciones,
       pasadas_totales: s.pasadas_totales,
+      pasadas_estimadas: s.pasadas_estimadas,
+      pasadas_medidas: s.pasadas_medidas,
+      pasadas_validadas: s.pasadas_validadas,
+      precision_conteo: precision,
       repeticiones_del_dibujo: s.repeticiones,
       pasadas_mayor_produccion: s.pasadas_mayor_produccion,
       primera_vez: s.primera_vez,
@@ -188,9 +250,16 @@ export async function estadisticasPatron(req, res, next) {
       horas_de_maquina: Math.round((Number(s.segundos_de_maquina) / 3600) * 100) / 100,
     };
 
+    if (precision !== 'sensor_validado') {
+      out.aviso_precision = precision === 'estimado'
+        ? 'Estas pasadas se estiman por el reloj de la aplicación, no las mide la máquina. Hasta que el sensor de pasada esté instalado y validado, los números (y los metros) son aproximados.'
+        : 'El conteo del sensor todavía no se validó contra el contador mecánico del telar (o hay producciones sin sensor). Los números son aproximados.';
+    }
+
     if (mpp !== null) {
       out.metros_tejidos = Math.round(s.pasadas_totales * mpp * 100) / 100;
       out.metros_mayor_produccion = Math.round(s.pasadas_mayor_produccion * mpp * 100) / 100;
+      out.metros_son_estimados = precision !== 'sensor_validado';
       // Cuántas pasadas entran en un metro, que es como suele pensarlo el operario.
       out.pasadas_por_metro = Math.round(1 / mpp);
     } else {

@@ -82,7 +82,8 @@ la posición como incierta hasta que alguien la confirme
    desde el Board Manager.
 2. *Tools → Manage Libraries* → instalá **ArduinoJson** (Benoît Blanchon,
    v7.x). `WiFi` y `HTTPClient` ya vienen con el core.
-3. Abrí `control_trama_esp32.ino` y **editá `config.h`**: Wi-Fi, URL del
+3. Abrí `control_trama_esp32.ino` y **editá `config.h`**: Wi-Fi, `DEVICE_KEY` (la misma que
+   `ESP32_DEVICE_KEY` del backend), `TELAR_ID` (8) y URL del
    backend (la del servidor Node, **no** la de Neon) y la polaridad
    del relé si hiciera falta.
 4. Placa: *ESP32 Dev Module* → puerto → **Upload**.

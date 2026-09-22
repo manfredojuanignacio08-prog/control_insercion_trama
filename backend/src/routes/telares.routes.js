@@ -1,6 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import * as telaresController from '../controllers/telares.controller.js';
+import { requerirSesion, requerirDispositivo } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -18,26 +19,34 @@ const playbackLimiter = rateLimit({
   message: { error: 'Demasiadas solicitudes de avance/retroceso, esperá un momento.' },
 });
 
+// Quién puede llamar cada ruta (server.js ya exige sesión o clave de dispositivo en todas):
+//   - lecturas (GET): operario con sesión o dispositivo. El ESP32 sondea GET /:id.
+//   - acciones que dispara una persona desde la web: solo con sesión (requerirSesion).
+//   - avisos que solo manda el hardware (evento-fisico): solo con clave de dispositivo.
 router.get('/', telaresController.listarTelares);
 router.get('/:id', telaresController.obtenerTelar);
-router.post('/', telaresController.crearTelar);
-router.post('/:id/asignar-patron', telaresController.asignarPatron);
-router.post('/:id/detener', telaresController.detenerTelar);
+router.post('/', requerirSesion, telaresController.crearTelar);
+router.post('/:id/asignar-patron', requerirSesion, telaresController.asignarPatron);
+router.post('/:id/detener', requerirSesion, telaresController.detenerTelar);
 // Pausa/reanudación: conservan la producción y el patrón (a diferencia de
 // /detener, que cierra el trabajo y desasigna el patrón).
-router.post('/:id/pausar', telaresController.pausarTelar);
-router.post('/:id/reanudar', telaresController.reanudarTelar);
-router.post('/:id/avanzar', playbackLimiter, telaresController.avanzarTelar);
-router.post('/:id/retroceder', playbackLimiter, telaresController.retrocederTelar);
+router.post('/:id/pausar', requerirSesion, telaresController.pausarTelar);
+router.post('/:id/reanudar', requerirSesion, telaresController.reanudarTelar);
+router.post('/:id/avanzar', requerirSesion, playbackLimiter, telaresController.avanzarTelar);
+router.post('/:id/retroceder', requerirSesion, playbackLimiter, telaresController.retrocederTelar);
 // Botón físico real del telar (Retroceder). A diferencia de la ruta de
 // arriba (llamada en cada paso de la animación), esta es una acción
 // puntual que el operador dispara a mano de vez en cuando, no necesita
 // el límite generoso de playbackLimiter, con el general de la API alcanza.
-router.post('/:id/retroceder-fisico', telaresController.retrocederFisico);
-// Sensado (no control) de los 3 botones: el ESP32 avisa un uso manual,
-// y el operario confirma la posición real cuando la revisó.
-router.post('/:id/evento-fisico', telaresController.eventoFisico);
-router.post('/:id/confirmar-posicion', telaresController.confirmarPosicion);
-router.get('/:id/historial', telaresController.historialPorTelar);
+router.post('/:id/retroceder-fisico', requerirSesion, telaresController.retrocederFisico);
+// Sensado (no control) de los botones y del sensor: el ESP32 avisa un uso manual
+// o que la máquina dejó de dar pulsos, y el operario confirma la posición real
+// cuando la revisó.
+router.post('/:id/evento-fisico', requerirDispositivo, telaresController.eventoFisico);
+router.post('/:id/confirmar-posicion', requerirSesion, telaresController.confirmarPosicion);
+// El operario da por bueno el conteo del sensor tras compararlo con el contador
+// mecánico del telar durante una jornada completa.
+router.post('/:id/validar-conteo', requerirSesion, telaresController.validarConteo);
+router.get('/:id/historial', requerirSesion, telaresController.historialPorTelar);
 
 export default router;

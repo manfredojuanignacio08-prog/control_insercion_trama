@@ -6,6 +6,7 @@ import {
 } from '@simplewebauthn/server';
 import crypto from 'crypto';
 import { pool } from '../db.js';
+import { emitirSesion, cerrarSesion, leerSesion } from '../middleware/auth.js';
 
 /**
  * Autenticación biométrica (huella dactilar) mediante WebAuthn / FIDO2.
@@ -56,11 +57,21 @@ function datosRP(req) {
 
 const CHALLENGE_TTL_MIN = 5; // los desafíos vencen a los 5 minutos
 
-// Registro ABIERTO y SIN LÍMITE: cualquier persona puede registrar su huella
-// sin necesidad de un código de invitación. Se deja en Infinity para que
-// nunca se pida invitación. (El sistema de invitaciones sigue existiendo por
-// compatibilidad, pero no bloquea el registro.)
-const LIMITE_LIBRE = Infinity;
+// Cuántos usuarios se pueden registrar libremente. A partir de ahí hace falta un
+// código de invitación que genera un usuario ya registrado (ver generarInvitacion).
+// Por defecto 3, como documenta el proyecto ("invitaciones a partir del cuarto usuario").
+//
+// Esto importa para la seguridad: como registrarse da acceso a la API, un registro
+// abierto y sin límite dejaría entrar a cualquiera que escribiera un nombre de usuario.
+// Para volver al registro abierto (solo pruebas): REGISTRO_LIBRE_MAX=Infinity en el .env.
+const LIMITE_LIBRE = process.env.REGISTRO_LIBRE_MAX !== undefined && process.env.REGISTRO_LIBRE_MAX !== ''
+  ? Number(process.env.REGISTRO_LIBRE_MAX)
+  : 3;
+
+// Un usuario recién creado que todavía no completó el registro de su huella puede
+// reintentarlo (sin sesión) durante este lapso. Pasado ese tiempo, agregar una huella
+// a un usuario existente exige sesión iniciada como ese usuario.
+const RECLAMO_REGISTRO_MIN = 15;
 
 // Vencimiento de un código de invitación (días).
 const INVITACION_TTL_DIAS = 7;
@@ -123,17 +134,36 @@ export async function iniciarRegistro(req, res, next) {
     let { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [nom]);
     let user = rows[0];
 
-    // ── Control de registro ──────────────────────────────────────────
+    // ── Usuario que YA existe ────────────────────────────────────────
+    // Agregar una huella a una cuenta existente equivale a poder entrar como ella.
+    // Sin esta comprobación, alguien que supiera un nombre de usuario registraba SU
+    // huella en esa cuenta y entraba. Se exige estar logueado como ese mismo usuario
+    // (así se suma un dispositivo nuevo), salvo que la cuenta sea recién creada y
+    // todavía no tenga ninguna huella (registro que se cortó a la mitad).
+    if (user) {
+      const { rows: yaTiene } = await pool.query(
+        `SELECT 1 FROM credenciales_biometricas WHERE usuario_id = $1 LIMIT 1`, [user.id]
+      );
+      const reciente = Date.now() - new Date(user.creado_at).getTime() < RECLAMO_REGISTRO_MIN * 60 * 1000;
+      const sesion = leerSesion(req);
+      const esElMismo = sesion && sesion.usuario === user.usuario;
+      if (!esElMismo && !(yaTiene.length === 0 && reciente)) {
+        return res.status(403).json({
+          error: 'Ese usuario ya existe. Para sumar una huella a esta cuenta, entrá primero con tu huella o tu código de recuperación.',
+        });
+      }
+    }
+
+    // ── Control de registro (usuario nuevo) ──────────────────────────
     // Los primeros LIMITE_LIBRE usuarios se registran libres. A partir de
-    // ahí (para sumar usuarios en el futuro) hace falta un código de
-    // invitación válido, que cualquier usuario ya registrado puede generar.
-    // No hay roles: todos los usuarios son iguales.
+    // ahí hace falta un código de invitación válido, que cualquier usuario ya
+    // registrado puede generar. No hay roles: todos los usuarios son iguales.
     if (!user) {
       const { rows: cnt } = await pool.query('SELECT COUNT(*)::int AS n FROM usuarios');
       const totalUsuarios = cnt[0].n;
+      let invitacionId = null;
 
       if (totalUsuarios >= LIMITE_LIBRE) {
-        // Ya se completaron los registros libres: exigir invitación.
         const inv = await validarInvitacion(invitacion);
         if (!inv.ok) {
           return res.status(403).json({
@@ -141,8 +171,7 @@ export async function iniciarRegistro(req, res, next) {
             requiere_invitacion: true,
           });
         }
-        // marcar el id de invitación para consumirla al verificar el registro
-        req._invitacionId = inv.id;
+        invitacionId = inv.id;
       }
 
       const webauthnId = aB64(crypto.randomBytes(32));
@@ -151,6 +180,13 @@ export async function iniciarRegistro(req, res, next) {
         [nom, nombre || null, webauthnId]
       );
       user = ins.rows[0];
+
+      // La invitación se consume acá, al crear el usuario. Antes se guardaba en
+      // req._invitacionId para consumirla en verificarRegistro, pero son dos pedidos
+      // HTTP distintos y el valor se perdía: las invitaciones nunca se gastaban.
+      if (invitacionId) {
+        await pool.query('UPDATE invitaciones SET usada = true, usada_por = $1 WHERE id = $2', [user.id, invitacionId]);
+      }
     }
 
     // Credenciales que este usuario ya tiene (para no registrar dos veces la misma)
@@ -258,13 +294,8 @@ export async function verificarRegistro(req, res, next) {
       recoveryCode = null; // el registro sigue siendo válido igual
     }
 
-    // Si el registro usó un código de invitación, marcarlo como consumido.
-    if (req._invitacionId) {
-      await pool.query(
-        'UPDATE invitaciones SET usada = true, usada_por = $1 WHERE id = $2',
-        [user.id, req._invitacionId]
-      );
-    }
+    // Quien acaba de registrar su huella queda con la sesión iniciada.
+    emitirSesion(req, res, { usuario: user.usuario, nombre: user.nombre });
 
     res.status(201).json({
       ok: true,
@@ -375,6 +406,9 @@ export async function verificarLogin(req, res, next) {
     );
     await pool.query('UPDATE usuarios SET ultimo_acceso = now() WHERE id = $1', [user.id]);
 
+    // Antes solo se devolvía {ok:true}: no había cookie, ni token, ni sesión, así que
+    // el login no protegía nada. Ahora se emite la cookie de sesión.
+    emitirSesion(req, res, { usuario: user.usuario, nombre: user.nombre });
     res.json({ ok: true, usuario: user.usuario, nombre: user.nombre });
   } catch (e) {
     next(e);
@@ -418,6 +452,7 @@ export async function recuperarUsuario(req, res, next) {
 
     // Código correcto → entrar directamente. No se toca la huella ni el código.
     await pool.query('UPDATE usuarios SET ultimo_acceso = now() WHERE id = $1', [user.id]);
+    emitirSesion(req, res, { usuario: user.usuario, nombre: user.nombre });
     res.json({
       ok: true,
       usuario: user.usuario,
@@ -508,17 +543,15 @@ export async function regenerarCodigoRecuperacion(req, res, next) {
 }
 
 /**
- * POST /api/auth/invitacion   body: { usuario }
+ * POST /api/auth/invitacion   (requiere sesión)
  * Cualquier usuario ya registrado puede generar un código de invitación para
- * sumar un usuario nuevo en el futuro. Devuelve el código UNA vez (se guarda
- * hasheado). No hay roles: todos pueden invitar.
+ * sumar un usuario nuevo. Devuelve el código UNA vez (se guarda hasheado). No hay
+ * roles: todos pueden invitar. Quien invita es el usuario de la sesión (antes se
+ * tomaba de un campo del body, o sea que cualquiera podía invitar en nombre de otro).
  */
 export async function generarInvitacion(req, res, next) {
   try {
-    const { usuario } = req.body || {};
-    if (!usuario) return res.status(400).json({ error: 'Falta el usuario que genera la invitación.' });
-
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [req.usuario.usuario]);
     const user = rows[0];
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
@@ -559,15 +592,32 @@ export async function estadoRegistro(req, res, next) {
   try {
     const { rows } = await pool.query('SELECT COUNT(*)::int AS n FROM usuarios');
     const total = rows[0].n;
+    const requiere = total >= LIMITE_LIBRE;
     res.json({
       registrados: total,
-      limite_libre: null,          // sin límite
-      registro_abierto: true,      // el registro siempre está abierto
-      requiere_invitacion: false,  // nunca hace falta código de invitación
+      limite_libre: Number.isFinite(LIMITE_LIBRE) ? LIMITE_LIBRE : null,
+      registro_abierto: !requiere,
+      requiere_invitacion: requiere,
     });
   } catch (e) {
     next(e);
   }
+}
+
+/**
+ * GET /api/auth/sesion
+ * Le dice a la web si el navegador ya tiene una sesión válida (cookie), para no
+ * pedir el login de nuevo al recargar la página.
+ */
+export function estadoSesion(req, res) {
+  const s = leerSesion(req);
+  res.json(s ? { autenticado: true, usuario: s.usuario, nombre: s.nombre } : { autenticado: false });
+}
+
+/** POST /api/auth/logout, borra la cookie de sesión. */
+export function logout(req, res) {
+  cerrarSesion(req, res);
+  res.json({ ok: true });
 }
 
 // ─── Helpers de desafíos ──────────────────────────────────────────────

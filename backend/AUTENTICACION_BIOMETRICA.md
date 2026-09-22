@@ -165,3 +165,22 @@ un código válido, del 4º usuario en adelante no se puede registrar nadie.
 
 Tablas nuevas: columnas `recovery_hash` / `recovery_usado` en `usuarios`, y la
 tabla `invitaciones`. Ver `src/db/migracion_004_recupero_usuarios.sql`.
+
+## Sesión (cookie) y protección de la API
+
+Desde esta versión el login **sí protege la API**. Al verificar la huella (o el código de
+recuperación) el servidor entrega una cookie de sesión firmada (`HttpOnly`, `SameSite=Lax`,
+`Secure` con HTTPS) y todas las rutas de `/api` (salvo `/api/health` y `/api/auth/*`) exigen
+esa cookie o, en el caso de los ESP32, la clave de dispositivo (`X-Device-Key`). Antes,
+`login/verificar` solo devolvía `{ok:true}` y ninguna ruta lo comprobaba.
+
+- `GET /api/auth/sesion`: la web lo consulta al abrir para no pedir el login de nuevo.
+- `POST /api/auth/logout`: borra la cookie.
+- La opción "Continuar sin iniciar sesión" se eliminó de la pantalla de ingreso.
+- Sumar una huella a un usuario que ya existe exige haber iniciado sesión como ese usuario
+  (si no, cualquiera que supiera el nombre podía registrar su huella en esa cuenta).
+- El código de invitación se consume al crear el usuario (antes se perdía entre los dos pasos
+  del registro y nunca se gastaba). El registro es libre solo para los primeros
+  `REGISTRO_LIBRE_MAX` usuarios (por defecto 3).
+- En producción, definir `WEBAUTHN_RP_ID` y `WEBAUTHN_ORIGIN`: si no, el dominio se toma del
+  header `Origin` del pedido, lo que debilita la protección anti-phishing de WebAuthn.

@@ -40,11 +40,11 @@ print("  SIMULACIÓN DEL FLUJO LÓGICO, Nivel 2 (marcos / dobby)")
 print("="*66)
 
 # Patrón de ejemplo: una RAYA repetitiva (como las telas de las fotos).
-# El Vamatex C201 de la planta tiene 4 bobinas de selección instaladas
-# (relevamiento del 28/08/26), así que el patrón trabaja con 6 marcos.
+# El telar de destino tiene 4 bobinas de selección (confirmado por el equipo),
+# así que el patrón trabaja con 4 marcos.
 # Cada FILA de la matriz es una PASADA, y cada columna una bobina:
 #   [1,1,1] -> suben los tres marcos ; [0,1,0] -> sube solo el del medio
-N_MARCOS = 6
+N_MARCOS = 4
 patron_raya = [
     [1,0,1],  # pasada 1: suben el 1 y el 3
     [0,1,0],  # pasada 2: sube el del medio

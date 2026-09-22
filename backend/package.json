@@ -9,7 +9,8 @@
     "dev": "nodemon src/server.js",
     "init-db": "node src/db/init.js",
     "migrate": "node src/db/migrate.js",
-    "codigo": "node src/scripts/codigo_recuperacion.js"
+    "codigo": "node src/scripts/codigo_recuperacion.js",
+    "test": "node tests/posicion.test.mjs && node tests/auth.test.mjs && node tests/controladores.test.mjs && node tests/frontend.test.mjs"
   },
   "dependencies": {
     "@simplewebauthn/server": "^13.3.2",

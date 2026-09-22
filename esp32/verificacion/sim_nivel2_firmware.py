@@ -76,7 +76,7 @@ class Nivel2Simulado:
 
 
 def verificar():
-    # Un dibujo de prueba: 4 pasadas, 6 canales.
+    # Un dibujo de prueba: 4 pasadas, 4 canales.
     dibujo = [
         [1, 0, 1, 0],
         [0, 1, 0, 1],

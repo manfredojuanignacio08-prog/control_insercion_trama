@@ -19,7 +19,7 @@
  *
  *  Qué hace:
  *   1. Se conecta al Wi-Fi.
- *   2. Sondea el backend (GET /api/telares/1) cada pocos segundos.
+ *   2. Sondea el backend (GET /api/telares/{TELAR_ID}) cada pocos segundos.
  *   3. Cuando el estado deseado cambia:
  *        - pasa a "tejiendo"  → pulso en el relé de MARCHA (GPIO 25)
  *        - deja de "tejiendo" → pulso en el relé de PAUSA  (GPIO 26)
@@ -48,7 +48,10 @@
  *   4. Si falla la red, NO hace nada peligroso (fail-safe): los relés
  *      quedan sueltos y el telar sigue gobernado por su botonera física.
  *   5. Reporta fallas propias a POST /api/errores para que queden en el
- *      log del sistema.
+ *      log del sistema: reinicios por watchdog/brownout, pérdidas de Wi-Fi y
+ *      períodos en que el backend no respondió. Como sin red no se puede avisar
+ *      en el momento, el aviso queda pendiente y se envía al recuperarse la
+ *      comunicación.
  *
  *  Protecciones DE CÓDIGO incluidas (complementan las eléctricas):
  *   - Arranque seguro de relés: se escribe el nivel INACTIVO en los GPIO
@@ -61,8 +64,11 @@
  *   - Anti-doble-pulso: tiempo mínimo entre comandos, para no "apretar"
  *     dos veces por una lectura repetida del backend.
  *
- *  Librerías (Library Manager del IDE de Arduino):
- *   - WiFi.h, HTTPClient.h → incluidas con el core de ESP32
+ *  Autenticación: todos los pedidos llevan la clave del dispositivo en el header
+ *  X-Device-Key (DEVICE_KEY en config.h). Sin ella la API responde 401.
+ *
+ *  Librerías (Library Manager del IDE de Arduino), IGUALES en el Nivel 2:
+ *   - Core ESP32 de Espressif 3.x (IDF 5): WiFi, HTTPClient y WiFiClientSecure incluidos
  *   - ArduinoJson (Benoît Blanchon, v7.x)
  *
  *  Completar config.h antes de subir el sketch.
@@ -71,7 +77,9 @@
 #include <WiFi.h>
 #include <string.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
+#include <esp_system.h>
 #include <esp_task_wdt.h>
 #include "config.h"
 
@@ -102,6 +110,34 @@ int nivelActivo(int pin) {
 
 int nivelInactivo(int pin) {
   return nivelActivo(pin) == LOW ? HIGH : LOW;
+}
+
+// ------------------------------------------------------------
+// HTTP(S) con clave de dispositivo
+// ------------------------------------------------------------
+// Prepara un pedido hacia el backend: elige HTTP o HTTPS según la URL y agrega la clave
+// del dispositivo. Todos los pedidos del firmware pasan por acá.
+static WiFiClientSecure clienteTls;
+
+// Si un pedido falla por la conexión (código negativo), se cierra el socket TLS compartido: el
+// próximo pedido abre uno nuevo en vez de reintentar sobre una conexión que el servidor ya cerró.
+static void cerrarTlsSiFalla(int codigo) {
+  if (codigo < 0) clienteTls.stop();
+}
+
+static bool iniciarHttp(HTTPClient& http, const String& url) {
+  if (url.startsWith("https://")) {
+#ifdef API_CA_CERT
+    clienteTls.setCACert(API_CA_CERT);
+#else
+    clienteTls.setInsecure();   // cifra pero no verifica el servidor: ver config.h
+#endif
+    if (!http.begin(clienteTls, url)) return false;
+  } else {
+    if (!http.begin(url)) return false;
+  }
+  http.addHeader("X-Device-Key", DEVICE_KEY);
+  return true;
 }
 
 // ------------------------------------------------------------
@@ -153,6 +189,31 @@ volatile unsigned long ultimoPulsoMarcha     = 0;
 volatile unsigned long ultimoPulsoPausa      = 0;
 volatile unsigned long ultimoPulsoRetroceder = 0;
 unsigned long ultimoIntentoAviso = 0;  // espacia los reintentos si el backend falla
+
+// Avisos de error pendientes de enviar al backend (POST /api/errores). Sin red no se
+// puede avisar en el momento: se guarda y se manda cuando vuelve la comunicación.
+const int  FALLOS_PARA_AVISAR = 5;      // sondeos seguidos fallidos antes de considerarlo una caída
+int        fallosConsecutivos = 0;
+bool       caidaBackendMarcada = false;
+unsigned long caidaBackendDesde = 0;
+unsigned long wifiPerdidoDesde = 0;
+String     errTitulo = "";
+String     errDetalle = "";
+String     errCodigo = "";
+bool       errPendiente = false;
+
+// Arranque en FRÍO (se cortó y volvió la luz, o el telar volvió de un traslado). Este nodo no
+// sabe si la máquina está andando, así que se avisa al backend para que el estado 'tejiendo'
+// pase a 'pausado' SIN perder el trabajo: al tocar ▶ en la web se retoma donde quedó, no se
+// empieza de nuevo. No se avisa en un reinicio por watchdog o brownout: ahí la máquina puede
+// estar andando de verdad y el estado del backend sigue siendo el correcto.
+bool       avisoReinicioPendiente = false;
+
+// Deja un aviso en cola (si ya hay uno pendiente, se conserva el más viejo).
+void encolarError(const String& codigo, const String& titulo, const String& detalle) {
+  if (errPendiente) return;
+  errCodigo = codigo; errTitulo = titulo; errDetalle = detalle; errPendiente = true;
+}
 
 void IRAM_ATTR isrMarcha() {
   unsigned long ahora = millis();
@@ -221,8 +282,35 @@ void setup() {
     .idle_core_mask = 0,
     .trigger_panic = true,
   };
-  esp_task_wdt_init(&wdtConfig);
+  // En el core 3.x el watchdog puede venir ya inicializado por el sistema: en ese caso se
+  // reconfigura en lugar de fallar. (El Nivel 2 usa exactamente este mismo bloque.)
+  if (esp_task_wdt_init(&wdtConfig) == ESP_ERR_INVALID_STATE) {
+    esp_task_wdt_reconfigure(&wdtConfig);
+  }
   esp_task_wdt_add(NULL);
+
+  // Si el reinicio no fue un encendido normal, dejarlo registrado en el backend.
+  switch (esp_reset_reason()) {
+    case ESP_RST_TASK_WDT:
+    case ESP_RST_INT_WDT:
+    case ESP_RST_WDT:
+      encolarError("REINICIO_WDT", "El ESP32 se reinició por watchdog",
+                   "El programa se colgó y el watchdog lo reinició. Revisar red y alimentación.");
+      break;
+    case ESP_RST_BROWNOUT:
+      encolarError("REINICIO_BROWNOUT", "El ESP32 se reinició por caída de tensión",
+                   "Brownout: la alimentación cayó por debajo del mínimo. Revisar la fuente de 5 V.");
+      break;
+    case ESP_RST_PANIC:
+      encolarError("REINICIO_PANIC", "El ESP32 se reinició por un error del programa",
+                   "Panic (excepción no controlada). Revisar el monitor serie.");
+      break;
+    case ESP_RST_POWERON:
+      avisoReinicioPendiente = true;
+      break;
+    default:
+      break;
+  }
 
   conectarWifi();
 }
@@ -275,9 +363,17 @@ void loop() {
 
   if (WiFi.status() != WL_CONNECTED) {
     digitalWrite(PIN_LED, LOW);
+    if (wifiPerdidoDesde == 0) wifiPerdidoDesde = millis();
     conectarWifi();
     delay(500);
     return;  // sin red no se toma ninguna acción (fail-safe)
+  }
+  if (wifiPerdidoDesde != 0) {
+    // Volvió el Wi-Fi tras una pérdida: se deja constancia (no se puede avisar mientras no hay red).
+    encolarError("WIFI_PERDIDO", "El ESP32 perdió la conexión Wi-Fi",
+                 "Sin Wi-Fi durante unos " + String((millis() - wifiPerdidoDesde) / 1000) +
+                 " s. Durante ese tiempo no se accionó ningún relé.");
+    wifiPerdidoDesde = 0;
   }
 
   if (millis() - ultimoSondeo >= INTERVALO_SONDEO_MS) {
@@ -317,6 +413,23 @@ void loop() {
     }
   }
 
+  // Arranque en frío: se avisa una vez que ya se leyó el estado inicial (así el sondeo
+  // siguiente no interpreta el cambio de estado como una orden para la máquina).
+  if (avisoReinicioPendiente && estadoDeseado != -1 && millis() - ultimoIntentoAviso >= REINTENTO_AVISO_MS) {
+    ultimoIntentoAviso = millis();
+    Serial.println("Arranque en frío: se avisa al backend (el tejido queda en pausa, sin perder la posición)");
+    if (reportarEventoFisico("reinicio")) avisoReinicioPendiente = false;
+    esp_task_wdt_reset();
+  }
+
+  // Avisos de error pendientes: solo se intenta con el backend respondiendo (sin fallos
+  // recientes), y espaciado, para no agregar pedidos si la red anda mal.
+  if (errPendiente && fallosConsecutivos == 0 && millis() - ultimoIntentoAviso >= REINTENTO_AVISO_MS) {
+    ultimoIntentoAviso = millis();
+    if (reportarError(errCodigo, errTitulo, errDetalle)) errPendiente = false;
+    esp_task_wdt_reset();
+  }
+
   delay(50);
 }
 
@@ -330,14 +443,32 @@ void loop() {
 void sincronizarConBackend() {
   HTTPClient http;
   String url = String(API_BASE_URL) + "/api/telares/" + String(TELAR_ID) + "?origen=esp32";
-  http.begin(url);
+  if (!iniciarHttp(http, url)) return;
   http.setTimeout(5000);
 
   int codigo = http.GET();
   if (codigo != 200) {
     Serial.printf("Error consultando estado: HTTP %d\n", codigo);
+    cerrarTlsSiFalla(codigo);
     http.end();
+    if (codigo == 401) {
+      Serial.println("401: la clave DEVICE_KEY no coincide con ESP32_DEVICE_KEY del backend");
+    }
+    // Varios fallos seguidos = el backend (o la red hasta él) está caído. Se marca el
+    // comienzo y, cuando vuelva a responder, se deja el aviso en el log del sistema.
+    if (++fallosConsecutivos >= FALLOS_PARA_AVISAR && !caidaBackendMarcada) {
+      caidaBackendMarcada = true;
+      caidaBackendDesde = millis();
+    }
     return;  // no se actúa con información dudosa
+  }
+
+  fallosConsecutivos = 0;
+  if (caidaBackendMarcada) {
+    caidaBackendMarcada = false;
+    encolarError("BACKEND_SIN_RESPUESTA", "El backend no respondió al ESP32",
+                 "Sin respuesta del backend durante unos " + String((millis() - caidaBackendDesde) / 1000) +
+                 " s (o la clave del dispositivo era inválida). Durante ese tiempo no se accionó ningún relé.");
   }
 
   // Solo nos interesa "estado" y "retroceder_seq"; el filtro evita gastar
@@ -423,7 +554,7 @@ bool reportarEventoFisico(const char* tipo) {
   if (WiFi.status() != WL_CONNECTED) return false;
   HTTPClient http;
   String url = String(API_BASE_URL) + "/api/telares/" + String(TELAR_ID) + "/evento-fisico";
-  http.begin(url);
+  if (!iniciarHttp(http, url)) return false;
   http.addHeader("Content-Type", "application/json");
   // 2s (no 5s): este POST puede dispararse justo después del sondeo, y la
   // suma de ambos timeouts no debe acercarse al watchdog de 15s.
@@ -439,8 +570,20 @@ bool reportarEventoFisico(const char* tipo) {
 
   if (codigo != 200) {
     Serial.printf("Error avisando evento %s: HTTP %d (se reintenta)\n", tipo, codigo);
+    cerrarTlsSiFalla(codigo);
     return false;
   }
+
+  // ROMPE EL BUCLE DE REALIMENTACIÓN. El operario aprieta Marcha a mano → se avisa al
+  // backend → el backend pone estado 'tejiendo' → el próximo sondeo vería "cambió a
+  // tejiendo" y pulsaría el relé de Marcha OTRA VEZ, un pulso que nadie pidió sobre una
+  // máquina real. Como el backend ya está al tanto, el estado que este nodo tiene por
+  // "último conocido" se actualiza acá y el sondeo siguiente no lo interpreta como una
+  // orden nueva. (Retroceder no tiene este problema: el backend no toca retroceder_seq
+  // por un botón físico.)
+  if (strcmp(tipo, "marcha") == 0)     estadoDeseado = 1;
+  else if (strcmp(tipo, "pausa") == 0) estadoDeseado = 0;
+  else if (strcmp(tipo, "reinicio") == 0) estadoDeseado = 0;   // el backend pasó a 'pausado': coincide, no se pulsa nada
   return true;
 }
 
@@ -470,24 +613,28 @@ void pulsarRele(int pin) {
 // ------------------------------------------------------------
 // POST /api/errores, dejar registro de problemas del dispositivo
 // ------------------------------------------------------------
-void reportarError(const String& titulo, const String& detalle) {
-  if (WiFi.status() != WL_CONNECTED) return;
+// Devuelve true si el backend lo recibió. La llamada es tolerante a fallos: si no llega,
+// el llamador lo deja pendiente y reintenta más tarde.
+bool reportarError(const String& codigoError, const String& titulo, const String& detalle) {
+  if (WiFi.status() != WL_CONNECTED) return false;
   HTTPClient http;
   String url = String(API_BASE_URL) + "/api/errores";
-  http.begin(url);
+  if (!iniciarHttp(http, url)) return false;
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(5000);
+  http.setTimeout(3000);
 
   JsonDocument doc;
   doc["telar_id"] = TELAR_ID;
   doc["titulo"]   = titulo;
   doc["mensaje"]  = detalle;
-  doc["codigo"]   = "ESP32";
+  doc["codigo"]   = codigoError;
 
   String cuerpo;
   serializeJson(doc, cuerpo);
-  http.POST(cuerpo);
+  const int codigo = http.POST(cuerpo);
+  cerrarTlsSiFalla(codigo);
   http.end();
+  return codigo == 200 || codigo == 201;
 }
 
 // ------------------------------------------------------------

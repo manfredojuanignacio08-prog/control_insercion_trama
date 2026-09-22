@@ -67,7 +67,7 @@ lugar del lector óptico de la cinta de papel.
   etapa de potencia, porque el sistema no conmuta la corriente de la bobina
   sino la señal del lector, que maneja mucha menos corriente. Las plaquetas del
   telar quedan intactas y siguen haciendo su trabajo.
-- **Relés de estado sólido (SSR), uno por lector óptico, seis en total óptico.** Es el punto donde más se
+- **Relés de estado sólido (SSR), uno por lector óptico, cuatro en total (una por bobina de selección).** Es el punto donde más se
   equivoca la intuición: un relé mecánico común no sirve acá. El telar trabaja
   alrededor de 200 pasadas por minuto, o sea unas 3 por segundo, y cada bobina
   puede conmutar una vez por pasada. Eso son unas 144.000 conmutaciones en un

@@ -1,5 +1,4 @@
 import path from 'path';
-import fs from 'fs';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
@@ -14,7 +13,10 @@ import telaresRouter from './routes/telares.routes.js';
 import historialRouter from './routes/historial.routes.js';
 import erroresRouter from './routes/errores.routes.js';
 import authRouter from './routes/auth.routes.js';
+import nivel2Router from './nivel2/nivel2.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { requerirSesion, requerirSesionODispositivo, esDispositivoValido } from './middleware/auth.js';
+import { aplicarMigraciones } from './db/migrator.js';
 import { pool } from './db.js';
 
 dotenv.config();
@@ -25,10 +27,12 @@ const isProd = process.env.NODE_ENV === 'production';
 
 const app = express();
 
-// Si el servidor corre detrás de un reverse proxy (Nginx, load balancer, etc.)
-// hay que avisarle a Express para que tome la IP real del cliente
-// (afecta el rate limiting y los logs). Activar con TRUST_PROXY=true en .env.
-if (process.env.TRUST_PROXY === 'true') {
+// Si el servidor corre detrás de un reverse proxy (Nginx, load balancer, Render,
+// etc.) hay que avisarle a Express para que tome la IP real del cliente (afecta el
+// rate limiting y los logs) y sepa que la conexión original era HTTPS (afecta la
+// cookie de sesión). Activar con TRUST_PROXY=true en .env. En Render se activa solo
+// (Render define la variable RENDER).
+if (process.env.TRUST_PROXY === 'true' || process.env.RENDER) {
   app.set('trust proxy', 1);
 }
 
@@ -58,11 +62,15 @@ app.use(
 
 app.use(compression());
 
-// CORS: en desarrollo permite cualquier origen. En producción, configurar
-// CORS_ORIGIN en .env con el/los dominios reales separados por coma
+// CORS: la web se sirve desde este mismo servidor (mismo origen), así que no
+// necesita CORS. En desarrollo se permite cualquier origen; en producción, si no se
+// define CORS_ORIGIN, no se habilita ninguno. Para permitir otros dominios, poner en
+// .env los dominios reales separados por coma
 // (ej: "https://control-trama.miempresa.com,https://app.miempresa.com").
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim()) : '*',
+  origin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : (isProd ? false : '*'),
 };
 app.use(cors(corsOptions));
 
@@ -73,11 +81,14 @@ app.use(morgan(isProd ? 'combined' : 'dev'));
 // ni a avanzar/retroceder (esas dos tienen su propio límite, mucho más
 // generoso, en telares.routes.js (se llaman en cada paso de la animación)).
 //
-// Tampoco aplica al sondeo del ESP32 (GET /telares/:id?origen=esp32): el
-// firmware consulta cada 2,5s, o sea ~360 pedidos cada 15 minutos, por
-// encima del límite general de 300. Sin esta excepción el propio ESP32 se
-// auto-bloqueaba a los ~12 minutos de encendido y dejaba de recibir órdenes
-// (el telar quedaba sin responder a Marcha/Pausa desde la web).
+// Tampoco aplica a los ESP32: el firmware consulta cada 2,5s, o sea ~360 pedidos
+// cada 15 minutos, por encima del límite general. Sin esta excepción el propio ESP32
+// se auto-bloqueaba a los ~12 minutos de encendido y dejaba de recibir órdenes (el
+// telar quedaba sin responder a Marcha/Pausa desde la web).
+//
+// La excepción se concede SOLO con la clave de dispositivo válida (header
+// X-Device-Key). Antes bastaba con agregar ?origen=esp32 a la URL, o sea que cualquiera
+// se salteaba el límite.
 //
 // El límite es de 900 (no 300) porque la web refresca el estado del telar
 // cada 4s = 225 pedidos cada 15 min POR PESTAÑA ABIERTA. Con dos personas
@@ -92,7 +103,7 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
   skip: (req) =>
     /\/telares\/[^/]+\/(avanzar|retroceder)$/.test(req.path) ||
-    req.query.origen === 'esp32',
+    esDispositivoValido(req),
   message: { error: 'Demasiadas solicitudes, intentá de nuevo más tarde.' },
 });
 app.use('/api', apiLimiter);
@@ -101,11 +112,16 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true, timestamp: new Date().toISOString() });
 });
 
+// ─── Rutas ───────────────────────────────────────────────────────────
+// /api/health y /api/auth/* son públicas (hay que poder entrar para tener sesión).
+// Todo lo demás exige sesión de operario o clave de dispositivo; cada ruta de
+// escritura aclara además quién puede llamarla (ver routes/*.js).
 app.use('/api/auth', authRouter);
-app.use('/api/patrones', patronesRouter);
-app.use('/api/telares', telaresRouter);
-app.use('/api/historial', historialRouter);
-app.use('/api/errores', erroresRouter);
+app.use('/api/patrones', requerirSesion, patronesRouter);
+app.use('/api/telares', requerirSesionODispositivo, telaresRouter);
+app.use('/api/telares', requerirSesionODispositivo, nivel2Router);   // Nivel 2: patron-actual y pasadas
+app.use('/api/historial', requerirSesion, historialRouter);
+app.use('/api/errores', requerirSesionODispositivo, erroresRouter);
 
 // Cualquier ruta /api/* no manejada arriba -> 404 limpio en JSON
 app.use('/api', (req, res) => {
@@ -122,39 +138,32 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(errorHandler);
 
 // ─── Migraciones automáticas al arrancar ─────────────────────────────
-// Aplica las migraciones (migracion_*.sql) al iniciar el servidor. Todas
-// usan "IF NOT EXISTS", así que correrlas de nuevo no rompe nada: si la
-// columna/tabla ya existe, no hace nada. Esto evita el típico error 500
-// por una columna que falta cuando alguien se olvida de correr "npm run
-// migrate" a mano. Cada archivo va en su propio try/catch para que un
-// problema en uno no frene a los demás.
-async function aplicarMigraciones() {
+// Aplica las migraciones pendientes (db/migracion_*.sql) al iniciar el servidor.
+// Cada una se aplica UNA sola vez (tabla migraciones_aplicadas) y dentro de una
+// transacción. Ver db/migrator.js. Si alguna falla, el servidor arranca igual pero
+// deja el error bien visible en el log.
+async function correrMigraciones() {
   try {
-    const dir = path.join(__dirname, 'db');
-    const archivos = fs
-      .readdirSync(dir)
-      .filter((f) => /^migracion_\d+.*\.sql$/.test(f))
-      .sort();
-    let aplicadas = 0;
-    for (const archivo of archivos) {
-      try {
-        const sql = fs.readFileSync(path.join(dir, archivo), 'utf-8');
-        await pool.query(sql);
-        aplicadas++;
-      } catch (err) {
-        console.warn(`  ⚠ Migración ${archivo} no se pudo aplicar (se continúa): ${err.message}`);
-      }
-    }
-    if (archivos.length) console.log(`Migraciones verificadas al arranque (${aplicadas}/${archivos.length}).`);
+    await aplicarMigraciones();
   } catch (err) {
-    console.error('No se pudieron leer las migraciones:', err.message);
+    console.error('No se pudieron aplicar las migraciones:', err.message);
     console.error('Podés correrlas a mano con: npm run migrate');
+  }
+}
+
+if (isProd) {
+  if (!process.env.ESP32_DEVICE_KEY) {
+    console.warn('⚠ ESP32_DEVICE_KEY no está definida: los ESP32 no van a poder conectarse (la API los rechaza).');
+  }
+  if (!process.env.WEBAUTHN_RP_ID || !process.env.WEBAUTHN_ORIGIN) {
+    console.warn('⚠ WEBAUTHN_RP_ID / WEBAUTHN_ORIGIN no están definidas: el login por huella toma el dominio del pedido, ' +
+                 'lo que debilita la protección anti-phishing de WebAuthn. Definirlas en producción.');
   }
 }
 
 const PORT = process.env.PORT || 3000;
 let server;
-aplicarMigraciones().finally(() => {
+correrMigraciones().finally(() => {
   server = app.listen(PORT, () => {
     console.log(`Servidor escuchando en http://localhost:${PORT} (NODE_ENV=${process.env.NODE_ENV || 'development'})`);
   });

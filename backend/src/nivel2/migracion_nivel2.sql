@@ -1,33 +1,7 @@
--- ============================================================================
---  Nivel 2, cambios en el esquema
+-- Este archivo ya no contiene nada que ejecutar.
 --
---  EN DESARROLLO: no aplicada en la base de producción.
---
---  El Nivel 2 no necesita tablas nuevas. Lo único que agrega es distinguir el
---  conteo real del sensor del que hoy se estima por tiempo, para que se pueda
---  comparar uno contra otro durante la etapa de validación.
--- ============================================================================
-
--- Las pasadas que efectivamente reportó el sensor inductivo. Se mantiene
--- separada de pasadas_totales, que hoy es una estimación por tiempo: durante la
--- jornada de validación hay que poder ver las dos y compararlas.
-ALTER TABLE historial_produccion
-  ADD COLUMN IF NOT EXISTS pasadas_sensor INTEGER NOT NULL DEFAULT 0;
-
--- Deja constancia de si el número de arriba viene del sensor o es estimado.
--- Mientras sea falso, cualquier cálculo derivado (metros, tiempos) es aproximado.
-ALTER TABLE historial_produccion
-  ADD COLUMN IF NOT EXISTS conteo_validado BOOLEAN NOT NULL DEFAULT false;
-
--- Cuántas pasadas tiene la pieza. Al alcanzarlas corresponde detener el telar.
--- Queda en cero mientras no se use, y la parada automática solo se habilita
--- cuando conteo_validado sea verdadero.
-ALTER TABLE historial_produccion
-  ADD COLUMN IF NOT EXISTS pasadas_objetivo INTEGER NOT NULL DEFAULT 0;
-
-COMMENT ON COLUMN historial_produccion.pasadas_sensor IS
-  'Pasadas reportadas por el sensor inductivo del Bloque C. Distinto de pasadas_totales, que puede ser una estimación por tiempo.';
-COMMENT ON COLUMN historial_produccion.conteo_validado IS
-  'Verdadero solo después de comparar el conteo del sensor contra el contador mecánico del telar durante una jornada completa.';
-COMMENT ON COLUMN historial_produccion.pasadas_objetivo IS
-  'Pasadas que tiene la pieza. Cero significa sin objetivo. La parada automática requiere conteo_validado en verdadero.';
+-- Las columnas pasadas_sensor, conteo_validado y pasadas_objetivo pasaron a la
+-- migración común backend/src/db/migracion_012_conteo_sensor_y_retrocesos.sql, que
+-- se aplica sola al arrancar el servidor (y con `npm run migrate`). Se dejó de
+-- mantener acá porque, al no aplicarse nunca, el resto del backend no podía
+-- apoyarse en esas columnas.

@@ -4,14 +4,16 @@ import { badRequest } from '../middleware/errorHandler.js';
 // GET /api/errores?telar_id=&limit=
 export async function listarErrores(req, res, next) {
   try {
-    const { telar_id, limit = 50 } = req.query;
+    const { telar_id } = req.query;
+    // Number("abc") es NaN y rompía la consulta: se valida y se acota (1 a 500).
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 500);
     const params = [];
     let query = 'SELECT * FROM errores_log';
     if (telar_id) {
       params.push(telar_id);
       query += ` WHERE telar_id = $${params.length}`;
     }
-    params.push(Number(limit));
+    params.push(limit);
     query += ` ORDER BY creado_at DESC LIMIT $${params.length}`;
     const { rows } = await pool.query(query, params);
     res.json(rows);

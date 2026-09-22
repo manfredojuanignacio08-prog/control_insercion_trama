@@ -99,9 +99,38 @@ son estimaciones y no deben darse por buenos.
 - `sensor_pasada.h`, el conteo de pasadas (Bloque C)
 - `seleccion_dibujo.h`, el comando de los cuatro canales (Bloque D)
 
+## Cómo está organizado (dos núcleos)
+
+`loop()` (núcleo 1) es solo tiempo real: cuenta pulsos y aplica filas, sin esperar nunca
+a la red. Toda la red (consultas, descarga del dibujo, reporte de pasadas, aviso de
+parada) corre en `tareaRed()` (núcleo 0). Antes todo estaba en `loop()` y una consulta
+lenta dejaba pasar hasta 30 pasadas con la fila anterior congelada.
+
+Mismas librerías que el Nivel 1: core ESP32 3.x y ArduinoJson 7.x. La URL del backend,
+el `TELAR_ID` (8) y la clave `DEVICE_KEY` son los mismos que en el Nivel 1.
+
+## Retomar tras un corte de luz o un traslado
+
+Al arrancar, el nodo baja del backend el dibujo asignado, la **fila donde quedó** y el **conteo de
+pasadas**, y sigue desde ahí (no desde la fila 1). Mientras teje reporta la posición cada segundo y
+una vez más al pausar, así que en una pausa normal se retoma exacto, y ante un corte de luz se pierden
+como mucho ~5 pasadas (la posición queda marcada como incierta para que el operario la verifique).
+
+## El sensor como detector de parada
+
+Si con el telar en "tejiendo" no llega ningún pulso durante `TIMEOUT_SIN_PULSOS_MS` (3 s;
+en el arranque rige `GRACIA_ARRANQUE_MS`, 15 s, hasta el primer pulso), el firmware apaga
+los canales y avisa al backend (`evento-fisico` con `sin_senal`), que pasa el telar a
+"pausado" y deja un registro en el log de errores. El Nivel 1 ve el cambio de estado y
+pulsa Pausa: ante una parada inesperada, el sistema termina con la máquina detenida.
+
 ## Cómo probarlo sin el telar
 
 `config_nivel2.h` tiene una constante `MODO_BANCO`. Con ella en `true`, el
 programa no espera pulsos reales del sensor: los genera él mismo a 5 por segundo,
 que es el ritmo del telar a 300 pasadas por minuto. Sirve para verificar la
 lógica de avance y el comando de las salidas con un LED en cada canal.
+
+**Por defecto está en `false`, y tiene que volver a `false` antes de instalar**: con el
+modo banco activo el firmware ignora el sensor real y aplica las filas al ritmo de un
+reloj interno, desfasado del telar.

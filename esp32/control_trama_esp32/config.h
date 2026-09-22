@@ -55,26 +55,40 @@
 
 
 // ---- Dónde está corriendo el backend Node.js ----
-// SIN barra final. Ejemplos:
-//   - Backend corriendo en una PC de la misma red:  "http://192.168.1.50:3000"
-//   - Backend desplegado en la nube con dominio:    "https://tu-backend.onrender.com"
+// SIN barra final. Es el MISMO valor que usa el Nivel 2 (config_nivel2.h): los dos
+// nodos tienen que hablar con el mismo backend. Antes cada uno apuntaba a uno distinto
+// (una PC de la red local vs. Render) y uno de los dos quedaba sin servidor.
+//   - Backend desplegado en la nube (Render):        "https://control-trama-backend.onrender.com"
+//   - Alternativa, backend en una PC de la red local: "http://192.168.1.50:3000"
 //
 // OJO: tiene que ser la URL del BACKEND (Node/Express), NO la de la base de datos.
 // El ESP32 nunca habla directo con la base de datos: siempre pasa por la
 // API, igual que la web y la app, así todas las reglas de negocio
 // (transacciones, validaciones, bloqueos) se aplican también al hardware.
-#define API_BASE_URL  "http://192.168.1.50:3000"
+#define API_BASE_URL  "https://control-trama-backend.onrender.com"
+
+// ---- Verificación del certificado HTTPS ----
+// Con una URL https://, si NO se define API_CA_CERT el nodo se conecta sin verificar el
+// certificado del servidor (setInsecure): cifra el tráfico pero no comprueba con quién
+// habla. Para verificarlo, pegar acá el certificado raíz de la CA que firma el dominio del
+// backend (en formato PEM) y descomentar:
+// #define API_CA_CERT "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
+
+// ---- Clave del dispositivo ----
+// La API rechaza (401) todo pedido sin sesión de operario o sin esta clave, y el ESP32 no
+// tiene sesión: manda esta clave en el header X-Device-Key en cada pedido. Tiene que ser
+// IGUAL a ESP32_DEVICE_KEY en el .env del backend, y la misma en el Nivel 2.
+// Generar una clave larga y al azar (no la reutilices en otro lado).
+#define DEVICE_KEY    "CAMBIAR_POR_LA_CLAVE_DE_ESP32_DEVICE_KEY"
 
 // ---- Qué telar controla ESTE dispositivo ----
-// Por ahora hay un solo telar (id 1). Si en el futuro hay varios, cada
-// ESP32 lleva grabado el id del telar físico al que está conectado.
-// OJO: tiene que coincidir con el telar que la web está mostrando. Hoy la
-// web usa el PRIMER telar de la base (telares[0]), que con una sola máquina
-// creada es el id 1. Si algún día se crea otro telar, o se borra y recrea el
-// primero (el id es SERIAL, no se reutiliza), este número puede quedar
-// apuntando a un telar distinto del que se ve en pantalla: la web mostraría
-// un estado y el ESP32 estaría accionando otro. Verificar en ese caso.
-#define TELAR_ID      1
+// Id del telar en la base de datos. El telar registrado tiene el id 8, y es el mismo
+// número que usa el Nivel 2. (Antes este archivo decía 1 y el Nivel 2 decía 8: el
+// Nivel 1 habría accionado un telar distinto del que muestra la web.)
+// Si algún día se crea otro telar, o se borra y recrea (el id es SERIAL, no se
+// reutiliza), este número puede quedar apuntando a un telar distinto del que se ve en
+// pantalla. Verificar en ese caso.
+#define TELAR_ID      8
 
 // ---- Polaridad de CADA módulo de relé ----
 // La mayoría de los módulos optoacoplados de 5V se activan con nivel BAJO

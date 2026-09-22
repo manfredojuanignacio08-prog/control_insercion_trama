@@ -6,12 +6,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      # Definir POSTGRES_PASSWORD en el entorno o en un archivo .env junto a este compose.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definí POSTGRES_PASSWORD}
       POSTGRES_DB: control_trama
     volumes:
       - db_data:/var/lib/postgresql/data
+    # Solo accesible desde esta misma máquina (la API llega por la red interna de Docker).
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
@@ -28,12 +30,18 @@ services:
       PGHOST: db
       PGPORT: 5432
       PGUSER: postgres
-      PGPASSWORD: postgres
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Definí POSTGRES_PASSWORD}
       PGDATABASE: control_trama
       PORT: 3000
       NODE_ENV: production
-      CORS_ORIGIN: "*"
+      # Vacío = sin CORS (la web se sirve desde este mismo servidor).
+      CORS_ORIGIN: "${CORS_ORIGIN:-}"
       TRUST_PROXY: "false"
+      SESSION_SECRET: ${SESSION_SECRET:?Definí SESSION_SECRET (mínimo 32 caracteres)}
+      ESP32_DEVICE_KEY: ${ESP32_DEVICE_KEY:?Definí ESP32_DEVICE_KEY}
+      REGISTRO_LIBRE_MAX: ${REGISTRO_LIBRE_MAX:-3}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-}
+      WEBAUTHN_ORIGIN: ${WEBAUTHN_ORIGIN:-}
     ports:
       - "3000:3000"
     # Crea/actualiza el esquema, aplica la migración y recién ahí levanta el server
