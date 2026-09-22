@@ -156,3 +156,20 @@ oscuro; el botón Guardar de la ficha del dibujo usaba una clase que no existe e
 botón principal en modo oscuro conservaba un texto bordó de la paleta vieja. Además, cada
 tarjeta de la biblioteca tiene ahora un botón **Estadísticas** que despliega el resumen de
 producción del dibujo.
+
+## Séptima pasada: revisión completa y preparación del despliegue
+
+- **Reproducir como invitado disparaba un bucle.** El rechazo de asignar el dibujo se registraba
+  pero la animación arrancaba igual: cada medio segundo pedía avanzar, era rechazado, mostraba el
+  aviso y guardaba un error en la base. Ahora ▶ le responde al invitado con un aviso único, sin
+  ninguna llamada, haya o no un telar cargado.
+- **El registro de errores aceptaba escrituras de invitados** (`requerirOperarioODispositivo`
+  en `POST /api/errores`), y la web ya no las intenta.
+- **En una base vacía, el invitado veía el aviso de "no podés controlar el telar" sin tocar
+  nada**, porque la web intentaba dar de alta el telar. Ahora no lo intenta.
+- **`TELAR_ID`**: la guía daba por hecho que era 8. La web usa el primer telar ordenado por
+  código, así que se reemplazó por una verificación.
+- `engines` en `package.json`, para que Render no elija otra versión de Node.
+- Probada la migración 013 con dos producciones abiertas en el mismo telar: cierra la más vieja
+  como detenida, sin borrar nada, y crea el índice.
+- Nuevo `DESPLIEGUE_RENDER.md` con el paso a paso.

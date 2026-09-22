@@ -74,8 +74,13 @@ Hasta validarlo, los metros de las estadísticas figuran como **estimados** (≈
 
 - [ ] Claves cargadas en Render y en los dos `config` (sección 1).
 - [ ] `N_CANALES = 4` y `elementos_seleccion = 4` (ya están así).
-- [ ] `TELAR_ID = 8` en los dos firmwares.
-- [ ] Migraciones 009, 012 y 013 probadas antes en una base de prueba (no directo en Neon).
+- [ ] `TELAR_ID` de los dos firmwares igual al id del telar que muestra la web. Con la sesión
+      iniciada, abrir `https://control-trama-backend.onrender.com/api/telares`: la web usa el
+      **primero de esa lista** (ordenada por código, no por id). Su `id` es el que va en
+      `TELAR_ID`. Si no coinciden, la web muestra un telar y la placa acciona otro; el síntoma es
+      que la web marca "Sin datos del ESP32" aunque la placa esté conectada.
+- [ ] Migraciones probadas antes en una base de prueba (no directo en Neon). Ya se verificaron
+      sobre una copia con datos de producción: se aplican y los datos se conservan.
 - [ ] `MODO_BANCO = false` en `config_nivel2.h`.
 - [ ] Medición con osciloscopio hecha y ajustes cargados (sección 2).
 - [ ] Un canal armado y probado en la máquina **antes** de armar los otros tres.
