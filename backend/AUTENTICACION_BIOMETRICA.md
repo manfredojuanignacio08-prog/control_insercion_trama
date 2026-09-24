@@ -188,3 +188,10 @@ esa cookie o, en el caso de los ESP32, la clave de dispositivo (`X-Device-Key`).
   `REGISTRO_LIBRE_MAX` usuarios (por defecto 3).
 - En producción, definir `WEBAUTHN_RP_ID` y `WEBAUTHN_ORIGIN`: si no, el dominio se toma del
   header `Origin` del pedido, lo que debilita la protección anti-phishing de WebAuthn.
+
+## Invitaciones desde la aplicación
+
+Desde el cuarto usuario, registrarse requiere un código de invitación. Lo genera cualquier usuario
+registrado con huella desde Inicio, con el botón **Invitar a alguien (generar código)**, que llama a
+`POST /api/auth/invitacion`. El código se muestra una sola vez, sirve para un único registro y vence a
+los siete días (`INVITACION_TTL_DIAS`). Un invitado no puede generarlos.

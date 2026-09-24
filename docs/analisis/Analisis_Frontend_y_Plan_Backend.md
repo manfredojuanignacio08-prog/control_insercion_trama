@@ -295,7 +295,7 @@ actual está `marcosActivosDeFila()`, que es lo que va a usar el ESP32 cuando
 controle el Nivel 2.
 
 La cantidad de filas y columnas **no está fija en ningún lado**: el editor
-admite de 2 a 32 en cada dimensión, y el backend guarda la matriz con las
+admite de 1 a 100 (filas) y 1 a 8 (columnas) en cada dimensión, y el backend guarda la matriz con las
 dimensiones que reciba. Si el telar suma bobinas, alcanza con cambiar las
 columnas en el editor.
 

@@ -96,7 +96,7 @@ function generarCodigo(prefijo) {
 // Valida un código de invitación. Devuelve {ok, id?, motivo?}.
 async function validarInvitacion(codigo) {
   if (!codigo || typeof codigo !== 'string' || !codigo.trim()) {
-    return { ok: false, motivo: 'Falta el código de invitación.' };
+    return { ok: false, motivo: 'Ya hay tres usuarios registrados: para crear una cuenta nueva hace falta un código de invitación. Pedíselo a alguien que ya tenga cuenta.' };
   }
   const h = hashCodigo(codigo);
   const { rows } = await pool.query(

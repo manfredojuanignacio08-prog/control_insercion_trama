@@ -162,7 +162,7 @@ src/
 │   ├── migracion_006_ping_esp32.sql             Migración: ultimo_ping_esp32 (heartbeat del ESP32)
 │   ├── migracion_007_retroceder_fisico.sql      Migración: retroceder_seq (botón físico Retroceder)
 │   ├── migracion_008_evento_fisico.sql          Migración: posicion_incierta + ultimo_evento_manual (sensado de los botones)
-- `migracion_009_rango_dimensiones.sql`: acota filas y columnas al rango 2 a 32, el mismo que valida el editor y que soporta el firmware.
+- `migracion_009_rango_dimensiones.sql`: acota filas y columnas al rango 1 a 100 (filas) y 1 a 8 (columnas), el mismo que valida el editor y que soporta el firmware.
 - `migracion_010_elementos_seleccion.sql`: guarda cuántos elementos de selección (bobinas) tiene cada telar, para avisar cuando un dibujo tiene más columnas de las que la máquina puede accionar. Documenta además que `columna_actual` es vestigial y queda siempre en cero.
 - `migracion_011_metros_por_pasada.sql`: guarda cuántos metros avanza la tela en una pasada, para convertir el conteo en metros reales y calcular estadísticas de producción.
 - `migracion_012_conteo_sensor_y_retrocesos.sql`: separa el conteo estimado del medido por el sensor (`pasadas_sensor`, `conteo_validado`), agrega `retrocesos_contados`, `ultimo_reporte_sensor` y `motivo_pausa`.

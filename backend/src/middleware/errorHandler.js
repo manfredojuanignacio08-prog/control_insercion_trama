@@ -1,7 +1,24 @@
 // Middleware centralizado de manejo de errores.
 // Cualquier controller que llame a next(err) termina acá.
 export function errorHandler(err, req, res, next) {
-  console.error(err);
+  if (!err.status || err.status >= 500) console.error(err);
+
+  // Datos mal formados que llegan hasta PostgreSQL: un id que no es número, un número
+  // fuera de rango, un campo obligatorio vacío o un valor que viola una restricción.
+  // Son errores del pedido, no del servidor: se responde 400 con un mensaje propio y
+  // nunca el texto interno de la base, que expondría nombres de tipos y columnas.
+  const DATOS_INVALIDOS = {
+    '22P02': 'Algún dato del pedido no tiene el formato esperado (por ejemplo, un número escrito como texto).',
+    '22003': 'Algún número del pedido está fuera del rango permitido.',
+    '22001': 'Algún texto del pedido es demasiado largo.',
+    '22007': 'Alguna fecha del pedido no tiene un formato válido.',
+    '22008': 'Alguna fecha del pedido está fuera de rango.',
+    '23502': 'Falta un dato obligatorio.',
+    '23514': 'Algún valor está fuera de los límites permitidos.',
+  };
+  if (DATOS_INVALIDOS[err.code]) {
+    return res.status(400).json({ error: DATOS_INVALIDOS[err.code] });
+  }
 
   // Violación de UNIQUE (ej: nombre de patrón o código de telar repetido)
   if (err.code === '23505') {

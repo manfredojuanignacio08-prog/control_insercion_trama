@@ -31,8 +31,8 @@ export async function obtenerPatronActual(req, res, next) {
     // memoria volvió a cero y sin este dato retomaría el dibujo desde la primera
     // fila, dejando un salto visible en la tela a mitad de una pieza.
     const { rows } = await pool.query(
-      `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas,
-              h.fila_actual, h.pasadas_sensor
+      `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas, p.repeticiones_por_fila,
+              h.fila_actual, h.repeticion_en_fila, h.pasadas_sensor
          FROM telares t
          JOIN patrones p ON p.id = t.patron_actual_id
          LEFT JOIN historial_produccion h
@@ -55,9 +55,13 @@ export async function obtenerPatronActual(req, res, next) {
       filas: p.filas,
       columnas: p.columnas,
       matriz_pasadas: p.matriz_pasadas,
+      // Cuántas pasadas seguidas se teje cada fila. Si el dibujo no lo define, se
+      // manda un 1 por fila: el nodo no tiene que interpretar ausencias.
+      repeticiones_por_fila: p.repeticiones_por_fila ?? Array.from({ length: p.filas }, () => 1),
       // Posición de la producción en curso, para que el nodo retome donde quedó.
       // En null si no hay producción abierta: ahí el nodo arranca desde el principio.
       fila_actual: p.fila_actual ?? null,
+      repeticion_en_fila: p.repeticion_en_fila ?? 0,
       pasadas_sensor: p.pasadas_sensor ?? null,
     });
   } catch (err) {
@@ -83,7 +87,7 @@ export async function reportarPasadas(req, res, next) {
   try {
     const telarId = Number(req.params.id);
     const pasadasSensor = req.body.pasadas_sensor ?? req.body.pasadas_totales;
-    const { fila_actual } = req.body;
+    const { fila_actual, repeticion_en_fila } = req.body;
 
     if (!Number.isInteger(telarId)) throw badRequest('El identificador del telar debe ser un número.');
     if (!Number.isInteger(pasadasSensor) || pasadasSensor < 0) {
@@ -95,7 +99,7 @@ export async function reportarPasadas(req, res, next) {
     // Se bloquea la fila del historial mientras se actualiza, para que dos
     // reportes seguidos no se pisen entre sí.
     const { rows } = await cliente.query(
-      `SELECT h.id, h.pasadas_sensor, p.filas
+      `SELECT h.id, h.pasadas_sensor, p.filas, p.repeticiones_por_fila
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -129,15 +133,29 @@ export async function reportarPasadas(req, res, next) {
       ? fila_actual
       : null;
 
+    // Cuántas pasadas de la fila actual ya se tejieron. El nodo la manda para que
+    // una reanudación caiga en la pasada exacta y no al principio de la fila.
+    const repValida = Number.isInteger(repeticion_en_fila) && repeticion_en_fila >= 0
+      ? repeticion_en_fila
+      : null;
+
+    // Una vuelta completa del dibujo son la SUMA de las repeticiones, no la
+    // cantidad de filas: una fila con 100 repeticiones son 100 pasadas.
+    const reps = Array.isArray(actual.repeticiones_por_fila) ? actual.repeticiones_por_fila : null;
+    const pasadasPorVuelta = reps && reps.length
+      ? reps.reduce((a, r) => a + (Number(r) || 1), 0)
+      : actual.filas;
+
     await cliente.query(
       `UPDATE historial_produccion
           SET pasadas_sensor = $1,
               fila_actual = COALESCE($2, fila_actual),
               columna_actual = 0,
               pasada_actual = 0,
+              repeticion_en_fila = COALESCE($5, repeticion_en_fila),
               vueltas_completadas = $4
         WHERE id = $3`,
-      [pasadasSensor, filaValida, actual.id, Math.floor(pasadasSensor / actual.filas)]
+      [pasadasSensor, filaValida, actual.id, Math.floor(pasadasSensor / Math.max(1, pasadasPorVuelta)), repValida]
     );
 
     // Heartbeat del sensor: mientras sea reciente, la web deja de avanzar por reloj.

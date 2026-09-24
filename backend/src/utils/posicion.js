@@ -11,10 +11,15 @@
  * porque son simultáneas dentro de la misma pasada. Lo que avanza, pasada a
  * pasada, es la FILA.
  *
- * Si se quiere repetir una pasada, se dibuja la misma fila dos veces. No existe
- * "repetición por celda": ese era el modelo viejo, que se descartó. Por eso la
- * posición es solo un número (fila_actual) y avanzar/retroceder son espejos
- * exactos: una pasada adelante = una fila más; una pasada atrás = una fila menos.
+ * REPETICIONES (migración 014): cada fila lleva cuántas pasadas seguidas se teje.
+ * En un tejido real es habitual que la misma combinación se repita cien o mil
+ * veces, y dibujar cien filas idénticas era impracticable. Por eso la posición
+ * son DOS números: la fila y cuántas pasadas de esa fila ya se tejieron
+ * (repeticion_en_fila). Una pasada adelante suma una repetición, y solo cuando se
+ * agotan las de esa fila se pasa a la siguiente. Retroceder es el espejo exacto.
+ *
+ * Sin repeticiones (dibujos viejos, o el array ausente) se asume una por fila y
+ * todo se comporta como antes: una pasada = una fila.
  *
  * El dibujo se teje en bucle (la cinta de papel del telar es un lazo): pasada la
  * última fila se vuelve a la primera, y retrocediendo desde la primera se llega
@@ -31,6 +36,19 @@ export function marcosActivosDeFila(fila) {
   return fila.reduce((acc, v, i) => ((Number(v) || 0) > 0 ? [...acc, i] : acc), []);
 }
 
+/**
+ * Normaliza las repeticiones a un array de un elemento por fila. Si no vienen, o
+ * vienen incompletas, se asume 1: una pasada por fila, el comportamiento anterior.
+ */
+function normalizarRepeticiones(reps, filas) {
+  const out = [];
+  for (let i = 0; i < filas; i++) {
+    const r = Array.isArray(reps) ? Number(reps[i]) : NaN;
+    out.push(Number.isInteger(r) && r >= 1 ? r : 1);
+  }
+  return out;
+}
+
 function contarFilas(matrizOFilas) {
   if (Array.isArray(matrizOFilas)) return matrizOFilas.length;
   const n = Number(matrizOFilas);
@@ -42,16 +60,33 @@ function contarFilas(matrizOFilas) {
  * `matrizOFilas` puede ser la matriz del dibujo o directamente su cantidad de filas.
  * Devuelve la nueva fila y cuántas vueltas completas del dibujo se dieron.
  */
-export function avanzarPosicionTejido(filaActual, matrizOFilas, pasos = 1) {
+export function avanzarPosicionTejido(filaActual, matrizOFilas, pasos = 1, repeticiones = null, repeticionEnFila = 0) {
   const filas = contarFilas(matrizOFilas);
-  if (filas === 0) return { fila_actual: 0, columna_actual: 0, pasada_actual: 0, vueltas_completadas: 0 };
+  if (filas === 0) {
+    return { fila_actual: 0, columna_actual: 0, pasada_actual: 0, repeticion_en_fila: 0, vueltas_completadas: 0 };
+  }
+  const reps = normalizarRepeticiones(repeticiones, filas);
 
-  const total = (Number(filaActual) || 0) + Math.max(0, Math.trunc(pasos));
+  let fila = ((Number(filaActual) || 0) % filas + filas) % filas;
+  let dentro = Math.max(0, Math.trunc(Number(repeticionEnFila) || 0));
+  if (dentro >= reps[fila]) dentro = 0;   // dato incoherente: se reencuadra
+  let vueltas = 0;
+
+  for (let i = 0; i < Math.max(0, Math.trunc(pasos)); i++) {
+    dentro++;
+    if (dentro >= reps[fila]) {
+      dentro = 0;
+      fila++;
+      if (fila >= filas) { fila = 0; vueltas++; }
+    }
+  }
+
   return {
-    fila_actual: total % filas,
+    fila_actual: fila,
     columna_actual: 0,
     pasada_actual: 0,
-    vueltas_completadas: Math.floor(total / filas),
+    repeticion_en_fila: dentro,
+    vueltas_completadas: vueltas,
   };
 }
 
@@ -63,20 +98,33 @@ export function avanzarPosicionTejido(filaActual, matrizOFilas, pasos = 1) {
  * `vueltas_deshechas` cuenta cuántas veces se cruzó el inicio hacia atrás, para
  * que quien llama pueda descontarlas de vueltas_completadas.
  */
-export function retrocederPosicionTejido(filaActual, matrizOFilas, pasos = 1) {
+export function retrocederPosicionTejido(filaActual, matrizOFilas, pasos = 1, repeticiones = null, repeticionEnFila = 0) {
   const filas = contarFilas(matrizOFilas);
-  if (filas === 0) return { fila_actual: 0, columna_actual: 0, pasada_actual: 0, vueltas_deshechas: 0, al_inicio: false };
+  if (filas === 0) {
+    return { fila_actual: 0, columna_actual: 0, pasada_actual: 0, repeticion_en_fila: 0, vueltas_deshechas: 0, al_inicio: false };
+  }
+  const reps = normalizarRepeticiones(repeticiones, filas);
 
-  const desde = Number(filaActual) || 0;
-  const n = Math.max(0, Math.trunc(pasos));
-  const destino = desde - n;
-  const vueltasDeshechas = destino >= 0 ? 0 : Math.ceil(-destino / filas);
-  const fila = ((destino % filas) + filas) % filas;
+  let fila = ((Number(filaActual) || 0) % filas + filas) % filas;
+  let dentro = Math.max(0, Math.trunc(Number(repeticionEnFila) || 0));
+  if (dentro >= reps[fila]) dentro = 0;
+  let vueltasDeshechas = 0;
+
+  for (let i = 0; i < Math.max(0, Math.trunc(pasos)); i++) {
+    if (dentro > 0) {
+      dentro--;                       // se deshace una pasada dentro de la misma fila
+    } else {
+      fila--;
+      if (fila < 0) { fila = filas - 1; vueltasDeshechas++; }
+      dentro = reps[fila] - 1;        // queda en la última pasada de la fila anterior
+    }
+  }
 
   return {
     fila_actual: fila,
     columna_actual: 0,
     pasada_actual: 0,
+    repeticion_en_fila: dentro,
     vueltas_deshechas: vueltasDeshechas,
     al_inicio: vueltasDeshechas > 0,
   };

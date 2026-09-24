@@ -110,14 +110,14 @@ assert.equal(x.r.body.al_inicio, true); assert.deepEqual(x.log.find(l=>/UPDATE h
 // 8) actualizarPatron bloqueado con producción abierta
 const body = { nombre:'Raya', filas:4, columnas:4, matriz_pasadas:[[1,0,1,0],[0,1,0,1],[1,1,0,0],[1,1,1,1]] };
 globalThis.__q = (sql) => {
-  if (/SELECT filas, columnas, matriz_pasadas FROM patrones/.test(sql)) return { rows:[{filas:4, columnas:4, matriz_pasadas:MAT}] };
+  if (/SELECT filas, columnas, matriz_pasadas[\s\S]*FROM patrones/.test(sql)) return { rows:[{filas:4, columnas:4, matriz_pasadas:MAT}] };
   if (/JOIN historial_produccion h ON h.telar_id = t.id/.test(sql)) return { rows:[{codigo:'TELAR-01'}] };
 };
 x = await call(P.actualizarPatron, { params:{id:'3'}, body });
 assert.equal(x.err?.status, 409); assert.equal(x.err.codigo, 'PATRON_EN_PRODUCCION');
 // mismo contenido (solo renombrar) => pasa el bloqueo
 globalThis.__q = (sql) => {
-  if (/SELECT filas, columnas, matriz_pasadas FROM patrones/.test(sql)) return { rows:[{filas:4, columnas:4, matriz_pasadas:MAT}] };
+  if (/SELECT filas, columnas, matriz_pasadas[\s\S]*FROM patrones/.test(sql)) return { rows:[{filas:4, columnas:4, matriz_pasadas:MAT}] };
   if (/UPDATE patrones/.test(sql)) return { rows:[{id:3}] };
 };
 x = await call(P.actualizarPatron, { params:{id:'3'}, body:{...body, nombre:'Raya 2', matriz_pasadas:MAT} });
@@ -140,7 +140,8 @@ const rp = (actual) => { globalThis.__q = (sql) => {
   if (/FROM historial_produccion h JOIN patrones p ON p.id = h.patron_id WHERE h.telar_id = \$1 AND h.estado = 'en_curso' ORDER BY/.test(sql)) return { rows:[actual] }; }; };
 rp({id:5, pasadas_sensor:100, filas:4});
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:120, fila_actual:2} });
-assert.equal(x.r.body.aplicado, true); const up = x.log.find(l=>/SET pasadas_sensor = \$1/.test(l.sql)); assert.deepEqual(up.params, [120,2,5,30]);
+assert.equal(x.r.body.aplicado, true); const up = x.log.find(l=>/SET pasadas_sensor = \$1/.test(l.sql)); // El quinto parámetro es repeticion_en_fila (null si el nodo no la manda).
+assert.deepEqual(up.params, [120,2,5,30,null]);
 assert(x.log.some(l=>/ultimo_reporte_sensor = now\(\)/.test(l.sql)));
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:3, fila_actual:1} });   // reinicio del nodo: cae de 100 a 3
 assert.equal(x.r.body.aplicado, false); assert.equal(x.r.body.pasadas_sensor, 100);
@@ -226,3 +227,23 @@ globalThis.__q = () => ({ rows:[{n:5}] }); x = await callA(A.estadoRegistro, {})
 
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log('controladores OK');
+
+// ── control de edición simultánea (version_esperada) ──
+{
+  const V = new Date('2026-09-20T10:00:00.123Z');
+  const poolV = { query: async (sql) => {
+    if (/SELECT filas, columnas, matriz_pasadas[\s\S]*FROM patrones/.test(sql)) return { rows:[{filas:2, columnas:2, matriz_pasadas:[[1,0],[0,1]], version:V}] };
+    if (/historial_produccion/.test(sql)) return { rows:[] };
+    if (/UPDATE patrones/.test(sql)) return { rows:[{id:1, modificado_at:new Date()}] };
+    return { rows:[] };
+  } };
+  const P2 = await import('../src/controllers/patrones.controller.js');
+  const base = { nombre:'X', filas:2, columnas:2, matriz_pasadas:[[1,0],[0,1]] };
+  const correr = async (body) => { let err=null, st=200; const res={ status(c){st=c;return this}, json(){return this} };
+    const db = await import('../src/db.js'); const orig=db.pool.query; db.pool.query=poolV.query;
+    await P2.actualizarPatron({ params:{id:'1'}, body }, res, (e)=>{err=e;}); db.pool.query=orig; return err ? (err.codigo||err.status) : st; };
+  assert.equal(await correr({ ...base, version_esperada: V.toISOString() }), 200);            // misma versión: guarda
+  assert.equal(await correr({ ...base, version_esperada: '2026-09-20T09:00:00.000Z' }), 'DIBUJO_MODIFICADO'); // otra: conflicto
+  assert.equal(await correr({ ...base }), 200);                                              // sin versión: como antes
+  console.log('version OK');
+}

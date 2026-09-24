@@ -41,7 +41,7 @@ export async function obtenerPatron(req, res, next) {
 // POST /api/patrones
 export async function crearPatron(req, res, next) {
   try {
-    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata } = req.body;
+    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila } = req.body;
 
     const errores = validarPatron(req.body);
     if (errores.length) throw badRequest(errores.join(' '));
@@ -49,8 +49,8 @@ export async function crearPatron(req, res, next) {
     const ligamento = matriz_ligamento ?? derivarLigamentoDesdePasadas(matriz_pasadas);
 
     const { rows } = await pool.query(
-      `INSERT INTO patrones (nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO patrones (nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
         nombre,
@@ -60,6 +60,8 @@ export async function crearPatron(req, res, next) {
         ligamento ? JSON.stringify(ligamento) : null,
         colores_filas ? JSON.stringify(colores_filas) : null,
         metadata ? JSON.stringify(metadata) : null,
+        // En null, el telar teje una pasada por fila: el comportamiento de siempre.
+        repeticiones_por_fila ?? null,
       ]
     );
     res.status(201).json(rows[0]);
@@ -72,7 +74,7 @@ export async function crearPatron(req, res, next) {
 export async function actualizarPatron(req, res, next) {
   try {
     const { id } = req.params;
-    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata } = req.body;
+    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila } = req.body;
 
     const errores = validarPatron(req.body);
     if (errores.length) throw badRequest(errores.join(' '));
@@ -82,8 +84,27 @@ export async function actualizarPatron(req, res, next) {
     // con el Nivel 2 instalado la tela saldría con un dibujo distinto al pedido, sin
     // aviso. Nombre, colores y metadatos sí se pueden cambiar. Para modificar la
     // matriz hay que detener el trabajo primero (eso libera el dibujo).
-    const actual = await pool.query('SELECT filas, columnas, matriz_pasadas FROM patrones WHERE id = $1', [id]);
+    const actual = await pool.query(
+      `SELECT filas, columnas, matriz_pasadas,
+              date_trunc('milliseconds', modificado_at) AS version
+         FROM patrones WHERE id = $1`, [id]);
     if (actual.rows.length === 0) throw notFound(`No existe el patrón con id ${id}.`);
+
+    // Control de versión optimista. La web manda la fecha de modificación que tenía
+    // cuando cargó (o guardó por última vez) el dibujo. Si no coincide, otra persona
+    // lo cambió mientras tanto, y guardar pisaría ese cambio sin aviso. El campo es
+    // opcional: un pedido que no lo trae se comporta como antes.
+    const { version_esperada } = req.body;
+    if (version_esperada) {
+      const esperada = new Date(version_esperada).getTime();
+      if (!Number.isFinite(esperada)) throw badRequest('version_esperada no es una fecha válida.');
+      if (new Date(actual.rows[0].version).getTime() !== esperada) {
+        throw conflict(
+          'Otra persona modificó este dibujo mientras lo editabas. Se cargó la versión más reciente.',
+          'DIBUJO_MODIFICADO'
+        );
+      }
+    }
     const previo = actual.rows[0];
     const cambiaForma =
       previo.filas !== filas ||
@@ -110,7 +131,8 @@ export async function actualizarPatron(req, res, next) {
     const { rows } = await pool.query(
       `UPDATE patrones
          SET nombre = $1, filas = $2, columnas = $3, matriz_pasadas = $4,
-             matriz_ligamento = $5, colores_filas = $6, metadata = $7
+             matriz_ligamento = $5, colores_filas = $6, metadata = $7,
+             repeticiones_por_fila = $9
        WHERE id = $8
        RETURNING *`,
       [
@@ -122,6 +144,7 @@ export async function actualizarPatron(req, res, next) {
         colores_filas ? JSON.stringify(colores_filas) : null,
         metadata ? JSON.stringify(metadata) : null,
         id,
+        repeticiones_por_fila ?? null,
       ]
     );
 
@@ -170,7 +193,7 @@ export async function actualizarMetrosPorPasada(req, res, next) {
           SET metros_por_pasada = $1,
               modificado_at = now()
         WHERE id = $2
-      RETURNING id, nombre, metros_por_pasada`,
+      RETURNING id, nombre, metros_por_pasada, modificado_at`,
       [metros_por_pasada, id]
     );
     if (r.rows.length === 0) return res.status(404).json({ error: `No existe el patrón con id ${id}.` });

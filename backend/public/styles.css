@@ -12,7 +12,7 @@
   --cream-bd: #CDD8E0;
   --gray-dk:  #1F2937;
   --gray-md:  #3F4B5C;
-  --gray-lt:  #6B7684;
+  --gray-lt:  #5F6976;   /* 4,7:1 o más sobre todas las superficies claras (antes 4,06:1, debajo del mínimo de 4,5) */
   --on-rose:  #F0F4F8;
   --green:    #2E6E4A;
   --amber:    #9C5C0A;
@@ -38,13 +38,16 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 }
 [data-theme="dark"] {
+  /* En oscuro el acento es celeste: el texto encima tiene que ser oscuro. Con el claro
+     de antes, "Aplicar" y "Nuevo" quedaban en 1,9:1, casi ilegibles. */
+  --on-rose: #0F2440;
   --bg:    #131A24;
   --srf:   #1F2937;
   --srf2:  #2C3846;
   --bd:    rgba(237,241,245,.22);
   --tx:    #F0F4F8;
   --tx2:   #B8C4D0;
-  --tx3:   #8895A3;
+  --tx3:   #98A3AF;   /* 4,6:1 o más sobre todas las superficies oscuras (antes 3,9:1) */
   --acc:   #8FB8DC;
   --acc-md:#6E9BC4;
   --acc-lt:rgba(125,160,200,.20);
@@ -789,16 +792,16 @@ font-family:var(--font-mono);}
 .ficha-ayuda{font-size:12px;color:var(--tx2);line-height:1.5;margin:0 0 9px}
 .ficha-fila{display:flex;gap:8px}
 .ficha-fila input{flex:1;min-width:0;padding:9px 11px;border:1px solid var(--bd);
-  border-radius:9px;background:var(--panel);color:var(--tx);font-size:14px}
+  border-radius:9px;background:var(--bg);color:var(--tx);font-size:14px}
 .ficha-eq{font-size:12px;color:var(--acc);margin-top:7px;min-height:16px}
 .ficha-est{margin-top:16px;border-top:1px solid var(--bd);padding-top:14px}
 .ficha-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px}
-.ficha-dato{background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:9px 11px}
+.ficha-dato{background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:9px 11px}
 .ficha-dato span{display:block;font-family:var(--font-mono);font-size:9.5px;
   text-transform:uppercase;letter-spacing:.08em;color:var(--tx2);margin-bottom:3px}
 .ficha-dato b{font-size:16px;color:var(--tx);font-family:var(--font-display)}
 .ficha-vacio,.ficha-cargando,.ficha-aviso{font-size:12.5px;color:var(--tx2);line-height:1.55}
-.ficha-aviso{margin-top:10px;padding:9px 11px;background:var(--panel);
+.ficha-aviso{margin-top:10px;padding:9px 11px;background:var(--bg);
   border-left:2px solid var(--acc);border-radius:0 8px 8px 0}
 
 /* ---------- Ficha del dibujo: el botón sigue el estilo de los de guardado ---------- */
@@ -828,3 +831,37 @@ font-family:var(--font-mono);}
 .pat-est-grid b{font-family:var(--font-display);font-size:15px;color:var(--tx)}
 .pat-est-msg{font-size:11.5px;color:var(--tx3);line-height:1.5;margin-top:8px}
 .pat-est-msg:first-child{margin-top:0}
+
+/* ---------- Repeticiones por fila ---------- */
+.g-rep{width:54px;flex:none;margin-left:6px;padding:4px 6px;text-align:center;
+  /* Con 8 columnas la grilla se desplaza en horizontal y esta columna quedaba
+     cortada en el borde. Fijándola a la derecha, el número se ve siempre. */
+  position:sticky;right:0;z-index:2;box-shadow:-6px 0 8px -6px rgba(30,58,95,.28);
+  border:1px solid var(--bd);border-radius:var(--r-sm,6px);background:var(--bg);
+  color:var(--tx);font-family:var(--font-mono);font-size:12px}
+.g-rep:focus{outline:2px solid var(--acc);outline-offset:1px}
+.g-rep-h{width:54px;flex:none;margin-left:6px;text-align:center;position:sticky;right:0;z-index:2;background:var(--bg)}
+
+/* Aviso informativo: sin botón de cancelar, el botón no va en rojo. */
+.confirm-yes.confirm-aviso{background:var(--acc)}
+
+/* Total de pasadas de una vuelta: la suma de las repeticiones de cada fila. */
+.total-pasadas{padding:0 16px 8px;font-family:var(--font-mono);font-size:10.5px;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)}
+
+/* Aviso cuando la búsqueda de la biblioteca no encuentra nada. */
+.lib-sin-resultados{padding:22px 16px;text-align:center;font-size:13px;color:var(--tx3);line-height:1.5}
+
+/* Dentro de un <button> solo se permiten elementos en línea, así que las tarjetas de
+   Inicio usan <span>. Se los muestra como bloque con especificidad mínima (:where),
+   para que cualquier regla de clase (por ejemplo display:flex) siga mandando. */
+:where(.action-card) span{display:block}
+
+/* Se permite el zoom con dos dedos, pero un doble toque rápido sobre las celdas no
+   debe ampliar la página: en la grilla se tocan celdas seguidas todo el tiempo. */
+.g-cell,.g-rep,.tool-btn,.ctrl-btn,button{touch-action:manipulation}
+
+/* Los mensajes de los diálogos pueden traer saltos de línea (por ejemplo, el código de invitación). */
+.confirm-p{white-space:pre-line}
+.confirm-p.con-codigo::first-line{font-family:var(--font-mono);font-size:20px;font-weight:700;
+  letter-spacing:.06em;color:var(--tx)}

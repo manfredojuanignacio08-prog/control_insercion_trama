@@ -26,13 +26,16 @@
 CREATE TABLE IF NOT EXISTS patrones (
   id                SERIAL PRIMARY KEY,
   nombre            TEXT NOT NULL UNIQUE,
-  filas             INTEGER NOT NULL CHECK (filas BETWEEN 2 AND 32),
-  columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 2 AND 32),
+  filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 100),
+  columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 1 AND 8),
   matriz_pasadas    JSONB NOT NULL,   -- array de arrays de enteros: pasadas por celda (lo que programa el editor hoy)
   matriz_ligamento  JSONB,            -- array de arrays binarios (0/1): lizo arriba/abajo, estructura textil (opcional)
   colores_filas     JSONB,            -- array de colores hex, uno por fila
   metadata          JSONB,            -- ej: {"tipo": "Tafetán"}
   creado_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- migración 014: cuántas pasadas seguidas se teje cada fila. Un elemento por
+  -- fila; en NULL, una pasada por fila.
+  repeticiones_por_fila INTEGER[],
   -- migración 011: metros de tela que avanza el telar en una pasada, para este
   -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
   metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),
@@ -54,7 +57,7 @@ CREATE TABLE IF NOT EXISTS telares (
   ultimo_evento_manual_tipo TEXT,                 -- migración 008: 'avanzar' | 'impulso'
   -- migración 010: cuántos elementos de selección (bobinas) tiene la máquina.
   -- Un dibujo con más columnas que este número no puede ejecutarse completo.
-  elementos_seleccion INTEGER NOT NULL DEFAULT 4 CHECK (elementos_seleccion BETWEEN 1 AND 32)
+  elementos_seleccion INTEGER NOT NULL DEFAULT 4 CHECK (elementos_seleccion BETWEEN 1 AND 8)
 );
 
 CREATE TABLE IF NOT EXISTS historial_produccion (
@@ -67,6 +70,9 @@ CREATE TABLE IF NOT EXISTS historial_produccion (
   alertas_disparadas   INTEGER DEFAULT 0,
   fila_actual          INTEGER DEFAULT 0,           -- índice (0-based) de la fila que se está tejiendo ahora
   columna_actual       INTEGER DEFAULT 0,           -- índice (0-based) de la columna dentro de esa fila
+  -- migración 015: cuántas pasadas de la fila actual ya se tejieron. Con las
+  -- repeticiones del dibujo define la posición exacta dentro de la producción.
+  repeticion_en_fila   INTEGER NOT NULL DEFAULT 0 CHECK (repeticion_en_fila >= 0),
   pasada_actual        INTEGER DEFAULT 0,           -- cuántas pasadas ya se hicieron en esa celda exacta
   vueltas_completadas  INTEGER DEFAULT 0,           -- cuántas veces se tejió el patrón entero de punta a punta
   estado               TEXT NOT NULL DEFAULT 'en_curso'

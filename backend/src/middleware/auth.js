@@ -149,8 +149,12 @@ export function requerirOperario(req, res, next) {
   const s = leerSesion(req);
   if (!s) return noAutenticado(res, 'Tenés que iniciar sesión.');
   if (s.invitado) {
+    // El mensaje dice qué se intentó: generar una invitación no es controlar el telar.
+    const invitando = /\/invitacion$/.test(String(req.originalUrl || req.url || '').split('?')[0]);
     return res.status(403).json({
-      error: 'Estás como invitado: para controlar el telar hay que iniciar sesión con tu huella o tu código.',
+      error: invitando
+        ? 'Estás como invitado: para invitar a otra persona hay que iniciar sesión con tu huella o tu código.'
+        : 'Estás como invitado: para controlar el telar hay que iniciar sesión con tu huella o tu código.',
       codigo: 'SOLO_OPERARIO',
     });
   }

@@ -16,7 +16,7 @@ const SENSOR_VIGENTE_SEG = 30;
 
 const COLUMNAS_TELAR = `
   t.*, p.nombre AS patron_actual_nombre,
-  h.id AS historial_actual_id, h.fila_actual, h.columna_actual,
+  h.id AS historial_actual_id, h.fila_actual, h.columna_actual, h.repeticion_en_fila,
   h.pasada_actual, h.vueltas_completadas, h.pasadas_totales AS pasadas_actuales,
   h.pasadas_sensor, h.conteo_validado,
   (t.ultimo_reporte_sensor IS NOT NULL
@@ -258,7 +258,7 @@ export async function avanzarTelar(req, res, next) {
     }
 
     const enCurso = await client.query(
-      `SELECT h.*, p.matriz_pasadas
+      `SELECT h.*, p.matriz_pasadas, p.repeticiones_por_fila
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -270,16 +270,18 @@ export async function avanzarTelar(req, res, next) {
     }
 
     const row = enCurso.rows[0];
-    const { fila_actual, vueltas_completadas } = avanzarPosicionTejido(row.fila_actual, row.matriz_pasadas, pasos);
+    const { fila_actual, repeticion_en_fila, vueltas_completadas } =
+      avanzarPosicionTejido(row.fila_actual, row.matriz_pasadas, pasos, row.repeticiones_por_fila, row.repeticion_en_fila);
 
     const actualizado = await client.query(
       `UPDATE historial_produccion
          SET fila_actual = $1, columna_actual = 0, pasada_actual = 0,
+             repeticion_en_fila = $5,
              vueltas_completadas = vueltas_completadas + $2,
              pasadas_totales = pasadas_totales + $3
        WHERE id = $4
        RETURNING *`,
-      [fila_actual, vueltas_completadas, pasos, row.id]
+      [fila_actual, vueltas_completadas, pasos, row.id, repeticion_en_fila]
     );
 
     await client.query('COMMIT');
@@ -418,7 +420,7 @@ export async function eventoFisico(req, res, next) {
 
     // Producción abierta (si la hay). Sin ella no se puede ubicar la posición.
     const enCurso = await client.query(
-      `SELECT h.*, p.matriz_pasadas
+      `SELECT h.*, p.matriz_pasadas, p.repeticiones_por_fila
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -493,14 +495,16 @@ export async function eventoFisico(req, res, next) {
     } else if (tipo === 'retroceder') {
       if (enCurso.rows.length > 0) {
         const row = enCurso.rows[0];
-        const { fila_actual, vueltas_deshechas } = retrocederPosicionTejido(row.fila_actual, row.matriz_pasadas, 1);
+        const { fila_actual, repeticion_en_fila, vueltas_deshechas } =
+          retrocederPosicionTejido(row.fila_actual, row.matriz_pasadas, 1, row.repeticiones_por_fila, row.repeticion_en_fila);
         await client.query(
           `UPDATE historial_produccion
               SET fila_actual = $1, columna_actual = 0, pasada_actual = 0,
+                  repeticion_en_fila = $4,
                   pasadas_totales = GREATEST(pasadas_totales - 1, 0),
                   vueltas_completadas = GREATEST(vueltas_completadas - $2, 0)
             WHERE id = $3`,
-          [fila_actual, vueltas_deshechas, row.id]
+          [fila_actual, vueltas_deshechas, row.id, repeticion_en_fila]
         );
       } else {
         // Retrocedieron a mano sin trabajo abierto: no hay posición que mover.
@@ -618,7 +622,7 @@ export async function retrocederTelar(req, res, next) {
     if (existeTelar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
 
     const enCurso = await client.query(
-      `SELECT h.*, p.matriz_pasadas
+      `SELECT h.*, p.matriz_pasadas, p.repeticiones_por_fila
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -630,16 +634,18 @@ export async function retrocederTelar(req, res, next) {
     }
 
     const row = enCurso.rows[0];
-    const { fila_actual, vueltas_deshechas, al_inicio } = retrocederPosicionTejido(row.fila_actual, row.matriz_pasadas, pasos);
+    const { fila_actual, repeticion_en_fila, vueltas_deshechas, al_inicio } =
+      retrocederPosicionTejido(row.fila_actual, row.matriz_pasadas, pasos, row.repeticiones_por_fila, row.repeticion_en_fila);
 
     const actualizado = await client.query(
       `UPDATE historial_produccion
          SET fila_actual = $1, columna_actual = 0, pasada_actual = 0,
+             repeticion_en_fila = $5,
              pasadas_totales = GREATEST(pasadas_totales - $2, 0),
              vueltas_completadas = GREATEST(vueltas_completadas - $3, 0)
        WHERE id = $4
        RETURNING *`,
-      [fila_actual, pasos, vueltas_deshechas, row.id]
+      [fila_actual, pasos, vueltas_deshechas, row.id, repeticion_en_fila]
     );
 
     await client.query('COMMIT');
