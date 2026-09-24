@@ -75,7 +75,7 @@ static const unsigned long TIMEOUT_SIN_PULSOS_MS = 3000;
 static const unsigned long GRACIA_ARRANQUE_MS = 15000;
 
 // ------------------------------------- Bloque D · selección del dibujo
-// Un relé PhotoMOS por lector óptico, uno por bobina de selección.
+// Un relé LCA110 (OptoMOS, salida MOSFET) por lector óptico, uno por bobina de selección.
 //
 // El C 401 donde se implementa tiene cuatro bobinas. El relevamiento original se
 // hizo sobre un C 201 y se estimaban seis; la máquina de destino tiene cuatro.
@@ -88,7 +88,7 @@ static const unsigned long GRACIA_ARRANQUE_MS = 15000;
 static const int  N_CANALES = 4;
 static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 
-// Sentido de la señal. El relé PhotoMOS conduce cuando su LED recibe corriente,
+// Sentido de la señal. El relé LCA110 conduce cuando su LED recibe corriente,
 // o sea con el pin en alto. Queda como constante porque, según cómo esté
 // cableado el lector óptico, puede que haya que invertir el criterio:
 //   - Si el relé va EN PARALELO con el lector (el agujero cierra el circuito),
@@ -131,7 +131,7 @@ static const int DESPLAZAMIENTO_FILAS = 0;
 // 200 ms de una pasada (máximo permitido: 50 ms). Cero = se aplica apenas llega el pulso.
 //
 // Ojo con la otra dirección: si la ventana de lectura llega ANTES de que el pulso más la
-// latencia del relé PhotoMOS (~1 ms) y del ESP32 alcancen a aplicar la fila, no se corrige
+// latencia del relé LCA110 (unos pocos ms) y del ESP32 alcancen a aplicar la fila, no se corrige
 // con un retardo: hay que adelantar la aplicación con DESPLAZAMIENTO_FILAS = 1 (aplicar en el
 // pulso N la fila N+1) o mover el blanco metálico sobre el eje.
 // A_CONFIRMAR: se define con la medición sobre la máquina.

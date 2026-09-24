@@ -59,6 +59,22 @@ anterior.
 Cuando lo que cambia es el dibujo asignado, en cambio, se arranca desde la
 primera fila: ahí empezar de cero es lo correcto.
 
+## Repeticiones por fila
+
+Una fila del dibujo es una pasada. Pero en un tejido real es habitual que la misma
+combinación de bobinas se repita cien o mil veces seguidas antes de cambiar, y
+dibujar cien filas idénticas era impracticable.
+
+Por eso cada fila lleva un número de repeticiones: cuántas pasadas seguidas se teje
+esa misma fila antes de pasar a la siguiente. Una vuelta completa del dibujo son la
+suma de todas las repeticiones, no la cantidad de filas.
+
+El retroceso acompaña: deshace una pasada dentro de la fila, y solo cuando se agotan
+las repeticiones vuelve a la fila anterior, a su última pasada.
+
+Los dibujos guardados antes de esto no traen el campo; el backend manda un 1 por
+fila y se tejen igual que siempre.
+
 ## Depende del Bloque C
 
 El Nivel 2 **no puede funcionar sin el sensor de pasada instalado y validado**.

@@ -3,17 +3,14 @@
 --
 --  Se genera a partir de la fuente de verdad del esquema (backend/src/db/schema.sql)
 --  más TODAS las migraciones, en orden, y al final las registra en la tabla que usa
---  el migrador del backend. Levanta la base entera de una sola vez, por ejemplo al
---  armar un entorno nuevo o al entregar el proyecto.
+--  el migrador del backend.
 --
---  En el día a día conviene usar los scripts del backend, que hacen lo mismo paso a
---  paso y llevan registro:
+--  En el día a día conviene usar los scripts del backend:
 --      npm run init-db     crea las tablas
 --      npm run migrate     aplica las migraciones pendientes
---  El servidor además aplica solo las migraciones pendientes en cada arranque.
+--  El servidor además aplica solo las pendientes en cada arranque.
 --
---  IMPORTANTE: si se agrega una migración nueva, este archivo hay que regenerarlo.
---  Si no, quedaría registrada como aplicada sin haberse ejecutado nunca.
+--  IMPORTANTE: si se agrega una migración nueva, hay que regenerar este archivo.
 -- ============================================================================
 
 -- ============================================================
@@ -44,13 +41,16 @@
 CREATE TABLE IF NOT EXISTS patrones (
   id                SERIAL PRIMARY KEY,
   nombre            TEXT NOT NULL UNIQUE,
-  filas             INTEGER NOT NULL CHECK (filas BETWEEN 2 AND 32),
-  columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 2 AND 32),
+  filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 100),
+  columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 1 AND 8),
   matriz_pasadas    JSONB NOT NULL,   -- array de arrays de enteros: pasadas por celda (lo que programa el editor hoy)
   matriz_ligamento  JSONB,            -- array de arrays binarios (0/1): lizo arriba/abajo, estructura textil (opcional)
   colores_filas     JSONB,            -- array de colores hex, uno por fila
   metadata          JSONB,            -- ej: {"tipo": "Tafetán"}
   creado_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- migración 014: cuántas pasadas seguidas se teje cada fila. Un elemento por
+  -- fila; en NULL, una pasada por fila.
+  repeticiones_por_fila INTEGER[],
   -- migración 011: metros de tela que avanza el telar en una pasada, para este
   -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
   metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS telares (
   ultimo_evento_manual_tipo TEXT,                 -- migración 008: 'avanzar' | 'impulso'
   -- migración 010: cuántos elementos de selección (bobinas) tiene la máquina.
   -- Un dibujo con más columnas que este número no puede ejecutarse completo.
-  elementos_seleccion INTEGER NOT NULL DEFAULT 4 CHECK (elementos_seleccion BETWEEN 1 AND 32)
+  elementos_seleccion INTEGER NOT NULL DEFAULT 4 CHECK (elementos_seleccion BETWEEN 1 AND 8)
 );
 
 CREATE TABLE IF NOT EXISTS historial_produccion (
@@ -85,6 +85,9 @@ CREATE TABLE IF NOT EXISTS historial_produccion (
   alertas_disparadas   INTEGER DEFAULT 0,
   fila_actual          INTEGER DEFAULT 0,           -- índice (0-based) de la fila que se está tejiendo ahora
   columna_actual       INTEGER DEFAULT 0,           -- índice (0-based) de la columna dentro de esa fila
+  -- migración 015: cuántas pasadas de la fila actual ya se tejieron. Con las
+  -- repeticiones del dibujo define la posición exacta dentro de la producción.
+  repeticion_en_fila   INTEGER NOT NULL DEFAULT 0 CHECK (repeticion_en_fila >= 0),
   pasada_actual        INTEGER DEFAULT 0,           -- cuántas pasadas ya se hicieron en esa celda exacta
   vueltas_completadas  INTEGER DEFAULT 0,           -- cuántas veces se tejió el patrón entero de punta a punta
   estado               TEXT NOT NULL DEFAULT 'en_curso'
@@ -729,10 +732,87 @@ DROP INDEX IF EXISTS idx_historial_en_curso;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_historial_en_curso ON historial_produccion (telar_id) WHERE estado = 'en_curso';
 
 -- ============================================================
+-- migracion_014_repeticiones_por_fila.sql
+-- ============================================================
+-- ============================================================
+-- Migración 014: repeticiones por fila y nuevos rangos del dibujo
+--
+-- Una fila del dibujo es una pasada, y eso no cambia. Lo que faltaba es poder
+-- decir cuántas veces se repite esa misma pasada: en un tejido real es habitual
+-- que la misma combinación de bobinas se repita cien o mil veces seguidas antes
+-- de cambiar. Hasta ahora había que dibujar cien filas idénticas.
+--
+-- repeticiones_por_fila guarda un número por cada fila del dibujo. En NULL
+-- significa "todas las filas una vez", que es exactamente el comportamiento
+-- anterior: los dibujos que ya existen siguen tejiéndose igual.
+--
+-- Además se corrigen los rangos. Las columnas son bobinas de selección, y una
+-- máquina tiene entre 1 y 8: permitir 32 no tenía sentido físico. Las filas
+-- pasan a 1 a 100, porque con las repeticiones ya no hace falta que sean muchas.
+-- ============================================================
+
+ALTER TABLE patrones
+  ADD COLUMN IF NOT EXISTS repeticiones_por_fila INTEGER[];
+
+COMMENT ON COLUMN patrones.repeticiones_por_fila IS
+  'Cuántas pasadas seguidas se teje cada fila. Un elemento por fila, en el mismo orden. En NULL significa una pasada por fila (comportamiento anterior).';
+
+-- Los rangos viejos (2 a 32) se reemplazan. Se usa NOT VALID para no rechazar
+-- los dibujos que ya están guardados: la restricción rige para lo que se cree o
+-- modifique de acá en adelante.
+ALTER TABLE patrones DROP CONSTRAINT IF EXISTS patrones_filas_check;
+ALTER TABLE patrones DROP CONSTRAINT IF EXISTS patrones_columnas_check;
+ALTER TABLE patrones DROP CONSTRAINT IF EXISTS patrones_filas_rango;
+ALTER TABLE patrones DROP CONSTRAINT IF EXISTS patrones_columnas_rango;
+
+ALTER TABLE patrones
+  ADD CONSTRAINT patrones_filas_rango CHECK (filas BETWEEN 1 AND 100) NOT VALID;
+ALTER TABLE patrones
+  ADD CONSTRAINT patrones_columnas_rango CHECK (columnas BETWEEN 1 AND 8) NOT VALID;
+
+-- Cada elemento de repeticiones_por_fila tiene que ser al menos 1.
+ALTER TABLE patrones DROP CONSTRAINT IF EXISTS patrones_repeticiones_positivas;
+ALTER TABLE patrones
+  ADD CONSTRAINT patrones_repeticiones_positivas
+  -- Sin subconsultas: PostgreSQL no las admite dentro de un CHECK. Los operadores
+  -- <= ALL y >= ALL sobre un array sí son válidos acá.
+  CHECK (repeticiones_por_fila IS NULL
+         OR (array_length(repeticiones_por_fila, 1) = filas
+             AND 1 <= ALL (repeticiones_por_fila)
+             AND 9999 >= ALL (repeticiones_por_fila)))
+  NOT VALID;
+
+-- Los elementos de selección de un telar también son como máximo 8.
+ALTER TABLE telares DROP CONSTRAINT IF EXISTS telares_elementos_seleccion_check;
+ALTER TABLE telares DROP CONSTRAINT IF EXISTS telares_elementos_rango;
+ALTER TABLE telares
+  ADD CONSTRAINT telares_elementos_rango CHECK (elementos_seleccion BETWEEN 1 AND 8) NOT VALID;
+
+-- ============================================================
+-- migracion_015_repeticion_en_fila.sql
+-- ============================================================
+-- ============================================================
+-- Migración 015: posición dentro de la fila
+--
+-- Con las repeticiones por fila (migración 014), una pasada ya no equivale a
+-- avanzar una fila: una fila con 100 repeticiones son 100 pasadas antes de pasar
+-- a la siguiente. La posición de una producción dejó de ser un solo número.
+--
+-- repeticion_en_fila guarda cuántas pasadas de la fila actual ya se tejieron
+-- (0 significa que todavía no se tejió ninguna de esa fila). Sin este dato, la
+-- aplicación y el nodo avanzaban distinto: la web se quedaba en la fila mientras
+-- el backend la adelantaba, y cada sincronización pegaba un salto.
+-- ============================================================
+
+ALTER TABLE historial_produccion
+  ADD COLUMN IF NOT EXISTS repeticion_en_fila INTEGER NOT NULL DEFAULT 0
+  CHECK (repeticion_en_fila >= 0);
+
+COMMENT ON COLUMN historial_produccion.repeticion_en_fila IS
+  'Cuántas pasadas de la fila actual ya se tejieron. Con repeticiones_por_fila del dibujo define la posición exacta dentro de la producción.';
+
+-- ============================================================
 -- Registro de migraciones
--- Todo lo anterior ya incluye cada migración. Se las registra en la misma tabla
--- que usa el migrador, para que un `npm run migrate` o el arranque del servidor
--- posteriores no intenten aplicarlas otra vez.
 -- ============================================================
 CREATE TABLE IF NOT EXISTS migraciones_aplicadas (
   archivo     TEXT PRIMARY KEY,
@@ -752,5 +832,7 @@ INSERT INTO migraciones_aplicadas (archivo) VALUES
   ('migracion_010_elementos_seleccion.sql'),
   ('migracion_011_metros_por_pasada.sql'),
   ('migracion_012_conteo_sensor_y_retrocesos.sql'),
-  ('migracion_013_indice_unico_en_curso.sql')
+  ('migracion_013_indice_unico_en_curso.sql'),
+  ('migracion_014_repeticiones_por_fila.sql'),
+  ('migracion_015_repeticion_en_fila.sql')
 ON CONFLICT (archivo) DO NOTHING;

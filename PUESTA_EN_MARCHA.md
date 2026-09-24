@@ -40,14 +40,14 @@ antes o después de que el telar mire, la tela sale con una fila corrida.
 1. La señal del sensor (pulso de pasada) y la **salida del lector óptico** (lo que le llega a las plaquetas
    del telar), en dos canales, disparando el osciloscopio con el pulso del sensor.
 2. El tiempo entre el pulso y el momento en que el lector "lee" (la ventana), repetido en varias pasadas.
-3. El nivel y la corriente de la salida del lector, para decidir cómo se conectan los relés PhotoMOS (en
+3. El nivel y la corriente de la salida del lector, para decidir cómo se conectan los relés LCA110 (en
    serie o en paralelo con esa señal).
 
 **Qué decide la medición** (en `config_nivel2.h`):
 
 | Resultado | Ajuste |
 |---|---|
-| La ventana de lectura llega antes de que el pulso más la latencia del relé (~1 ms) y del ESP32 alcancen a aplicar la fila | `DESPLAZAMIENTO_FILAS = 1` (aplica en el pulso N la fila N+1) o mover el blanco metálico en el eje |
+| La ventana de lectura llega antes de que el pulso más la latencia del relé (unos pocos milisegundos) y del ESP32 alcancen a aplicar la fila | `DESPLAZAMIENTO_FILAS = 1` (aplica en el pulso N la fila N+1) o mover el blanco metálico en el eje |
 | Hay un desfase pequeño dentro de la pasada | `RETARDO_APLICACION_US` (máximo 50 000 µs) |
 | Coincide | Ambos en 0 |
 

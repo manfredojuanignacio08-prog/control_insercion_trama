@@ -20,11 +20,15 @@ class Nivel2Simulado:
         """Simula el arranque del nodo retomando lo guardado en el backend."""
         if 0 <= fila < self.filas:
             self.fila_actual = fila
+            self.restantes = self.repeticiones[fila]
         if pasadas > 0:
             self.pasadas = pasadas
 
-    def __init__(self, dibujo, desplazamiento=DESPLAZAMIENTO_FILAS):
+    def __init__(self, dibujo, desplazamiento=DESPLAZAMIENTO_FILAS, repeticiones=None):
         self.dibujo = dibujo
+        # Cuántas pasadas seguidas se teje cada fila. Sin repeticiones, una por fila.
+        self.repeticiones = list(repeticiones) if repeticiones else [1] * len(dibujo)
+        self.restantes = self.repeticiones[0] if dibujo else 0
         self.desplazamiento = desplazamiento
         self.filas = len(dibujo)
         self.columnas = max(len(f) for f in dibujo) if dibujo else 0
@@ -54,9 +58,10 @@ class Nivel2Simulado:
             self.proxima_es_retroceso = False
             # La fila vuelve atrás: la próxima pasada hacia adelante repite la
             # fila que el telar acaba de deshacer.
-            self.fila_actual -= 1
-            if self.fila_actual < 0:
-                self.fila_actual = self.filas - 1
+            self.restantes += 1
+            if self.restantes > self.repeticiones[self.fila_actual]:
+                self.fila_actual = (self.fila_actual - 1) % self.filas
+                self.restantes = 1
             return
         self.pasadas += 1
         if not tejiendo:
@@ -69,10 +74,14 @@ class Nivel2Simulado:
         for i in range(N_CANALES):
             self.canales[i] = bool(fila[i]) if i < len(fila) else False
         self.historial.append(tuple(self.canales))
-        self.fila_actual += 1
-        if self.fila_actual >= self.filas:
-            self.fila_actual = 0
-            self.vueltas += 1
+        # La fila se teje tantas pasadas como diga repeticiones; recién ahí se avanza.
+        self.restantes -= 1
+        if self.restantes <= 0:
+            self.fila_actual += 1
+            if self.fila_actual >= self.filas:
+                self.fila_actual = 0
+                self.vueltas += 1
+            self.restantes = self.repeticiones[self.fila_actual]
 
 
 def verificar():
@@ -196,6 +205,44 @@ def verificar():
     s17.retomar(99, 50)                   # posición inválida para este dibujo
     v.append(("Una posición guardada fuera de rango no se adopta",
               s17.fila_actual == 0))
+
+    # Repeticiones: una fila con 100 repeticiones son 100 pasadas de la misma
+    # combinación de bobinas antes de pasar a la siguiente.
+    s18 = Nivel2Simulado(dibujo, repeticiones=[100, 3, 1, 1])
+    for _ in range(99):
+        s18.pulso_del_sensor()
+    v.append(("Con 100 repeticiones, a la pasada 99 se sigue tejiendo la fila 1",
+              s18.fila_actual == 0 and s18.historial[-1] == s18.historial[0]))
+    s18.pulso_del_sensor()
+    v.append(("A la pasada 100 se pasa a la fila 2", s18.fila_actual == 1))
+    for _ in range(3):
+        s18.pulso_del_sensor()
+    v.append(("La fila 2 se teje sus 3 repeticiones y pasa a la 3", s18.fila_actual == 2))
+
+    s19 = Nivel2Simulado(dibujo, repeticiones=[5, 5, 5, 5])
+    total = 0
+    while s19.vueltas == 0:
+        s19.pulso_del_sensor(); total += 1
+    v.append(("Una vuelta completa son la suma de las repeticiones", total == 20))
+
+    s20 = Nivel2Simulado(dibujo, repeticiones=[4, 4, 4, 4])
+    for _ in range(5):
+        s20.pulso_del_sensor()          # fila 2, primera repetición
+    antes = (s20.fila_actual, s20.restantes)          # fila 2, quedan 3 de 4
+    s20.avisar_retroceso(); s20.pulso_del_sensor()
+    v.append(("Retroceder deshace la pasada, sin salir de la fila si todavía quedaba",
+              (s20.fila_actual, s20.restantes) == (1, 4)))
+    s20.pulso_del_sensor()
+    v.append(("Y la pasada siguiente retoma donde estaba",
+              (s20.fila_actual, s20.restantes) == antes))
+
+    # Retroceder justo en el límite sí tiene que volver a la fila anterior.
+    s21 = Nivel2Simulado(dibujo, repeticiones=[4, 4, 4, 4])
+    for _ in range(4):
+        s21.pulso_del_sensor()                         # termina la fila 1, entra en la 2
+    s21.avisar_retroceso(); s21.pulso_del_sensor()
+    v.append(("En el límite entre filas, retroceder vuelve a la última pasada de la anterior",
+              (s21.fila_actual, s21.restantes) == (0, 1)))
 
     s11 = Nivel2Simulado(dibujo)
     s11.avisar_retroceso()

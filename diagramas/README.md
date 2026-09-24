@@ -29,7 +29,7 @@ y el pin del microcontrolador. Incluye la tabla para calcular la resistencia
 según la tensión que se mida.
 
 ### `canal_rele.svg`
-Un canal de la selección del dibujo del Bloque D: el relé PhotoMOS AQY212GH con
+Un canal de la selección del dibujo del Bloque D: el relé LCA110 (OptoMOS, salida MOSFET) con
 sus cuatro patas, las dos resistencias y las dos formas posibles de conectarlo
 al lector óptico, en serie o en paralelo.
 

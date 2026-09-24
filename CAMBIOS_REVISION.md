@@ -28,7 +28,7 @@ de datos y documentación. Cada punto lleva el número que tenía en la revisió
 
 | # | Qué se hizo |
 |---|---|
-| 7 | **Modelo confirmado: una fila = una pasada; para repetir una pasada se dibuja la fila dos veces.** `utils/posicion.js` se simplificó: `avanzar` y `retroceder` son espejos exactos (una prueba lo verifica), sin repeticiones por celda. Retroceder desde la fila 0 va a la última (el dibujo es un lazo) y descuenta una vuelta si cruza el inicio. El comentario "retrocedió una pasada" ahora es cierto. `pasada_actual`/`columna_actual` quedan en 0 por compatibilidad. |
+| 7 | **Modelo confirmado: una fila = una pasada** (lo de dibujar la fila dos veces para repetirla quedó superado en la octava pasada: ahora cada fila lleva su número de repeticiones). `utils/posicion.js` se simplificó: `avanzar` y `retroceder` son espejos exactos (una prueba lo verifica), sin repeticiones por celda. Retroceder desde la fila 0 va a la última (el dibujo es un lazo) y descuenta una vuelta si cruza el inicio. El comentario "retrocedió una pasada" ahora es cierto. `pasada_actual`/`columna_actual` quedan en 0 por compatibilidad. |
 | 8 | Nivel 1: cuando `reportarEventoFisico()` devuelve OK, `estadoDeseado` se actualiza (marcha→1, pausa→0), así el sondeo siguiente no ve un "cambio" y no da el pulso extra. |
 | 9 | El conteo del Nivel 1 se marca como **estimado** (`origen_conteo`). Con el Nivel 2: el sensor escribe `pasadas_sensor` (no `pasadas_totales`), deja un heartbeat, y mientras es reciente `POST /avanzar` responde 409 `SENSOR_ACTIVO` y la web deja de avanzar por reloj y sigue la posición del sensor. Las estadísticas dicen "estimadas" / "≈" hasta que el conteo esté validado (`POST /validar-conteo`, tras comparar con el contador mecánico). |
 | 10 | El rate limit y el heartbeat "ESP32 conectado" ya no se conceden por `?origen=esp32`: exigen la clave de dispositivo. |
@@ -173,3 +173,104 @@ producción del dibujo.
 - Probada la migración 013 con dos producciones abiertas en el mismo telar: cierra la más vieja
   como detenida, sin borrar nada, y crea el índice.
 - Nuevo `DESPLIEGUE_RENDER.md` con el paso a paso.
+
+## Revisión de la aplicación: pantallas, botones y buscador
+
+Se recorrieron las tres pantallas como operario y como invitado, en claro y oscuro, en escritorio
+y celular, y se ejecutaron los cien manejadores de clic distintos de la página contra una base real.
+
+- **Una variable de estilo inexistente** (`--panel`, copiada de la documentación web): los campos de la
+  ficha y de las repeticiones quedaban sin fondo definido. Ahora usan `--bg`.
+- **El buscador de la biblioteca usaba `onkeyup`**: al pegar texto, con el autocompletado del teclado del
+  celular o al dictar, no filtraba. Pasó a `oninput`. Además ignora tildes y mayúsculas ("tafetan"
+  encuentra "Tafetán"), muestra un aviso cuando no hay coincidencias en vez de dejar la lista en blanco,
+  y se vuelve a aplicar si la lista se redibuja.
+- **`filterByTag` era código muerto** que solo mostraba un aviso: eliminada.
+- **El simulador de color** no se cerraba tocando el fondo ni con Escape, y quedaba abierto si se cambiaba
+  de pantalla. El primer intento de enganchar el cierre corría antes de que la ventana existiera en la
+  página, lo que habría roto el resto del script; se resolvió escuchando en el documento.
+- **`tapCell` aceptaba coordenadas fuera de la grilla.** Un toque de una grilla vieja estiraba la fila y
+  desde ahí cada guardado era rechazado por el backend. Ahora se ignoran, y al guardar la matriz se ajusta
+  siempre a filas × columnas declaradas.
+
+## Robustez de la aplicación: datos malformados, inyección, red y ficha PDF
+
+- **Datos malformados devolvían error 500.** Se mandaron 3.481 pedidos con datos inválidos a todas las
+  rutas: 1.110 terminaban en 500 porque un id no numérico o fuera de rango llegaba crudo a PostgreSQL.
+  Ahora los ids se validan en la entrada de cada ruta (`router.param`) y los errores de datos de la base
+  (formato, rango, largo, obligatorio, restricciones) se responden como 400 con un mensaje propio, sin
+  exponer el texto interno de la base. Resultado: cero errores 500.
+- **Inyección de código:** se guardaron nombres de dibujo, de telar y de usuario con HTML y código. En
+  ninguna pantalla se ejecuta: se muestran como texto.
+- **Doble clic en Guardar:** tres toques seguidos crean un solo dibujo.
+- **Ficha PDF:** decía "cada celda indica el número de pasadas del hilo", el modelo viejo. No incluía las
+  repeticiones de cada fila, así que un dibujo con 100 pasadas en una fila salía como si fuera una. Las
+  celdas activas sin color asignado salían en blanco, y en dibujos grandes (donde no se imprime el número)
+  el patrón quedaba invisible. El nombre del archivo usaba el del dibujo tal cual, y "Sarga 2/2" tiene una
+  barra. Ahora incluye repeticiones y total por vuelta, instrucciones correctas, celdas en azul y un nombre
+  de archivo válido.
+- **Sin conexión o con Render despertando** se mostraba "Failed to fetch" o "Error (502)". Ahora dice qué
+  pasa y qué hacer, en el ingreso y dentro de la aplicación.
+
+## Validación del HTML, accesibilidad, temporizadores y cabeceras
+
+- **HTML inválido:** las dos tarjetas de Inicio tenían `<div>` dentro de `<button>`, lo que el estándar
+  no permite. Pasaron a `<span>` con un estilo de especificidad mínima; se verificó que se ven idénticas
+  al píxel. Además, 53 botones sin `type="button"`, un campo sin tipo y dos botones de solo ícono sin nombre
+  accesible. El HTML valida sin errores con html-validate.
+- **Accesibilidad (axe-core, WCAG 2 A y AA):** tres problemas, corregidos. El gris de texto secundario
+  daba 4,06:1 en el tema claro y 3,9:1 en el oscuro, debajo del mínimo de 4,5:1. En el tema oscuro, el texto
+  sobre el color de acento (botones "Aplicar" y "Nuevo") daba 1,88:1, casi ilegible: se definió un color de
+  texto oscuro para ese caso. La página bloqueaba el zoom en el celular (`user-scalable=no`), lo que impide
+  agrandar a quien tenga la vista cansada; se habilitó, evitando que un doble toque sobre las celdas amplíe.
+  Los campos de filas y columnas no tenían etiqueta. Resultado: cero problemas en el ingreso y las tres
+  pantallas, en los dos temas.
+- **Temporizadores:** ir y volver del editor quince veces no multiplica las consultas de estado (siguen
+  siendo tres cada doce segundos, y ninguna fuera del editor).
+- **Cabeceras de seguridad:** completas (CSP, HSTS, nosniff, marco, referrer); la cookie de sesión es
+  HttpOnly y SameSite.
+
+## Relé verificado contra la hoja de datos y dependencias actualizadas
+
+- **LCA110 contra la hoja de datos oficial (IXYS, DS-LCA110-R12):** el conexionado de patas documentado es
+  correcto (1 y 2 el LED, 4 y 6 la carga, 3 sin conexión y 5 «no usar» en la configuración para alterna y
+  continua). El LED se activa con 2 mA como máximo: con 330 Ω desde 3,3 V recibe unos 6,4 mA. Conduce con
+  23 Ω típicos y 35 Ω máximos, fuga como máximo 1 µA y conmuta en 3 ms como máximo. Se actualizó la
+  referencia bibliográfica con la revisión y el año de la hoja de datos.
+- **Dependencias:** `npm audit` encontró cinco vulnerabilidades conocidas (una alta, en `ip-address`, que usa
+  el limitador de peticiones). Como el proyecto fija versiones con `package-lock.json`, Render las habría
+  instalado. Se corrigieron con actualizaciones de parche, sin cambiar ningún rango de `package.json`:
+  express 4.22.3, body-parser 1.20.8, qs 6.16.0, morgan 1.12.1, ip-address 10.7.2. Resultado: cero
+  vulnerabilidades, y todas las pruebas y el límite por operario siguen funcionando.
+
+## Login con huella probado de punta a punta, e invitaciones
+
+- **Huella:** con el autenticador virtual de Chrome (que simula el sensor del teléfono) se recorrió el registro,
+  el código de recuperación, el cierre de sesión, el reingreso con la huella, un usuario inexistente, un código
+  de recuperación falso, un nombre duplicado y el nombre reservado "invitado". Todo funciona.
+- **Faltaba el botón para generar invitaciones.** El servidor las generaba, pero ningún botón de la aplicación lo
+  hacía: con tres usuarios registrados, nadie más podía crear una cuenta, y el manual pedía un código que no había
+  forma de obtener. Se agregó **Invitar a alguien (generar código)** en Inicio, visible solo para usuarios
+  registrados, con el código destacado y la opción de copiarlo. Se probó el ciclo completo: el cuarto usuario sin
+  código es rechazado, con el código entra, el mismo código no sirve dos veces, uno falso se rechaza y un invitado
+  no puede generarlos. El manual explica ahora dónde se genera.
+- **Mensajes:** el cuarto usuario sin código recibe una explicación de cómo conseguirlo, y un invitado que intenta
+  invitar ya no recibe el mensaje de "controlar el telar".
+
+## Guardados en fila y edición simultánea
+
+- **Los guardados automáticos no iban en fila.** La web guarda en cada toque, y dos toques rápidos mandaban dos
+  pedidos a la vez que podían llegar al servidor en desorden: el viejo pisaba al nuevo y se perdía un cambio, aun
+  con una sola persona usando la aplicación. Ahora, si hay un guardado en curso, se espera y se manda uno solo con
+  el estado más reciente. Veinte toques seguidos generan dos pedidos, y el servidor queda idéntico a la pantalla.
+- **Dos personas editando el mismo dibujo:** gana el último que guardaba y el cambio del otro se perdía sin aviso.
+  Ahora la web manda la fecha de modificación que conoce (`version_esperada`); si no coincide con la del servidor,
+  se responde 409 `DIBUJO_MODIFICADO`, se carga la versión más reciente y se avisa. El campo es opcional: un pedido
+  sin él se comporta como antes. Guardar los metros por pasada también cambia esa fecha, así que la web toma la
+  versión nueva para no dar un falso conflicto en el próximo toque.
+- **El botón Guardar decía "ya existe un dibujo con ese nombre" ante cualquier 409**, incluso cuando el motivo era
+  que el dibujo se estaba tejiendo. Ahora distingue los tres casos.
+- **Probado además:** recuperación de la cuenta desde la pantalla, activación de la huella en un celular nuevo y
+  posterior ingreso con ella, "Ver mi código de recuperación", sesión vencida en uso, y la cadena del Nivel 2 con
+  repeticiones contra el servidor real (incluido el reinicio del nodo, que retoma en la pasada exacta, y el
+  retroceso desde la botonera).

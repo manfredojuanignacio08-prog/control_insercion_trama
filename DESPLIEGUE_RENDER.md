@@ -57,12 +57,12 @@ clave real va solo en Render y en la copia que se carga a las placas.
 
 ## 5. Revisar el arranque
 
-En **Logs**, la primera vez deberían aparecer las trece migraciones aplicadas:
+En **Logs**, la primera vez deberían aparecer las quince migraciones aplicadas:
 
 ```
 ✅ migracion_001_... aplicada.
 ...
-Migraciones al día (13 nueva/s).
+Migraciones al día (15 nueva/s).
 Servidor escuchando ...
 ```
 

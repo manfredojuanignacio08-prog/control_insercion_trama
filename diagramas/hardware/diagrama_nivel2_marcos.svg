@@ -43,7 +43,7 @@
 
   <!-- SSR -->
   <rect x="120" y="205" width="760" height="40" rx="8" fill="#EDF1F5" stroke="#3D6B96" stroke-width="1.5"/>
-  <text x="500" y="230" text-anchor="middle" font-size="12" font-weight="bold" fill="#3D6B96">RELÉS DE ESTADO SÓLIDO (PhotoMOS), uno por lector óptico, cuatro en total · reemplazan la interrupción del papel</text>
+  <text x="500" y="230" text-anchor="middle" font-size="12" font-weight="bold" fill="#3D6B96">RELÉS DE ESTADO SÓLIDO (LCA110), uno por lector óptico, cuatro en total · reemplazan la interrupción del papel</text>
 
   <line x1="640" y1="160" x2="640" y2="205" stroke="#3D6B96" stroke-width="2" marker-end="url(#fl)"/>
   <text x="650" y="182" font-size="9.5" fill="#3D6B96">señal de cada canal</text>
@@ -79,7 +79,7 @@
 
   <!-- PROTECCION OBLIGATORIA -->
   <rect x="50" y="470" width="900" height="118" rx="10" fill="#F2F5F8" stroke="#9C5C0A" stroke-width="1.5" stroke-dasharray="6 3"/>
-  <text x="70" y="492" font-size="12" font-weight="bold" fill="#9C5C0A">El PhotoMOS no tiene partes móviles: aguanta 5 conmutaciones por segundo (300 pasadas/min) sin desgaste.</text>
+  <text x="70" y="492" font-size="12" font-weight="bold" fill="#9C5C0A">El LCA110 no tiene partes móviles: aguanta 5 conmutaciones por segundo (300 pasadas/min) sin desgaste.</text>
   <text x="70" y="514" font-size="10.5">El sistema corta la señal del lector óptico, no la corriente de la bobina: las plaquetas del telar quedan intactas.</text>
   
   <text x="70" y="554" font-size="10.5" font-weight="bold">Pendiente de medir: la salida del lector óptico (define cómo se conecta el relé) y el instante de lectura de la selección.</text>

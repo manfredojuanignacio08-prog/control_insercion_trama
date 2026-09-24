@@ -21,9 +21,9 @@
 
 <!-- fuente del telar -->
 <rect x="56" y="296" width="236" height="58" rx="6" fill="#E8EDF1" stroke="#CDD8E0"/>
-<text x="174" y="314" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1E3A5F">24 V ALTERNA DEL TELAR</text>
-<text x="174" y="330" text-anchor="middle" font-size="9.5" fill="#3F4B5C">Puente DB157 + capacitor 470 µF 50 V</text>
-<text x="174" y="345" text-anchor="middle" font-size="9" fill="#9C5C0A" font-weight="bold">Da unos 30-34 V DC · MEDIR: tope del sensor 36 V</text>
+<text x="174" y="314" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1E3A5F">12 A 14 V CONTINUOS DEL TELAR</text>
+<text x="174" y="330" text-anchor="middle" font-size="9.5" fill="#3F4B5C">Ya viene en continua: sin puente ni regulador</text>
+<text x="174" y="345" text-anchor="middle" font-size="9" fill="#9C5C0A" font-weight="bold">Lejos del tope de 36 V del sensor · MEDIR</text>
 <line x1="86" y1="212" x2="86" y2="296" stroke="#8B4513" stroke-width="2"/>
 <line x1="110" y1="238" x2="110" y2="296" stroke="#2C5AA0" stroke-width="2"/>
 
@@ -35,7 +35,7 @@
 <line x1="324" y1="212" x2="380" y2="212" stroke="#8B4513" stroke-width="2"/>
 <rect x="380" y="200" width="66" height="24" rx="3" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.5"/>
 <text x="413" y="216" text-anchor="middle" font-size="10" font-weight="bold">R1</text>
-<text x="413" y="240" text-anchor="middle" font-size="9" fill="#6B7684">ver tabla</text>
+<text x="413" y="240" text-anchor="middle" font-size="9" fill="#6B7684">1,2 kΩ</text>
 <line x1="446" y1="212" x2="512" y2="212" stroke="#1F2937" stroke-width="2"/>
 <line x1="324" y1="264" x2="512" y2="264" stroke="#1F2937" stroke-width="2"/>
 <text x="418" y="278" text-anchor="middle" font-size="9" fill="#6B7684">negro (señal)</text>
@@ -68,7 +68,7 @@
 <rect x="820" y="176" width="120" height="72" rx="6" fill="#1E3A5F"/>
 <text x="880" y="200" text-anchor="middle" font-size="11" font-weight="bold" fill="#FFFFFF">ESP32</text>
 <text x="880" y="217" text-anchor="middle" font-size="10" fill="#DCE7F0">pin de entrada</text>
-<text x="880" y="235" text-anchor="middle" font-size="9" fill="#7FA8C9">libre, con interrupción</text>
+<text x="880" y="235" text-anchor="middle" font-size="9" fill="#7FA8C9">GPIO 35, con interrupción</text>
 
 <line x1="682" y1="264" x2="880" y2="264" stroke="#1F2937" stroke-width="2"/>
 <line x1="880" y1="248" x2="880" y2="264" stroke="#1F2937" stroke-width="2"/>
@@ -81,8 +81,8 @@
 
 <!-- tabla de resistencia -->
 <rect x="24" y="452" width="932" height="88" rx="7" fill="#FFFFFF" stroke="#CDD8E0"/>
-<text x="42" y="474" font-size="11" font-weight="bold" fill="#1E3A5F">Valor de R1, según la tensión que entregue el telar</text>
-<text x="42" y="496" font-size="10" fill="#3F4B5C">Rectificando los 24 V AC del telar quedan unos 30 a 34 V DC  →  R1 = 3,3 kΩ de 1/2 W          ·          Fórmula: R1 = (tensión medida − 1,2 V) ÷ 0,010 A</text>
-<text x="42" y="516" font-size="9.5" fill="#6B7684">El 1,2 V es la caída del LED del optoacoplador y los 10 mA la corriente que se busca. A 34 V la resistencia disipa 0,33 W, por eso va de 1/2 W.</text>
-<text x="42" y="532" font-size="9.5" fill="#9C5C0A" font-weight="bold">Medir la continua rectificada con la máquina en marcha. Si superara los 36 V hay que bajarla: el sensor no tolera más.</text>
+<text x="42" y="474" font-size="11" font-weight="bold" fill="#1E3A5F">R1 = 1,2 kΩ con 12 a 14 V (unos 10 mA en el LED del PC817)</text>
+<text x="42" y="496" font-size="10" fill="#3F4B5C">Con 13 V de continua: (13 − 1,2) ÷ 0,010 A = 1.180 Ω, así que 1,2 kΩ de 1/4 W · Fórmula: R1 = (tensión medida − 1,2 V) ÷ 0,010 A</text>
+<text x="42" y="516" font-size="9.5" fill="#6B7684">El 1,2 V es la caída del LED del optoacoplador y los 10 mA la corriente que se busca. A 14 V la resistencia disipa 0,14 W: alcanza con 1/4 W.</text>
+<text x="42" y="532" font-size="9.5" fill="#9C5C0A" font-weight="bold">Medir la tensión con la máquina en marcha. Si diera 24 V, R1 pasa a 2,2 kΩ de 1/2 W; nunca debe superar los 36 V que tolera el sensor.</text>
 </svg>
