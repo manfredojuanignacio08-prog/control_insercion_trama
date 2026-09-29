@@ -100,7 +100,7 @@ Nivel 1 ya funciona y no conviene tocarlo mientras se desarrolla el Nivel 2.
 | Medición | Para qué |
 |---|---|
 | Tensión rectificada de los 24 V AC del telar | Elegir la resistencia del canal del sensor |
-| Relación de giro del eje elegido | Confirmar que da una vuelta por pasada |
+| Relación de giro del eje elegido | Confirmado el 10/09/2026: una vuelta por pasada |
 | Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado |
 | Si el agujero del papel abre o cierra el circuito | Definir si el relé va en serie o en paralelo, y el valor de `CANAL_ACTIVO_EN_ALTO` |
 | Sincronización entre el pulso del sensor y la lectura del telar | Ajustar `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba |

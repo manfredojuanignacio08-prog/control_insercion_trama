@@ -98,7 +98,7 @@ proyecto_completo/
 ```bash
 cd backend
 npm install
-cp .env.example .env      # completar DATABASE_URL con la URI de Neon
+cp .env.example .env      # completar DATABASE_URL con la URI de Neon, y PGSSL=true
 npm run init-db           # crea las tablas (solo la primera vez)
 npm start                 # levanta la API + la web en http://localhost:3000
 ```

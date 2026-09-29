@@ -18,6 +18,8 @@ que ya está; no pasa nada, el código nuevo todavía no está subido.
 |---|---|---|
 | `DATABASE_URL` | La de Neon (ya debería estar) | El servidor no arranca |
 | `NODE_ENV` | `production` | |
+| `PGSSL` | `true` | **El servidor no puede conectarse a Neon**: Neon exige conexión cifrada, y el código solo la activa con este valor |
+| `TRUST_PROXY` | `true` | Nada: en Render se activa solo. Es necesaria si el servidor corre detrás de otro proxy |
 | `SESSION_SECRET` | Clave larga al azar (ver abajo) | **El servidor no arranca** |
 | `RECOVERY_SECRET` | Otra clave larga al azar, **distinta** | **El servidor no arranca**. Cifra los códigos de recuperación en la base |
 | `ESP32_DEVICE_KEY` | Otra clave larga al azar, **distinta** | Ningún ESP32 puede conectarse |

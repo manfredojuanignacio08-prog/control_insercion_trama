@@ -330,7 +330,7 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 | `NODE_ENV` | Modo de ejecución (`development` o `production`) | `production` |
 | `CORS_ORIGIN` | Dominios que pueden llamar a la API. Vacío = cualquiera. | `https://miapp.com` |
 | `TRUST_PROXY` | Poner en `true` si hay Nginx u otro proxy delante (incluido Render) | `false` |
-| `RATE_LIMIT_MAX` | Máximo de solicitudes por IP por ventana de tiempo. **Ojo:** la web refresca el estado del telar cada 4s (≈225 pedidos por pestaña cada 15 min), así que con 2 pestañas abiertas un valor de `300` se agota solo y la app empieza a dar errores sin que nadie haga nada. Si venís de una versión anterior, revisá que tu `.env` no tenga `RATE_LIMIT_MAX=300`. | `900` |
+| `RATE_LIMIT_MAX` | Máximo de solicitudes por usuario (por IP antes de iniciar sesión) por ventana de tiempo. **Ojo:** la web refresca el estado del telar cada 4s (≈225 pedidos por pestaña cada 15 min), así que con 2 pestañas abiertas un valor de `300` se agota solo y la app empieza a dar errores sin que nadie haga nada. Si venís de una versión anterior, revisá que tu `.env` no tenga `RATE_LIMIT_MAX=300`. | `900` |
 | `RATE_LIMIT_WINDOW_MS` | Ventana de tiempo del rate limit en milisegundos | `900000` (15 min) |
 
 ---
@@ -457,4 +457,4 @@ las protecciones eléctricas recomendadas y el diagrama del circuito están en
 | Error al eliminar: "No se puede completar la operación" | El patrón tiene historial de producción. No se puede borrar para preservar el historial. |
 | `docker compose up` falla con "port already in use" | El puerto 3000 o 5432 está ocupado. Cambiarlo en `docker-compose.yml` o liberar el puerto. |
 | La app no trae datos | Verificar que el backend esté corriendo, que `http://localhost:3000/api/health` responda, y que la `BASE_URL` de la app apunte al backend. |
-| No se ve la tipografía Century Gothic (web de demo) | Es una fuente comercial, no se puede empaquetar. Si el equipo no la tiene instalada, cae automáticamente a `Questrial` (Google Fonts), la alternativa más parecida. |
+| No se ven las tipografías de la app (IBM Plex Sans, Questrial) | Se cargan desde Google Fonts. Sin internet, la app usa las fuentes del sistema del dispositivo y funciona igual. |

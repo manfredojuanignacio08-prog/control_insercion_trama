@@ -457,3 +457,83 @@ Se extrajeron los 251 textos que la aplicación le muestra al usuario (carteles,
 - **Cifras de funcionamiento en los documentos:** se contrastaron con el código todas las afirmaciones del tipo "cada
   2,5 s", "12 horas", "7 días", "3 usuarios", "300 ms", "8 segundos", "400 ms". Todas coinciden. Un comentario del
   código decía que el límite general de la API es de 300 pedidos cada 15 minutos; es de 900.
+
+## Documentación contrastada con la aplicación real, y las páginas de documentación
+
+- **La sección de interfaz de la Documentación describía una aplicación que no existe:** controles y métricas (velocidad,
+  tiempo estimado, porcentaje de avance) en la pantalla de Inicio, que están en el Editor o no existen; la grilla con el
+  modelo viejo ("1 representa alzada/lizo arriba"); herramientas de inversión, espejo y estructuras precargadas;
+  búsqueda por densidad y etiquetas; importación y exportación en JSON. Se reescribió pantalla por pantalla con lo que la
+  app hace, verificado en el código (también los epígrafes de las Figuras 6 y 7, y la sección 3.2 de funcionalidad).
+  El Product Backlog conserva sus ítems porque es planificación.
+- **La guía de estilos describía otro diseño:** tipografía Century Gothic (la app usa IBM Plex Sans, Questrial e IBM
+  Plex Mono), puntos de quiebre para tablet y escritorio (la app es una sola columna de hasta 430 px), una frase de
+  contraste de la paleta púrpura/crema vieja, y colores que no coinciden (degradado y texto claro). Corregido con los
+  valores reales de los estilos; también en el manual de instalación y el análisis del frontend.
+- **Manual:** nueva pregunta frecuente que explica por qué las pasadas y los metros aparecen con «≈» y que la estimación
+  se frena si se bloquea el celular donde se tocó ▶ (verificado: una segunda pantalla abierta no suma pasadas).
+- **Páginas de documentación:** no se les había aplicado validación ni auditoría de accesibilidad. Dos textos
+  alternativos tenían comillas que cortaban el atributo (el lector de pantalla leía la mitad), el visor de imágenes tenía
+  una imagen sin `src`, y el gris del menú lateral daba 3,91:1 en el tema claro (85 elementos). Ahora las dos validan
+  sin errores y tienen cero problemas de accesibilidad en los dos temas.
+
+## Cabecera de la página y largos máximos
+
+- **Ícono de la pestaña:** la app y las dos páginas de documentación no tenían, y el navegador daba un error 404 en cada
+  carga. Se agregó uno incrustado (la política de seguridad ya permite imágenes incrustadas), junto con el color de la
+  barra del navegador en el celular.
+- **Título de la pestaña de la app:** decía "Control de Dibujos"; ahora "Control de Inserción de Trama", como su portada.
+  Los títulos de las dos páginas de documentación usan el mismo separador.
+- **La fuente Questrial se pedía dos veces:** el bloque de fuentes estaba repetido. Quedó uno solo.
+- **Largos máximos:** el nombre de un dibujo no tenía tope (se podía guardar un texto de miles de caracteres) y el
+  usuario del registro tenía mínimo pero no máximo (se aceptó uno de 300). Ahora: dibujos hasta 100 caracteres y usuarios
+  de 3 a 40, en el servidor y en las casillas de la web. Probado: un nombre de 96 caracteres se muestra recortado con
+  puntos suspensivos, sin desbordar ninguna pantalla.
+- Verificado también: después de un despliegue, los celulares toman la versión nueva al recargar (el servidor obliga a
+  revalidar la página con su etiqueta de versión).
+
+## Registro de entrevistas
+
+Se completaron las decisiones de la reunión 5 con lo definido en el proyecto. Las de la reunión 6 quedan a completar con
+el resultado de la prueba del Nivel 1.
+
+## Reuniones 5 y 6, y estado del proyecto al día
+
+- **Registro de entrevistas:** reunión 5 (10/09/2026) y reunión 6 (19/09/2026) completas, con duración, decisiones y
+  temas. En la reunión 6 se registra que los tres comandos del Nivel 1 funcionaron desde la aplicación y que se detectó
+  el uso manual de la botonera, y los ajustes que surgieron en la prueba, tomados de lo que documenta el firmware del
+  Nivel 1: el relé de Retroceder resultó activo-alto (pull-down en vez de pull-up), el filtro de rebotes de 400 ms de la
+  botonera y el WiFi sin ahorro de energía.
+- **Cada vuelta del eje es una pasada** (confirmado en la reunión 5) y **el Bloque A está instalado y probado** (reunión
+  6): varios documentos los daban como pendientes. Se actualizaron el Estado del proyecto (tabla de bloques, sección
+  5.3, párrafo del sensor y lista de pendientes), el Conexionado (el eje pasó de incógnita a dato confirmado), la guía
+  de los Bloques C y D y el README del Nivel 2.
+
+## Campos numéricos: cómo escribe los números un usuario argentino
+
+- **Metros por pasada con coma:** el campo era de tipo número y el navegador descartaba la coma: "0,0007" llegaba como
+  7 y el servidor lo rechazaba con un mensaje técnico. Era imposible cargar el dato como se escribe en Argentina, aunque
+  el ejemplo del propio campo dice "0,0005". Ahora acepta coma o punto, valida el rango con un mensaje claro y muestra el
+  valor guardado con coma. La línea de equivalencia ya no aparece con valores inválidos y usa el singular cuando
+  corresponde. Probado con el navegador en español y en inglés.
+- **Repeticiones de cada fila:** "1,5", "1.000" o "2e3" se convertían en silencio en otro número, y algo que no era
+  número dejaba la fila en 1 (quien tenía 100 y se equivocaba perdía el dato). Ahora la casilla bloquea coma, punto,
+  signos y la "e", como las de filas y columnas, y si llega algo que no es un entero (por ejemplo, pegado) avisa y
+  conserva el valor anterior.
+- **Filas y columnas:** un valor pegado con decimales ("8.5") se truncaba en silencio y una casilla vacía volvía a un
+  tamaño por defecto. Ahora se avisa y se conserva el tamaño actual. Además, **achicar el dibujo borraba sin aviso las
+  celdas marcadas que quedaban afuera** (de 4 a 2 columnas se perdían las bobinas 3 y 4): ahora pide confirmación
+  indicando cuántas se pierden. Agregado al manual.
+
+## Pines del ESP32 y variables de entorno
+
+- **Pines:** verificados contra las restricciones del ESP32. Los relés (25, 26, 27) y las bobinas del Nivel 2 (18, 19,
+  21, 22) no usan pines de arranque; las entradas 34 y 35, que solo sirven como entrada y no tienen resistencias
+  internas, llevan resistencias externas, como indica el código. Ningún documento ni diagrama cita un pin distinto.
+- **`PGSSL=true` es obligatoria con Neon y no figuraba** en la guía de Render ni en el README del backend: el código
+  fija el cifrado de la conexión según esa variable (el `sslmode` de la URL no alcanza), y sin ella Neon rechaza la
+  conexión. Agregada, junto con `TRUST_PROXY` (que en Render se activa sola), y aclarado en `.env.example`.
+- **El límite de pedidos figuraba "por IP"** en el README y el manual de instalación, pero es por usuario (por IP solo
+  antes de iniciar sesión), para que en la fábrica, donde todos salen por la misma IP, nadie bloquee a los demás.
+- Todas las variables que lee el código están ahora documentadas en `.env.example` (faltaban los dos límites de pedidos
+  y el máximo de conexiones a la base), y ninguna documentada deja de usarse.

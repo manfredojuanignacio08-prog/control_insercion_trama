@@ -19,7 +19,7 @@
 | Alcance de telares para el MVP | **Esquema multi-telar desde ahora**, pero el piloto funcional arranca probando con **1 solo telar** conectado. |
 | Login de operarios | **No por ahora.** Sistema abierto en planta, sin tabla de usuarios ni auth en esta versión. |
 | ¿Dónde vive la base de datos? | **Neon** (PostgreSQL administrado en la nube), no una base local. Credenciales compartidas por el equipo. |
-| Tipografía del frontend | **Century Gothic**, con `Questrial` (Google Fonts) como respaldo, Century Gothic es una fuente comercial y no se puede empaquetar ni cargar desde un CDN gratuito, así que se usa si el sistema operativo del usuario ya la tiene instalada, y si no, cae a Questrial (la alternativa libre más parecida geométricamente). |
+| Tipografía del frontend | **IBM Plex Sans** para el texto, **Questrial** para los títulos e **IBM Plex Mono** para etiquetas y números, desde Google Fonts. |
 
 ---
 
@@ -450,7 +450,7 @@ límite y consistencia. Lo que se verificó y/o corrigió:
 - **Content-Security-Policy:** se confirmó que el CSP de helmet permite
   exactamente lo que el frontend usa (Google Fonts para la tipografía, jsPDF
   servido localmente) y nada más.
-- **Fuente sin internet:** el stack de fuentes cae a Century Gothic → Questrial
+- **Fuente sin internet:** cada tipografía cae a la fuente del sistema del dispositivo
   (Google Fonts) → fuente del sistema, así que la página se ve bien aun si la
   planta no tiene conexión. Se unificó el fallback de títulos y cuerpo.
 - **Cierre prolijo:** ante SIGTERM/SIGINT (lo que manda Render al reiniciar),
