@@ -225,8 +225,10 @@ Render necesita leer el código desde un repositorio de Git (no se sube el `.zip
 
 #### Paso 2, Conectar la base de datos del equipo (Neon)
 
-El equipo ya tiene una base de datos en **Neon**, con las 4 tablas creadas
-(`patrones`, `telares`, `historial_produccion`, `errores_log`). No hace falta
+El equipo ya tiene una base de datos en **Neon**, con las tablas creadas
+(las del telar: `patrones`, `telares`, `historial_produccion`, `errores_log`; y
+las del ingreso de usuarios). Las que falten, el servidor las crea solo al
+arrancar, con las migraciones. No hace falta
 crear una base nueva en Render (solo conectar el backend a esa).
 
 1. Pedile al responsable de la base de datos del equipo la contraseña de

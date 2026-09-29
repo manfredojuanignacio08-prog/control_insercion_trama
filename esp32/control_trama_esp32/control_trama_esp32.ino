@@ -317,6 +317,9 @@ void setup() {
 
 // Intenta una red concreta durante los segundos configurados.
 // Devuelve true si logró conectarse.
+// NOTA: es bloqueante (hasta WIFI_ESPERA_SEG por red, ~30 s entre ambas): mientras espera no
+// se sensan botones ni se reporta al backend. El delay(400) de abajo ya cede la CPU de forma
+// cooperativa y el wdt_reset evita el reinicio; no se cambia la lógica de reintento ni el watchdog.
 static bool intentarRed(const char* ssid, const char* pass) {
   if (ssid == nullptr || strlen(ssid) == 0) return false;   // red no configurada
   Serial.printf("Conectando a la red %s", ssid);
@@ -364,6 +367,8 @@ void loop() {
   if (WiFi.status() != WL_CONNECTED) {
     digitalWrite(PIN_LED, LOW);
     if (wifiPerdidoDesde == 0) wifiPerdidoDesde = millis();
+    // NOTA: conectarWifi() bloquea hasta ~30 s sin red (ver intentarRed): en ese lapso no hay
+    // sensado ni reportes; el delay(500) posterior ya cede la CPU. Sin cambios de lógica.
     conectarWifi();
     delay(500);
     return;  // sin red no se toma ninguna acción (fail-safe)
@@ -502,7 +507,9 @@ void sincronizarConBackend() {
   }
 
   if (deseadoAhora != estadoDeseado) {
-    // Anti-doble-pulso: respetar un tiempo mínimo entre comandos
+    // Anti-doble-pulso: respetar un tiempo mínimo entre comandos.
+    // NOTA: si `estado` y `retroceder_seq` cambian en el mismo sondeo, esta guarda
+    // retrasa el segundo comando al próximo polling (~2,5 s). Solo ordena, no pierde órdenes.
     if (millis() - ultimoComando < MIN_ENTRE_COMANDOS_MS) return;
 
     if (deseadoAhora == 1) {
@@ -533,6 +540,9 @@ void sincronizarConBackend() {
   }
 
   if (retrocederSeqAhora != retrocederSeqConocido) {
+    // NOTA: ver arriba. Si estado y retroceder_seq cambiaron en el mismo sondeo, el
+    // anti-doble-pulso (MIN_ENTRE_COMANDOS_MS) deja este segundo comando para el
+    // próximo polling (~2,5 s). Solo comentario: la lógica no cambia.
     if (millis() - ultimoComando < MIN_ENTRE_COMANDOS_MS) return;
 
     Serial.println("Backend pide RETROCEDER → pulso en relé de RETROCEDER");

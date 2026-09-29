@@ -812,6 +812,17 @@ COMMENT ON COLUMN historial_produccion.repeticion_en_fila IS
   'Cuántas pasadas de la fila actual ya se tejieron. Con repeticiones_por_fila del dibujo define la posición exacta dentro de la producción.';
 
 -- ============================================================
+-- migracion_016_recovery_cifrado.sql
+-- ============================================================
+-- 016 · recovery_code ahora guarda el código CIFRADO (AES-256-GCM), no texto plano.
+-- Sin cambio de esquema: la columna TEXT ya contiene el valor; las filas
+-- viejas en texto plano se migran solas al usarse (login por código o endpoint ver).
+-- Este archivo solo documenta el cambio para el tracking de migraciones.
+DO $$ BEGIN
+  RAISE NOTICE '016: recovery_code en reposo cifrado (ver auth.controller.js). Requiere RECOVERY_SECRET en el .env.';
+END $$;
+
+-- ============================================================
 -- Registro de migraciones
 -- ============================================================
 CREATE TABLE IF NOT EXISTS migraciones_aplicadas (
@@ -834,5 +845,15 @@ INSERT INTO migraciones_aplicadas (archivo) VALUES
   ('migracion_012_conteo_sensor_y_retrocesos.sql'),
   ('migracion_013_indice_unico_en_curso.sql'),
   ('migracion_014_repeticiones_por_fila.sql'),
-  ('migracion_015_repeticion_en_fila.sql')
+  ('migracion_015_repeticion_en_fila.sql'),
+  ('migracion_016_recovery_cifrado.sql')
 ON CONFLICT (archivo) DO NOTHING;
+
+-- ============================================================
+-- Verificación final: lista las tablas creadas (deben ser nueve).
+-- Es el resultado que se ve al terminar de correr este script.
+-- ============================================================
+SELECT table_name AS tablas_creadas
+  FROM information_schema.tables
+ WHERE table_schema = 'public'
+ ORDER BY table_name;

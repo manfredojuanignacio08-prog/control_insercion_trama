@@ -19,6 +19,7 @@ struct String {
   String(unsigned long v):s(std::to_string(v)){} String(unsigned v):s(std::to_string(v)){}
   bool startsWith(const char* p) const { return s.rfind(p,0)==0; }
   const char* c_str() const { return s.c_str(); }
+  unsigned int length() const { return (unsigned int)s.size(); }
   String operator+(const String& o) const { String r; r.s=s+o.s; return r; }
   String& operator+=(const String& o){ s+=o.s; return *this; }
   bool operator==(const char* o) const { return s==o; }

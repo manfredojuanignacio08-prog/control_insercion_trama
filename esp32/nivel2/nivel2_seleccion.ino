@@ -131,6 +131,7 @@ static bool intentarRed(const char* ssid, const char* pass) {
 // Primero la red de la fábrica; si falla, el punto de acceso del celular.
 void conectarWifi() {
   WiFi.mode(WIFI_STA);
+  WiFi.setSleep(false);   // sin ahorro de energía: evita microcortes (igual que el Nivel 1)
   bool ok = intentarRed(WIFI_SSID, WIFI_PASSWORD);
   if (!ok) ok = intentarRed(WIFI_SSID_ALT, WIFI_PASSWORD_ALT);
   log(ok ? "Red conectada" : "Sin red: el sistema queda en reposo");
@@ -171,9 +172,37 @@ bool descargarDibujo() {
 
   // ArduinoJson 7: el documento vive en el heap (no en la pila, que en esta tarea es finita:
   // 8 KB en la pila de loopTask desbordaban y reiniciaban la placa).
-  JsonDocument doc;
-  const DeserializationError err = deserializeJson(doc, http.getString());
+  // Límite explícito: un dibujo de 100 filas × 4 canales ocupa ~1 KB en JSON; 32 KB deja
+  // margen de sobra y evita que un payload anómalo agote el heap (OOM) al parsear.
+  static const size_t MAX_DIBUJO_BYTES = 32768;
+  // Si el servidor anuncia más de lo permitido, se rechaza sin ni siquiera traer el cuerpo.
+  const int tamAnunciado = http.getSize();
+  if (tamAnunciado > (int)MAX_DIBUJO_BYTES) {
+    log("Dibujo demasiado grande (" + String(tamAnunciado) + " bytes): se rechaza sin parsear");
+    http.end();
+    esp_task_wdt_reset();
+    return false;
+  }
+  const String cuerpoDibujo = http.getString();
   http.end();
+  esp_task_wdt_reset();
+  // Segunda barrera (respuestas fragmentadas anuncian -1): si igual llegó de más, no se parsea.
+  if (cuerpoDibujo.length() > MAX_DIBUJO_BYTES) {
+    log("Dibujo demasiado grande (" + String(cuerpoDibujo.length()) + " bytes): se rechaza sin parsear");
+    return false;
+  }
+
+  // El filtro deja pasar solo los campos que usa este nodo: el resto no ocupa RAM.
+  JsonDocument filtroDibujo;
+  filtroDibujo["matriz_pasadas"] = true;
+  filtroDibujo["repeticiones_por_fila"] = true;
+  filtroDibujo["fila_actual"] = true;
+  filtroDibujo["pasadas_sensor"] = true;
+  filtroDibujo["repeticion_en_fila"] = true;
+  filtroDibujo["patron_id"] = true;
+  JsonDocument doc;
+  const DeserializationError err =
+      deserializeJson(doc, cuerpoDibujo, DeserializationOption::Filter(filtroDibujo));
   esp_task_wdt_reset();
 
   if (err) {
@@ -385,6 +414,11 @@ void reportarPasadas() {
         log("El conteo local se reacomodó al del backend: " + String(guardado));
       }
     }
+  } else if (codigo > 0) {
+    // Antes un rechazo se descartaba en silencio: si el backend dejaba de aceptar los
+    // reportes (por ejemplo, una fila que no cuadra con el conteo), nadie se enteraba.
+    // Queda en el monitor serie, que es lo que se mira al instalar.
+    log("El backend rechazó el reporte de pasadas (código " + String(codigo) + "): " + http.getString());
   }
   http.end();
   esp_task_wdt_reset();

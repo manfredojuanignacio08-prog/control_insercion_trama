@@ -80,15 +80,21 @@ volatile unsigned long arranqueMs = 0;
 void IRAM_ATTR isrPasada() {
   const unsigned long ahora = millis();
 
+  // Las lecturas van DENTRO de la sección crítica (versión ISR): ultimoPulsoMs y
+  // esperandoReposo también los toca loop()/la red en el otro núcleo, y leerlos
+  // fuera permitía que cambiaran a mitad de la comprobación. Se copia a locales
+  // y se sale rápido para mantener la ISR corta.
+  portENTER_CRITICAL_ISR(&muxSensor);
+  const unsigned long ultimo = ultimoPulsoMs;
+  const bool enReposo = esperandoReposo;
   // Anti-rebote. A 5 pasadas por segundo hay 200 ms entre pulsos, así que
   // 60 ms filtra los rebotes sin riesgo de descartar un pulso legítimo.
-  if (ahora - ultimoPulsoMs < DEBOUNCE_PASADA_MS) return;
+  if (ahora - ultimo < DEBOUNCE_PASADA_MS) { portEXIT_CRITICAL_ISR(&muxSensor); return; }
 
   // Si el sensor todavía no volvió a reposo desde el pulso anterior, esto no es
   // una pasada nueva sino la misma paleta oscilando frente al sensor.
-  if (esperandoReposo) return;
+  if (enReposo) { portEXIT_CRITICAL_ISR(&muxSensor); return; }
 
-  portENTER_CRITICAL_ISR(&muxSensor);
   ultimoPulsoMs = ahora;
   esperandoReposo = true;
 
@@ -110,11 +116,24 @@ void IRAM_ATTR isrPasada() {
 // Se llama desde el bucle principal: libera la traba cuando el sensor dejó de
 // detectar metal, o sea cuando la paleta ya pasó de largo.
 void sensorPasadaActualizar() {
-  if (esperandoReposo && digitalRead(PIN_SENSOR_PASADA) == HIGH) {
+  // esperandoReposo lo escribe la ISR: se lee con copia atómica y el digitalRead
+  // (lento) se hace FUERA de la sección crítica; solo la escritura vuelve a entrar.
+  bool trabado;
+  portENTER_CRITICAL(&muxSensor);
+  trabado = esperandoReposo;
+  portEXIT_CRITICAL(&muxSensor);
+  if (trabado && digitalRead(PIN_SENSOR_PASADA) == HIGH) {
+    portENTER_CRITICAL(&muxSensor);
     esperandoReposo = false;
+    portEXIT_CRITICAL(&muxSensor);
   }
   // Aviso de retroceso vencido sin haberse consumido: se descarta.
-  if (pasadasARetroceder > 0 && (millis() - avisoRetrocesoMs) > CADUCIDAD_AVISO_RETROCESO_MS) {
+  // La lectura también es atómica: pasadasARetroceder lo toca la ISR y la red.
+  int pendientes;
+  portENTER_CRITICAL(&muxSensor);
+  pendientes = pasadasARetroceder;
+  portEXIT_CRITICAL(&muxSensor);
+  if (pendientes > 0 && (millis() - avisoRetrocesoMs) > CADUCIDAD_AVISO_RETROCESO_MS) {
     portENTER_CRITICAL(&muxSensor);
     pasadasARetroceder = 0;
     portEXIT_CRITICAL(&muxSensor);
