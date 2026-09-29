@@ -57,7 +57,7 @@
 <text x="850.0" y="521" text-anchor="middle" font-size="9.5" fill="#6B7684"></text>
 <text x="850.0" y="536" text-anchor="middle" font-size="9.5" fill="#6B7684">Puente DB157</text>
 <text x="850.0" y="551" text-anchor="middle" font-size="9.5" fill="#6B7684">Capacitor 22 a 47 µF</text>
-<text x="850.0" y="566" text-anchor="middle" font-size="9.5" fill="#6B7684">Resistencia 2,2 kΩ 1 W</text>
+<text x="850.0" y="566" text-anchor="middle" font-size="9.5" fill="#6B7684">2,2 kΩ 1 W (1,2 kΩ si mide menos de 18 V)</text>
 <text x="850.0" y="581" text-anchor="middle" font-size="9.5" fill="#6B7684">Optoacoplador PC817</text>
 <text x="850.0" y="596" text-anchor="middle" font-size="9.5" fill="#6B7684">Resistencia 10 kΩ a 3,3 V</text>
 <path d="M670 380 C 700 380, 700 505, 720 509" fill="none" stroke="#3D6B96" stroke-width="2"/>

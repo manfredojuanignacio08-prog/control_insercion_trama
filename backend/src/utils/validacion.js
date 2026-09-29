@@ -3,7 +3,7 @@
  * Devuelve un array de strings con los errores encontrados (vacío si está OK).
  */
 export function validarPatron(body) {
-  const { nombre, filas, columnas, matriz_pasadas, colores_filas, repeticiones_por_fila } = body;
+  const { nombre, filas, columnas, matriz_pasadas, colores_filas, metadata, repeticiones_por_fila } = body;
   const errores = [];
 
   if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
@@ -55,6 +55,38 @@ export function validarPatron(body) {
   if (colores_filas !== undefined && colores_filas !== null) {
     if (!Array.isArray(colores_filas) || (filasOk && colores_filas.length !== filas)) {
       errores.push(`colores_filas debe ser un array con ${filasOk ? filas : 'la misma cantidad de'} elementos.`);
+    } else {
+      // Un color por fila: hex de 6 dígitos (ej. "#1E3A5F") o null si la fila no
+      // tiene color. Sin este formato, el firmware y el PDF lo interpretan cada
+      // uno a su manera.
+      const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+      const colorMalo = colores_filas.some((c) => c !== null && (typeof c !== 'string' || !HEX_COLOR.test(c)));
+      if (colorMalo) errores.push('cada color de colores_filas debe ser un hex de 6 dígitos (ej. "#1E3A5F") o null.');
+    }
+  }
+
+  // metadata es opcional, pero si viene tiene que ser un objeto plano con las
+  // claves que usa el sistema (ver schema.sql: ej. {"tipo": "Tafetán"}). Sin
+  // lista cerrada, cualquier cliente podría guardar claves arbitrarias que el
+  // resto del código no conoce y que después nadie limpia.
+  const METADATA_PERMITIDAS = ['tipo', 'nota', 'autor', 'origen'];
+  if (metadata !== undefined && metadata !== null) {
+    const esObjetoPlano = typeof metadata === 'object' && !Array.isArray(metadata);
+    if (!esObjetoPlano) {
+      errores.push('metadata debe ser un objeto plano.');
+    } else {
+      const clavesMalas = Object.keys(metadata).filter((k) => !METADATA_PERMITIDAS.includes(k));
+      if (clavesMalas.length) {
+        errores.push(`metadata trae claves no permitidas (${clavesMalas.join(', ')}): solo se admite ${METADATA_PERMITIDAS.join(', ')}.`);
+      }
+      // Cada valor es un dato corto (un tipo de tejido, una nota, un nombre): sin tope,
+      // un solo campo podía pesar megas y quedar guardado en cada dibujo.
+      const MAX_VALOR_METADATA = 200;
+      const valoresMalos = Object.values(metadata).some(
+        (v) => !['string', 'number', 'boolean'].includes(typeof v)
+          || (typeof v === 'string' && v.length > MAX_VALOR_METADATA)
+      );
+      if (valoresMalos) errores.push('los valores de metadata deben ser texto (hasta 200 caracteres), número o booleano.');
     }
   }
 

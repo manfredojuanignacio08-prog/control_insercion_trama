@@ -38,6 +38,7 @@ services:
       CORS_ORIGIN: "${CORS_ORIGIN:-}"
       TRUST_PROXY: "false"
       SESSION_SECRET: ${SESSION_SECRET:?Definí SESSION_SECRET (mínimo 32 caracteres)}
+      RECOVERY_SECRET: ${RECOVERY_SECRET:?Definí RECOVERY_SECRET (mínimo 16 caracteres, cifra los códigos de recuperación)}
       ESP32_DEVICE_KEY: ${ESP32_DEVICE_KEY:?Definí ESP32_DEVICE_KEY}
       REGISTRO_LIBRE_MAX: ${REGISTRO_LIBRE_MAX:-3}
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-}

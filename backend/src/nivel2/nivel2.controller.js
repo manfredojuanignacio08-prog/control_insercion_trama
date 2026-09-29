@@ -6,6 +6,7 @@
 
 import { pool } from '../db.js';
 import { badRequest, notFound } from '../middleware/errorHandler.js';
+import { avanzarPosicionTejido, retrocederPosicionTejido } from '../utils/posicion.js';
 
 // Cuánto puede bajar el conteo entre dos reportes sin que se considere un error.
 // Con Retroceder el telar deshace pasadas y el contador del sensor BAJA de verdad
@@ -13,6 +14,16 @@ import { badRequest, notFound } from '../middleware/errorHandler.js';
 // reinició". Un descenso pequeño se acepta; uno grande casi seguro es un reinicio
 // del nodo que volvió a contar desde cero, y se ignora para no borrar tela tejida.
 const TOLERANCIA_RETROCESO = 25;
+
+// Cuánto puede diferir la posición (fila_actual / repeticion_en_fila) que informa
+// el ESP32 respecto de la que corresponde al conteo pasadas_sensor que trae el
+// mismo reporte. Tolerancia explícita: 2 pasadas. Cubre la carrera entre el
+// muestreo del contador y el cálculo de la fila dentro del propio firmware (el
+// telar teje hasta ~5 pasadas por segundo y ambos valores no se congelan en el
+// mismo instante). Un salto mayor es arbitrario: el nodo perdió su posición
+// (reinicio parcial, memoria corrupta) y se rechaza con 400 en lugar de
+// guardar una posición que dejaría un salto visible en la tela.
+const TOLERANCIA_POSICION_PASADAS = 2;
 
 /**
  * Devuelve la matriz del dibujo asignado a un telar.
@@ -99,7 +110,7 @@ export async function reportarPasadas(req, res, next) {
     // Se bloquea la fila del historial mientras se actualiza, para que dos
     // reportes seguidos no se pisen entre sí.
     const { rows } = await cliente.query(
-      `SELECT h.id, h.pasadas_sensor, p.filas, p.repeticiones_por_fila
+      `SELECT h.id, h.pasadas_sensor, h.fila_actual, h.repeticion_en_fila, p.filas, p.repeticiones_por_fila
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -127,6 +138,41 @@ export async function reportarPasadas(req, res, next) {
         motivo: 'El conteo recibido es mucho menor que el registrado: probablemente el nodo se reinició.',
         pasadas_sensor: actual.pasadas_sensor,
       });
+    }
+
+    // La fila que informa el nodo tiene que ser coherente con el conteo que trae
+    // el mismo reporte: pasadas_sensor es la fuente de verdad del avance y la
+    // posición se deriva de él. Se proyecta la posición guardada con el delta del
+    // conteo (la misma matemática que usan /avanzar y /retroceder) y se compara
+    // en "espacio de pasadas" contra la posición informada. Una fila fuera de
+    // rango se sigue ignorando como antes (no se rechaza); solo se rechaza una
+    // fila en rango que no corresponde al conteo. Sin posición guardada previa
+    // no hay contra qué cotejar y el reporte se acepta.
+    if (
+      Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas &&
+      Number.isInteger(actual.fila_actual) && Number.isInteger(actual.filas) && actual.filas > 0
+    ) {
+      const delta = pasadasSensor - actual.pasadas_sensor;
+      const repsDeFila = (i) => {
+        const r = Array.isArray(actual.repeticiones_por_fila) ? Number(actual.repeticiones_por_fila[i]) : NaN;
+        return Number.isInteger(r) && r >= 1 ? r : 1;
+      };
+      const aPasadas = (fila, rep) => {
+        let acc = 0;
+        for (let i = 0; i < fila; i++) acc += repsDeFila(i);
+        return acc + Math.max(0, Math.trunc(Number(rep) || 0));
+      };
+      const esperada = delta >= 0
+        ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0)
+        : retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0);
+      const diferencia = Math.abs(aPasadas(fila_actual, repeticion_en_fila) - aPasadas(esperada.fila_actual, esperada.repeticion_en_fila));
+      if (diferencia > TOLERANCIA_POSICION_PASADAS) {
+        await cliente.query('ROLLBACK');
+        throw badRequest(
+          `La posición informada (fila ${fila_actual}) no coincide con el conteo del sensor: ` +
+          `para ${pasadasSensor} pasadas se esperaba la fila ${esperada.fila_actual}.`
+        );
+      }
     }
 
     const filaValida = Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas

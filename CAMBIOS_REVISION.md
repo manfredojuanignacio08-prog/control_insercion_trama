@@ -274,3 +274,186 @@ y celular, y se ejecutaron los cien manejadores de clic distintos de la página 
   posterior ingreso con ella, "Ver mi código de recuperación", sesión vencida en uso, y la cadena del Nivel 2 con
   repeticiones contra el servidor real (incluido el reinicio del nodo, que retoma en la pasada exacta, y el
   retroceso desde la botonera).
+
+## Correcciones de otra revisión externa (evaluadas una por una)
+
+**Adoptadas, tras verificarlas:**
+- La revisión externa reemplazó la clave del WiFi de los dos `config` por textos de ejemplo. **No se adoptó**:
+  por decisión del equipo la clave sigue en los archivos (es la misma de la fábrica y no cambió).
+- **Códigos de recuperación cifrados en la base** (AES-256-GCM, clave `RECOVERY_SECRET`), migración 016,
+  script `npm run codigo <usuario> [--rotar]` y prueba `tests/recovery.test.mjs`. Probado contra PostgreSQL: un
+  usuario con código viejo sin cifrar entra y su código queda cifrado; un código falso sigue rechazado.
+- **`SESSION_SECRET` obligatoria en producción** (el servidor no arranca sin ella).
+- **`REGISTRO_LIBRE_MAX`** robusto ante valores inválidos; **escape de `%` y `_`** en la búsqueda de dibujos.
+- **Cotejo de la fila que reporta el Nivel 2** contra la que corresponde al conteo (tolerancia de 2 pasadas).
+  Probado: acepta los cambios de fila legítimos por repeticiones y rechaza una fila incoherente.
+- **Validación de `colores_filas`** (hexadecimal) y de `metadata`; grilla inicial de 8 × 4.
+- **Firmware:** WiFi sin ahorro de energía en el Nivel 2, filtro y tope de tamaño al leer el dibujo, y sección
+  crítica en la interrupción del sensor de pasada.
+
+**Descartada:** la migración 017 (rango de dimensiones). Partía de que un dibujo de más de 32 filas se rechazaba,
+pero eso ya lo resolvía la migración 014; se comprobó en una base real con un dibujo de 50 filas.
+
+**Completadas o corregidas al aplicarlas:**
+- El informe afirmaba que sin `RECOVERY_SECRET` el servidor no arrancaba, pero arrancaba igual y recién fallaba al
+  primer intento de recuperación. Ahora se verifica al arrancar, igual que `SESSION_SECRET`.
+- `RECOVERY_SECRET` no figuraba en `.env.example`, `DESPLIEGUE_RENDER.md` ni `PUESTA_EN_MARCHA.md`, y esta última
+  seguía diciendo que sin `SESSION_SECRET` el servidor "funciona igual".
+- **Retroceder con el sensor activo:** `retrocederTelar` ahora responde 409 `SENSOR_ACTIVO` sin tocar la
+  producción, como ya hacía `avanzarTelar`. Probado contra la base, con una prueba unitaria nueva.
+- El Nivel 2 **descartaba en silencio** los rechazos del backend; ahora los informa por el monitor serie.
+- Red de seguridad en la web: un color que no sea hexadecimal se manda como "sin color", para que un dibujo viejo
+  no quede imposible de guardar.
+- Los stubs de verificación del firmware no tenían `HTTPClient::getSize()` ni `String::length()`, que el código
+  nuevo usa: agregados.
+
+## Registro de entrevistas
+
+Se agregaron las reuniones 5 (soporte del sensor inductivo y definición de conexiones), 6 (conexión y prueba del
+Nivel 1) y 7 (conexión final y prueba del Nivel 2, todavía no realizada). Se numeraron a partir de 5 porque ya
+existía la reunión 4 del 06/09/2026. Las fechas y la modalidad quedan "a completar". Se ensanchó la columna de
+fechas, que partía "12/05/2026" en dos renglones.
+
+**Cantidad de telares:** la fábrica tiene once. Se corrigieron "seis telares operativos" (Estado del proyecto) y
+"las 6 máquinas de la fábrica" (Documentación, sección de lineamientos futuros, en el Word y en la web).
+
+## Revisión detallada: actualización de la base, scripts nuevos y Gantt
+
+- **Actualización de una base existente, probada de punta a punta:** se armó una base como la de la versión anterior
+  del proyecto (migraciones 001 a 011, sin tabla de registro), con dibujos con colores, dos producciones abiertas
+  duplicadas y un usuario con código de recuperación sin cifrar. Al arrancar el servidor nuevo se aplicaron las 16
+  migraciones, se conservaron los datos, la producción duplicada más vieja quedó cerrada sin borrarse, el usuario
+  entró con su código (que quedó cifrado) y un dibujo viejo con colores se volvió a guardar sin problemas.
+- **Script `npm run codigo`** probado contra la base: muestra el código descifrado, lo rota (el viejo deja de
+  servir y el nuevo funciona) y responde bien ante un usuario inexistente o faltante.
+- **Búsqueda:** buscar "%" o "_" encuentra solo los nombres que los contienen.
+- **`metadata`:** se agregó un tope de 200 caracteres por valor (antes un campo podía pesar megas).
+- **Registro de entrevistas:** reuniones 5 y 6 con fecha 10/09/2026 y 19/09/2026, presenciales (en ambas se montó
+  hardware en el telar). Sus decisiones y acuerdos siguen a completar.
+- **El Gantt de este repositorio estaba desactualizado** respecto del de Google Sheets del equipo (21 de 40 tareas
+  con otro avance). Resuelto en la ronda siguiente: ver abajo.
+
+## Gantt reemplazado por la versión de Google Sheets, corregida
+
+Se descargó la versión vigente del Gantt desde Google Drive y reemplazó a la copia vieja del repositorio. Sobre ella
+se corrigieron cinco errores, que la versión de Google Sheets todavía tenía:
+- **Duración de la tarea 3,4:** la fórmula restaba el fin de la fila 71 (`=K71-J59`, 16 días); ahora `=K59-J59`
+  (2 días). La suma de duraciones bajó de 327 a 313.
+- **Duración total del proyecto:** sumaba las duraciones de todas las tareas (327), que se superponen entre sí.
+  Ahora es fin menos inicio (`=D6-D5`): 243 días, la cifra de todos los documentos.
+- **Inicio del proyecto:** buscaba la primera fecha solo hasta la fila 77, y el fin hasta la 181. Ahora ambos
+  recorren todas las tareas.
+- **Etapa 05:** "Dobby con Solenoides" pasó a "selección del dibujo por las bobinas del telar".
+- **Hoja Estimación de Costos:** rearmada en pesos, con los diez roles y las horas reales repartidas.
+
+Se verificó celda por celda que no cambió nada más: la hoja GANTT difiere solo en esas celdas, y
+GANTT_Data_Referencias y Cashflow quedaron idénticas en fórmulas y valores.
+
+**Presupuesto recalculado con las horas reales:** 591 en vez de 599. Personal $29.411.089, costo $29.642.903,
+margen $7.410.726, **presupuesto $37.053.629** (antes $37.543.410). Actualizado en la Estimación, la Documentación,
+la Modalidad (hardware y software) y la documentación web; las cuentas cierran en los tres documentos.
+
+## Revisión de imágenes y diagramas
+
+Las revisiones anteriores buscaban errores en el texto, pero no dentro de las imágenes. Esta vez se leyó el texto
+de todos los diagramas (y de las imágenes sin fuente, por reconocimiento óptico). Se encontró y corrigió:
+
+- **Cronograma (`gantt.svg`):** decía 162 tareas y sus barras eran aproximadas y viejas (por ejemplo, la Etapa 03
+  figuraba de fines de mayo a mediados de julio, y dura del 18/06 al 06/07). Regenerado con las fechas reales del Gantt.
+- **Estructura de costos (`estimacion.svg`):** mostraba cifras de varias versiones atrás (presupuesto $30.910.671).
+  Actualizado al presupuesto vigente ($37.053.629) y verificadas sus cuentas.
+- **Modelo de datos (`ERD`, `DER_Negocio`, `DER_Autenticacion`):** dos nombres de tabla equivocados
+  ("registro_de_errores", "produccion_historial"), columnas inexistentes en usuarios, ninguna de las columnas agregadas
+  desde entonces, y dos tablas superpuestas. Regenerados leyendo el esquema real de la base (9 tablas, 82 columnas,
+  8 relaciones), con las flechas trazadas para que ninguna pase por detrás de una tabla.
+- **Arquitectura:** decía 4 tablas, la API no mencionaba el ingreso ni el historial, remitía a un archivo con una ruta
+  inexistente, no mencionaba el Nivel 2, y usaba un rosa y un azul fuera de la paleta.
+- **Organigrama:** "Jacó (D2/UX)"; en el Gantt, D02 es Mia Iannone y Jacó figura como IM02 y DUX.
+- **Bloques A y C y Bloque A:** daban la botonera como 24 V alterna y la resistencia fija en 2,2 kΩ, cuando en el
+  C 401 hay que medirla y el valor depende de lo que dé.
+- **Conexión eléctrica:** fondo rosa sin significado en la etapa de sensado.
+- Se reemplazaron también las copias en la Documentación (en Word, ajustando el marco a la nueva proporción), en la
+  documentación web (incluidas figuras viejas que la página ya no usa pero se publicarían igual) y en los entregables.
+
+**Textos corregidos a raíz de lo anterior:** la Documentación y la web decían que el modelo tiene "cinco entidades"
+(son nueve tablas); el README y el manual de instalación, "4 tablas"; y la guía para crear la base le pedía al usuario
+verificar un listado de 4 tablas que el script ya no mostraba. Ahora el script termina listando las nueve tablas y la
+guía describe ese resultado. El Estado decía que la Documentación tiene 14 tablas y 12 figuras: son 15 y 14.
+
+## Capturas de la aplicación en los manuales, y errores que destaparon
+
+Se volvieron a sacar las 19 capturas de la aplicación que usan el manual web (16), la documentación web (3) y sus
+versiones en Word, con una base de ejemplo y en el estado exacto que describe cada epígrafe. Las anteriores mostraban
+la grilla vieja de 8 × 8 sin la columna de repeticiones, y cuatro tenían el cartel de error "No se pudo conectar con el
+servidor". En los Word se reemplazaron emparejando cada imagen con su número o su epígrafe, no por parecido, porque
+varias capturas viejas del editor eran casi idénticas entre sí.
+
+**Epígrafes y textos corregidos:**
+- "Los números dentro de las celdas son las pasadas de cada punto": era el modelo viejo. Ahora explica que cada fila es
+  una pasada, las celdas marcadas son las bobinas que se activan y el número de la derecha son las repeticiones.
+- Tres epígrafes no coincidían con su imagen (simulador de color, diálogo de guardado, biblioteca con dibujos): ahora
+  cada captura muestra lo que su epígrafe dice.
+- El manual decía que filas y columnas van "de 2 a 32" y que un valor mayor "lo deja en 32": ahora 1 a 100 filas y 1 a 8
+  columnas, y el ejemplo de 150 filas que quedan en 100 (el que muestra la captura).
+- El indicador de estado ahora nombra también "Editando".
+- La Documentación tenía tres epígrafes para dos imágenes: la Figura 9 no tenía imagen y repetía el texto de la 8. Se
+  eliminó y se renumeraron las siguientes (ahora son 13 figuras), también en la web.
+
+**Errores de la aplicación encontrados al sacar las capturas:**
+- **El indicador de estado nunca volvía a "Guardado"** después del guardado automático: quedaba en "Modificado" hasta
+  apretar Guardar, aunque el cambio ya estuviera en el servidor, contradiciendo al manual ("informa si hay cambios sin
+  guardar"). Ahora pasa a "Guardado" cuando el guardado automático termina bien, y queda en "Modificado" si falla.
+- **"Nuevo" siempre advertía "se perderán los cambios no guardados"**, aunque no hubiera ninguno. Ahora pregunta solo si
+  de verdad hay un cambio que no llegó al servidor (probado cortando la conexión).
+- **"Tejido pausado" aparecía sin que hubiera nada tejiéndose** al crear un dibujo nuevo: la función usaba para decidirlo
+  la fila elegida para el color, que tocar una celda cambia. Ahora avisa solo si se estaba tejiendo.
+- En el diálogo de guardado, **la opción segura ("Guardar y crear uno nuevo") iba en rojo**, el color de las acciones
+  destructivas. Ninguna de las dos borra nada: ahora va en el color de acento.
+- El ícono del telar estaba incrustado **tres veces** (29 KB cada una): ahora una sola, y la página pasó de 214 KB a
+  156 KB.
+- La ficha mostraba una raya larga como fecha de un dibujo que nunca se tejió: ahora dice "Todavía no". Y un comentario
+  del código seguía diciendo "rango permitido (2 a 32)". El barrido del zip no revisaba los archivos HTML; ahora sí.
+
+## Empaquetado
+
+- **Los nombres con tilde se guardaban mal dentro de los zips.** La herramienta de compresión no marcaba los nombres
+  como UTF-8, y Windows los interpreta con otra codificación: al descomprimir, "Documentación_de_Proyecto.docx" y
+  "Bitácora.docx" aparecían como "Documentaci├│n_de_Proyecto.docx" y "Bit├ícora.docx". Los zips se arman ahora
+  marcando la codificación, y se verificó descomprimiéndolos: los cuatro devuelven sus archivos idénticos al original.
+- Se verificó además que el zip del proyecto coincide archivo por archivo con el repositorio (173 archivos, incluidos
+  los ocultos `.gitignore`, `.env.example` y `.dockerignore`), que las pruebas no dejan archivos en el proyecto, y que
+  `package-lock.json` instala exactamente las versiones corregidas con `npm ci`, sin vulnerabilidades.
+
+## Textos de la aplicación
+
+Se extrajeron los 251 textos que la aplicación le muestra al usuario (carteles, diálogos, botones, etiquetas).
+
+- **Voseo:** cuatro textos estaban en tuteo ("Confirma que deseas continuar", "¿Qué deseas hacer?", "Selecciona un
+  dibujo…", "¿Deseas aplicar este color…?") frente a quince en voseo. Unificados.
+- **"Inserción" por "dibujo":** siete mensajes llamaban "inserción" al dibujo ("¿Guardar inserción?", "Inserción
+  eliminada"…), mientras el resto de la aplicación y los manuales dicen "dibujo". Unificados; "Control de Inserción de
+  Trama" queda, porque es el nombre del sistema.
+- **Nombre de los dibujos nuevos:** el botón Nuevo proponía "Nueva Inserción N" con su propia lógica, sin verificar que
+  el nombre no existiera, mientras la numeración de la app solo reconoce "Nuevo Dibujo N"; el nombre podía repetirse y
+  la base rechazarlo. Ahora usa la misma rutina que al entrar al editor (probado: tres vueltas con recarga, nombres
+  consecutivos y sin repetir).
+- **"Editor reiniciado: Matriz nueva lista"** aparecía cada vez que se entraba al editor con un dibujo nuevo, sin que el
+  usuario hubiera reiniciado nada. Quitado, junto con un mensaje de depuración que quedaba en la consola.
+- Ortografía: una búsqueda de palabras que deberían llevar tilde en todos los textos que lee una persona (aplicación,
+  manuales, documentos y guías) no encontró errores; los únicos resultados eran nombres de columnas de la base.
+- Se volvieron a sacar las capturas, porque dos mostraban los textos viejos.
+
+## Mensajes del servidor y ritmo de la estimación
+
+- **Mensajes del servidor:** se revisaron los 87 mensajes que devuelve el backend. Sin tuteo ni inglés, pero siete
+  decían "No existe el patrón con id…", un mensaje que el usuario puede ver (por ejemplo, si otra persona borra un
+  dibujo mientras él lo edita). Ahora dicen "dibujo". Los de validación conservan los nombres técnicos de los campos
+  porque describen el formato de la API y la web nunca manda datos que los disparen.
+- **Ritmo de la estimación de pasadas:** mientras el sensor no está instalado, la web estima el tejido por tiempo, y lo
+  hacía a una pasada cada 500 ms (120 por minuto). El dueño confirmó que la máquina teje 300 por minuto, así que las
+  pasadas y los metros estimados quedaban en el 40 % de lo real. Ahora usa ese ritmo (una pasada cada 200 ms), con una
+  constante con nombre. Medido en el navegador: unas 295 pasadas por minuto, todas aceptadas por el servidor (la ruta
+  admite hasta 20 por segundo).
+- **Cifras de funcionamiento en los documentos:** se contrastaron con el código todas las afirmaciones del tipo "cada
+  2,5 s", "12 horas", "7 días", "3 usuarios", "300 ms", "8 segundos", "400 ms". Todas coinciden. Un comentario del
+  código decía que el límite general de la API es de 300 pedidos cada 15 minutos; es de 900.

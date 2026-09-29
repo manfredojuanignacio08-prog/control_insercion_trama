@@ -4,28 +4,31 @@ La fábrica tiene telares C 201, C 301 y C 401; el equipo investigó los tres, p
 instala en el **C 401** (cuatro bobinas de selección). Este documento reúne lo que hay que hacer
 antes y durante la instalación. Nada de esto se puede verificar sin la máquina.
 
-## 1. Claves del sistema (SESSION_SECRET y ESP32_DEVICE_KEY)
+## 1. Claves del sistema (SESSION_SECRET, RECOVERY_SECRET y ESP32_DEVICE_KEY)
 
-Son dos contraseñas largas que el servidor necesita. Se cargan como **variables de entorno** en Render
+Son tres contraseñas largas que el servidor necesita. Se cargan como **variables de entorno** en Render
 (no van escritas en el código).
 
 | Variable | Para qué sirve | Qué pasa si falta |
 |---|---|---|
-| `SESSION_SECRET` | El servidor firma con ella la cookie de sesión de quien inicia sesión. Sin una clave secreta, cualquiera podría fabricar una cookie falsa. | Se usa una clave temporal: funciona, pero todos quedan deslogueados en cada reinicio del servidor. |
+| `SESSION_SECRET` | El servidor firma con ella la cookie de sesión de quien inicia sesión. Sin una clave secreta, cualquiera podría fabricar una cookie falsa. | **El servidor no arranca.** |
+| `RECOVERY_SECRET` | Cifra los códigos de recuperación guardados en la base: sin ella, quien consiga una copia de la base no puede usarlos. Mínimo 16 caracteres. | **El servidor no arranca.** Si se cambia después, los códigos guardados dejan de leerse: regenerarlos con `npm run codigo <usuario> --rotar`. |
 | `ESP32_DEVICE_KEY` | Contraseña compartida entre el servidor y los ESP32. Ellos no tienen huella ni navegador: mandan esta clave en cada pedido (header `X-Device-Key`). | El servidor rechaza a los ESP32 con error 401 y no controlan nada. |
 
 **Pasos**
 
-1. Generar dos valores **distintos** y largos (mínimo 32 caracteres):
+1. Generar tres valores **distintos** y largos (mínimo 32 caracteres):
    `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` (o un generador de contraseñas).
-2. En Render: el servicio → **Environment** → agregar `SESSION_SECRET` y `ESP32_DEVICE_KEY` con esos valores →
+2. En Render: el servicio → **Environment** → agregar `SESSION_SECRET`, `RECOVERY_SECRET` y `ESP32_DEVICE_KEY` con esos valores →
    guardar (Render redespliega solo). Agregar también `WEBAUTHN_RP_ID` (solo el dominio, ej. `control-trama-backend.onrender.com`) y `WEBAUTHN_ORIGIN` (con https, ej. `https://control-trama-backend.onrender.com`).
 3. Copiar **el mismo valor** de `ESP32_DEVICE_KEY` en `DEVICE_KEY` de `esp32/control_trama_esp32/config.h`
    (Nivel 1) y de `esp32/nivel2/config_nivel2.h` (Nivel 2), y volver a cargar los firmwares. Tienen que ser
-   idénticos, carácter por carácter.
+   idénticos, carácter por carácter. En esos mismos dos archivos están `WIFI_SSID` y `WIFI_PASSWORD` de la red de la fábrica:
+   si la clave del router cambia, hay que actualizarla en los dos.
 4. Comprobar: el monitor serie no muestra errores 401 y en la web se puede iniciar sesión.
 
-No publicar estas claves en el repositorio ni compartirlas. En el repo queda el texto de ejemplo; la clave
+No publicar estas claves en el repositorio ni compartirlas. La del WiFi de la fábrica sí está en los dos
+`config`: si el repositorio es público, cualquiera que lo lea la ve. En el repo queda el texto de ejemplo; la clave
 real va solo en la copia que se carga a la placa y en Render. Si se sospecha que una se filtró, se cambia en
 Render y en los firmwares.
 
@@ -72,7 +75,7 @@ Hasta validarlo, los metros de las estadísticas figuran como **estimados** (≈
 
 ## 4. Lista de primera puesta en marcha
 
-- [ ] Claves cargadas en Render y en los dos `config` (sección 1).
+- [ ] Claves cargadas en Render (`SESSION_SECRET`, `RECOVERY_SECRET`, `ESP32_DEVICE_KEY`) y en los dos `config` (sección 1).
 - [ ] `N_CANALES = 4` y `elementos_seleccion = 4` (ya están así).
 - [ ] `TELAR_ID` de los dos firmwares igual al id del telar que muestra la web. Con la sesión
       iniciada, abrir `https://control-trama-backend.onrender.com/api/telares`: la web usa el

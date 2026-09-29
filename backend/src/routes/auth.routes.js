@@ -35,11 +35,11 @@ router.post('/invitado', entrarComoInvitado);
 router.get('/estado-registro', estadoRegistro);
 
 // Registro de una huella dactilar (dos pasos: iniciar → verificar)
-router.post('/registro/iniciar', iniciarRegistro);
-router.post('/registro/verificar', verificarRegistro);
+router.post('/registro/iniciar', limiteIntentos, iniciarRegistro);
+router.post('/registro/verificar', limiteIntentos, verificarRegistro);
 
 // Login con huella dactilar ya registrada (dos pasos: iniciar → verificar)
-router.post('/login/iniciar', iniciarLogin);
+router.post('/login/iniciar', limiteIntentos, iniciarLogin);
 router.post('/login/verificar', limiteIntentos, verificarLogin);
 
 // Recupero de acceso con código de recuperación

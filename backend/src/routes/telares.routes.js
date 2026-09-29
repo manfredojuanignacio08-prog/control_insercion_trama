@@ -16,8 +16,8 @@ router.param('id', (req, res, next, id) => {
 });
 
 // avanzar/retroceder se llaman en CADA paso de la animación de tejido
-// (cada 100-500ms mientras Play está activo), el límite general de la API
-// (300 cada 15 min, pensado para uso normal) se agota en un par de minutos
+// (cada 200 ms mientras Play está activo, el ritmo de la máquina), el límite general
+// de la API (900 cada 15 min, pensado para uso normal) se agota en un par de minutos
 // con eso. Estas dos rutas tienen su propio límite, mucho más generoso
 // (hasta ~20 solicitudes por segundo sostenidas), pensado específicamente
 // para esa frecuencia.

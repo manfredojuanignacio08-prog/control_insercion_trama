@@ -109,7 +109,7 @@ export async function asignarPatron(req, res, next) {
     if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
 
     const patron = await client.query('SELECT id, nombre, columnas FROM patrones WHERE id = $1', [patron_id]);
-    if (patron.rows.length === 0) throw notFound(`No existe el patrón con id ${patron_id}.`);
+    if (patron.rows.length === 0) throw notFound(`No existe el dibujo con id ${patron_id}.`);
 
     // Cada telar tiene una cantidad fija de elementos de selección (bobinas). Está
     // guardada por telar en la columna elementos_seleccion (por defecto 4, las del
@@ -618,8 +618,23 @@ export async function retrocederTelar(req, res, next) {
 
     await client.query('BEGIN');
 
-    const existeTelar = await client.query('SELECT id FROM telares WHERE id = $1', [id]);
+    const existeTelar = await client.query(
+      `SELECT id, (ultimo_reporte_sensor IS NOT NULL
+                   AND ultimo_reporte_sensor > now() - interval '${SENSOR_VIGENTE_SEG} seconds') AS sensor_activo
+         FROM telares WHERE id = $1`,
+      [id]
+    );
     if (existeTelar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    // Mismo criterio que avanzarTelar: con el sensor del Nivel 2 activo, él es la
+    // fuente de verdad de la posición y del conteo. El retroceso por reloj de la
+    // web no debe descontar nada: se responde 409 sin tocar la producción.
+    if (existeTelar.rows[0].sensor_activo) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        error: 'El conteo y la posición los lleva el sensor de pasada: la web no retrocede por reloj.',
+        codigo: 'SENSOR_ACTIVO',
+      });
+    }
 
     const enCurso = await client.query(
       `SELECT h.*, p.matriz_pasadas, p.repeticiones_por_fila
@@ -634,7 +649,7 @@ export async function retrocederTelar(req, res, next) {
     }
 
     const row = enCurso.rows[0];
-    const { fila_actual, repeticion_en_fila, vueltas_deshechas, al_inicio } =
+const { fila_actual, repeticion_en_fila, vueltas_deshechas, al_inicio } =
       retrocederPosicionTejido(row.fila_actual, row.matriz_pasadas, pasos, row.repeticiones_por_fila, row.repeticion_en_fila);
 
     const actualizado = await client.query(

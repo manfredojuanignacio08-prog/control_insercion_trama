@@ -7,6 +7,13 @@ import { notFound, badRequest, conflict } from '../middleware/errorHandler.js';
 // GET /api/patrones?buscar=texto&limit=500&offset=0
 // Con límite (por defecto 500, máximo 1000) para que la respuesta no crezca sin tope
 // a medida que se guardan dibujos.
+// En ILIKE, `%`, `_` y `\` del término buscado son comodines: sin escaparlos,
+// buscar "100%" o "_" devuelve dibujos que no contienen ese texto
+// (wildcard-injection). Se escapan con `\` y se declara ESCAPE '\\'.
+function escaparTerminoLike(texto) {
+  return String(texto).replace(/[\\%_]/g, (c) => `\\${c}`);
+}
+
 export async function listarPatrones(req, res, next) {
   try {
     const { buscar } = req.query;
@@ -15,8 +22,8 @@ export async function listarPatrones(req, res, next) {
     const params = [];
     let query = 'SELECT * FROM patrones';
     if (buscar) {
-      query += ' WHERE nombre ILIKE $1';
-      params.push(`%${buscar}%`);
+      query += ` WHERE nombre ILIKE $1 ESCAPE '\\'`;
+      params.push(`%${escaparTerminoLike(buscar)}%`);
     }
     params.push(limite, desplazamiento);
     query += ` ORDER BY modificado_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`;
@@ -31,7 +38,7 @@ export async function listarPatrones(req, res, next) {
 export async function obtenerPatron(req, res, next) {
   try {
     const { rows } = await pool.query('SELECT * FROM patrones WHERE id = $1', [req.params.id]);
-    if (rows.length === 0) throw notFound(`No existe el patrón con id ${req.params.id}.`);
+    if (rows.length === 0) throw notFound(`No existe el dibujo con id ${req.params.id}.`);
     res.json(rows[0]);
   } catch (err) {
     next(err);
@@ -88,7 +95,7 @@ export async function actualizarPatron(req, res, next) {
       `SELECT filas, columnas, matriz_pasadas,
               date_trunc('milliseconds', modificado_at) AS version
          FROM patrones WHERE id = $1`, [id]);
-    if (actual.rows.length === 0) throw notFound(`No existe el patrón con id ${id}.`);
+    if (actual.rows.length === 0) throw notFound(`No existe el dibujo con id ${id}.`);
 
     // Control de versión optimista. La web manda la fecha de modificación que tenía
     // cuando cargó (o guardó por última vez) el dibujo. Si no coincide, otra persona
@@ -148,7 +155,7 @@ export async function actualizarPatron(req, res, next) {
       ]
     );
 
-    if (rows.length === 0) throw notFound(`No existe el patrón con id ${id}.`);
+    if (rows.length === 0) throw notFound(`No existe el dibujo con id ${id}.`);
     res.json(rows[0]);
   } catch (err) {
     next(err);
@@ -159,7 +166,7 @@ export async function actualizarPatron(req, res, next) {
 export async function eliminarPatron(req, res, next) {
   try {
     const { rows } = await pool.query('DELETE FROM patrones WHERE id = $1 RETURNING id', [req.params.id]);
-    if (rows.length === 0) throw notFound(`No existe el patrón con id ${req.params.id}.`);
+    if (rows.length === 0) throw notFound(`No existe el dibujo con id ${req.params.id}.`);
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -196,7 +203,7 @@ export async function actualizarMetrosPorPasada(req, res, next) {
       RETURNING id, nombre, metros_por_pasada, modificado_at`,
       [metros_por_pasada, id]
     );
-    if (r.rows.length === 0) return res.status(404).json({ error: `No existe el patrón con id ${id}.` });
+    if (r.rows.length === 0) return res.status(404).json({ error: `No existe el dibujo con id ${id}.` });
     res.json(r.rows[0]);
   } catch (err) {
     next(err);
@@ -224,7 +231,7 @@ export async function estadisticasPatron(req, res, next) {
   try {
     const { id } = req.params;
     const p = await pool.query('SELECT id, nombre, filas, columnas, metros_por_pasada FROM patrones WHERE id = $1', [id]);
-    if (p.rows.length === 0) return res.status(404).json({ error: `No existe el patrón con id ${id}.` });
+    if (p.rows.length === 0) return res.status(404).json({ error: `No existe el dibujo con id ${id}.` });
 
     const h = await pool.query(
       `SELECT COUNT(*)::int                                            AS producciones,

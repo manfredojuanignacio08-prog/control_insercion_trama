@@ -31,10 +31,20 @@ import 'dotenv/config';
 import crypto from 'crypto';
 
 const COOKIE = 'trama_sesion';
+const ES_PROD = process.env.NODE_ENV === 'production';
 let secreto = process.env.SESSION_SECRET;
 if (!secreto || secreto.length < 32) {
-  // Si falta, se genera una clave al azar en cada arranque: es seguro (nadie puede
-  // falsificar una cookie) pero las sesiones no sobreviven a un reinicio del servidor.
+  if (ES_PROD) {
+    // En producción, arrancar sin secreto es peor que no arrancar: cualquier
+    // caída anterior invalidaría todo igual, pero una clave débil o ausente
+    // permite falsificar sesiones. Fallar cerrado obliga a configurarlo.
+    throw new Error(
+      'SESSION_SECRET no está definida (o tiene menos de 32 caracteres). ' +
+      'Definila en el .env antes de arrancar en producción.'
+    );
+  }
+  // Solo desarrollo/test: clave temporal por arranque (las sesiones no
+  // sobreviven a un reinicio, pero nadie puede falsificar una cookie).
   secreto = crypto.randomBytes(32).toString('hex');
   console.warn(
     '⚠ SESSION_SECRET no está definida (o tiene menos de 32 caracteres). Se usa una clave temporal: ' +

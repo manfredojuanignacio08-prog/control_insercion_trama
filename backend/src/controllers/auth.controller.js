@@ -64,8 +64,9 @@ const CHALLENGE_TTL_MIN = 5; // los desafíos vencen a los 5 minutos
 // Esto importa para la seguridad: como registrarse da acceso a la API, un registro
 // abierto y sin límite dejaría entrar a cualquiera que escribiera un nombre de usuario.
 // Para volver al registro abierto (solo pruebas): REGISTRO_LIBRE_MAX=Infinity en el .env.
-const LIMITE_LIBRE = process.env.REGISTRO_LIBRE_MAX !== undefined && process.env.REGISTRO_LIBRE_MAX !== ''
-  ? Number(process.env.REGISTRO_LIBRE_MAX)
+const _limiteEnv = process.env.REGISTRO_LIBRE_MAX;
+const LIMITE_LIBRE = (_limiteEnv !== undefined && _limiteEnv !== '' && Number.isFinite(Number(_limiteEnv)))
+  ? Number(_limiteEnv)
   : 3;
 
 // Un usuario recién creado que todavía no completó el registro de su huella puede
@@ -83,6 +84,87 @@ const deB64 = (str) => Buffer.from(str, 'base64url');
 // Hash SHA-256 (para guardar códigos de recuperación e invitación sin texto plano)
 const hashCodigo = (codigo) =>
   crypto.createHash('sha256').update(String(codigo).trim().toUpperCase()).digest('hex');
+
+// ─── Cifrado del código de recuperación en reposo ────────────────────
+// La columna recovery_code YA NO guarda texto plano: guarda el código
+// cifrado con AES-256-GCM (base64). Un volcado de la base ya no alcanza
+// para entrar como otro usuario: hace falta además RECOVERY_SECRET del .env
+// (mínimo 16 caracteres, 32 recomendados). En producción sin esa variable
+// el servidor no arranca (fallar cerrado); en desarrollo/test se usa una
+// clave temporal del proceso (con aviso).
+// Las filas viejas con texto plano se aceptan UNA vez y se migran a
+// cifrado automáticamente al usarlas (ver coincideCodigo()).
+// Se verifica al cargar el módulo, es decir al arrancar el servidor. Si solo se
+// verificara dentro de claveRecovery(), el servidor arrancaría igual y recién
+// fallaría la primera vez que alguien intentara recuperar su cuenta, que es el peor
+// momento para enterarse. Mismo criterio que SESSION_SECRET en middleware/auth.js.
+if (process.env.NODE_ENV === 'production' &&
+    !(process.env.RECOVERY_SECRET && process.env.RECOVERY_SECRET.length >= 16)) {
+  throw new Error(
+    'RECOVERY_SECRET no está definida (o tiene menos de 16 caracteres). ' +
+    'Definila en el .env antes de arrancar en producción.'
+  );
+}
+
+function claveRecovery() {
+  const s = process.env.RECOVERY_SECRET;
+  if (s && s.length >= 16) return crypto.createHash('sha256').update(s).digest();
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('RECOVERY_SECRET no está definida (mínimo 16 caracteres). Definila en el .env.');
+  }
+  if (!globalThis.__recoveryTmp) {
+    globalThis.__recoveryTmp = crypto.randomBytes(32);
+    console.warn('⚠ RECOVERY_SECRET no definida: cifrado de recuperación temporal (solo desarrollo/test).');
+  }
+  return globalThis.__recoveryTmp;
+}
+
+function cifrarCodigo(codigo) {
+  const iv = crypto.randomBytes(12);
+  const c = crypto.createCipheriv('aes-256-gcm', claveRecovery(), iv);
+  const enc = Buffer.concat([c.update(String(codigo), 'utf8'), c.final()]);
+  return `gcm1.${iv.toString('base64url')}.${enc.toString('base64url')}.${c.getAuthTag().toString('base64url')}`;
+}
+
+// Devuelve: el código (string) si es cifrado válido; null si es texto
+// plano legado; undefined si es cifrado pero ilegible (otra clave).
+function descifrarCodigo(guardado) {
+  const partes = String(guardado || '').split('.');
+  if (partes.length !== 4 || partes[0] !== 'gcm1') return null;
+  try {
+    const d = crypto.createDecipheriv('aes-256-gcm', claveRecovery(), Buffer.from(partes[1], 'base64url'));
+    d.setAuthTag(Buffer.from(partes[3], 'base64url'));
+    return Buffer.concat([d.update(Buffer.from(partes[2], 'base64url')), d.final()]).toString('utf8');
+  } catch { return undefined; }
+}
+
+// ¿El código ingresado coincide con lo guardado (cifrado, plano legado o
+// hash viejo)? Devuelve {ok, migrar}: migrar=true pide re-guardar cifrado
+// para eliminar el texto plano de la base.
+function coincideCodigo(ingresado, user) {
+  const ing = String(ingresado).trim().toUpperCase();
+  const g = user.recovery_code ? String(user.recovery_code) : null;
+  if (g) {
+    const dec = descifrarCodigo(g);
+    if (typeof dec === 'string') return { ok: ing === dec.trim().toUpperCase(), migrar: false };
+    if (dec === null) return { ok: ing === g.trim().toUpperCase(), migrar: true }; // legado
+    return { ok: false, migrar: false }; // cifrado ilegible: no aceptar
+  }
+  if (user.recovery_hash) {
+    const a = Buffer.from(hashCodigo(ingresado));
+    const b = Buffer.from(String(user.recovery_hash));
+    const ok = a.length === b.length && crypto.timingSafeEqual(a, b);
+    return { ok, migrar: true };
+  }
+  return { ok: false, migrar: false };
+}
+
+async function guardarCodigoCifrado(userId, codigo) {
+  await pool.query(
+    'UPDATE usuarios SET recovery_code = $1, recovery_hash = $2, recovery_usado = false WHERE id = $3',
+    [cifrarCodigo(codigo), hashCodigo(codigo), userId]
+  );
+}
 
 // Genera un código legible tipo "TRAMA-4K7Q" (fácil de anotar, difícil de adivinar)
 function generarCodigo(prefijo) {
@@ -281,19 +363,23 @@ export async function verificarRegistro(req, res, next) {
 
     // ── Código de recuperación FIJO ──────────────────────────────────
     // Cada usuario tiene UN código fijo que nunca cambia. Se genera una
-    // sola vez (la primera vez que se registra) y se guarda en texto plano
-    // para poder mostrarlo siempre que el usuario lo necesite. Si el usuario
-    // ya tiene código, NO se toca: sigue siendo el mismo de siempre.
+    // sola vez (la primera vez que se registra). En la base se guarda
+    // CIFRADO (columna recovery_code) + su hash: el texto plano solo viaja
+    // en esta respuesta, una vez. Si el usuario ya tiene código, NO se
+    // toca: sigue siendo el mismo de siempre.
     // Va en su propio try/catch: si por algún motivo fallara (ej. base sin
     // migrar), el registro de la huella NO debe romperse por eso.
-    let recoveryCode = user.recovery_code || null;
+    let recoveryCode = null;
     try {
-      if (!recoveryCode) {
+      const dec = user.recovery_code ? descifrarCodigo(user.recovery_code) : null;
+      if (typeof dec === 'string' && dec) {
+        recoveryCode = null; // ya tiene código fijo: no se re-muestra acá (ver endpoint /recuperacion/ver)
+      } else if (dec === null && user.recovery_code) {
+        recoveryCode = String(user.recovery_code); // legado en plano: se migra abajo
+        await guardarCodigoCifrado(user.id, recoveryCode);
+      } else {
         recoveryCode = generarCodigo('TRAMA');
-        await pool.query(
-          'UPDATE usuarios SET recovery_code = $1, recovery_hash = $2, recovery_usado = false WHERE id = $3',
-          [recoveryCode, hashCodigo(recoveryCode), user.id]
-        );
+        await guardarCodigoCifrado(user.id, recoveryCode);
       }
     } catch (errRec) {
       console.warn('No se pudo guardar el código de recuperación (se continúa):', errRec.message);
@@ -442,18 +528,19 @@ export async function recuperarUsuario(req, res, next) {
     const user = rows[0];
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
-    // Validar contra el código fijo (texto plano). Como respaldo, si por
-    // algún motivo sólo existiera el hash viejo, también se acepta por hash.
-    const ingresado = String(codigo).trim().toUpperCase();
-    const guardadoPlano = user.recovery_code ? String(user.recovery_code).trim().toUpperCase() : null;
-    const coincidePlano = guardadoPlano && ingresado === guardadoPlano;
-    const coincideHash = user.recovery_hash && hashCodigo(codigo) === user.recovery_hash;
+    // Validar contra lo guardado (cifrado, plano legado o hash viejo).
+    // Si era legado y coincide, se migra a cifrado en el acto: la base
+    // deja de tener ese texto plano.
+    const { ok, migrar } = coincideCodigo(codigo, user);
 
-    if (!guardadoPlano && !user.recovery_hash) {
+    if (!user.recovery_code && !user.recovery_hash) {
       return res.status(400).json({ error: 'Este usuario todavía no tiene un código de recuperación.' });
     }
-    if (!coincidePlano && !coincideHash) {
+    if (!ok) {
       return res.status(401).json({ error: 'El código de recuperación es incorrecto.' });
+    }
+    if (migrar) {
+      try { await guardarCodigoCifrado(user.id, String(codigo).trim().toUpperCase()); } catch { /* no bloquea el login */ }
     }
 
     // Código correcto → entrar directamente. No se toca la huella ni el código.
@@ -527,15 +614,19 @@ export async function regenerarCodigoRecuperacion(req, res, next) {
       [verification.authenticationInfo.newCounter, cred.id]
     );
 
-    // Devolver el código FIJO. Si por algún motivo el usuario todavía no
-    // tuviera uno, se genera una única vez y queda fijo desde entonces.
-    let recoveryCode = user.recovery_code || null;
-    if (!recoveryCode) {
+    // Devolver el código FIJO (descifrado). Si el usuario todavía no
+    // tuviera uno, o solo tuviera hash viejo, se genera uno nuevo, se
+    // guarda cifrado y se devuelve UNA vez.
+    let recoveryCode = null;
+    const dec = user.recovery_code ? descifrarCodigo(user.recovery_code) : null;
+    if (typeof dec === 'string' && dec) {
+      recoveryCode = dec;
+    } else if (dec === null && user.recovery_code) {
+      recoveryCode = String(user.recovery_code); // legado en plano: se muestra y se migra
+      await guardarCodigoCifrado(user.id, recoveryCode);
+    } else {
       recoveryCode = generarCodigo('TRAMA');
-      await pool.query(
-        'UPDATE usuarios SET recovery_code = $1, recovery_hash = $2, recovery_usado = false WHERE id = $3',
-        [recoveryCode, hashCodigo(recoveryCode), user.id]
-      );
+      await guardarCodigoCifrado(user.id, recoveryCode);
     }
 
     res.json({

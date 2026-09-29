@@ -313,7 +313,7 @@ font-family:var(--font-mono);}
    color va inline en el HTML. */
 [data-theme="dark"] button.lib-clear{color:var(--acc) !important}
 
-/* (5) El toast (aviso "Editor reiniciado", etc.) usaba texto color --srf,
+/* (5) El toast (aviso "Dibujo guardado", etc.) usaba texto color --srf,
    que en modo oscuro es oscuro → quedaba texto oscuro sobre fondo oscuro,
    viéndose como un cuadrado negro sin letras encima de los botones. Se
    fuerza fondo claro y texto oscuro para que se lea. */

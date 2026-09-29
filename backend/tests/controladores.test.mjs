@@ -98,14 +98,22 @@ globalThis.__q = (sql) => {
 x = await call(T.avanzarTelar, { params:{id:'8'}, body:{} });
 const u = x.log.find(l=>/UPDATE historial_produccion/.test(l.sql)); assert.deepEqual(u.params.slice(0,3), [0,1,1]); assert.equal(x.r.body.origen_conteo,'estimado');
 
-// 7) retrocederTelar
+// 7) retrocederTelar (sin sensor activo: retrocede por reloj)
 globalThis.__q = (sql) => {
-  if (/SELECT id FROM telares/.test(sql)) return { rows:[{id:8}] };
+  if (/AS sensor_activo\s+FROM telares/.test(sql)) return { rows:[{id:8, sensor_activo:false}] };
   if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:0, matriz_pasadas:MAT}] };
   if (/UPDATE historial_produccion/.test(sql)) return { rows:[{id:5, fila_actual:3}] };
 };
 x = await call(T.retrocederTelar, { params:{id:'8'}, body:{} });
 assert.equal(x.r.body.al_inicio, true); assert.deepEqual(x.log.find(l=>/UPDATE historial_produccion/.test(l.sql)).params.slice(0,3),[3,1,1]);
+
+// 7b) retrocederTelar con el sensor del Nivel 2 activo: 409, sin tocar la producción
+globalThis.__q = (sql) => {
+  if (/AS sensor_activo\s+FROM telares/.test(sql)) return { rows:[{id:8, sensor_activo:true}] };
+};
+x = await call(T.retrocederTelar, { params:{id:'8'}, body:{} });
+assert.equal(x.r.code, 409); assert.equal(x.r.body.codigo, 'SENSOR_ACTIVO');
+assert.ok(!x.log.some(l=>/UPDATE historial_produccion/.test(l.sql)), 'no debe tocar la producción');
 
 // 8) actualizarPatron bloqueado con producción abierta
 const body = { nombre:'Raya', filas:4, columnas:4, matriz_pasadas:[[1,0,1,0],[0,1,0,1],[1,1,0,0],[1,1,1,1]] };

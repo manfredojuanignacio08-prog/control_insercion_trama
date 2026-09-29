@@ -131,7 +131,7 @@ mejoras eléctricas en `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md`.
 - `src/routes/`, define las rutas de la API.
 - `src/utils/`, lógica pura sin base de datos: derivación de ligamento,
   cálculo de posición de tejido, validaciones.
-- `backend/src/db/schema.sql` + `migracion_*.sql`, esquema de 4 tablas y
+- `backend/src/db/schema.sql` + `migracion_*.sql`, esquema de 9 tablas y
   migraciones idempotentes.
 - `public/`, la página web (HTML/CSS/JS + jsPDF), diseñada para el celular,
   con modo claro y oscuro.

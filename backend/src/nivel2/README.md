@@ -15,7 +15,7 @@ de `ESP32_DEVICE_KEY` en el `.env`).
 ## Conteo estimado vs. medido
 
 Mientras el sensor no esté instalado, `pasadas_totales` sale del **reloj de la web**
-(una pasada cada 500 ms): es una estimación, y así se marca (`origen_conteo:
+(una pasada cada 200 ms, el ritmo real de 300 pasadas por minuto): es una estimación, y así se marca (`origen_conteo:
 "estimado"`). Con el sensor reportando:
 
 - el conteo medido se guarda en `pasadas_sensor` (nunca en `pasadas_totales`, para

@@ -100,7 +100,8 @@ en vez de la del proxy.
 | Variable | Para qué sirve |
 |---|---|
 | `NODE_ENV=production` | Logs en formato `combined`, optimizaciones de Express |
-| `SESSION_SECRET` | **Obligatoria.** Firma las cookies de sesión (mínimo 32 caracteres). Si falta se usa una clave temporal y las sesiones se pierden en cada reinicio |
+| `SESSION_SECRET` | **Obligatoria.** Firma las cookies de sesión (mínimo 32 caracteres). En producción sin ella el servidor no arranca; en desarrollo se usa clave temporal y las sesiones se pierden en cada reinicio |
+| `RECOVERY_SECRET` | **Obligatoria en producción.** Cifra los códigos de recuperación en la base (mínimo 16 caracteres). Si cambia, los códigos viejos dejan de leerse: rotarlos con `npm run codigo <usuario> --rotar` |
 | `ESP32_DEVICE_KEY` | **Obligatoria.** Clave que mandan los ESP32 en `X-Device-Key` (la misma en `DEVICE_KEY` de los dos `config`). Sin ella los ESP32 reciben 401 |
 | `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | Dominio real para el login por huella (requiere HTTPS) |
 | `REGISTRO_LIBRE_MAX` | Usuarios que se registran libres (defecto 3); después hace falta invitación |
@@ -230,7 +231,7 @@ src/
 
 Sin ninguna de las dos, la API responde **401**. Las acciones de la web (asignar dibujo, pausar, etc.) las rechaza si vienen con clave de dispositivo, y los avisos del hardware (`evento-fisico`, `pasadas`) los rechaza si vienen de una sesión: una persona no puede falsear lo que "sensó" el telar.
 
-Variables de entorno obligatorias en producción (ver `.env.example`): `SESSION_SECRET` (mínimo 32 caracteres), `ESP32_DEVICE_KEY` (la misma en `DEVICE_KEY` de los dos firmwares), y `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` con el dominio real. El login por huella exige HTTPS (o `localhost`): por `http://192.168.x.x` el navegador lo bloquea, así que en la red local hay que servir por HTTPS o entrar con el código de recuperación.
+Variables de entorno obligatorias en producción (ver `.env.example`): `SESSION_SECRET` (mínimo 32 caracteres), `RECOVERY_SECRET` (mínimo 16 caracteres), `ESP32_DEVICE_KEY` (la misma en `DEVICE_KEY` de los dos firmwares), y `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` con el dominio real. El login por huella exige HTTPS (o `localhost`): por `http://192.168.x.x` el navegador lo bloquea, así que en la red local hay que servir por HTTPS o entrar con el código de recuperación.
 
 Además: el registro es libre solo para los primeros `REGISTRO_LIBRE_MAX` usuarios (defecto 3); después hace falta un código de invitación. Sumar una huella a un usuario existente exige haber iniciado sesión como ese usuario. El login y la recuperación tienen un límite de intentos por IP (`AUTH_INTENTOS_MAX`).
 

@@ -18,7 +18,8 @@ que ya está; no pasa nada, el código nuevo todavía no está subido.
 |---|---|---|
 | `DATABASE_URL` | La de Neon (ya debería estar) | El servidor no arranca |
 | `NODE_ENV` | `production` | |
-| `SESSION_SECRET` | Clave larga al azar (ver abajo) | Todos pierden la sesión cada vez que Render reinicia el servicio (en el plan gratuito, seguido) |
+| `SESSION_SECRET` | Clave larga al azar (ver abajo) | **El servidor no arranca** |
+| `RECOVERY_SECRET` | Otra clave larga al azar, **distinta** | **El servidor no arranca**. Cifra los códigos de recuperación en la base |
 | `ESP32_DEVICE_KEY` | Otra clave larga al azar, **distinta** | Ningún ESP32 puede conectarse |
 | `WEBAUTHN_RP_ID` | `control-trama-backend.onrender.com` | El login por huella queda menos protegido |
 | `WEBAUTHN_ORIGIN` | `https://control-trama-backend.onrender.com` | Ídem |
@@ -57,12 +58,12 @@ clave real va solo en Render y en la copia que se carga a las placas.
 
 ## 5. Revisar el arranque
 
-En **Logs**, la primera vez deberían aparecer las quince migraciones aplicadas:
+En **Logs**, la primera vez deberían aparecer las dieciséis migraciones aplicadas:
 
 ```
 ✅ migracion_001_... aplicada.
 ...
-Migraciones al día (15 nueva/s).
+Migraciones al día (16 nueva/s).
 Servidor escuchando ...
 ```
 
