@@ -207,8 +207,9 @@ export async function iniciarRegistro(req, res, next) {
   try {
     const { rpID, origin } = datosRP(req);
     const { usuario, nombre, invitacion } = req.body || {};
-    if (!usuario || typeof usuario !== 'string' || usuario.trim().length < 3) {
-      return res.status(400).json({ error: 'El usuario debe tener al menos 3 caracteres.' });
+    // Sin máximo, el registro aceptaba nombres de cientos de caracteres.
+    if (!usuario || typeof usuario !== 'string' || usuario.trim().length < 3 || usuario.trim().length > 40) {
+      return res.status(400).json({ error: 'El usuario debe tener entre 3 y 40 caracteres.' });
     }
     const nom = usuario.trim();
     // "invitado" es el nombre de la sesión sin cuenta: no puede usarse para registrarse.

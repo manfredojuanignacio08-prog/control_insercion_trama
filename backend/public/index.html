@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Control de Dibujos</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Questrial&display=swap" rel="stylesheet">
+<title>Control de Inserción de Trama</title>
+<meta name="description" content="Control del telar Vamatex: diseño de dibujos, marcha, pausa y retroceso, y seguimiento de la producción.">
+<meta name="theme-color" content="#1E3A5F">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231E3A5F'/%3E%3Cpath d='M8 10h16M8 16h16M8 22h16' stroke='%23F0F4F8' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -56,7 +56,7 @@
 
     <input id="login-usuario" type="text" placeholder="Usuario"
       autocomplete="username" autocapitalize="none" spellcheck="false"
-      style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;">
+      style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;" maxlength="40">
 
     <button type="button" onclick="hacerLogin()" id="btn-login"
       style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-bottom:12px;font-family:inherit;">
@@ -103,7 +103,7 @@
     <p style="color:var(--tx3);font-size:13px;margin:0 0 22px;">Escribí tu usuario y tu código de recuperación (es fijo, siempre el mismo) y entrás directo a la app.</p>
 
     <input id="rec-usuario" type="text" placeholder="Usuario" autocapitalize="none" spellcheck="false"
-      style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:12px;box-sizing:border-box;">
+      style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:12px;box-sizing:border-box;" maxlength="40">
     <input id="rec-codigo" type="text" placeholder="Código (ej: TRAMA-ABC123)" autocapitalize="characters" spellcheck="false"
       style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;text-align:center;">
 
@@ -298,7 +298,7 @@
     </div>
 
     <div class="editor-namebar">
-      <input type="text" class="name-in" id="insercion-name" placeholder="Nombre del dibujo..." value="Nuevo Dibujo 1">
+      <input type="text" class="name-in" id="insercion-name" placeholder="Nombre del dibujo..." value="Nuevo Dibujo 1" maxlength="100">
       <span class="status-badge" id="ed-status">Nuevo</span>
       <button type="button" class="ficha-btn" id="ficha-btn" aria-label="Ficha y estadísticas del dibujo" title="Ficha y estadísticas">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
@@ -319,7 +319,7 @@
         <label for="mpp-in">Metros de tela por pasada</label>
         <p class="ficha-ayuda">Cuánto avanza la tela en cada pasada. Depende de la densidad del tejido y lo sabe el operario. Con ese dato el sistema convierte las pasadas contadas en metros reales.</p>
         <div class="ficha-fila">
-          <input type="number" id="mpp-in" step="0.0001" min="0.0001" max="1" placeholder="0,0005">
+          <input type="text" id="mpp-in" inputmode="decimal" autocomplete="off" placeholder="0,0005" aria-label="Metros que avanza la tela por pasada">
           <button type="button" class="save-btn save-primary ficha-guardar" id="mpp-guardar">Guardar</button>
         </div>
         <div class="ficha-eq" id="mpp-eq"></div>
@@ -1362,7 +1362,7 @@ function renderGrid() {
 	    }
 	    // Repeticiones de la fila: cuántas pasadas seguidas se teje esta misma
 	    // combinación de bobinas antes de pasar a la siguiente.
-	    h += `<input class="g-rep" type="number" min="1" max="9999" value="${repFilas[r] || 1}" onchange="setRepeticion(${r}, this.value)" aria-label="Pasadas de la fila ${r+1}">`;
+	    h += `<input class="g-rep" type="number" min="1" max="9999" inputmode="numeric" value="${repFilas[r] || 1}" onkeydown="if(['-','+','e','E','.',','].includes(event.key))event.preventDefault()" onchange="setRepeticion(${r}, this.value)" aria-label="Pasadas de la fila ${r+1}">`;
 	    h += '</div>';
 	  }
 	  wrap.innerHTML = h;
@@ -1388,35 +1388,54 @@ function tapCell(r, c) {
 
 function applySize() {
   if (edicionBloqueada()) return;
-  const rawR = document.getElementById('in-rows').value;
-  const rawC = document.getElementById('in-cols').value;
+  const inR = document.getElementById('in-rows');
+  const inC = document.getElementById('in-cols');
+  const rawR = String(inR.value).trim();
+  const rawC = String(inC.value).trim();
+
+  // Solo enteros. Si algo pegado traía punto o coma ("8.5") se truncaba en silencio, y una
+  // casilla vacía volvía a un tamaño por defecto. Ahora se avisa y se conserva el tamaño actual.
+  if (!/^\d+$/.test(rawR) || !/^\d+$/.test(rawC)) {
+    toast('Escribí números enteros: filas de 1 a 100 y columnas de 1 a 8.');
+    inR.value = nR; inC.value = nC;
+    return;
+  }
   const rNum = parseInt(rawR, 10);
   const cNum = parseInt(rawC, 10);
 
-  // Si quedó vacío o fuera del rango permitido (1 a 100 filas, 1 a 8 columnas), avisar en vez de
-  // corregir en silencio (así el usuario entiende por qué cambió el número).
-  // Cada columna es una bobina de selección: una máquina tiene entre 1 y 8, así que
-  // un dibujo más ancho no se podría ejecutar. Para tejer muchas pasadas iguales
-  // están las repeticiones de cada fila, no filas repetidas.
-  const rInvalido = !Number.isInteger(rNum) || rNum < 1 || rNum > 100;
-  const cInvalido = !Number.isInteger(cNum) || cNum < 1 || cNum > 8;
-  if (rInvalido) toast('Las filas deben ser un número entre 1 y 100.');
-  else if (cInvalido) toast('Las columnas son bobinas de selección: entre 1 y 8.');
+  // Fuera de rango: se avisa y se corrige al límite, así el usuario entiende por qué cambió.
+  // Cada columna es una bobina de selección (una máquina tiene entre 1 y 8), y para tejer
+  // muchas pasadas iguales están las repeticiones de cada fila, no filas repetidas.
+  if (rNum < 1 || rNum > 100) toast('Las filas deben ser un número entre 1 y 100.');
+  else if (cNum < 1 || cNum > 8) toast('Las columnas son bobinas de selección: entre 1 y 8.');
+  const r = Math.min(100, Math.max(1, rNum));
+  const c = Math.min(8, Math.max(1, cNum));
+  inR.value = r; inC.value = c;
+  if (r === nR && c === nC) return;
 
   // Este telar tiene 4 bobinas. Un dibujo con más columnas se guarda igual, pero al
   // tejerlo las columnas sobrantes no accionan nada.
   const ELEMENTOS_TELAR = 4;
-  if (Number.isInteger(cNum) && cNum > ELEMENTOS_TELAR && cNum <= 8) {
+  if (c > ELEMENTOS_TELAR) {
     toast('Atención: este telar tiene ' + ELEMENTOS_TELAR + ' bobinas. Las columnas ' + (ELEMENTOS_TELAR + 1) + ' en adelante no van a accionar nada al tejer.');
   }
 
-  const r = Math.min(100, Math.max(1, rNum || 8));
-  const c = Math.min(8, Math.max(1, cNum || 4));
-  document.getElementById('in-rows').value = r;
-  document.getElementById('in-cols').value = c;
-  pausePlay();
-  mkGrid(r, c, true);
-  sincronizarPatron();
+  const aplicar = () => {
+    pausePlay();
+    mkGrid(r, c, true);
+    sincronizarPatron();
+  };
+  // Achicar borra lo que queda afuera: antes pasaba sin aviso (de 4 a 2 columnas se perdían
+  // las bobinas 3 y 4 del dibujo). Si hay celdas marcadas que se pierden, se pide confirmación.
+  let perdidas = 0;
+  for (let i = 0; i < nR; i++) for (let k = 0; k < nC; k++) if ((i >= r || k >= c) && grid[i] && grid[i][k]) perdidas++;
+  if (perdidas > 0) {
+    showConfirm('¿Achicar el dibujo?',
+      `Se van a borrar ${perdidas} ${perdidas === 1 ? 'celda marcada que queda' : 'celdas marcadas que quedan'} fuera del nuevo tamaño.`,
+      aplicar, 'Achicar', () => { inR.value = nR; inC.value = nC; });
+  } else {
+    aplicar();
+  }
 }
 
 function clearGrid() {
@@ -2394,12 +2413,28 @@ function fichaFormatearNumero(n, dec = 0) {
   return Number(n).toLocaleString('es-AR', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 
+// Los metros por pasada se escriben con coma, como en Argentina ("0,0005"). El campo era de
+// tipo número y el navegador descartaba la coma: "0,0007" llegaba como 7 y se rechazaba.
+// Ahora es texto con teclado numérico y se acepta coma o punto.
+function leerDecimal(texto) {
+  const t = String(texto || '').replace(/\s/g, '');
+  if (t === '') return null;
+  if (!/^\d+([.,]\d+)?$/.test(t)) return NaN;
+  return parseFloat(t.replace(',', '.'));
+}
+function mostrarDecimal(v) {
+  if (v === null || v === undefined || v === '') return '';
+  const n = Number(v);
+  return Number.isFinite(n) ? String(n).replace('.', ',') : '';
+}
+
 function fichaMostrarEquivalencia() {
   const eq = document.getElementById('mpp-eq');
-  const v = parseFloat(document.getElementById('mpp-in').value);
-  if (!Number.isFinite(v) || v <= 0) { eq.textContent = ''; return; }
+  const v = leerDecimal(document.getElementById('mpp-in').value);
+  // Solo para valores válidos: con uno fuera de rango no tiene sentido mostrar la equivalencia.
+  if (v === null || !Number.isFinite(v) || v <= 0 || v > 1) { eq.textContent = ''; return; }
   const porMetro = Math.round(1 / v);
-  eq.textContent = `Equivale a ${fichaFormatearNumero(porMetro)} pasadas por metro de tela.`;
+  eq.textContent = `Equivale a ${fichaFormatearNumero(porMetro)} ${porMetro === 1 ? 'pasada' : 'pasadas'} por metro de tela.`;
 }
 
 async function fichaCargar() {
@@ -2414,7 +2449,7 @@ async function fichaCargar() {
   cont.innerHTML = '<div class="ficha-cargando">Cargando estadísticas...</div>';
   try {
     const d = await apiFetch(`/patrones/${idActual}/estadisticas`);
-    document.getElementById('mpp-in').value = d.metros_por_pasada ?? '';
+    document.getElementById('mpp-in').value = mostrarDecimal(d.metros_por_pasada);
     fichaMostrarEquivalencia();
 
     if (d.producciones === 0) {
@@ -2464,8 +2499,12 @@ function fichaInicializar() {
   document.getElementById('mpp-guardar').addEventListener('click', async () => {
     const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
     if (!idActual) { toast('Primero guardá el dibujo.'); return; }
-    const bruto = document.getElementById('mpp-in').value.trim();
-    const v = bruto === '' ? null : parseFloat(bruto);
+    const v = leerDecimal(document.getElementById('mpp-in').value);
+    if (Number.isNaN(v)) { toast('Escribí un número, por ejemplo 0,0005.'); return; }
+    if (v !== null && (v <= 0 || v > 1)) {
+      toast('Tiene que ser mayor que 0 y hasta 1: una pasada avanza milímetros (por ejemplo, 0,0005).');
+      return;
+    }
     try {
       await esperarGuardadosPendientes();
       const r = await apiFetch(`/patrones/${idActual}/metros-por-pasada`, {
@@ -2537,11 +2576,22 @@ async function libToggleEstadisticas(id) {
 // la misma combinación de bobinas, sin tener que dibujar 100 filas idénticas.
 function setRepeticion(r, valor) {
   if (edicionBloqueada()) { renderGrid(); return; }
-  let n = parseInt(valor, 10);
-  if (!Number.isInteger(n) || n < 1 || n > 9999) {
-    toast('Las pasadas de una fila deben ser un número entre 1 y 9999.');
-    n = Math.min(9999, Math.max(1, n || 1));
+  // Solo un entero sin separadores. Antes "1,5", "1.000" o "2e3" se convertían en silencio en
+  // otro número, y un valor que no era número dejaba la fila en 1: quien tenía 100 y se
+  // equivocaba al tipear perdía el dato. Ahora se avisa y se conserva el valor anterior.
+  const texto = String(valor).trim();
+  const anterior = repFilas[r] || 1;
+  if (!/^\d+$/.test(texto)) {
+    toast('Escribí un número entero, sin puntos ni comas (por ejemplo, 1000).');
+    renderGrid();
+    return;
   }
+  let n = parseInt(texto, 10);
+  if (n < 1 || n > 9999) {
+    toast('Las pasadas de una fila deben ser un número entre 1 y 9999.');
+    n = Math.min(9999, Math.max(1, n));
+  }
+  if (n === anterior) { renderGrid(); return; }
   repFilas[r] = n;
   renderGrid();
   actualizarTotalPasadas();

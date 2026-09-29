@@ -8,6 +8,9 @@ export function validarPatron(body) {
 
   if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
     errores.push('nombre es requerido y debe ser texto.');
+  } else if (nombre.trim().length > 100) {
+    // Sin tope, se podía pegar un texto de miles de caracteres como nombre.
+    errores.push('El nombre del dibujo puede tener hasta 100 caracteres.');
   }
 
   // Las columnas son bobinas de selección: una máquina tiene entre 1 y 8, así que

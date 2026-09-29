@@ -45,7 +45,7 @@ completa.
 
 El backend ya incluye lo necesario para correr en producción: cabeceras de
 seguridad (`helmet`, con CSP ajustado para no romper el `<script>` inline
-de la página web), compresión `gzip`, *rate limiting* por IP, CORS configurable,
+de la página web), compresión `gzip`, *rate limiting* por usuario (por IP antes de iniciar sesión), CORS configurable,
 logs en formato `combined` cuando `NODE_ENV=production`, validación estricta
 de los datos que llegan, y apagado prolijo (cierra el pool de Postgres antes
 de salir cuando el proceso recibe `SIGTERM`/`SIGINT`).
@@ -100,14 +100,15 @@ en vez de la del proxy.
 | Variable | Para qué sirve |
 |---|---|
 | `NODE_ENV=production` | Logs en formato `combined`, optimizaciones de Express |
+| `PGSSL=true` | **Obligatoria con Neon.** Activa la conexión cifrada a la base; el `sslmode` de la URL no alcanza, porque el código fija el cifrado según esta variable |
 | `SESSION_SECRET` | **Obligatoria.** Firma las cookies de sesión (mínimo 32 caracteres). En producción sin ella el servidor no arranca; en desarrollo se usa clave temporal y las sesiones se pierden en cada reinicio |
 | `RECOVERY_SECRET` | **Obligatoria en producción.** Cifra los códigos de recuperación en la base (mínimo 16 caracteres). Si cambia, los códigos viejos dejan de leerse: rotarlos con `npm run codigo <usuario> --rotar` |
 | `ESP32_DEVICE_KEY` | **Obligatoria.** Clave que mandan los ESP32 en `X-Device-Key` (la misma en `DEVICE_KEY` de los dos `config`). Sin ella los ESP32 reciben 401 |
 | `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | Dominio real para el login por huella (requiere HTTPS) |
 | `REGISTRO_LIBRE_MAX` | Usuarios que se registran libres (defecto 3); después hace falta invitación |
 | `CORS_ORIGIN` | Dominios que pueden llamar a la API desde otro origen. Vacío en producción = ninguno (la web se sirve desde el mismo servidor y no lo necesita) |
-| `TRUST_PROXY` | Poner en `true` si hay Nginx/load balancer delante |
-| `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS` | Límite de requests por IP |
+| `TRUST_PROXY` | Poner en `true` si hay Nginx/load balancer delante (en Render se activa solo) |
+| `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS` | Límite de pedidos por usuario (por IP para quien no inició sesión o entra como invitado): en la fábrica todos salen por la misma IP, y un límite por IP haría que un operario bloquee a los demás |
 
 ## 5. Endpoints
 
@@ -231,7 +232,7 @@ src/
 
 Sin ninguna de las dos, la API responde **401**. Las acciones de la web (asignar dibujo, pausar, etc.) las rechaza si vienen con clave de dispositivo, y los avisos del hardware (`evento-fisico`, `pasadas`) los rechaza si vienen de una sesión: una persona no puede falsear lo que "sensó" el telar.
 
-Variables de entorno obligatorias en producción (ver `.env.example`): `SESSION_SECRET` (mínimo 32 caracteres), `RECOVERY_SECRET` (mínimo 16 caracteres), `ESP32_DEVICE_KEY` (la misma en `DEVICE_KEY` de los dos firmwares), y `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` con el dominio real. El login por huella exige HTTPS (o `localhost`): por `http://192.168.x.x` el navegador lo bloquea, así que en la red local hay que servir por HTTPS o entrar con el código de recuperación.
+Variables de entorno obligatorias en producción (ver `.env.example`): `DATABASE_URL` y `PGSSL=true` (con Neon), `SESSION_SECRET` (mínimo 32 caracteres), `RECOVERY_SECRET` (mínimo 16 caracteres), `ESP32_DEVICE_KEY` (la misma en `DEVICE_KEY` de los dos firmwares), y `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` con el dominio real. El login por huella exige HTTPS (o `localhost`): por `http://192.168.x.x` el navegador lo bloquea, así que en la red local hay que servir por HTTPS o entrar con el código de recuperación.
 
 Además: el registro es libre solo para los primeros `REGISTRO_LIBRE_MAX` usuarios (defecto 3); después hace falta un código de invitación. Sumar una huella a un usuario existente exige haber iniciado sesión como ese usuario. El login y la recuperación tienen un límite de intentos por IP (`AUTH_INTENTOS_MAX`).
 
