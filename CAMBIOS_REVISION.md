@@ -537,3 +537,10 @@ el resultado de la prueba del Nivel 1.
   antes de iniciar sesión), para que en la fábrica, donde todos salen por la misma IP, nadie bloquee a los demás.
 - Todas las variables que lee el código están ahora documentadas en `.env.example` (faltaban los dos límites de pedidos
   y el máximo de conexiones a la base), y ninguna documentada deja de usarse.
+
+## Guía de conexión de los relés LCA110
+
+Nuevo documento `documentacion_proyecto/Guia_Conexion_Reles_LCA110.docx`: datos de la hoja del fabricante, patas,
+materiales, orden de trabajo, seguridad, mediciones previas, prueba en la mesa, conexión del lado del ESP32 y del telar
+(paralelo o serie, con el ajuste de `CANAL_ACTIVO_EN_ALTO` que corresponde a cada caso), la cinta de papel, la prueba del
+primer canal (con `MODO_BANCO` en false), el montaje definitivo, problemas frecuentes y una lista de verificación.

@@ -79,7 +79,7 @@
 // tiene sesión: manda esta clave en el header X-Device-Key en cada pedido. Tiene que ser
 // IGUAL a ESP32_DEVICE_KEY en el .env del backend, y la misma en el Nivel 2.
 // Generar una clave larga y al azar (no la reutilices en otro lado).
-#define DEVICE_KEY    "cc1ce04d-f582-4150-be55-dc06a0d1faf33e97df76-6c70-407d-963b-518b3a931f7c"
+#define DEVICE_KEY    "CAMBIAR_POR_LA_CLAVE_DE_ESP32_DEVICE_KEY"
 
 // ---- Qué telar controla ESTE dispositivo ----
 // Id del telar en la base de datos. El telar registrado tiene el id 8, y es el mismo
