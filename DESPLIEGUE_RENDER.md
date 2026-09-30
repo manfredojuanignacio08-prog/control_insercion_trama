@@ -60,7 +60,7 @@ clave real va solo en Render y en la copia que se carga a las placas.
 
 ## 5. Revisar el arranque
 
-En **Logs**, la primera vez deberían aparecer las dieciséis migraciones aplicadas:
+En **Logs**, la primera vez deberían aparecer las diecisiete migraciones aplicadas:
 
 ```
 ✅ migracion_001_... aplicada.

@@ -33,30 +33,38 @@ No publicar estas claves en el repositorio ni compartirlas. La del WiFi de la f�
 real va solo en la copia que se carga a la placa y en Render. Si se sospecha que una se filtró, se cambia en
 Render y en los firmwares.
 
-## 2. Medir con el osciloscopio (Nivel 2)
+## 2. Ajustar la sincronización (Nivel 2)
 
 **Qué se quiere saber.** Cada pasada, el telar "mira" la selección en un instante preciso (cuando abre la
-calada). El sensor inductivo avisa el comienzo de la pasada en otro instante. Si el firmware aplica la fila
-antes o después de que el telar mire, la tela sale con una fila corrida.
+calada), y el sensor inductivo avisa el comienzo de la pasada en otro instante. Además, con el papel la
+selección se activa y se suelta en cada pasada (entre dos agujeros seguidos hay papel), y el firmware
+tiene que imitarlo. Si la fila se aplica antes o después de tiempo, o dura poco, la tela sale mal.
 
-**Qué medir** (con el telar en marcha, a 300 pasadas por minuto = una pasada cada 200 ms):
+**Sin osciloscopio** (el camino previsto; la guía de los relés LCA110 lo explica paso a paso):
 
-1. La señal del sensor (pulso de pasada) y la **salida del lector óptico** (lo que le llega a las plaquetas
-   del telar), en dos canales, disparando el osciloscopio con el pulso del sensor.
-2. El tiempo entre el pulso y el momento en que el lector "lee" (la ventana), repetido en varias pasadas.
-3. El nivel y la corriente de la salida del lector, para decidir cómo se conectan los relés LCA110 (en
-   serie o en paralelo con esa señal).
+1. Con el multímetro, medir el nivel y la corriente de la salida del lector óptico, para decidir si los
+   relés LCA110 van en serie o en paralelo.
+2. Estimar `PORCENTAJE_SELECCION` con una regla sobre la cinta de papel: si avanza de forma pareja, la
+   señal dura más o menos el diámetro del agujero dividido por la distancia entre los centros de dos
+   agujeros seguidos (agujeros de 4 mm cada 8 mm dan 50 %).
+3. Tejer una prueba corta con un dibujo fácil de reconocer y corregir según la tabla de abajo.
 
-**Qué decide la medición** (en `config_nivel2.h`):
+**Con osciloscopio, si hay uno en la escuela** (a 300 pasadas por minuto, una pasada cada 200 ms): medir
+la señal del sensor y la salida del lector óptico en dos canales, disparando con el pulso del sensor.
+Se ve el tiempo entre el pulso y la lectura (la ventana) y qué parte de cada pasada dura la señal del
+lector cuando pasa un agujero.
+
+**Qué se ajusta** (en `config_nivel2.h`):
 
 | Resultado | Ajuste |
 |---|---|
-| La ventana de lectura llega antes de que el pulso más la latencia del relé (unos pocos milisegundos) y del ESP32 alcancen a aplicar la fila | `DESPLAZAMIENTO_FILAS = 1` (aplica en el pulso N la fila N+1) o mover el blanco metálico en el eje |
-| Hay un desfase pequeño dentro de la pasada | `RETARDO_APLICACION_US` (máximo 50 000 µs) |
-| Coincide | Ambos en 0 |
+| El dibujo sale corrido una pasada (la ventana de lectura llega antes de que se aplique la fila, o después) | `DESPLAZAMIENTO_FILAS` en 1 o −1, o mover el blanco metálico en el eje |
+| Hay un desfase pequeño dentro de la pasada (solo se ve con osciloscopio) | `RETARDO_APLICACION_US` (máximo 50 000 µs) |
+| Algunas pasadas no toman la selección, o la señal del lector dura otra parte de la pasada que la mitad | `PORCENTAJE_SELECCION` (hoy 50 %; hasta 90 %) |
+| La tela sale bien | No se toca nada |
 
-**Seguridad.** Las bobinas trabajan a 24 V de alterna. Medir del lado de baja tensión (el lector), no
-conectar la masa del osciloscopio a algo cuyo referencial no se conozca, y hacerlo con el profesor o el
+**Seguridad.** Las bobinas trabajan a 24 V de alterna. Medir del lado de baja tensión (el lector); con
+osciloscopio, no conectar su masa a algo cuyo referencial no se conozca. Hacerlo con el profesor o el
 técnico presentes.
 
 ## 3. Validar el conteo del sensor
@@ -86,6 +94,6 @@ Hasta validarlo, los metros de las estadísticas figuran como **estimados** (≈
 - [ ] Migraciones probadas antes en una base de prueba (no directo en Neon). Ya se verificaron
       sobre una copia con datos de producción: se aplican y los datos se conservan.
 - [ ] `MODO_BANCO = false` en `config_nivel2.h`.
-- [ ] Medición con osciloscopio hecha y ajustes cargados (sección 2).
+- [ ] Sincronización ajustada con la prueba de tejido (o el osciloscopio) y valores cargados (sección 2).
 - [ ] Un canal armado y probado en la máquina **antes** de armar los otros tres.
 - [ ] Jornada de validación del conteo hecha (sección 3).

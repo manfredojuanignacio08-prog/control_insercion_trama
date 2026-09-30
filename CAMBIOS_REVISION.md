@@ -573,3 +573,71 @@ y vuelve a figurar así en el Conexionado, el Checklist y el diagrama de los blo
 Además: el dueño confirmó las cuatro bobinas en la reunión 6 (19/09/2026), y así figura ahora en el Registro, la
 Bitácora, la Documentación, la Lista y el Conexionado (antes se atribuía al 06/09, cuya minuta registra seis). Y la
 Bitácora registra el cambio del AQY212GH, que no llegó a comprarse, al LCA110, el 23-24/09/2026.
+
+## Manual web alineado con el Manual del telar
+
+El manual web incluye el Manual del telar y conservaba dos textos que ya se habían corregido en el Word: el cálculo de
+conmutaciones con un turno de 8 horas (son hasta 180.000 en la jornada de 10) y la instrucción de la botonera. Esta
+última, además, se ajustó en los dos: con el C 201 como máquina de implementación, los 24 V medidos son el dato real.
+
+## Un agujero por pasada, y dibujos de hasta 300 filas
+
+- **Error del firmware del Nivel 2: la selección se mantenía entre pasadas.** El código suponía que el agujero del papel
+  quedaba frente al lector toda la pasada, así que mantenía cerrado el relé hasta el pulso siguiente. Pero entre dos
+  agujeros seguidos de la misma columna hay papel: la bobina se activa y se suelta en cada pasada. Con el código
+  anterior, una fila con 25 repeticiones era, para la máquina, un solo agujero largo en lugar de 25. Ahora, en cada
+  pasada, los canales se activan y se sueltan pasado un porcentaje de la pasada (`PORCENTAJE_SELECCION`, 50 %),
+  calculado sobre lo que duró la anterior, así que se adapta a la velocidad como el agujero del papel. Se ajusta con el
+  osciloscopio (agregado a la puesta en marcha). Nueva prueba del código real con reloj simulado
+  (`host/test_seleccion.cpp`, 79 verificaciones): 25 pasadas de una fila dan 25 activaciones separadas. Se corrigió
+  también un comentario que decía que la cinta se retira: el lector tiene que ver cinta sin perforar.
+- **Filas: de 100 a 300**, en todas las capas: migración 017 (probada sobre una base con las 16 anteriores: aplica sola
+  y no toca los dibujos existentes), validación del servidor, web, memoria del firmware y documentos.
+- **La ficha en PDF cortaba los dibujos grandes:** achicaba las celdas hasta 2 mm para que la matriz entrara en una hoja,
+  y lo que no entraba quedaba fuera del borde. Ahora, si no entra, sigue en las hojas siguientes, con el número de fila y
+  un encabezado. También reservaba poco lugar abajo, y las instrucciones podían quedar solas en una hoja casi vacía.
+- **"Cada fila es una pasada"** era la descripción de antes de las repeticiones, y aparecía en la Documentación, el
+  manual, el Estado, el Árbol, los README, los comentarios del código y la propia ficha en PDF. Ahora: cada fila es una
+  combinación de bobinas que se teje en una o más pasadas seguidas. Un requisito todavía decía que cada columna es
+  "un marco", del modelo de lizos.
+- La lista de migraciones del README del backend no llegaba a la 16 y describía mal la 9 (fijaba de 2 a 32).
+
+## Editor sin el total de pasadas por vuelta
+
+A pedido del equipo, el editor ya no muestra la línea "N pasadas por vuelta" debajo de la barra de estado. El total
+sigue en la ficha técnica en PDF. Se actualizaron el manual (web y Word) y las capturas.
+
+## Guía de los relés LCA110 al día con el firmware
+
+La guía se había escrito antes de corregir el firmware. Ahora explica que el relé se cierra y se suelta en cada pasada,
+agrega la prueba en la mesa con el firmware y un LED (con MODO_BANCO, el LED parpadea una vez por pasada), el armado de
+un canal en protoboard, el uso de borneras de 3 vías, cómo ajustar PORCENTAJE_SELECCION y DESPLAZAMIENTO_FILAS sin
+osciloscopio (estimación con la cinta de papel y prueba de tejido), y tres problemas frecuentes nuevos.
+
+## Sincronización sin osciloscopio, y coherencia verificada automáticamente
+
+- La puesta en marcha tenía una sección "Medir con el osciloscopio" y su lista exigía esa medición, mientras la guía de
+  los relés explica cómo ajustarlo sin él. Ahora la sección es "Ajustar la sincronización", con el camino sin
+  osciloscopio como principal y el osciloscopio como opción; lo mismo en el README y los comentarios del firmware. La
+  tabla de ajustes decía "ambos en 0" cuando los valores son tres.
+- El Conexionado daba "24 V en continua" como valor esperado del circuito de selección, contradiciendo su propia
+  explicación y al resto del proyecto (alterna).
+- `verif_coherencia.py` pasa de 13 a 16 controles: el límite de filas igual en web, servidor, firmware y base; el de
+  columnas igual en web y servidor; y los pines de las bobinas del Nivel 2 iguales en el firmware y su diagrama.
+- La lista de validación del firmware tenía un aviso pendiente que ya no aplicaba (el tercer relé ya está en el
+  diagrama) y una cadena de tensiones equivocada (24 V en lugar de 220 V).
+- **Alimentación del módulo de relés del Nivel 1 (confirmada por el equipo):** el jumper JD-VCC quedó puesto y su
+  conector no se usa; todo va al conector de las señales, con VCC a 5 V. El diagrama eléctrico, el README, la lista de
+  validación y el verificador decían que el VCC iba a los 3,3 V del ESP32: con el jumper puesto eso une las líneas de
+  5 V y 3,3 V. Corregidos, y el control del verificador ahora exige lo contrario.
+- **Resistencias de las entradas del módulo:** el diagrama dibujaba los pull-ups uniendo entre sí las líneas de GPIO 25,
+  26 y 27, y ponía pull-up también en IN3, cuando el módulo de Retroceder es activo-alto y lleva pull-down a GND (con
+  pull-up arranca pegado, como se vio el 19/09). Redibujado: cada resistencia sobre su línea, IN1 e IN2 a 3,3 V e IN3 a
+  GND. La guía de armado del Bloque A decía que los pull-ups iban "a 3,3V/5V": nunca a 5 V, porque esas líneas van a
+  pines del ESP32, que no toleran 5 V; y agrega el pull-down del tercer relé, que no figuraba. Nuevo control del
+  verificador (17/17). También se acortaron tres rótulos del diagrama que se salían de su recuadro.
+- **Cálculo de desgaste de un relé mecánico:** el Estado, las recomendaciones eléctricas y el documento del Nivel 2
+  seguían con "144.000 conmutaciones por turno de 8 horas", cuando el proyecto usa jornadas de 10 horas (hasta
+  180.000). El del Nivel 2 además decía que el telar trabaja a "unas 200 pasadas por minuto, 3 por segundo", un dato
+  anterior al del dueño (300 por minuto) y que ni siquiera daba esa cuenta. La Bitácora y el Registro conservan el
+  cálculo de su fecha.
