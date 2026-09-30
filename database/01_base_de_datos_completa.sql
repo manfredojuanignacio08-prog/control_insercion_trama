@@ -41,7 +41,7 @@
 CREATE TABLE IF NOT EXISTS patrones (
   id                SERIAL PRIMARY KEY,
   nombre            TEXT NOT NULL UNIQUE,
-  filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 100),
+  filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 300),
   columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 1 AND 8),
   matriz_pasadas    JSONB NOT NULL,   -- array de arrays de enteros: pasadas por celda (lo que programa el editor hoy)
   matriz_ligamento  JSONB,            -- array de arrays binarios (0/1): lizo arriba/abajo, estructura textil (opcional)
@@ -823,6 +823,17 @@ DO $$ BEGIN
 END $$;
 
 -- ============================================================
+-- migracion_017_filas_hasta_300.sql
+-- ============================================================
+-- 017 · El máximo de filas de un dibujo pasa de 100 a 300.
+-- Con las repeticiones por fila alcanzaba para la mayoría de los dibujos, pero el equipo
+-- pidió margen para dibujos con más filas distintas. Los dibujos guardados tienen como
+-- máximo 100 filas, así que todos cumplen la restricción nueva.
+ALTER TABLE patrones DROP CONSTRAINT IF EXISTS patrones_filas_rango;
+ALTER TABLE patrones
+  ADD CONSTRAINT patrones_filas_rango CHECK (filas BETWEEN 1 AND 300);
+
+-- ============================================================
 -- Registro de migraciones
 -- ============================================================
 CREATE TABLE IF NOT EXISTS migraciones_aplicadas (
@@ -846,7 +857,8 @@ INSERT INTO migraciones_aplicadas (archivo) VALUES
   ('migracion_013_indice_unico_en_curso.sql'),
   ('migracion_014_repeticiones_por_fila.sql'),
   ('migracion_015_repeticion_en_fila.sql'),
-  ('migracion_016_recovery_cifrado.sql')
+  ('migracion_016_recovery_cifrado.sql'),
+  ('migracion_017_filas_hasta_300.sql')
 ON CONFLICT (archivo) DO NOTHING;
 
 -- ============================================================
