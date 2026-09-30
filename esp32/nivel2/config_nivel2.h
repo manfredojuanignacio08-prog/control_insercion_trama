@@ -77,8 +77,9 @@ static const unsigned long GRACIA_ARRANQUE_MS = 15000;
 // ------------------------------------- Bloque D · selección del dibujo
 // Un relé LCA110 (OptoMOS, salida MOSFET) por lector óptico, uno por bobina de selección.
 //
-// El C 401 donde se implementa tiene cuatro bobinas. El relevamiento original se
-// hizo sobre un C 201 y se estimaban seis; la máquina de destino tiene cuatro.
+// El C 201 donde se implementa tiene cuatro bobinas en funcionamiento. El primer
+// relevamiento había estimado seis; el dueño confirmó que son cuatro en la visita
+// del 19/09/2026.
 // Si en otro telar hubiera más, alcanza con ampliar este número y la lista de
 // pines, y poner elementos_seleccion en la base al valor que corresponda.
 // Es la misma cifra que telares.elementos_seleccion en la base (por defecto 4): la

@@ -6,13 +6,13 @@ Este directorio contiene el firmware del **Nivel 2**: el conteo real de pasadas
 ## Sobre el telar de destino
 
 La fábrica tiene once telares Vamatex de tres modelos: C 201, C 301 y C 401. El
-relevamiento y la documentación se hicieron sobre el C 201, pero la implementación
-se haría sobre un C 401.
+relevamiento, la documentación y la implementación son sobre el C 201 (matrícula 1104).
 
 Los tres comparten la arquitectura de selección (lectora óptica sobre cinta de
-papel perforada que comanda bobinas), así que el diseño se traslada. Antes de
-instalar hay que verificar sobre la máquina de destino: cuántas bobinas tiene, con
-qué tensión trabaja su botonera y si el lector óptico responde igual.
+papel perforada que comanda bobinas), así que el diseño se traslada. En el C 201 ya
+están confirmadas las cuatro bobinas (el dueño, 19/09/2026) y la tensión de la botonera
+(24 V en alterna, medida el 19/08/2026); falta medir la salida del lector óptico. Si se
+instalara en otro modelo, hay que verificar esas tres cosas sobre esa máquina.
 
 ## El retroceso y el sentido de giro
 

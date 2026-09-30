@@ -594,7 +594,7 @@ ALTER TABLE patrones ADD CONSTRAINT patrones_columnas_check CHECK (columnas BETW
 -- Migración 010: elementos de selección por telar
 --
 -- El editor permite dibujar hasta 32 columnas, pero cada telar tiene
--- una cantidad fija de elementos de selección: en el Vamatex C 401 donde
+-- una cantidad fija de elementos de selección: en el Vamatex C 201 donde
 -- se implementa son 4 bobinas. Las columnas que excedan ese número no
 -- tienen a qué accionar y el firmware las descarta.
 --
