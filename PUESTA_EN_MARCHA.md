@@ -1,7 +1,8 @@
-# Puesta en marcha en el telar (Vamatex C 401, cuatro bobinas)
+# Puesta en marcha en el telar (Vamatex C 201, cuatro bobinas)
 
-La fábrica tiene telares C 201, C 301 y C 401; el equipo investigó los tres, pero el hardware se
-instala en el **C 401** (cuatro bobinas de selección). Este documento reúne lo que hay que hacer
+La fábrica tiene telares C 201, C 301 y C 401; el equipo investigó los tres, y el hardware se
+instala en el **C 201** (matrícula 1104, cuatro bobinas de selección), el mismo telar que se relevó y
+midió. El diseño sirve igual para los otros dos modelos, que comparten la arquitectura de selección. Este documento reúne lo que hay que hacer
 antes y durante la instalación. Nada de esto se puede verificar sin la máquina.
 
 ## 1. Claves del sistema (SESSION_SECRET, RECOVERY_SECRET y ESP32_DEVICE_KEY)

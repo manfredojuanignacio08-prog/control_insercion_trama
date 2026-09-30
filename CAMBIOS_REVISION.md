@@ -544,3 +544,32 @@ Nuevo documento `documentacion_proyecto/Guia_Conexion_Reles_LCA110.docx`: datos 
 materiales, orden de trabajo, seguridad, mediciones previas, prueba en la mesa, conexión del lado del ESP32 y del telar
 (paralelo o serie, con el ajuste de `CANAL_ACTIVO_EN_ALTO` que corresponde a cada caso), la cinta de papel, la prueba del
 primer canal (con `MODO_BANCO` en false), el montaje definitivo, problemas frecuentes y una lista de verificación.
+
+## Revisión de la documentación principal
+
+- **Bitácora:** terminaba el 08/09. Se agregaron las visitas del 10/09 (soporte del sensor, una vuelta del eje por
+  pasada, conexiones definidas) y del 19/09 (Nivel 1 conectado y probado, con sus tres ajustes), y su tabla de reuniones,
+  que llegaba al 24/06, ahora incluye las del 19/08, 06/09, 10/09, 19/09 y la pendiente. Sus entradas anteriores no se
+  tocan: son el registro de lo que se decidió en cada fecha.
+- **Documentación:** decía que las 4 bobinas se confirmaron "con el dueño el 06/09/26", pero la minuta de esa reunión
+  registra que el dueño habló de seis; se quitó la atribución. El punto de montaje del sensor figuraba como pendiente
+  (quedó definido el 10/09). Y el cálculo de conmutaciones usaba un turno de 8 horas, cuando el propio documento define
+  jornadas de 10: son hasta 180.000.
+- **Manual del telar:** el mismo cálculo, y una instrucción que daba por hecho que la botonera tiene 24 V (medido en el
+  C 201; en la máquina de implementación está por medir).
+- **Lista de componentes:** el montaje del sensor figuraba "a determinar"; quedó hecho el 10/09.
+
+## Telar de implementación: el C 201
+
+El equipo confirmó que el sistema se implementa en el Vamatex C 201 (matrícula 1104), el mismo telar que se relevó y
+midió. Varios archivos lo daban como C 401. Se actualizaron la puesta en marcha, los README, los comentarios del firmware,
+del controlador y de la base, la Documentación (Word y web), el Conexionado, la Lista de componentes, las guías de los
+Bloques C y D y de los relés LCA110, y el Checklist. Quedan las menciones al C 401 que nombran los tres modelos de la
+planta o advierten que es otra máquina.
+
+Consecuencias: la tensión de la botonera ya no es una incógnita (24 V en alterna, medida sobre el C 201 el 19/08/2026),
+y vuelve a figurar así en el Conexionado, el Checklist y el diagrama de los bloques A y C.
+
+Además: el dueño confirmó las cuatro bobinas en la reunión 6 (19/09/2026), y así figura ahora en el Registro, la
+Bitácora, la Documentación, la Lista y el Conexionado (antes se atribuía al 06/09, cuya minuta registra seis). Y la
+Bitácora registra el cambio del AQY212GH, que no llegó a comprarse, al LCA110, el 23-24/09/2026.
