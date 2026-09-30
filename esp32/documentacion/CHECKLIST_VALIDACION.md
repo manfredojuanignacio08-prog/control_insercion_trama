@@ -35,8 +35,9 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 
 ## Etapa 3, El relé, pero con un LED o zumbador (NO el telar)
 
-- [ ] Conectá el módulo relé: 5V a JD-VCC, 3.3V a VCC lógico, GND común,
-      GPIO 25 → IN1, GPIO 26 → IN2, GPIO 27 → IN3 (relé adicional para
+- [ ] Conectá el módulo relé por el conector de las señales (GND · IN1 · IN2 · VCC),
+      con el jumper JD-VCC puesto y el conector del jumper sin usar: VCC a 5V (nunca a
+      los 3.3V del ESP32), GND común, GPIO 25 → IN1, GPIO 26 → IN2, GPIO 27 → IN3 (relé adicional para
       Retroceder, si el módulo es de 2 canales, hace falta sumar un
       tercer relé o pasar a un módulo de 3-4 canales).
 - [ ] En lugar del telar, poné un **LED con resistencia** (o un zumbador, o
@@ -98,18 +99,12 @@ Antes de esta validación física, ya se verificó lo siguiente:
 
 **Coherencia entre documentos:** los
 pines (GPIO 25→IN1 Marcha, GPIO 26→IN2 Pausa), la cadena de voltajes
-(24V→5V→3,3V), la separación JD-VCC/VCC-lógico, la advertencia de quitar el
-jumper, la conexión en paralelo, y la etapa de protección coinciden entre el
+(220V→5V→3,3V, con la fuente HLK-5M05), el jumper JD-VCC puesto (todo el módulo a 5V, sin llevar 3.3V al VCC), la conexión en paralelo, y la etapa de protección coinciden entre el
 firmware, el diagrama eléctrico y el documento de conexiones.
 
-> ⚠️ **Pendiente:** esta verificación de 12/12 se hizo con el firmware
-> `verif_coherencia.py`, que compara el `.ino` contra el diagrama SVG y el
-> documento "Documentación Eléctrica Telar - ESP32". Al sumar el tercer
-> relé (GPIO 27 → Retroceder), el `.ino` y este checklist ya se actualizaron,
-> pero **el diagrama SVG y ese documento todavía no**, por eso no se puede
-> afirmar "13/13" todavía. Falta actualizar esas dos fuentes y volver a
-> correr `verif_coherencia.py` antes de dar por cerrada la coherencia del
-> diseño de 3 relés.
+> **Estado actual:** `verif_coherencia.py` da 17/17. Ya incluye el tercer relé (GPIO 27 → IN3), que
+> el diagrama muestra, y además compara los límites de filas y columnas entre la web, el servidor,
+> el firmware y la base, y los pines de las bobinas del Nivel 2 con su diagrama.
 
 **Simulación del flujo lógico Nivel 1 (6/6):** el arranque seguro (el telar
 no arranca solo), el arranque con "tejiendo", la ausencia de doble-pulso

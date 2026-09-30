@@ -61,7 +61,7 @@ primera fila: ahí empezar de cero es lo correcto.
 
 ## Repeticiones por fila
 
-Una fila del dibujo es una pasada. Pero en un tejido real es habitual que la misma
+Sin repeticiones, una fila del dibujo sería una pasada. Pero en un tejido real es habitual que la misma
 combinación de bobinas se repita cien o mil veces seguidas antes de cambiar, y
 dibujar cien filas idénticas era impracticable.
 
@@ -104,6 +104,7 @@ Nivel 1 ya funciona y no conviene tocarlo mientras se desarrolla el Nivel 2.
 | Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado |
 | Si el agujero del papel abre o cierra el circuito | Definir si el relé va en serie o en paralelo, y el valor de `CANAL_ACTIVO_EN_ALTO` |
 | Sincronización entre el pulso del sensor y la lectura del telar | Ajustar `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba |
+| Qué parte de cada pasada dura la señal del lector con la cinta | Ajustar `PORCENTAJE_SELECCION` (hoy 50 %): la selección se activa y se suelta en cada pasada, como el papel |
 
 Hasta tener esos datos, los valores marcados como `A_CONFIRMAR` en `config_nivel2.h`
 son estimaciones y no deben darse por buenos.

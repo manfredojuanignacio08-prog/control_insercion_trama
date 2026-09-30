@@ -845,9 +845,6 @@ font-family:var(--font-mono);}
 /* Aviso informativo: sin botón de cancelar, el botón no va en rojo. */
 .confirm-yes.confirm-aviso{background:var(--acc)}
 
-/* Total de pasadas de una vuelta: la suma de las repeticiones de cada fila. */
-.total-pasadas{padding:0 16px 8px;font-family:var(--font-mono);font-size:10.5px;
-  text-transform:uppercase;letter-spacing:.08em;color:var(--tx3)}
 
 /* Aviso cuando la búsqueda de la biblioteca no encuentra nada. */
 .lib-sin-resultados{padding:22px 16px;text-align:center;font-size:13px;color:var(--tx3);line-height:1.5}

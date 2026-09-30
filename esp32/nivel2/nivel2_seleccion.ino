@@ -40,12 +40,12 @@
 #include "seleccion_dibujo.h"
 
 // ---------------------------------------------------------------- El dibujo
-// La matriz que se está tejiendo. Cada fila es una pasada; sus columnas son
+// La matriz que se está tejiendo. Cada fila es una combinación que se teje tantas pasadas como indique repeticiones[]; sus columnas son
 // los canales que se activan al mismo tiempo.
 //
 // dibujo, dibujoFilas, dibujoColumnas y filaActual los tocan los dos núcleos: siempre
 // dentro de una sección crítica (mux).
-static const int MAX_FILAS = 100;
+static const int MAX_FILAS = 300;   // igual que el máximo de la web y la base
 bool  dibujo[MAX_FILAS][N_CANALES];
 // Cuántas pasadas seguidas se teje cada fila. En un tejido real es habitual que la
 // misma combinación de bobinas se repita cien o mil veces antes de cambiar, y
@@ -172,7 +172,7 @@ bool descargarDibujo() {
 
   // ArduinoJson 7: el documento vive en el heap (no en la pila, que en esta tarea es finita:
   // 8 KB en la pila de loopTask desbordaban y reiniciaban la placa).
-  // Límite explícito: un dibujo de 100 filas × 4 canales ocupa ~1 KB en JSON; 32 KB deja
+  // Límite explícito: un dibujo de 300 filas × 4 canales, con sus repeticiones, ocupa ~5 KB en JSON; 32 KB deja
   // margen de sobra y evita que un payload anómalo agote el heap (OOM) al parsear.
   static const size_t MAX_DIBUJO_BYTES = 32768;
   // Si el servidor anuncia más de lo permitido, se rechaza sin ni siquiera traer el cuerpo.
@@ -544,6 +544,7 @@ void loop() {
 
   sensorPasadaSimular();          // no hace nada si MODO_BANCO es false
   sensorPasadaActualizar();       // libera la traba cuando la paleta pasó de largo
+  seleccionSoltarSiCorresponde(); // suelta los canales pasada la duración de la selección
 
   // ---- cambios de estado que decidió la tarea de red ----
   static bool tejiendoAntes = false;
@@ -635,9 +636,11 @@ void loop() {
     }
   }
 
-  // La señal NO se libera por tiempo: se mantiene hasta el pulso siguiente, que es cuando
-  // seleccionAplicarFila() escribe la fila nueva. Así reproduce lo que hacía el agujero del
-  // papel, que permanecía frente al lector toda la pasada.
+  // La selección se suelta sola pasado un porcentaje de la pasada (seleccionSoltarSiCorresponde, al
+  // principio del ciclo), y el pulso siguiente la vuelve a aplicar. Así reproduce el papel, que
+  // entre dos agujeros seguidos de la misma columna tiene papel: un agujero por pasada. Antes se
+  // mantenía hasta el pulso siguiente, y una fila con 25 repeticiones era, para la máquina, un
+  // solo agujero largo en lugar de 25.
 
   // ---- el telar dejó de dar pulsos ----
   // La máquina se frenó o el sensor dejó de detectar. Se apagan los canales y se avisa al

@@ -126,9 +126,9 @@ usar para comandarlas y qué no.
   plaquetas del telar quedan intactas.
 - **Relé de estado sólido (SSR), uno por lector óptico: cuatro en total (una por cada una de las cuatro bobinas de selección del telar).** Un relé mecánico común no
   sirve para esta tarea: el telar hace 5 pasadas por segundo y cada bobina
-  puede conmutar una vez por pasada, lo que da unas 144.000 conmutaciones por
-  turno. La vida típica de un relé mecánico con carga ronda las 100.000, así
-  que se gastaría en un turno de trabajo. Los relés mecánicos del Bloque A
+  puede activarse una vez por pasada, lo que da hasta 180.000 conmutaciones en
+  una jornada de 10 horas. La vida típica de un relé mecánico con carga ronda las
+  100.000, así que se gastaría en una jornada de trabajo. Los relés mecánicos del Bloque A
   quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas
   pocas veces por día.
 - Sirve un **módulo SSR** con entrada de 3-32 V DC (lo que entrega el ESP32) y

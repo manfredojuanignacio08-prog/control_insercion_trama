@@ -606,9 +606,9 @@ export async function validarConteo(req, res, next) {
 
 // POST /api/telares/:id/retroceder  { pasos? }
 // El "volver atrás" de la posición: retrocede el cursor de fila del dibujo sin
-// reconstruir nada. Es el espejo exacto de /avanzar: una pasada atrás = una fila
-// menos (una fila ES una pasada). Desde la fila 0 se vuelve a la última, porque el
-// dibujo es un lazo. También descuenta la pasada del conteo y, si cruzó el inicio,
+// reconstruir nada. Es el espejo exacto de /avanzar: una pasada atrás descuenta una
+// repetición de la fila, y solo al agotarlas vuelve a la fila anterior (ver
+// utils/posicion.js). Desde la fila 0 se vuelve a la última, porque el dibujo es un lazo. También descuenta la pasada del conteo y, si cruzó el inicio,
 // una vuelta completa.
 export async function retrocederTelar(req, res, next) {
   const client = await pool.connect();

@@ -250,11 +250,15 @@ def verificar():
     v.append(("Un retroceso con el contador en cero no lo deja negativo",
               s11.pasadas == 0))
 
+    # En cada pasada la selección se aplica y se suelta antes de la siguiente, como el papel
+    # (entre dos agujeros seguidos de la misma columna hay papel). La lógica real, con los
+    # tiempos, se prueba con el reloj simulado en host/test_seleccion.cpp.
     s8 = Nivel2Simulado(dibujo)
     s8.pulso_del_sensor()
-    antes = list(s8.canales)
-    v.append(("La selección se mantiene hasta el pulso siguiente, no se libera por tiempo",
-              s8.canales == antes))
+    aplicada = list(s8.canales)
+    s8.apagar_todo()                     # pasado el porcentaje de la pasada, se suelta
+    v.append(("En cada pasada la selección se aplica y después se suelta, antes de la pasada siguiente",
+              any(aplicada) and not any(s8.canales)))
 
     print("\n  VERIFICACIÓN DEL FIRMWARE DEL NIVEL 2\n")
     for texto, ok in v:

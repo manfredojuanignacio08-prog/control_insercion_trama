@@ -1,11 +1,11 @@
 /**
- * MODELO DE TEJIDO: una FILA es una PASADA.
+ * MODELO DE TEJIDO: una FILA es una COMBINACIÓN de bobinas, que se teje durante
+ * tantas pasadas seguidas como indiquen sus repeticiones (ver más abajo).
  *
- * Así trabaja el dobby del telar: en cada pasada, la fila del dibujo define
- * QUÉ MARCOS suben. Cada columna de la fila es una bobina/electroimán y la
- * celda es binaria (se activa o no):
- *   [1, 1, 1] → suben los tres marcos
- *   [0, 1, 0] → sube solo el del medio
+ * En cada pasada, la fila define QUÉ BOBINAS de selección se activan. Cada columna
+ * es una bobina y la celda es binaria (se activa o no):
+ *   [1, 0, 1, 0] → se activan las bobinas 1 y 3
+ *   [0, 1, 1, 0] → se activan las bobinas 2 y 3
  *
  * Las columnas NO se recorren una por una: se envían juntas, de una sola vez,
  * porque son simultáneas dentro de la misma pasada. Lo que avanza, pasada a

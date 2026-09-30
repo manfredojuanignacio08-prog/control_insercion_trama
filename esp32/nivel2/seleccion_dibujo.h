@@ -14,12 +14,23 @@
 //  cortar la señal de cada lector con un relé de estado sólido LCA110, de modo que sea el
 //  microcontrolador el que decida qué "agujero" hay en cada pasada.
 //
-//  Una fila del dibujo es una pasada, y sus columnas son los canales que se
-//  activan al mismo tiempo. No se recorren de a uno.
+//  Una fila del dibujo es una combinación de canales que se activan al mismo
+//  tiempo (no se recorren de a uno), y se teje durante tantas pasadas como diga
+//  su cantidad de repeticiones. En CADA pasada los canales activos se cierran y,
+//  pasado un porcentaje de la pasada (PORCENTAJE_SELECCION), se sueltan: igual
+//  que el papel, que entre dos agujeros seguidos de la misma columna tiene papel.
+//  Así la máquina ve un agujero por pasada y no uno solo largo.
 // ============================================================================
 
-// El estado que se aplicó en la última pasada, para poder consultarlo.
+// La combinación que se aplicó en la última pasada, para el registro. Indica lo que
+// se seleccionó, no si el relé sigue cerrado: se suelta pasada la duración de la selección.
 bool canalActivo[N_CANALES] = { false };
+
+// Cuándo se aplicó la última selección, cuánto tiene que durar, y si todavía falta soltarla.
+unsigned long seleccionAplicadaMs = 0;
+unsigned long seleccionDuracionMs = 0;
+bool seleccionPorSoltar = false;
+bool seleccionHayAnterior = false;   // hay una pasada anterior reciente con qué medir
 
 // Traduce "quiero el canal activo" al nivel eléctrico que corresponda. Queda en
 // una función y no escrito a mano en cada lugar, porque el sentido depende de
@@ -54,6 +65,28 @@ void seleccionAplicarFila(const bool fila[], int nCols) {
     canalActivo[i] = false;
     digitalWrite(PIN_CANAL[i], nivelPara(false));
   }
+  // La duración es un porcentaje de lo que duró la pasada anterior. Si no hay una anterior
+  // reciente (primera pasada, o más de un segundo de diferencia, que es una parada y no una
+  // pasada), se usa la duración inicial.
+  const unsigned long ahora = millis();
+  unsigned long duracion = DURACION_SELECCION_INICIAL_MS;
+  if (seleccionHayAnterior) {
+    const unsigned long periodo = ahora - seleccionAplicadaMs;
+    if (periodo >= 50 && periodo <= 1000) duracion = periodo * PORCENTAJE_SELECCION / 100;
+  }
+  seleccionDuracionMs = duracion;
+  seleccionAplicadaMs = ahora;
+  seleccionHayAnterior = true;
+  seleccionPorSoltar = (PORCENTAJE_SELECCION > 0);
+}
+
+// Suelta los canales cuando pasó la duración de la selección de esta pasada. Se llama en cada vuelta del
+// ciclo principal (cada 1 ms), así que se suelta con una precisión de un milisegundo.
+void seleccionSoltarSiCorresponde() {
+  if (!seleccionPorSoltar) return;
+  if (millis() - seleccionAplicadaMs < seleccionDuracionMs) return;
+  for (int i = 0; i < N_CANALES; i++) digitalWrite(PIN_CANAL[i], nivelPara(false));
+  seleccionPorSoltar = false;
 }
 
 // Deja todos los canales en reposo. Se llama al pausar, al perder la red y en
@@ -63,6 +96,8 @@ void seleccionApagarTodo() {
     canalActivo[i] = false;
     digitalWrite(PIN_CANAL[i], nivelPara(false));
   }
+  seleccionPorSoltar = false;
+  seleccionHayAnterior = false;   // después de una parada, la próxima pasada no tiene referencia
 }
 
 // Arma una línea legible con el estado de los canales, para el monitor serie.

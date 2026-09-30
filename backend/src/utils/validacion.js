@@ -14,9 +14,9 @@ export function validarPatron(body) {
   }
 
   // Las columnas son bobinas de selección: una máquina tiene entre 1 y 8, así que
-  // un dibujo más ancho que eso no se podría ejecutar. Las filas van de 1 a 100;
+  // un dibujo más ancho que eso no se podría ejecutar. Las filas van de 1 a 300;
   // para tejer muchas pasadas iguales está repeticiones_por_fila, no filas repetidas.
-  const MAX_FILAS = 100;
+  const MAX_FILAS = 300;
   const MAX_COLUMNAS = 8;
   const MAX_REPETICIONES = 9999;
   const filasOk = Number.isInteger(filas) && filas >= 1 && filas <= MAX_FILAS;

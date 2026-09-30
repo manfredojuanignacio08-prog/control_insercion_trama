@@ -98,14 +98,11 @@ static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 // A_CONFIRMAR: depende de la medición sobre el lector.
 #define CANAL_ACTIVO_EN_ALTO   true
 
-// La selección NO se aplica por un tiempo fijo: se mantiene desde el pulso del
-// sensor hasta el pulso siguiente, que es exactamente lo que hacía el papel.
-// El agujero de la cinta permanecía frente al lector durante toda la pasada, no
-// un instante, así que la plaqueta veía una señal sostenida. Como la cinta se
-// retira, el relé ocupa su lugar y debe comportarse igual.
-//
-// Esto además se adapta solo si el telar cambia de velocidad: un tiempo fijo
-// dejaría la señal caída antes de terminar la pasada cuando la máquina va lenta.
+// Cómo se aplica la selección: en CADA pasada, los canales de la fila se activan y se
+// sueltan antes de la pasada siguiente, como el papel, que entre dos agujeros seguidos de la
+// misma columna tiene papel. Cuánto dura lo define PORCENTAJE_SELECCION (más abajo). El lector
+// tiene que ver siempre cinta sin agujero (una cinta sin perforar, o el lector tapado): el relé
+// ocupa el lugar de los agujeros. Sin cinta, el lector vería luz todo el tiempo.
 
 // ---------------------------------------------- Sincronización con la máquina
 // El telar lee la selección en un instante concreto de su ciclo, cuando abre la
@@ -127,8 +124,9 @@ static const int DESPLAZAMIENTO_FILAS = 0;
 // El desplazamiento de arriba corrige de a FILAS ENTERAS. Pero también puede haber un
 // desfase DENTRO de la pasada: el telar lee la selección en un instante de su ciclo
 // (cuando abre la calada), y el pulso del sensor llega en otro. Este retardo hace esperar
-// esos microsegundos entre el pulso y la aplicación de la fila. Se mide con osciloscopio:
-// pulso del sensor → ventana de lectura del lector óptico. Debe ser mucho menor que los
+// esos microsegundos entre el pulso y la aplicación de la fila. Solo se puede medir con un
+// osciloscopio (pulso del sensor → ventana de lectura del lector óptico); sin él, queda en 0 y
+// el desfase de filas enteras se corrige con DESPLAZAMIENTO_FILAS tejiendo una prueba. Debe ser mucho menor que los
 // 200 ms de una pasada (máximo permitido: 50 ms). Cero = se aplica apenas llega el pulso.
 //
 // Ojo con la otra dirección: si la ventana de lectura llega ANTES de que el pulso más la
@@ -138,6 +136,27 @@ static const int DESPLAZAMIENTO_FILAS = 0;
 // A_CONFIRMAR: se define con la medición sobre la máquina.
 static const unsigned long RETARDO_APLICACION_US = 0;
 static_assert(RETARDO_APLICACION_US <= 50000UL, "RETARDO_APLICACION_US no puede pasar de 50 ms");
+
+// Qué parte de cada pasada queda activa la selección. Con la cinta de papel, entre dos
+// agujeros seguidos de la misma columna hay papel: la bobina se activa y se suelta en cada
+// pasada, aunque la combinación se repita. Una fila con 25 repeticiones son 25 activaciones
+// separadas, no una sola larga.
+//
+// Se expresa como porcentaje de lo que duró la pasada anterior, que el sensor mide: así se
+// adapta sola a la velocidad, como el agujero del papel, que queda más tiempo frente al lector
+// cuando la máquina va lenta. A 300 pasadas por minuto, el 50 % son 100 ms. En la primera
+// pasada, y después de una parada, todavía no hay una anterior con qué medir: se usa
+// DURACION_SELECCION_INICIAL_MS.
+//
+// Con 0, la selección se mantiene hasta el pulso siguiente (no se suelta nunca entre pasadas):
+// solo si la medición mostrara que la máquina lo necesita así.
+// A_CONFIRMAR: se estima con una regla sobre la cinta de papel (diámetro del agujero dividido
+// por la distancia entre los centros de dos agujeros seguidos) y se confirma tejiendo una
+// prueba, o con un osciloscopio si hay uno.
+static const unsigned long PORCENTAJE_SELECCION = 50;
+static const unsigned long DURACION_SELECCION_INICIAL_MS = 100;
+static_assert(PORCENTAJE_SELECCION <= 90UL, "PORCENTAJE_SELECCION tiene que dejar un hueco entre pasadas");
+static_assert(DURACION_SELECCION_INICIAL_MS <= 180UL, "DURACION_SELECCION_INICIAL_MS tiene que ser menor que una pasada (200 ms)");
 
 // -------------------------------------------------------------- Diagnóstico
 #define LOG_SERIAL         true

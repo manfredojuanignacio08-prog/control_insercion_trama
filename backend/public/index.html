@@ -288,7 +288,7 @@
     <div class="editor-cfg">
       <div class="cfg-grp">
         <span class="cfg-lbl">Fil.</span>
-        <input class="cfg-in" id="in-rows" aria-label="Cantidad de filas del dibujo" type="number" value="8" min="1" max="100" inputmode="numeric" onkeydown="if(['-','+','e','E','.',','].includes(event.key))event.preventDefault()" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+        <input class="cfg-in" id="in-rows" aria-label="Cantidad de filas del dibujo" type="number" value="8" min="1" max="300" inputmode="numeric" onkeydown="if(['-','+','e','E','.',','].includes(event.key))event.preventDefault()" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
       </div>
       <div class="cfg-grp">
         <span class="cfg-lbl">Col.</span>
@@ -350,10 +350,6 @@
         <button type="button" class="telar-confirmar-btn" id="telar-conteo-btn" onclick="validarConteoTelar()" title="Confirmar que el conteo del sensor coincide con el contador mecánico del telar">Validar</button>
       </span>
     </div>
-
-    <!-- Con las repeticiones, la cantidad de filas ya no dice cuántas pasadas se
-         tejen: una fila con 100 son 100 pasadas. Este total lo aclara. -->
-    <div class="total-pasadas" id="total-pasadas"></div>
 
     <div class="editor-grid-area" id="grid-area">
       <div class="grid-inner" id="grid-container"></div>
@@ -1396,7 +1392,7 @@ function applySize() {
   // Solo enteros. Si algo pegado traía punto o coma ("8.5") se truncaba en silencio, y una
   // casilla vacía volvía a un tamaño por defecto. Ahora se avisa y se conserva el tamaño actual.
   if (!/^\d+$/.test(rawR) || !/^\d+$/.test(rawC)) {
-    toast('Escribí números enteros: filas de 1 a 100 y columnas de 1 a 8.');
+    toast('Escribí números enteros: filas de 1 a 300 y columnas de 1 a 8.');
     inR.value = nR; inC.value = nC;
     return;
   }
@@ -1406,9 +1402,9 @@ function applySize() {
   // Fuera de rango: se avisa y se corrige al límite, así el usuario entiende por qué cambió.
   // Cada columna es una bobina de selección (una máquina tiene entre 1 y 8), y para tejer
   // muchas pasadas iguales están las repeticiones de cada fila, no filas repetidas.
-  if (rNum < 1 || rNum > 100) toast('Las filas deben ser un número entre 1 y 100.');
+  if (rNum < 1 || rNum > 300) toast('Las filas deben ser un número entre 1 y 300.');
   else if (cNum < 1 || cNum > 8) toast('Las columnas son bobinas de selección: entre 1 y 8.');
-  const r = Math.min(100, Math.max(1, rNum));
+  const r = Math.min(300, Math.max(1, rNum));
   const c = Math.min(8, Math.max(1, cNum));
   inR.value = r; inC.value = c;
   if (r === nR && c === nC) return;
@@ -2287,15 +2283,35 @@ function exportDrawToPDF() {
   // Se reserva lugar a la derecha para la columna de repeticiones.
   const anchoReps = 16;
   const maxGridWidth = pageWidth - 28 - anchoReps;
-  const maxGridHeight = pageHeight - startY - 35;
+  // Debajo de la matriz van las instrucciones (unos 25 mm) y el margen: se les reserva el lugar.
+  // Antes se reservaban 35 mm y, cuando la matriz llenaba la hoja, las instrucciones quedaban
+  // solas en una segunda hoja casi vacía.
+  const maxGridHeight = pageHeight - startY - 50;
   let cellSize = Math.min(maxGridWidth / cols, maxGridHeight / rows, 10);
-  cellSize = Math.max(cellSize, 2);
+  // Si la matriz entra en la hoja con celdas de al menos 2 mm, se dibuja entera como
+  // siempre. Si no (con hasta 300 filas puede pasar), las celdas quedan de 4 mm y la matriz
+  // sigue en las hojas siguientes: antes se salía del borde y el PDF mostraba solo una parte.
+  const paginado = cellSize < 2;
+  if (paginado) cellSize = Math.min(maxGridWidth / cols, 4);
   const startX = (pageWidth - cellSize * cols - anchoReps) / 2;
   const showNumbers = cellSize >= 5;
+  const tamFuenteCeldas = () => { if (showNumbers) doc.setFontSize(Math.min(7, cellSize * 1.3)); };
+  tamFuenteCeldas();
 
-  if (showNumbers) doc.setFontSize(Math.min(7, cellSize * 1.3));
-
+  let yBase = startY;          // dónde empieza la matriz en la hoja actual
+  let primeraFilaHoja = 0;     // qué fila va arriba de todo en la hoja actual
+  let yFinal = startY;
   for (let r = 0; r < rows; r++) {
+    let y = yBase + (r - primeraFilaHoja) * cellSize;
+    if (paginado && y + cellSize > pageHeight - 20) {
+      doc.addPage();
+      doc.setFontSize(9);
+      doc.setTextColor(90, 90, 90);
+      doc.text(`${name}: continuación, desde la fila ${r + 1} de ${rows}`, 14, 14);
+      doc.setTextColor(0, 0, 0);
+      tamFuenteCeldas();
+      yBase = 20; primeraFilaHoja = r; y = yBase;
+    }
     const rowColor = (rowColors && rowColors[r]) ? rowColors[r] : null;
     // Sin color asignado, las celdas activas van en el azul de la aplicación. Antes
     // iban en blanco: solo se distinguían por el número, que con celdas chicas no se
@@ -2304,7 +2320,6 @@ function exportDrawToPDF() {
     for (let c = 0; c < cols; c++) {
       const val = (grid && grid[r] && grid[r][c]) || 0;
       const x = startX + c * cellSize;
-      const y = startY + r * cellSize;
       if (val > 0) {
         doc.setFillColor(rC, gC, bC);
         doc.rect(x, y, cellSize, cellSize, 'F');
@@ -2322,12 +2337,15 @@ function exportDrawToPDF() {
     // Repeticiones de la fila: cuántas pasadas seguidas se teje esta combinación.
     doc.setFontSize(Math.min(8, Math.max(5, cellSize * 1.2)));
     doc.setTextColor(60, 60, 60);
-    doc.text(`x${repsPdf[r]}`, startX + cols * cellSize + 3, startY + r * cellSize + cellSize / 2 + cellSize * 0.12, { baseline: 'middle' });
+    doc.text(`x${repsPdf[r]}`, startX + cols * cellSize + 3, y + cellSize / 2 + cellSize * 0.12, { baseline: 'middle' });
+    // En un dibujo que ocupa varias hojas, el número de fila a la izquierda permite ubicarse.
+    if (paginado) doc.text(String(r + 1), startX - 2, y + cellSize / 2 + cellSize * 0.12, { align: 'right', baseline: 'middle' });
     doc.setTextColor(0, 0, 0);
-    if (showNumbers) doc.setFontSize(Math.min(7, cellSize * 1.3));
+    tamFuenteCeldas();
+    yFinal = y + cellSize;
   }
 
-  let endY = startY + rows * cellSize + 10;
+  let endY = yFinal + 10;
   if (endY + 25 > pageHeight) {
     doc.addPage();
     endY = 20;
@@ -2338,7 +2356,7 @@ function exportDrawToPDF() {
   doc.text('Instrucciones de tejido:', 14, endY);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
-  doc.text('- Cada fila es una pasada: las celdas marcadas son las bobinas que se activan en ella.', 14, endY + 6);
+  doc.text('- Cada fila es una combinación de bobinas: las marcadas se activan en cada una de sus pasadas.', 14, endY + 6);
   doc.text('- El número a la derecha (x100, x3...) es cuántas pasadas seguidas se teje esa fila.', 14, endY + 11);
   doc.text('- Se avanza fila por fila, de arriba hacia abajo; al terminar, el dibujo vuelve a empezar.', 14, endY + 16);
 
@@ -2606,6 +2624,9 @@ function totalPasadasDibujo() {
   return t;
 }
 
+// El total de pasadas por vuelta ya no se muestra en el editor (el equipo pidió sacarlo de
+// esa pantalla); sigue en la ficha en PDF. Si se vuelve a agregar un elemento con este id,
+// la función lo completa sola.
 function actualizarTotalPasadas() {
   const el = document.getElementById('total-pasadas');
   if (!el) return;

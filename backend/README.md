@@ -164,11 +164,15 @@ src/
 │   ├── migracion_006_ping_esp32.sql             Migración: ultimo_ping_esp32 (heartbeat del ESP32)
 │   ├── migracion_007_retroceder_fisico.sql      Migración: retroceder_seq (botón físico Retroceder)
 │   ├── migracion_008_evento_fisico.sql          Migración: posicion_incierta + ultimo_evento_manual (sensado de los botones)
-- `migracion_009_rango_dimensiones.sql`: acota filas y columnas al rango 1 a 100 (filas) y 1 a 8 (columnas), el mismo que valida el editor y que soporta el firmware.
+- `migracion_009_rango_dimensiones.sql`: acotó filas y columnas al rango de 2 a 32 (la 014 lo reemplazó, y la 017 amplió las filas).
 - `migracion_010_elementos_seleccion.sql`: guarda cuántos elementos de selección (bobinas) tiene cada telar, para avisar cuando un dibujo tiene más columnas de las que la máquina puede accionar. Documenta además que `columna_actual` es vestigial y queda siempre en cero.
 - `migracion_011_metros_por_pasada.sql`: guarda cuántos metros avanza la tela en una pasada, para convertir el conteo en metros reales y calcular estadísticas de producción.
 - `migracion_012_conteo_sensor_y_retrocesos.sql`: separa el conteo estimado del medido por el sensor (`pasadas_sensor`, `conteo_validado`), agrega `retrocesos_contados`, `ultimo_reporte_sensor` y `motivo_pausa`.
 - `migracion_013_indice_unico_en_curso.sql`: una sola producción `en_curso` por telar (índice único).
+- `migracion_014_repeticiones_por_fila.sql`: agrega las repeticiones de cada fila y fija los rangos de 1 a 100 filas y de 1 a 8 columnas.
+- `migracion_015_repeticion_en_fila.sql`: guarda cuántas pasadas de la fila actual ya se tejieron.
+- `migracion_016_recovery_cifrado.sql`: documenta el cifrado del código de recuperación (sin cambios de esquema).
+- `migracion_017_filas_hasta_300.sql`: el máximo de filas de un dibujo pasa de 100 a 300.
 │   ├── migrator.js                               Aplica cada migración UNA vez (tabla migraciones_aplicadas)
 │   └── migrate.js                                Corre las migraciones pendientes (npm run migrate)
 ├── utils/
@@ -183,7 +187,7 @@ src/
 ## 6. Decisiones de diseño aplicadas (ver documento de análisis)
 
 - `matriz_pasadas` (enteros) y `matriz_ligamento` (binario) son **campos separados**.
-- **Una FILA es una PASADA.** En cada pasada, la fila del patrón define qué
+- **Una FILA es una COMBINACIÓN de bobinas**, que se teje tantas pasadas seguidas como indiquen sus repeticiones. En cada pasada, la fila del patrón define qué
   marcos suben: cada columna es una bobina/electroimán del dobby. Las
   columnas NO se recorren una por una, son simultáneas dentro de la misma
   pasada. Lo que avanza es la fila.

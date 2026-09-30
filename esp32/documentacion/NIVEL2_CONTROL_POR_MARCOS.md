@@ -69,10 +69,10 @@ lugar del lector óptico de la cinta de papel.
   telar quedan intactas y siguen haciendo su trabajo.
 - **Relés de estado sólido (SSR), uno por lector óptico, cuatro en total (una por bobina de selección).** Es el punto donde más se
   equivoca la intuición: un relé mecánico común no sirve acá. El telar trabaja
-  alrededor de 200 pasadas por minuto, o sea unas 3 por segundo, y cada bobina
-  puede conmutar una vez por pasada. Eso son unas 144.000 conmutaciones en un
-  turno de 8 horas, cuando la vida típica de un relé mecánico con carga ronda
-  las 100.000: se gastaría en un turno. Un SSR no tiene partes móviles,
+  a 300 pasadas por minuto, o sea 5 por segundo, y cada bobina puede activarse
+  una vez por pasada. Eso son hasta 180.000 activaciones en una jornada de 10
+  horas, cuando la vida típica de un relé mecánico con carga ronda las 100.000:
+  se gastaría en una jornada. Un SSR no tiene partes móviles,
   conmuta en microsegundos y no se desgasta.
 - Sirven tanto un **módulo SSR armado** (entrada de 3-32 V DC, que es
   justo lo que entrega el ESP32, y salida para carga de alterna) como el
@@ -95,8 +95,8 @@ siempre parcialmente energizada.
 **Dato que falta medir en la máquina:** la tensión y la corriente en la salida
 de un lector óptico, que definen qué SSR comprar. La velocidad ya está
 confirmada: el telar trabaja a 300 pasadas por minuto, dato que dio el dueño de
-la planta el 06/09/26, lo que equivale a 5 conmutaciones por segundo y unas
-144.000 por turno de 8 horas.
+la planta el 06/09/26, lo que equivale a 5 conmutaciones por segundo y hasta
+180.000 por jornada de 10 horas.
 
 Esto es **de escala de prototipo**, no de proyecto industrial.
 
