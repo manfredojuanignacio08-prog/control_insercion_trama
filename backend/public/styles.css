@@ -51,6 +51,10 @@
   --acc:   #8FB8DC;
   --acc-md:#6E9BC4;
   --acc-lt:rgba(125,160,200,.20);
+  /* Verde y ámbar de los estados ("Tejiendo", "En pausa", la placa). No se redefinían en
+     oscuro, y el verde y el ámbar del tema claro quedaban en 2,4:1 y 2,8:1 sobre estos fondos. */
+  --green: #74C69D;
+  --amber: #E9B15A;
   --sh-sm: 0 1px 4px rgba(0,0,0,.35);
   --sh-md: 0 3px 14px rgba(0,0,0,.45);
 }

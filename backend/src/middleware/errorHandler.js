@@ -15,6 +15,8 @@ export function errorHandler(err, req, res, next) {
     '22008': 'Alguna fecha del pedido está fuera de rango.',
     '23502': 'Falta un dato obligatorio.',
     '23514': 'Algún valor está fuera de los límites permitidos.',
+    '22021': 'Algún texto del pedido tiene caracteres no válidos.',
+    '22P05': 'Algún texto del pedido tiene caracteres no válidos.',
   };
   if (DATOS_INVALIDOS[err.code]) {
     return res.status(400).json({ error: DATOS_INVALIDOS[err.code] });

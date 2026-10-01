@@ -2252,7 +2252,36 @@ function hexToRgb(hex) {
   return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
 }
 
-function exportDrawToPDF() {
+// Último dato de producción de cada dibujo, con su hora: si al descargar la ficha el servidor
+// tarda en responder, se usa este en vez de esperar y perder el permiso de descarga del toque.
+const produccionCache = {};
+
+// Pide las estadísticas del dibujo (las mismas de la ventana de la biblioteca) y las deja en
+// el formato de la ficha. Devuelve null si no hay datos.
+async function obtenerProduccionParaFicha(id) {
+  if (!id) return null;
+  const ahora = new Date();
+  const conHora = (s, cuando) => ({
+    pasadas: Number(s.pasadas_totales) || 0,
+    metros: s.metros_tejidos != null ? Number(s.metros_tejidos) : null,
+    vueltas: Number(s.repeticiones_del_dibujo) || 0,
+    horas: Number(s.horas_de_maquina) || 0,
+    ultimaVez: s.ultima_vez ? new Date(s.ultima_vez).toLocaleDateString('es-AR') : null,
+    aproximado: s.precision_conteo !== 'sensor_validado',
+    fechaDato: `${cuando.toLocaleDateString('es-AR')} ${cuando.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}`,
+  });
+  try {
+    const espera = new Promise((_, rechazar) => setTimeout(() => rechazar(new Error('tiempo')), 2500));
+    const s = await Promise.race([apiFetch(`/patrones/${id}/estadisticas`), espera]);
+    produccionCache[id] = { s, cuando: ahora };
+    return conHora(s, ahora);
+  } catch {
+    const c = produccionCache[id];
+    return c ? conHora(c.s, c.cuando) : null;
+  }
+}
+
+async function exportDrawToPDF() {
   if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
     toast('No se pudo cargar el generador de PDF');
     return;
@@ -2305,8 +2334,50 @@ function exportDrawToPDF() {
       doc.text(val, x + 4, 63.5);
     });
 
+    // ── Producción hasta el momento ───────────────────────────────────────
+    // Sale de las mismas estadísticas que la ventana de la biblioteca, e incluye la
+    // producción en curso. Sin datos (dibujo sin guardar, sin conexión, invitado) no se muestra.
+    const P = d.produccion;
+    const desp = !P ? 0 : (P.pasadas > 0 ? 34 : 14);   // cuánto baja el resto de la hoja
+    if (P) {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...AZUL);
+      doc.text('PRODUCCIÓN HASTA EL MOMENTO', M, 76);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...GRIS);
+      doc.text(`Datos al ${P.fechaDato}${P.aproximado && P.pasadas > 0 ? ' · valores aproximados' : ''}`, W - M, 76, { align: 'right' });
+      if (P.pasadas > 0) {
+        const datos = [
+          ['Metros tejidos', P.metros != null ? largo(P.metros) : 'Sin dato'],
+          ['Pasadas tejidas', miles(P.pasadas)],
+          ['Vueltas completas', miles(P.vueltas)],
+          ['Horas de máquina', P.horas.toLocaleString('es-AR', { maximumFractionDigits: 1 })],
+        ];
+        datos.forEach(([et, val], i) => {
+          const x = M + i * (tw + 4);
+          doc.setDrawColor(...AZUL2); doc.setLineWidth(0.35); doc.setFillColor(255, 255, 255);
+          doc.roundedRect(x, 79, tw, 17, 2.5, 2.5, 'FD');
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...GRIS);
+          doc.text(et.toUpperCase(), x + 4, 84.5);
+          doc.setFontSize(13); doc.setTextColor(...(val === 'Sin dato' ? GRIS : AZUL));
+          doc.text(val, x + 4, 92.2);
+          if (P.aproximado && i < 3 && val !== 'Sin dato') {
+            const wv = doc.getTextWidth(val);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...GRIS);
+            doc.text('aprox.', x + 4 + wv + 1.5, 92.2);
+          }
+        });
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8); doc.setTextColor(...GRIS);
+        let nota = 'Incluye la producción en curso.';
+        if (P.ultimaVez) nota += ` Última vez que se tejió: ${P.ultimaVez}.`;
+        if (P.metros == null) nota += ' Para ver los metros, cargá los metros por pasada en la ficha del dibujo.';
+        doc.text(nota, M, 100.5);
+      } else {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...TEXTO);
+        doc.text('Todavía no se tejió este dibujo.', M, 82.5);
+      }
+    }
+
     // ── Colores de hilo ────────────────────────────────────────────────────
-    const y = 76;
+    const y = 76 + desp;
     const usados = [];
     if (hayColores) d.colores.forEach((c) => { if (c && !usados.includes(c.toUpperCase())) usados.push(c.toUpperCase()); });
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...GRIS);
@@ -2325,7 +2396,7 @@ function exportDrawToPDF() {
     }
 
     // ── Columnas: matriz a la izquierda, vista previa a la derecha ─────────
-    const yCols = 86;
+    const yCols = 86 + desp;
     const colMatriz = { x: M, w: 86 }, colTela = { x: M + 92, w: W - 2 * M - 92 };
     const tituloSeccion = (texto, x, yy, w) => {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...AZUL);
@@ -2380,7 +2451,7 @@ function exportDrawToPDF() {
     // de 100. Si a esa escala la vuelta entra, se muestra entera (dos veces si caben); si no, se
     // muestra desde el principio hasta donde entre, y el epígrafe dice qué filas se ven.
     doc.setPage(1);
-    const tx = colTela.x, ty = yCols + 6, tWidth = colTela.w, tHeight = 132;
+    const tx = colTela.x, ty = yCols + 6, tWidth = colTela.w, tHeight = 132 - desp;
     const MIN_FRANJA = 1.6;
     const minReps = Math.min(...reps);
     let escala = tHeight / pasadasVuelta;                 // mm por pasada, con una vuelta entera
@@ -2472,6 +2543,7 @@ function exportDrawToPDF() {
   const filasPdf = nR || 1, colsPdf = nC || 1;
   const actual = draws.find((x) => String(x.id) === String(editId));
   const mpp = actual && actual.metrosPorPasada != null ? Number(actual.metrosPorPasada) : null;
+  const produccion = actual ? await obtenerProduccionParaFicha(actual.id) : null;
   const doc = generarFicha(jspdf.jsPDF, {
     nombre: name,
     // El telar donde se implementa el sistema. Si se usara en otro, cambiar este texto.
@@ -2481,6 +2553,7 @@ function exportDrawToPDF() {
     grid: Array.from({ length: filasPdf }, (_, r) => Array.from({ length: colsPdf }, (_, c) => ((grid[r] && grid[r][c]) ? 1 : 0))),
     repeticiones: Array.from({ length: filasPdf }, (_, r) => repFilas[r] || 1),
     colores: Array.from({ length: filasPdf }, (_, r) => (rowColors && rowColors[r]) || null),
+    produccion,
   });
 
   // El nombre del archivo no puede llevar / \ : * ? " < > |: se reemplazan por guiones.
@@ -2594,6 +2667,7 @@ async function fichaCargar() {
   cont.innerHTML = '<div class="ficha-cargando">Cargando estadísticas...</div>';
   try {
     const d = await apiFetch(`/patrones/${idActual}/estadisticas`);
+    produccionCache[idActual] = { s: d, cuando: new Date() };   // para la ficha en PDF
     document.getElementById('mpp-in').value = mostrarDecimal(d.metros_por_pasada);
     fichaMostrarEquivalencia();
 

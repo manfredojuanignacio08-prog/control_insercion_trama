@@ -658,3 +658,29 @@ osciloscopio (estimación con la cinta de papel y prueba de tejido), y tres prob
   celular no se abrían como PDF. Error previo a este cambio. Ahora el nombre del archivo va sin tildes ni caracteres
   especiales ("Rayado bordo y azul_1-10-2026.pdf").
 - Manual (web y Word): la descripción de la ficha dice qué trae ahora.
+
+## Producción hasta el momento en la ficha en PDF
+
+La ficha muestra, si el dibujo ya se tejió, los metros y pasadas tejidas, las vueltas completas y las horas de máquina,
+incluida la producción en curso, con la fecha y hora del dato y la marca "aprox." mientras el sensor no esté validado.
+Sale de las mismas estadísticas que la ventana de la biblioteca. Si el dibujo no está guardado, no se muestra; si nunca
+se tejió, dice "Todavía no se tejió este dibujo"; si el servidor tarda más de 2,5 s o no hay conexión, usa el último dato
+consultado de ese dibujo (con su hora) o se descarga sin el recuadro, para no perder el permiso de descarga del toque.
+Probados los cinco casos. Manual (web y Word) actualizado.
+
+## Revisión completa después de agregar la producción a la ficha
+
+- **El ingreso podía responder con error 500 ante datos malformados.** Cinco funciones del ingreso (iniciar y verificar
+  el inicio de sesión, verificar el registro, recuperar con el código y ver el código) usaban el usuario sin comprobar
+  que fuera un texto: un número, una lista o un objeto las hacían fallar. Y un usuario con un carácter nulo llegaba a
+  la base, que lo rechazaba por codificación inválida. Ahora una sola función valida el usuario (texto de 1 a 40
+  caracteres, sin caracteres de control) y responde "El usuario no es válido". Además, el manejador general convierte
+  los rechazos de PostgreSQL por caracteres inválidos (22021, 22P05) en un 400 en cualquier ruta. Lo encontró la
+  prueba de pedidos malformados una vez que se subió el límite de pedidos solo para la prueba: con el límite normal,
+  la mayoría de los pedidos se cortaban antes de llegar a las rutas. Ahora: 4.060 pedidos, cero errores 500, cubriendo
+  todas las rutas del ingreso. El ingreso normal (registro con huella, salir, entrar, recuperar) sigue funcionando.
+- **Contraste en el tema oscuro:** el verde y el ámbar de los estados ("Tejiendo", "En pausa", la placa) no se
+  redefinían para el tema oscuro y quedaban en 2,4:1 y 2,8:1. Ahora tienen su versión clara (más de 5,8:1 sobre todos
+  los fondos oscuros).
+- Verificado y sin cambios: los controles de tamaño atenuados mientras el telar teje son intencionales (la edición está
+  bloqueada y se avisa en pantalla), y las pautas de accesibilidad eximen del contraste a los controles inactivos.

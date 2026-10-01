@@ -81,6 +81,16 @@ const INVITACION_TTL_DIAS = 7;
 const aB64 = (buf) => Buffer.from(buf).toString('base64url');
 const deB64 = (str) => Buffer.from(str, 'base64url');
 
+// El usuario tiene que ser un texto de 1 a 40 caracteres, sin caracteres de control. Antes,
+// un número, una lista o un carácter nulo llegaban a la consulta y la hacían fallar con un
+// error 500 en lugar de responder que el dato no es válido.
+function usuarioValido(u) {
+  if (typeof u !== 'string') return null;
+  const t = u.trim();
+  if (!t || t.length > 40 || /[\u0000-\u001f\u007f]/.test(t)) return null;
+  return t;
+}
+
 // Hash SHA-256 (para guardar códigos de recuperación e invitación sin texto plano)
 const hashCodigo = (codigo) =>
   crypto.createHash('sha256').update(String(codigo).trim().toUpperCase()).digest('hex');
@@ -208,7 +218,7 @@ export async function iniciarRegistro(req, res, next) {
     const { rpID, origin } = datosRP(req);
     const { usuario, nombre, invitacion } = req.body || {};
     // Sin máximo, el registro aceptaba nombres de cientos de caracteres.
-    if (!usuario || typeof usuario !== 'string' || usuario.trim().length < 3 || usuario.trim().length > 40) {
+    if (!usuario || typeof usuario !== 'string' || usuario.trim().length < 3 || usuario.trim().length > 40 || /[\u0000-\u001f\u007f]/.test(usuario)) {
       return res.status(400).json({ error: 'El usuario debe tener entre 3 y 40 caracteres.' });
     }
     const nom = usuario.trim();
@@ -325,7 +335,8 @@ export async function verificarRegistro(req, res, next) {
       return res.status(400).json({ error: 'Faltan datos (usuario y respuesta).' });
     }
 
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+    if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
+    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
     const user = rows[0];
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
@@ -417,7 +428,8 @@ export async function iniciarLogin(req, res, next) {
     const { usuario } = req.body || {};
     if (!usuario) return res.status(400).json({ error: 'Falta el usuario.' });
 
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+    if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
+    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
     const user = rows[0];
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
@@ -454,7 +466,8 @@ export async function verificarLogin(req, res, next) {
       return res.status(400).json({ error: 'Faltan datos (usuario y respuesta).' });
     }
 
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+    if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
+    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
     const user = rows[0];
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
@@ -525,7 +538,8 @@ export async function recuperarUsuario(req, res, next) {
     if (!usuario || !codigo) {
       return res.status(400).json({ error: 'Faltan datos (usuario y código de recuperación).' });
     }
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+    if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
+    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
     const user = rows[0];
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
@@ -573,7 +587,8 @@ export async function regenerarCodigoRecuperacion(req, res, next) {
       return res.status(400).json({ error: 'Faltan datos (usuario y verificación de huella).' });
     }
 
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuario.trim()]);
+    if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
+    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
     const user = rows[0];
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
