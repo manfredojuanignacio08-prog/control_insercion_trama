@@ -641,3 +641,20 @@ osciloscopio (estimación con la cinta de papel y prueba de tejido), y tres prob
   180.000). El del Nivel 2 además decía que el telar trabaja a "unas 200 pasadas por minuto, 3 por segundo", un dato
   anterior al del dueño (300 por minuto) y que ni siquiera daba esa cuenta. La Bitácora y el Registro conservan el
   cálculo de su fecha.
+
+## Ficha técnica en PDF con diseño nuevo y vista previa de la tela
+
+- **Diseño nuevo** (aprobado por el equipo): encabezado con el telar y la fecha, tarjetas con filas, bobinas, pasadas
+  por vuelta y largo por vuelta, colores de hilo, la matriz con encabezados de bobina y repeticiones (sigue en otras
+  hojas si es larga), las instrucciones de tejido y pie de página con numeración.
+- **Vista previa de la tela, a escala:** cada fila es una franja con el alto de sus pasadas y el color de su hilo, con
+  una textura de urdimbre. La escala se elige para que la fila más corta mida al menos 1,6 mm, así se distinguen 20, 50
+  y 100 pasadas; si el dibujo entra, se ve entero (dos vueltas si caben), y si no, desde el principio hasta donde
+  entre, con un texto que dice qué filas se ven.
+- **El largo por vuelta salía "Sin dato" aunque estuvieran cargados los metros por pasada:** la lista de dibujos en
+  memoria descartaba ese dato al convertirlo. Ahora lo conserva, y se actualiza al guardar los metros en la ficha
+  (probado: cambiarlos y descargar enseguida usa el valor nuevo).
+- **Los dibujos con tilde o ñ en el nombre se descargaban sin nombre ni extensión** ("download"), así que en el
+  celular no se abrían como PDF. Error previo a este cambio. Ahora el nombre del archivo va sin tildes ni caracteres
+  especiales ("Rayado bordo y azul_1-10-2026.pdf").
+- Manual (web y Word): la descripción de la ficha dice qué trae ahora.
