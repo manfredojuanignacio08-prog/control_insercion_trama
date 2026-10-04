@@ -15,10 +15,12 @@ web pensada para el celular**; un **backend** guarda y coordina todo en una
 backend/          El servidor y la aplicación web
   public/         La aplicación que ve el operario
   src/            Rutas, controladores y utilidades
-  src/nivel2/     Endpoints del Nivel 2 (en desarrollo, sin montar)
+  src/nivel2/     Endpoints del Nivel 2 (montados; los usa el firmware con el sensor)
 esp32/            El firmware
-  control_trama_esp32/   Nivel 1: el que hoy corre en la máquina
-  nivel2/                Nivel 2: en desarrollo, proyecto separado
+  control_trama_esp32/   El único programa de la placa (un solo ESP32). Con
+                         NIVEL2_INSTALADO en false (hoy) maneja la botonera;
+                         en true suma el sensor y la selección del dibujo
+  pruebas/               Prueba de mesa de un relé LCA110, sin red
   documentacion/         Recomendaciones eléctricas, checklist y niveles
   verificacion/          Scripts que comprueban la lógica sin hardware
 diagramas/        Los diagramas del proyecto, en SVG y PNG
@@ -36,17 +38,18 @@ documentacion_proyecto/   Los documentos de la Carpeta del Proyecto
 ```
 ┌────────────────┐    ┌───────────────────────┐    ┌───────────────────┐
 │  Página web    │──▶ │  Backend Node/Express │ ◀─▶│ Base de datos     │
-│  (en el celu, │    │  (API REST + sirve    │    │ PostgreSQL /      │
-│   interfaz de  │    │   la web + reglas de  │    │ Neon (nube)   │
+│  (en el celu,  │    │  (API REST + sirve    │    │ PostgreSQL /      │
+│   interfaz de  │    │   la web + reglas de  │    │ Neon (nube)       │
 │   uso real)    │    │   negocio)            │    │                   │
 └────────────────┘    └───────────┬───────────┘    └───────────────────┘
                                   │  (la misma API REST)
                                   ▼
                        ┌─────────────────────┐        ┌──────────────────┐
                        │  Firmware ESP32     │ ─────▶ │  Telar físico    │
-                       │  (gateway por relés)│        │  (botones        │
-                       └─────────────────────┘        │   Marcha/Pausa)  │
-                                                       └──────────────────┘
+                       │  (gateway por relés)│        │  (botones Marcha,│
+                       └─────────────────────┘        │  Pausa y         │
+                                                      │  Retroceder)     │
+                                                      └──────────────────┘
 ```
 
 Cuatro componentes forman el producto:
@@ -64,7 +67,8 @@ Cuatro componentes forman el producto:
    alojada en la nube.
 4. **Firmware ESP32**, el puente con la máquina real: lee del backend si el
    telar debe estar tejiendo y acciona los relés conectados en paralelo a
-   los botones de Marcha/Pausa del telar.
+   los botones de Marcha, Pausa y Retroceder del telar, y le avisa al
+   backend cuando alguien los usa a mano en la botonera.
 
 **La regla de oro:** los clientes (la web y el ESP32) hablan con el **mismo
 backend** por la **misma API**. Nadie toca la base de datos directo.
@@ -79,11 +83,11 @@ proyecto_completo/
 │   ├── src/                    La API REST y la lógica de negocio.
 │   └── public/                 La PÁGINA WEB (el producto), servida por el backend.
 ├── esp32/                   → Firmware del microcontrolador (gateway con
-│                              relés Marcha/Pausa) + documentación eléctrica.
+│                              relés Marcha/Pausa/Retroceder) + documentación eléctrica.
 ├── database/                → Script SQL de referencia del esquema.
 ├── docs/                    → Documentación de análisis, instalación y uso.
-├── diagramas/               → Diagrama lógico (arquitectura) y diagrama
-│                              físico (conexión eléctrica del ESP32).
+├── diagramas/               → Diagramas del sistema (arquitectura, base de datos)
+│                              y del hardware (conexión eléctrica, bloques).
 └── _referencia_app_android/ → ⚠️ Base de una eventual app Android, guardada
                                SOLO como referencia. NO funcional, NO en uso,
                                NO es parte del producto. Se puede ignorar.
@@ -114,7 +118,7 @@ escritorio, ya que está pensada para pantalla de teléfono).
 ### 2. ESP32 (fase de hardware)
 
 El firmware sigue el diseño eléctrico del equipo: tres relés en paralelo con
-los botones de Marcha y Pausa del telar. Asignar un patrón desde la web
+los botones de Marcha, Pausa y Retroceder del telar. Asignar un patrón desde la web
 arranca la máquina real; "Pausa" la detiene. Detalle en `esp32/README.md` y
 mejoras eléctricas en `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md`.
 
@@ -141,24 +145,30 @@ mejoras eléctricas en `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md`.
 - `Dockerfile`, `docker-compose.yml`, `ecosystem.config.cjs`, despliegue.
 
 ### `esp32/`
-- `esp32/control_trama_esp32/control_trama_esp32.ino`, firmware gateway: sondeo
-  del estado del telar, pulsos de relé Marcha/Pausa, arranque seguro,
-  watchdog, fail-safe sin red y reporte de errores.
-- `esp32/control_trama_esp32/config.h`, configuración (Wi-Fi, URL del backend,
-  id del telar, polaridad del relé).
-- `RECOMENDACIONES_ELECTRICAS.md`, mejoras de protección eléctrica.
-- `diagrama_conexion_electrica.svg` / `.png`, diagrama de las 4 etapas.
+- `esp32/control_trama_esp32/control_trama_esp32.ino`, el único firmware de la placa:
+  sondeo del estado del telar, pulsos de relé Marcha/Pausa/Retroceder, sensado de
+  la botonera, arranque seguro, watchdog, fail-safe sin red y reporte de errores; con
+  `NIVEL2_INSTALADO` en `true`, además el conteo de pasadas y la selección del dibujo.
+- `esp32/control_trama_esp32/config.h`, configuración (qué está instalado, Wi-Fi, clave
+  del dispositivo, URL del backend, id del telar, polaridad de los relés y parámetros del
+  Nivel 2). En el repositorio van textos de ejemplo: los datos reales no se suben.
+- `esp32/verificacion/`, simulaciones y pruebas en la PC de la lógica del firmware.
+- `esp32/documentacion/`, recomendaciones eléctricas, lista de validación y
+  descripción de los niveles de control.
 
 ### `diagramas/`
-- `diagrama_logico_arquitectura.svg` / `.png`, cómo se conectan la web, el
-  backend, la base de datos, el ESP32 y el telar.
-- `diagrama_conexion_electrica.svg` / `.png`, el cableado físico del ESP32.
-- `arbol_problemas_soluciones.svg` / `.png`, el árbol de problemas y
-  soluciones del proyecto.
+Cada diagrama en SVG (editable) y PNG. El detalle está en `diagramas/README.md`.
+- `diagramas/hardware/`, cómo se conecta: el cableado del nodo de control
+  (`diagrama_conexion_electrica`), los bloques A y C, un canal del sensor, un
+  canal de relé LCA110 y la vista del Nivel 2.
+- `diagramas/sistema/`, cómo funciona: la arquitectura (`diagrama_logico_arquitectura`),
+  los diagramas de la base de datos, el árbol de problemas y soluciones, el Gantt,
+  la estimación y el organigrama.
 
 ### `database/` y `docs/`
-Material de referencia: el script SQL del esquema y los documentos de
-análisis, instalación y funcionamiento.
+Material de referencia: el script SQL completo de la base, `docs/guias/`
+(instalación y funcionamiento, cómo crear la base) y `docs/analisis/`
+(análisis del frontend, árbol de problemas, componentes).
 
 ### `_referencia_app_android/`
 ⚠️ Base de una eventual app Android, guardada solo como referencia para el
@@ -173,7 +183,7 @@ el `AVISO.md` dentro de la carpeta. Se puede ignorar por completo.
 punta a punta), página web conectada a la API y diseñada para el celular
 (con modo claro/oscuro), login biométrico (huella/rostro) con WebAuthn,
 esquema multi-telar, historial y log de errores, firmware ESP32 gateway
-(relés Marcha/Pausa) acorde al diseño eléctrico del equipo.
+(relés Marcha/Pausa/Retroceder) acorde al diseño eléctrico del equipo.
 
 **Siguiente fase:** armar la etapa eléctrica según la documentación (con las
 mejoras de `RECOMENDACIONES_ELECTRICAS.md`) y conectar los relés del ESP32 a
@@ -182,12 +192,13 @@ la botonera del telar.
 
 ## Nivel 2, en desarrollo
 
-El código del Nivel 2 (conteo real de pasadas y selección del dibujo) está en
-desarrollo y se mantiene **separado** del que hoy corre en la máquina:
+El conteo real de pasadas y la selección del dibujo están en desarrollo. El gabinete tiene
+**un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`): hoy se carga con
+`NIVEL2_INSTALADO` en `false` y solo maneja la botonera; cuando se instalen los Bloques C y D
+se pone en `true` y se vuelve a cargar el mismo programa.
 
-- `esp32/nivel2/`, firmware, con su propio archivo de configuración
-- `backend/src/nivel2/`, endpoints y migración de base de datos
+- `esp32/control_trama_esp32/`, el firmware (su README explica el Nivel 2)
+- `backend/src/nivel2/`, endpoints que usa el firmware con el sensor
 - `esp32/verificacion/sim_nivel2_firmware.py`, verificación de la lógica
 
-Ninguna de esas piezas está montada en producción. Cada carpeta tiene su README
-con el detalle de lo que falta antes de poder usarla.
+Cada carpeta tiene su README con el detalle de lo que falta antes de usar el Nivel 2.

@@ -13,7 +13,7 @@ Son tres contraseñas largas que el servidor necesita. Se cargan como **variable
 | Variable | Para qué sirve | Qué pasa si falta |
 |---|---|---|
 | `SESSION_SECRET` | El servidor firma con ella la cookie de sesión de quien inicia sesión. Sin una clave secreta, cualquiera podría fabricar una cookie falsa. | **El servidor no arranca.** |
-| `RECOVERY_SECRET` | Cifra los códigos de recuperación guardados en la base: sin ella, quien consiga una copia de la base no puede usarlos. Mínimo 16 caracteres. | **El servidor no arranca.** Si se cambia después, los códigos guardados dejan de leerse: regenerarlos con `npm run codigo <usuario> --rotar`. |
+| `RECOVERY_SECRET` | Cifra los códigos de recuperación guardados en la base: sin ella, quien consiga una copia de la base no puede usarlos. Mínimo 16 caracteres. | **El servidor no arranca.** Si se cambia después, los códigos guardados dejan de leerse: regenerarlos con `npm run codigo -- <usuario> --rotar` (con los dos guiones antes del usuario: sin ellos, npm se queda con `--rotar` y no rota nada). |
 | `ESP32_DEVICE_KEY` | Contraseña compartida entre el servidor y los ESP32. Ellos no tienen huella ni navegador: mandan esta clave en cada pedido (header `X-Device-Key`). | El servidor rechaza a los ESP32 con error 401 y no controlan nada. |
 
 **Pasos**
@@ -23,15 +23,18 @@ Son tres contraseñas largas que el servidor necesita. Se cargan como **variable
 2. En Render: el servicio → **Environment** → agregar `SESSION_SECRET`, `RECOVERY_SECRET` y `ESP32_DEVICE_KEY` con esos valores →
    guardar (Render redespliega solo). Agregar también `WEBAUTHN_RP_ID` (solo el dominio, ej. `control-trama-backend.onrender.com`) y `WEBAUTHN_ORIGIN` (con https, ej. `https://control-trama-backend.onrender.com`).
 3. Copiar **el mismo valor** de `ESP32_DEVICE_KEY` en `DEVICE_KEY` de `esp32/control_trama_esp32/config.h`
-   (Nivel 1) y de `esp32/nivel2/config_nivel2.h` (Nivel 2), y volver a cargar los firmwares. Tienen que ser
-   idénticos, carácter por carácter. En esos mismos dos archivos están `WIFI_SSID` y `WIFI_PASSWORD` de la red de la fábrica:
-   si la clave del router cambia, hay que actualizarla en los dos.
+   (el único firmware de la placa) y volver a cargarlo. Tienen que ser idénticos, carácter por carácter. En ese
+   mismo archivo van `WIFI_SSID` y `WIFI_PASSWORD` de la red de la fábrica y `NIVEL2_INSTALADO` (`false` mientras
+   el sensor y los relés LCA110 no estén conectados): en el repositorio quedan con un texto de ejemplo
+   (`NOMBRE_DE_LA_RED`, `CLAVE_DE_LA_RED`); los datos reales se escriben solo en la copia que se carga a la placa y
+   **no se suben** al repositorio. Si la clave del router cambia, hay que actualizarla y volver a cargarlo.
 4. Comprobar: el monitor serie no muestra errores 401 y en la web se puede iniciar sesión.
 
-No publicar estas claves en el repositorio ni compartirlas. La del WiFi de la fábrica sí está en los dos
-`config`: si el repositorio es público, cualquiera que lo lea la ve. En el repo queda el texto de ejemplo; la clave
-real va solo en la copia que se carga a la placa y en Render. Si se sospecha que una se filtró, se cambia en
-Render y en los firmwares.
+No publicar estas claves en el repositorio ni compartirlas. En el repo quedan los textos de ejemplo; la clave del
+dispositivo real va solo en Render y en la copia que se carga a la placa, y lo mismo el WiFi de la fábrica. Si se
+sospecha que una se filtró, se cambia en Render y en el firmware (y la del WiFi, en el router). **Las versiones
+anteriores del repositorio tenían escritas la clave del dispositivo y la del WiFi**: siguen en el historial de git,
+así que hay que cambiar las dos antes de poner el sistema en la fábrica.
 
 ## 2. Ajustar la sincronización (Nivel 2)
 
@@ -54,7 +57,7 @@ la señal del sensor y la salida del lector óptico en dos canales, disparando c
 Se ve el tiempo entre el pulso y la lectura (la ventana) y qué parte de cada pasada dura la señal del
 lector cuando pasa un agujero.
 
-**Qué se ajusta** (en `config_nivel2.h`):
+**Qué se ajusta** (en `esp32/control_trama_esp32/config.h`):
 
 | Resultado | Ajuste |
 |---|---|
@@ -84,16 +87,16 @@ Hasta validarlo, los metros de las estadísticas figuran como **estimados** (≈
 
 ## 4. Lista de primera puesta en marcha
 
-- [ ] Claves cargadas en Render (`SESSION_SECRET`, `RECOVERY_SECRET`, `ESP32_DEVICE_KEY`) y en los dos `config` (sección 1).
+- [ ] Claves cargadas en Render (`SESSION_SECRET`, `RECOVERY_SECRET`, `ESP32_DEVICE_KEY`) y en `config.h` (sección 1).
 - [ ] `N_CANALES = 4` y `elementos_seleccion = 4` (ya están así).
-- [ ] `TELAR_ID` de los dos firmwares igual al id del telar que muestra la web. Con la sesión
+- [ ] `TELAR_ID` del firmware igual al id del telar que muestra la web. Con la sesión
       iniciada, abrir `https://control-trama-backend.onrender.com/api/telares`: la web usa el
       **primero de esa lista** (ordenada por código, no por id). Su `id` es el que va en
       `TELAR_ID`. Si no coinciden, la web muestra un telar y la placa acciona otro; el síntoma es
       que la web marca "Sin datos del ESP32" aunque la placa esté conectada.
 - [ ] Migraciones probadas antes en una base de prueba (no directo en Neon). Ya se verificaron
       sobre una copia con datos de producción: se aplican y los datos se conservan.
-- [ ] `MODO_BANCO = false` en `config_nivel2.h`.
+- [ ] `NIVEL2_INSTALADO = true` y `MODO_BANCO = false` en `config.h`, recién con el sensor y los relés LCA110 conectados.
 - [ ] Sincronización ajustada con la prueba de tejido (o el osciloscopio) y valores cargados (sección 2).
 - [ ] Un canal armado y probado en la máquina **antes** de armar los otros tres.
 - [ ] Jornada de validación del conteo hecha (sección 3).

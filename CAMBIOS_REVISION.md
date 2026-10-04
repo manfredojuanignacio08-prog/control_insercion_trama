@@ -11,7 +11,8 @@ de datos y documentación. Cada punto lleva el número que tenía en la revisió
 | `esp32/verificacion/host/correr.sh`: lógica real de `sensor_pasada.h` con reloj simulado; sintaxis de los dos sketches contra stubs de Arduino | OK |
 | Scripts de verificación existentes (13/13, 6/6, 6/6, 21/21) | OK |
 | `node --check` de todo el backend y del JavaScript de la web | OK |
-| Backend contra una base PostgreSQL real, navegador real, compilación con el core ESP32 real | **NO se pudo** (no hay base ni placa en este entorno). Probar primero en una base de prueba. |
+| Backend contra una base PostgreSQL real (`tests/integracion.pg.mjs`, desde la revisión completísima de octubre de 2026) | OK |
+| Navegador real, compilación con el core ESP32 real, hardware | **NO se pudo** (no hay navegador gráfico, placa ni telar en este entorno). |
 
 ## Críticos
 
@@ -684,3 +685,126 @@ Probados los cinco casos. Manual (web y Word) actualizado.
   los fondos oscuros).
 - Verificado y sin cambios: los controles de tamaño atenuados mientras el telar teje son intencionales (la edición está
   bloqueada y se avisa en pantalla), y las pautas de accesibilidad eximen del contraste a los controles inactivos.
+
+## Revisión completísima: software, firmware y hardware (octubre de 2026)
+
+Revisión línea por línea de todo el proyecto (backend, web, base, los dos firmwares, documentación), repetida sobre el
+código ya corregido hasta que una pasada completa no encontró nada. Esta vez el backend se probó además **contra un
+PostgreSQL real** (`backend/tests/integracion.pg.mjs`), no solo con la base simulada.
+
+**Seguridad**
+
+| Problema | Corrección |
+|---|---|
+| El repositorio público tenía escritas la clave de dispositivo (`DEVICE_KEY`) y la red y clave del WiFi de la fábrica en `config.h` y `config_nivel2.h`. | Quedan textos de ejemplo (`NOMBRE_DE_LA_RED`, `CLAVE_DE_LA_RED`, la clave de ejemplo). **Siguen en el historial de git: hay que cambiar la clave del dispositivo en Render y en las placas, y la del router.** |
+| Una cookie mal codificada (`%E0%A4%A`) hacía fallar `decodeURIComponent` y devolvía error 500 en **cada** pedido de ese navegador hasta borrar las cookies. | Se trata como "sin sesión" (401). |
+| `pasos` sin tope en `/avanzar` y `/retroceder`: con `pasos: 1e9` el servidor recorría mil millones de pasos y quedaba colgado para todos. Lo mismo con un conteo enorme del sensor. | `pasos` de 1 a 10.000 (400 si no). La posición se calcula con aritmética (sin bucle, verificado igual al paso a paso en 400.000 casos al azar). Conteo del sensor hasta 2.147.483.647. |
+| Invitaciones: dos registros simultáneos con el mismo código entraban los dos; y el cupo de registro libre (3) se podía pasar con registros simultáneos. `REGISTRO_LIBRE_MAX=Infinity` no funcionaba. | El código se consume en una sola sentencia (`UPDATE … AND usada = false RETURNING`) dentro de una transacción con un bloqueo, junto con el conteo y el alta. Probado contra PostgreSQL: dos registros a la vez con la misma invitación dan exactamente un 200 y un 403. |
+| `matriz_ligamento` no se validaba (se guardaba cualquier cosa). El nombre del registro tampoco. | Misma forma que la matriz y solo 0/1; nombre hasta 60 caracteres, sin caracteres de control. |
+
+**Posición y conteo**
+
+| Problema | Corrección |
+|---|---|
+| Retroceso a mano con el sensor del Nivel 2 instalado: el backend movía la posición **y** el nodo también la descontaba. Con tres retrocesos seguidos el backend quedaba tres pasadas adelante y **rechazaba todos los reportes siguientes** (posición congelada). | Si el sensor lleva la producción, el backend solo suma `retrocesos_contados`; la posición la informa el nodo. Probado contra PostgreSQL. |
+| Nivel 2: una pasada con el telar sin tejer (en pausa, impulso) sumaba al conteo pero **no movía la posición**, y el pulso reclasificado como retroceso movía la posición de forma distinta al backend. Posición y conteo se separaban y el backend rechazaba los reportes. | `posicion_dibujo.h`: el mismo modelo que el backend, adelante y atrás espejo; probado en la PC con 1,2 millones de pasadas al azar contra el modelo del backend. El nodo reporta también en pausa si el conteo cambió. |
+| Las repeticiones de las filas se podían cambiar con un trabajo abierto (el backend solo comparaba la matriz), lo que dejaba la posición guardada sin sentido. | Cuentan como cambio de forma: 409 `PATRON_EN_PRODUCCION`. |
+| Con la PC y el celular abiertos a la vez en el editor, las dos pantallas sumaban pasadas: el conteo estimado corría al doble. | Un solo "conductor" por telar: la otra pantalla recibe 409 `OTRO_CONDUCTOR` y solo sigue la posición; si la primera se cierra, toma la posta en un par de segundos. |
+| Al retomar, al recargar y al sincronizar con el sensor, la pantalla reiniciaba las repeticiones de la fila (volvía a contar desde la primera pasada). Un dibujo nuevo heredaba las repeticiones del anterior. | Se toma `repeticion_en_fila` del backend; el dibujo nuevo empieza con 1 en todas las filas. |
+
+**Control del telar**
+
+| Problema | Corrección |
+|---|---|
+| Crear un dibujo nuevo, cambiar el tamaño o limpiar la grilla **pausaba el telar real** (la misma función que el botón ⏸). Desde un celular se podía frenar la máquina que otra persona estaba tejiendo. | Solo el botón ⏸ le da la orden de Pausa al telar; las acciones del editor solo frenan la animación. Abrir otro dibujo o "guardar y crear uno nuevo" mientras se teje quedan bloqueados. |
+| ⏪ desde la web frenaba la animación pero dejaba el telar en "tejiendo": el Nivel 1 mandaba Retroceder con la máquina en marcha. | Primero `/pausar`, después `/retroceder`, después el relé. |
+| Pausar un telar apagado (sin trabajo) lo dejaba "pausado". | Queda apagado. |
+| Nivel 1: si el primer sondeo después de arrancar traía un retroceso pendiente, se perdía. | Se memoriza antes del primer sondeo. |
+| Nivel 1: después de avisar un evento de la botonera, el estado esperado se deducía del tipo de evento y no de lo que respondió el servidor. | Se usa el `estado` de la respuesta. |
+| El indicador "ESP32 conectado" comparaba con la hora del celular: con el reloj corrido decía "Sin conexión" con el ESP32 andando. | El servidor manda `segundos_desde_ping`, medido con su propio reloj. |
+| El cartel "se puso en marcha desde la botonera" se repetía cada 4 s. | Una vez por evento. |
+| `detener` aceptaba `pasadas_totales` y `alertas_disparadas` de cualquier tipo. | Enteros no negativos (400 si no). |
+
+**Web, registros y documentación**
+
+- Mensajes del servidor (`d.aviso`, errores) escapados antes de insertarse en la ficha; "Fila - / -" en lugar de "Fila 0 / 0"
+  sin dibujo; registrarse sin código de recuperación entra igual al sistema.
+- El registro de errores del servidor ya no se llena con rechazos esperados (400/409 de la base por datos inválidos):
+  solo los errores reales.
+- `Manual_Pagina_Web_Telar.docx` (sección 4.6) todavía decía que Pausa solo frenaba la animación, que al retomar se
+  volvía a la fila 1 y que la "posición incierta" la causaban los botones Avanzar/Impulso. Reescrito según cómo funciona
+  hoy, con ⏹ Terminar trabajo, el bloqueo de edición con trabajo abierto, las repeticiones por fila y la pantalla que
+  lleva la cuenta. El manual de instalación tenía el mismo problema con los controles.
+- `PUESTA_EN_MARCHA.md`, `esp32/README.md`, `backend/README.md` (API: `cliente`, `OTRO_CONDUCTOR`, tope de `pasos`,
+  `segundos_desde_ping`, retroceso con sensor; pruebas), `esp32/nivel2/README.md` y `verificacion/LEEME.md` al día.
+
+**Pruebas:** `npm test` (seis suites, con casos nuevos para cada corrección), `esp32/verificacion/host/correr.sh`
+(con la prueba nueva de `posicion_dibujo.h`), las simulaciones de Python (`sim_nivel2_firmware.py` 29/29),
+`verif_coherencia.py` sin errores y la integración contra PostgreSQL 16. **No probado:** compilación con el core ESP32
+real, un navegador real y el hardware.
+
+**Hardware (para medir en el armado, no se cambió nada):** el módulo de 2 canales es activo en bajo y va a 5 V, pero
+el GPIO en reposo queda en 3,3 V (pull-up a 3,3 V): entre el VCC del módulo y la entrada quedan 1,7 V. En la mayoría de
+los módulos el LED indicador va en serie con el del optoacoplador (unos 3 V entre los dos) y con 1,7 V no circula
+corriente, así que no pasa nada; pero en un módulo con el indicador en otra posición puede circular una corriente chica
+por el optoacoplador. Con el montaje de la documentación (jumper JD-VCC puesto), verificar con el ESP32 encendido y sin
+pulsos que el LED de cada canal quede apagado y el relé suelto (el paso de la lista de validación que comprueba que el
+relé arranca suelto lo cubre). Si quedara encendido, el arreglo es cambiar de módulo o quitar el jumper y alimentar VCC
+con 3,3 V y JD-VCC con 5 V.
+
+### Segunda pasada de esta revisión (sobre el código ya corregido)
+
+| Problema | Corrección |
+|---|---|
+| **Con el Nivel 2 instalado, el sensor quedaba rechazado para siempre.** El sensor contaba como "activo" solo si había reportado pasadas en los últimos 30 s, y el nodo no reporta con el telar quieto. Tras una pausa de más de 30 s (o al empezar un trabajo nuevo), al tocar ▶ la web volvía a avanzar la posición por reloj durante los segundos que tarda la máquina en arrancar; el primer reporte del sensor ya no coincidía con esa posición, el backend lo rechazaba (400), el sensor nunca volvía a "activo" y desde ahí se rechazaban todos. | La consulta periódica del nodo (cada 2,5 s, con su clave) también renueva la señal del sensor: mientras el nodo esté conectado, la web no avanza por reloj. Y una producción que ya tiene pasadas medidas es del sensor aunque el nodo se quede sin red un rato (el reloj no la mueve, así al volver sus reportes coinciden). Migración 018: solo la descripción de la columna. |
+| Interbloqueos en la base: `detener` y el reporte del sensor tomaban los bloqueos en orden inverso al de `asignar-patron` y `evento-fisico`. Con pedidos simultáneos (por ejemplo, un retroceso en la botonera mientras el Nivel 2 reporta) PostgreSQL cortaba uno con error 500. **Medido:** 198 interbloqueos en 200 rondas de pedidos simultáneos con el código anterior. | Todos bloquean primero el telar y después la producción. Con el código nuevo: 0 interbloqueos y 0 errores 500 en la misma prueba. |
+| `reanudar` comprobaba que hubiera trabajo y después ponía "tejiendo" en dos consultas sueltas: un "Terminar trabajo" justo en el medio dejaba el telar "tejiendo" sin trabajo (y el Nivel 1 pulsaba Marcha). | Una transacción con el telar bloqueado. Probado con 15 rondas de `detener`, `asignar` y `reanudar` simultáneos: nunca queda "tejiendo" sin trabajo. |
+| El reporte del sensor se comparaba con la posición esperada en línea recta: en el cambio de vuelta (última pasada del dibujo contra la primera de la siguiente) una pasada de diferencia se medía como una vuelta entera y se rechazaba un reporte correcto. | La distancia se mide sobre el lazo. |
+| Si la conexión con la base se cortaba a mitad de una transacción, el `ROLLBACK` de `asignar-patron` y `detener` fallaba y el pedido quedaba sin respuesta. | Igual que en el resto: el error del `ROLLBACK` se ignora y se responde el error original. |
+| El registro de "conductor" del reloj se anotaba antes de comprobar que el telar existiera (un pedido con ids inventados hacía crecer la memoria). | Se anota con el telar confirmado. |
+| Comentarios con datos viejos ("una pasada cada 500 ms", "para repetir una pasada se dibuja la fila dos veces"). | Corregidos (200 ms, repeticiones por fila). |
+| `DESPLIEGUE_RENDER.md` decía "diecisiete migraciones" y mostraba "(16 nueva/s)". | Dieciocho, con el ejemplo correcto. |
+| `README.md`: la estructura de carpetas y los diagramas apuntaban a la ubicación vieja; decía "relés Marcha/Pausa" (son tres: también Retroceder). | Al día. |
+| En el repositorio quedaban 29 copias viejas (del 14/09) de diagramas y documentos que la versión actual ya había movido a otras carpetas, con datos ya corregidos (por ejemplo, "seis SSR"). | Borradas: el repositorio queda igual al zip, más las pruebas nuevas. |
+
+| El avance por reloj no miraba si el telar estaba tejiendo. Si alguien lo pausaba desde la botonera o desde otra pantalla (o el equipo se reiniciaba) mientras la pantalla que llevaba el avance estaba en Inicio o en la Biblioteca (la consulta del estado solo corre en el editor), seguía sumando cinco pasadas por segundo con la máquina parada. Y si otra pantalla terminaba el trabajo, cada avance fallido dejaba un error en el registro del servidor (cinco por segundo). | `/avanzar` responde 409 `TELAR_NO_TEJIENDO` (con el motivo y la posición) o `SIN_TRABAJO`, y la web se frena ahí mismo, con el mismo aviso que antes daba solo en el editor. |
+| Carrera en la web: si la consulta periódica del estado (cada 4 s) salía justo antes de tocar ▶ y volvía después con "pausado", frenaba la reproducción recién iniciada con la máquina ya tejiendo, y la estimación quedaba detenida. | Cada inicio o pausa de la pantalla sube un contador; una respuesta de antes del cambio se descarta. |
+| "Cerrar sesión" con el tejido en marcha en esa pantalla: el siguiente avance salía sin sesión y el ingreso mostraba "Tu sesión venció". | Al cerrar sesión la pantalla deja de llevar el avance (el telar sigue como está). |
+| `npm run codigo <usuario> --rotar` (como decía la documentación) no rotaba: npm se queda con `--rotar`. Y con `RECOVERY_SECRET` cambiada, justo el caso para el que se indica, el script terminaba en error porque intentaba descifrar el código viejo antes de mirar `--rotar`. | El comando correcto es `npm run codigo -- <usuario> --rotar` (documentación corregida); el script rota aunque el código viejo sea ilegible y, sin `--rotar`, explica qué hacer. Probado contra PostgreSQL. |
+| El historial de errores en memoria de la web crecía sin tope con la red caída. | Últimos 200. |
+| "Cargar" en la biblioteca el mismo dibujo que se estaba tejiendo frenaba la reproducción de esa pantalla (la estimación se cortaba con el telar andando) y volvía a contar las repeticiones de la fila desde el principio. | Si es el mismo dibujo en marcha, solo se vuelve al editor. |
+| Nivel 2: el nodo solo volvía a bajar el dibujo si cambiaba el **dibujo** asignado. Con ⏹ y ▶ seguidos sobre el mismo dibujo (antes de su próxima consulta, 2,5 s), seguía con la posición y el conteo del trabajo anterior: no empezaba en la fila 1 como promete ⏹, y la producción nueva heredaba las pasadas de la vieja (contadas dos veces en las estadísticas). Además, con la descarga fallida reportaba una fila vieja. | El nodo compara también el id de la producción (`historial_id` en `patron-actual`, `historial_actual_id` en la consulta) y la vuelve a bajar si es otra; sin dibujo cargado no reporta. |
+| Nivel 2: si con la red caída se retrocedían más de 25 pasadas, el backend tomaba el reporte como "el nodo se reinició" y le devolvía su conteo; el nodo corregía el conteo pero no la fila, y desde ahí todos sus reportes se rechazaban. | El backend acepta una bajada grande si la fila informada la acompaña (un nodo reiniciado no la tendría); y si igual la descarta, el nodo vuelve a bajar posición y conteo juntos (reintentando al ritmo de las consultas). |
+| El firmware del Nivel 2 se llamaba `nivel2_seleccion.ino` dentro de la carpeta `nivel2`: el Arduino IDE exige que coincidan, y al abrirlo ofrecía mover solo el `.ino` a otra carpeta, sin los `.h`, y no compilaba. | Renombrado a `esp32/nivel2/nivel2.ino` (scripts de verificación y documentación al día). |
+| En modo banco (`MODO_BANCO`) los pulsos simulados corrían también en pausa: en una prueba de mesa la posición seguía avanzando con el telar pausado desde la web. La guía de los LCA110 tampoco decía que hay que tocar ▶ para que corran. | Se simulan solo con el telar "tejiendo", como la máquina; la guía lo explica y avisa que ▶ también arranca la máquina si el Nivel 1 está conectado. |
+| **El firmware estaba escrito para dos placas, pero el gabinete tiene un solo ESP32** (lista de componentes y diseño del gabinete). El del Nivel 1 maneja la botonera y el del Nivel 2 el sensor y la selección; en una sola placa entra uno solo, así que con el Nivel 2 instalado nadie pulsaba Marcha, Pausa ni Retroceder, ni sensaba la botonera. | El firmware del Nivel 2 hace también todo lo del Nivel 1 (Bloque A, con la misma lógica: arranque seguro, eco del propio relé, anti-doble-pulso, avisos y errores). Los pulsos corren en el núcleo de la red, sin frenar el conteo. Con un dibujo nuevo, Marcha espera a que esté cargado. Su consulta mantiene también el "ESP32 conectado". Prueba en la PC del Bloque A dentro de ese firmware y chequeo de coherencia de pines (18/18). |
+| La aplicación se inicializaba una sola vez: si se entraba como invitado con la base vacía y después se iniciaba sesión, el operario quedaba sin telar hasta recargar; y al volver a entrar tras una sesión vencida no se recuperaba el trabajo en curso. | Al volver a entrar se recargan los dibujos, el telar y el trabajo en curso. |
+
+Las pruebas de la integración contra PostgreSQL se ampliaron con estos casos (incluida la pausa larga con el
+nodo conectado) y se verificó que la versión anterior las falla y la corregida las pasa.
+
+### Revisión con un solo ESP32
+
+| Problema | Corrección |
+|---|---|
+| La espera del WiFi (los dos firmwares) calculaba el límite sumando a `millis()`: cuando el contador da la vuelta (a los 49 días encendido) la espera terminaba al instante o no terminaba. | Se mide el tiempo transcurrido con una resta. |
+| `RECOMENDACIONES_ELECTRICAS.md` y `NIVEL2_CONTROL_POR_MARCOS.md` recomendaban para el Nivel 2 un SSR de alterna o MOC3041 + BT136 sobre las bobinas, y decían que "los MOSFET no sirven", cuando el proyecto usa el LCA110 (salida MOSFET bidireccional) sobre la señal del lector; la lista de compras pedía 6. | Reescritas según el diseño real: cuatro LCA110, por qué sirven y qué no. |
+| `NIVELES_DE_CONTROL.md` y `NIVEL2_CONTROL_POR_MARCOS.md` seguían hablando de un Jacquard por tarjetas, de 8 actuadores y de 3 bobinas, y del Nivel 2 como "fuera de alcance". | Estado actual al principio: dobby con cinta de papel, cuatro bobinas, Nivel 2 en desarrollo en la misma placa. |
+| `esp32/README.md`: sondeo de `/api/telares/1`, rutas viejas de los documentos, el sensado descripto como "botones Avanzar e Impulso sin relé", y "no conectar el USB con los 24 V" (la placa se alimenta de 220 V con la HLK-5M05). | Corregido, con la sección «Una sola placa». |
+
+### Revisión de lo que faltaba: hardware, planillas y documentos de análisis
+
+| Problema | Corrección |
+|---|---|
+| **El sensor de pasada estaba mal conectado en los documentos.** El pie de `canal_sensor` y `diagrama_bloque_C`, `Guia_Bloques_C_y_D.docx`, `Conexionado_Nivel2.docx` y `Estado_Completo_del_Proyecto.docx` llevaban el negro (señal) por R1 a la pata 1 del PC817 y el azul a la pata 2. Con un sensor NPN así el LED del optoacoplador nunca enciende y no se cuenta ninguna pasada. La guía C/D además mandaba unir el negativo del sensor al GND del ESP32, lo que anula el aislamiento. | Positivo del telar (el del marrón) → R1 → pata 1; pata 2 → negro; el azul queda en el negativo del telar. Al gabinete van el positivo y el negro. Diagramas y PNG regenerados, imagen del Word reemplazada. |
+| `Guia_Armado_Bloque_A.docx` describía la versión vieja: regulador LM2596 desde los 24 V del telar con fusible de 0,5 A, dos relés y cable mallado. | Reescrita: HLK-5M05 desde 220 V con fusible de 1 A en la fase, tres relés, sensado de los tres botones y cable multifilar sin blindaje. |
+| `docs/analisis/Componentes_Completos_Control_Trama.docx` seguía con el diseño viejo entero (solenoides, MOSFET IRLZ44N, 74HC595, 8 canales, sensado de Avanzar e Impulso, DB107, cable mallado); `docs/analisis/Arbol_de_problemas_y_soluciones.docx` también pedía 8 actuadores con 74HC595. Los Árboles decían 3 u 8 bobinas. | Actualizados: cuatro LCA110 con 330 Ω y 10 kΩ, sensor de pasada, tres canales de sensado, todo en un ESP32. **El PDF de `Componentes_Completos` no se pudo regenerar acá (no hay LibreOffice) y sigue con la versión vieja: hay que exportarlo de nuevo desde el Word.** |
+| Planillas: `Componentes_en_placa.xlsx` pedía el capacitor de 10–47 µF (es de 22–47) y repetía una oración; `Lista_de_componentes` repetía otra, fechaba las 4 bobinas el 06/09 (fue el 19/09) y pedía medir la velocidad, ya confirmada; `Checklist_verificaciones.xlsx` no incluía los pines del Nivel 2 ni el reposo del módulo de 2 canales. | Corregidas; la checklist suma los GPIO 35 y 18/19/21/22 y la medición del módulo de 2 canales en reposo. |
+| `diagrama_bloques_A_y_C` decía que el Bloque C se alimenta de 24 V (son 12 a 14 V continuos); `diagrama_conexion_electrica` decía "+ R capacitor". `CHECKLIST_VALIDACION.md` tenía un resto de texto ("dañarlo)."), pedía sumar un tercer relé (ya está el módulo individual) y nombraba Avanzar/Impulso en el sensado. | Corregidos; la checklist explica cómo medir el módulo de 2 canales en reposo. |
+| La tabla de componentes (BOM) de `Documentación_de_Proyecto.docx` tenía 3 bobinas (son 4), los LCA110 "a definir" (son 4), el 74HC595 descartado con cantidad 1, "DB157 / DB157", las 3 resistencias de los relés "a 3,3 V" (la de Retroceder va a GND), no listaba los capacitores de 22–47 µF ni el de 470 µF, y la última fila tenía un resto de texto. Dos párrafos nombraban un botón "Detener" que no existe. | Corregida la tabla (la última fila pasa a las resistencias de 330 Ω y 10 kΩ de los LCA110) y los controles pasan a "▶, Pausa, Retroceder y Terminar trabajo (⏹)". Los mismos cambios, y los del manual de la web, se pasaron a las versiones HTML de la documentación y de los manuales (fuera del repositorio). |
+
+### Un solo programa para la placa
+
+| Problema | Corrección |
+|---|---|
+| Seguían existiendo dos firmwares: `control_trama_esp32` (solo Bloque A, el que se cargaba hoy) y `nivel2` (todo). Con una sola placa, eso obligaba a cambiar de programa al instalar el Nivel 2, y a mantener dos `config` con la misma red y la misma clave. No se podía cargar directamente el del Nivel 2: su consulta (`?origen=nivel2`) le dice al servidor que el sensor está funcionando, y sin sensor la web dejaba de estimar las pasadas y el conteo quedaba en cero. | Un solo firmware en `esp32/control_trama_esp32/`, con un solo `config.h`. El interruptor `NIVEL2_INSTALADO` (en `false` hoy) decide si además del Bloque A maneja el sensor y la selección: en `false` consulta con `?origen=esp32`, no baja el dibujo, no reporta pasadas y no activa el pin del sensor. La carpeta `nivel2/` se eliminó. Las pruebas en la PC compilan el firmware en los dos modos y la coherencia comprueba que haya un solo firmware y que el interruptor venga en `false`. |
