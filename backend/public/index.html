@@ -734,6 +734,11 @@ function renderUsuarioActual() {
 function cerrarSesion() {
   showConfirm('¿Cerrar sesión?', 'Vas a volver a la pantalla de ingreso.', async () => {
     try { await apiAuth('/logout', {}); } catch (e) { /* si falla, igual se vuelve al login */ }
+    // Esta pantalla deja de llevar el tejido (el telar sigue como está). Si no, el próximo
+    // avance por reloj ya salía sin sesión y el ingreso mostraba "Tu sesión venció".
+    isPlaying = false; seguidor = false;
+    clearTimeout(playTimer);
+    if (telarStatusTimer) { clearInterval(telarStatusTimer); telarStatusTimer = null; }
     setUsuarioActual(null, null);
     // limpiar el login para el próximo ingreso
     const u = document.getElementById('login-usuario'); if (u) u.value = '';
@@ -851,6 +856,7 @@ async function apiFetch(path, options = {}) {
     const err = new Error(body.error || `Error del servidor (${res.status})`);
     err.status = res.status;
     err.codigo = body.codigo || null;
+    err.datos = body;
     throw err;
   }
   return body;
@@ -1109,6 +1115,10 @@ async function actualizarEstadoTelar() {
   if (!dotConn || !dotTej) return;
 
   estadoTelarEnCurso = true;
+  // Si mientras esta consulta viaja se toca ▶ (o ⏸), su respuesta describe un estado viejo y no
+  // puede frenar la reproducción recién iniciada: antes, una consulta que salía justo antes de ▶
+  // volvía con "pausado" y frenaba la pantalla con la máquina ya tejiendo.
+  const gen = generacionPlay;
   try {
     const telar = await apiFetch(`/telares/${telarPorDefectoId}`);
 
@@ -1152,19 +1162,9 @@ async function actualizarEstadoTelar() {
       toast('El telar se puso en marcha desde la botonera');
     }
     if (telar.ultimo_evento_manual) marchaManualVista = telar.ultimo_evento_manual;
-    if (telar.estado === 'pausado' && isPlaying) {
-      isPlaying = false;
-      clearTimeout(playTimer);
-      updPlayUI();
-      if (telar.motivo_pausa === 'sin_senal') {
-        // El sensor de pasada dejó de recibir pulsos con el telar "tejiendo": la
-        // máquina se frenó (paro, hilo cortado, falla) o el sensor falló.
-        showAlert('El telar dejó de dar pulsos', 'El sensor de pasada no detecta movimiento: la máquina se frenó o el sensor falló. Revisá el telar antes de reanudar.');
-      } else if (telar.motivo_pausa === 'reinicio') {
-        showAlert('El equipo del telar se reinició', 'El ESP32 arrancó de nuevo (corte de luz o traslado) y el tejido quedó en pausa. Verificá la posición y tocá ▶ para retomar donde quedó.');
-      } else {
-        toast('El telar se pausó desde la botonera');
-      }
+    if (isPlaying && gen === generacionPlay) {
+      if (telar.estado === 'pausado') frenarPorEstadoDelTelar(telar);
+      else if (telar.estado === 'apagado' || !telar.historial_actual_id) frenarPorEstadoDelTelar(null);
     }
 
     // Con el sensor de pasada reportando, la posición y el conteo son los del sensor:
@@ -1574,6 +1574,7 @@ async function restaurarTrabajoEnCurso() {
       // La página se cerró con el telar en marcha: se sigue mostrando. Sin sensor, el conteo por
       // reloj no avanzó mientras estuvo cerrada, así que la fila puede estar atrasada.
       isPlaying = true;
+      generacionPlay++;
       seguidor = false;   // si otra pantalla lleva el tejido, el primer avance lo dice (409) y esta la sigue
       updPlayUI(); renderGrid(); doTick();
       if (telar.origen_conteo === 'estimado') {
@@ -1691,6 +1692,7 @@ async function startPlay() {
   if (curRow >= nR) { toast('¡Tejido ya completado!'); return; }
   seguidor = false;
   isPlaying = true;
+  generacionPlay++;
   updPlayUI(); renderGrid();
   doTick();
 }
@@ -1715,6 +1717,41 @@ function sensorLleva(telar) {
   return !!telar.sensor_activo || (!!telar.historial_actual_id && Number(telar.pasadas_sensor) > 0);
 }
 
+// Sube cada vez que esta pantalla empieza o deja de reproducir. Una respuesta que llega con otra
+// generación es de antes de ese cambio y no puede deshacerlo.
+let generacionPlay = 0;
+
+// El telar dejó de tejer por otra vía (botonera, otra pantalla, el sensor, un reinicio del
+// equipo) o el trabajo se terminó: esta pantalla deja de avanzar por reloj, toma la posición del
+// servidor y avisa por qué. `t` es el telar (o la respuesta del 409); null = el trabajo se terminó.
+function frenarPorEstadoDelTelar(t) {
+  isPlaying = false;
+  seguidor = false;
+  clearTimeout(playTimer);
+  generacionPlay++;
+  if (!t) {
+    trabajoEnCursoPatronId = null;
+    curRow = -1; curCol = -1; curPass = 0;
+    updPlayUI(); renderGrid();
+    toast('El trabajo se terminó desde otra pantalla');
+    return;
+  }
+  if (Number.isInteger(t.fila_actual) && t.fila_actual >= 0 && t.fila_actual < nR) {
+    curRow = t.fila_actual; curCol = 0; curPass = 0;
+    repRestantes = restantesDesde(curRow, t.repeticion_en_fila);
+  }
+  updPlayUI(); renderGrid();
+  if (t.motivo_pausa === 'sin_senal') {
+    // El sensor de pasada dejó de recibir pulsos con el telar "tejiendo": la
+    // máquina se frenó (paro, hilo cortado, falla) o el sensor falló.
+    showAlert('El telar dejó de dar pulsos', 'El sensor de pasada no detecta movimiento: la máquina se frenó o el sensor falló. Revisá el telar antes de reanudar.');
+  } else if (t.motivo_pausa === 'reinicio') {
+    showAlert('El equipo del telar se reinició', 'El ESP32 arrancó de nuevo (corte de luz o traslado) y el tejido quedó en pausa. Verificá la posición y tocá ▶ para retomar donde quedó.');
+  } else {
+    toast('El telar se pausó desde la botonera o desde otra pantalla');
+  }
+}
+
 // Un solo "conductor" del reloj por telar. Cada pestaña se identifica al avanzar; si otra ya
 // está llevando el tejido, el backend responde 409 OTRO_CONDUCTOR y esta pasa a SEGUIR la
 // posición del servidor (como con el sensor) en vez de sumar pasadas por su cuenta. Antes,
@@ -1735,6 +1772,7 @@ function restantesDesde(fila, hechas) {
 // backend acepta este avance y esta pantalla pasa a conducir, desde la posición del servidor.
 async function intentarConducir() {
   if (!isPlaying || !telarPorDefectoId) return;
+  const gen = generacionPlay;
   try {
     const r = await apiFetch(`/telares/${telarPorDefectoId}/avanzar`, {
       method: 'POST', body: JSON.stringify({ pasos: 1, cliente: CLIENTE_ID }),
@@ -1748,6 +1786,10 @@ async function intentarConducir() {
   } catch (e) {
     if (e.codigo === 'SENSOR_ACTIVO') { sensorManda = true; seguidor = false; }
     else if (e.codigo === 'SOLO_OPERARIO') { isPlaying = false; clearTimeout(playTimer); updPlayUI(); renderGrid(); return; }
+    else if (e.codigo === 'TELAR_NO_TEJIENDO' || e.codigo === 'SIN_TRABAJO') {
+      if (gen === generacionPlay && isPlaying) frenarPorEstadoDelTelar(e.codigo === 'SIN_TRABAJO' ? null : e.datos);
+      return;
+    }
     // OTRO_CONDUCTOR (o la red): se sigue mirando
   }
   doTick();
@@ -1794,10 +1836,17 @@ function doTick() {
 
     updPlayUI(); renderGrid();
     if (telarPorDefectoId) {
+      const gen = generacionPlay;
       apiFetch(`/telares/${telarPorDefectoId}/avanzar`, { method: 'POST', body: JSON.stringify({ pasos: 1, cliente: CLIENTE_ID }) })
         .catch((e) => {
           if (e.codigo === 'SENSOR_ACTIVO') { sensorManda = true; return; }   // el sensor lleva la cuenta
           if (e.codigo === 'OTRO_CONDUCTOR') { seguidor = true; return; }     // otra pantalla lleva el tejido
+          // El telar se pausó o el trabajo se terminó por otra vía: se frena acá (antes seguía
+          // sumando con la máquina parada, y sin trabajo dejaba un error en el registro por pasada).
+          if (e.codigo === 'TELAR_NO_TEJIENDO' || e.codigo === 'SIN_TRABAJO') {
+            if (gen === generacionPlay && isPlaying) frenarPorEstadoDelTelar(e.codigo === 'SIN_TRABAJO' ? null : e.datos);
+            return;
+          }
           if (e.codigo === 'SOLO_OPERARIO') {                                  // invitado: se frena
             isPlaying = false; clearTimeout(playTimer); updPlayUI(); renderGrid();
             return;
@@ -1827,6 +1876,7 @@ async function pausePlay(pedirAlTelar = false) {
   const estabaTejiendo = isPlaying;
   isPlaying = false;
   seguidor = false;
+  generacionPlay++;
   clearTimeout(playTimer);
   // OJO: NO se resetea curRow/curCol/curPass. Pausa es pausa: la posición
   // se conserva para que ▶ retome exactamente donde quedó.
@@ -2704,6 +2754,8 @@ let errorHistory = [];
 function logError(title, msg, code) {
   const error = { timestamp: new Date().toLocaleTimeString('es-AR'), title, message: msg, code };
   errorHistory.push(error);
+  // Con la red caída, un avance fallido por pasada lo hacía crecer sin límite.
+  if (errorHistory.length > 200) errorHistory.splice(0, errorHistory.length - 200);
   // Enviar al servidor de forma no bloqueante; si falla, queda solo en memoria.
   // Un invitado no escribe en el registro de errores: es un registro de la máquina
   // y del sistema, no de las pruebas de alguien que está mirando la aplicación.

@@ -100,7 +100,7 @@ globalThis.__q = (sql) => { if (/AS sensor_activo\s+FROM telares/.test(sql)) ret
 x = await call(T.avanzarTelar, { params:{id:'8'}, body:{} });
 assert.equal(x.r.code, 409); assert.equal(x.r.body.codigo, 'SENSOR_ACTIVO'); assert(x.log.some(l=>l.sql==='ROLLBACK'));
 globalThis.__q = (sql) => {
-  if (/AS sensor_activo/.test(sql)) return { rows:[{id:8, sensor_activo:false}] };
+  if (/AS sensor_activo/.test(sql)) return { rows:[{id:8, sensor_activo:false, estado:'tejiendo'}] };
   if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:3, matriz_pasadas:MAT}] };
   if (/UPDATE historial_produccion/.test(sql)) return { rows:[{id:5, fila_actual:0}] };
 };
@@ -117,7 +117,7 @@ x = await call(T.avanzarTelar, { params:{id:'8'}, body:{cliente:'A'} }); assert.
 
 // producción con pasadas medidas por el sensor, aunque el nodo esté sin red: el reloj no la mueve
 globalThis.__q = (sql) => {
-  if (/AS sensor_activo/.test(sql)) return { rows:[{id:8, sensor_activo:false}] };
+  if (/AS sensor_activo/.test(sql)) return { rows:[{id:8, sensor_activo:false, estado:'tejiendo'}] };
   if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:3, pasadas_sensor:250, matriz_pasadas:MAT}] };
 };
 for (const fn of [T.avanzarTelar, T.retrocederTelar]) {
@@ -125,11 +125,23 @@ for (const fn of [T.avanzarTelar, T.retrocederTelar]) {
   assert.equal(x.r.code, 409); assert.equal(x.r.body.codigo, 'SENSOR_ACTIVO');
   assert(!x.log.some(l=>/UPDATE historial_produccion/.test(l.sql))); assert(x.log.some(l=>l.sql==='ROLLBACK'));
 }
+// telar pausado (botonera, otra pantalla, reinicio): el reloj no suma; responde estado y posición
+globalThis.__q = (sql) => {
+  if (/AS sensor_activo/.test(sql)) return { rows:[{id:8, sensor_activo:false, estado:'pausado', motivo_pausa:'reinicio'}] };
+  if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:2, repeticion_en_fila:0, matriz_pasadas:MAT}] };
+};
+x = await call(T.avanzarTelar, { params:{id:'8'}, body:{} });
+assert.equal(x.r.code, 409); assert.equal(x.r.body.codigo, 'TELAR_NO_TEJIENDO'); assert.equal(x.r.body.motivo_pausa, 'reinicio');
+assert.equal(x.r.body.fila_actual, 2); assert(!x.log.some(l=>/UPDATE historial_produccion/.test(l.sql)));
+// sin trabajo abierto (otra pantalla lo terminó): 409 con código propio
+globalThis.__q = (sql) => { if (/AS sensor_activo/.test(sql)) return { rows:[{id:8, sensor_activo:false, estado:'apagado'}] }; };
+x = await call(T.avanzarTelar, { params:{id:'8'}, body:{} });
+assert.equal(x.err?.status, 409); assert.equal(x.err.codigo, 'SIN_TRABAJO');
 // un telar que no existe no queda anotado como "conducido" (el mapa no crece con ids inventados)
 globalThis.__q = () => ({ rows:[] });
 x = await call(T.avanzarTelar, { params:{id:'777'}, body:{cliente:'Z'} }); assert.equal(x.err?.status, 404);
 globalThis.__q = (sql) => {
-  if (/AS sensor_activo/.test(sql)) return { rows:[{id:777, sensor_activo:false}] };
+  if (/AS sensor_activo/.test(sql)) return { rows:[{id:777, sensor_activo:false, estado:'tejiendo'}] };
   if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:0, matriz_pasadas:MAT}] };
   if (/UPDATE historial_produccion/.test(sql)) return { rows:[{id:5, fila_actual:1}] };
 };
@@ -172,7 +184,7 @@ assert(!x.log.some(l=>/ultimo_reporte_sensor = now\(\)/.test(l.sql))); assert(x.
 
 // 7) retrocederTelar (sin sensor activo: retrocede por reloj)
 globalThis.__q = (sql) => {
-  if (/AS sensor_activo\s+FROM telares/.test(sql)) return { rows:[{id:8, sensor_activo:false}] };
+  if (/AS sensor_activo\s+FROM telares/.test(sql)) return { rows:[{id:8, sensor_activo:false, estado:'tejiendo'}] };
   if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:0, matriz_pasadas:MAT}] };
   if (/UPDATE historial_produccion/.test(sql)) return { rows:[{id:5, fila_actual:3}] };
 };

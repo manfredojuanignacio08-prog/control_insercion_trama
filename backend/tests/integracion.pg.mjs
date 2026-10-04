@@ -50,6 +50,8 @@ r = await api('PUT',`/patrones/${P}`,{nombre:'Raya',filas:3,columnas:4,matriz_pa
 r = await api('PUT',`/patrones/${P}`,{nombre:'Raya azul',filas:3,columnas:4,matriz_pasadas:MAT,repeticiones_por_fila:[2,1,3]}); assert.equal(r.s,200);
 // pausar / retroceder / reanudar
 r = await api('POST',`/telares/${T}/pausar`); assert.equal(r.b.estado,'pausado');
+// pausado, el reloj no suma (antes una pantalla en otra sección seguía contando con la máquina parada)
+r = await api('POST',`/telares/${T}/avanzar`,{pasos:1,cliente:'A'}); assert.equal(r.s,409); assert.equal(r.b.codigo,'TELAR_NO_TEJIENDO'); assert.equal(r.b.fila_actual,1);
 r = await api('POST',`/telares/${T}/retroceder`,{pasos:1}); assert.equal(r.b.fila_actual,0); assert.equal(r.b.repeticion_en_fila,1);
 r = await api('POST',`/telares/${T}/retroceder-fisico`); assert.equal(r.b.retroceder_seq,1); assert.equal(r.b.retrocesos_contados,1);
 r = await api('POST',`/telares/${T}/reanudar`); assert.equal(r.b.estado,'tejiendo');
@@ -129,6 +131,8 @@ for (let i = 0; i < 15; i++) {
 }
 r = await api('POST',`/telares/${T2}/detener`,{});
 r = await api('POST',`/telares/${T2}/reanudar`); assert.equal(r.s,409);
+psql(`update telares set ultimo_reporte_sensor = null where id=${T2}`);
+r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,409); assert.equal(r.b.codigo,'SIN_TRABAJO');
 r = await api('POST','/telares/987654/reanudar'); assert.equal(r.s,404);
 // registro: 3 libres, el 4.º necesita invitación; una invitación sirve UNA vez aunque lleguen dos a la vez
 const reg = (usuario, invitacion) => api('POST','/auth/registro/iniciar',{usuario, invitacion},{ck:null, headers:{Origin:'http://localhost:3999'}});

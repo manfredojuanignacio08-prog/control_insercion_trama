@@ -178,4 +178,37 @@ f.timers.length = 0; f.run('doTick()'); assert.equal(f.timers.pop().ms, 1000, 's
 await f.run('actualizarEstadoTelar()'); await settle(); assert.equal(f.run('sensorManda'), true);
 f.run('isPlaying=false');
 
+// ── T18: el telar se pausó por otra vía mientras esta pantalla llevaba el reloj (aunque no esté
+// mirando el editor): el backend responde 409 TELAR_NO_TEJIENDO y la pantalla se frena en la
+// posición del servidor, sin dejar errores en el registro
+const pausadoAfuera = (m,u,b) => (m==='POST' && u==='/api/telares/8/avanzar')
+  ? { status:409, body:{ error:'no', codigo:'TELAR_NO_TEJIENDO', estado:'pausado', motivo_pausa:null, fila_actual:3, repeticion_en_fila:0 } } : routes(m,u,b);
+telar = { id:8, estado:'pausado', patron_actual_id:3, historial_actual_id:9, fila_actual:1, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(pausadoAfuera); await f.run('iniciarApp()'); await settle();
+await f.run('startPlay()'); f.run("goTo('sc-biblioteca')");
+posts.length = 0; f.timers.length = 0; f.run('doTick()'); f.timers.pop().f(); await settle();
+assert.equal(f.run('isPlaying'), false, 'se frena'); assert.equal(f.run('curRow'), 3, 'toma la fila del servidor');
+assert(!posts.some(p=>p.includes('/api/errores')), 'no es un error: ' + posts.join('|'));
+
+// ── T19: otra pantalla terminó el trabajo: 409 SIN_TRABAJO, se frena y queda sin trabajo
+const terminadoAfuera = (m,u,b) => (m==='POST' && u==='/api/telares/8/avanzar')
+  ? { status:409, body:{ error:'no', codigo:'SIN_TRABAJO' } } : routes(m,u,b);
+f = boot(terminadoAfuera); await f.run('iniciarApp()'); await settle();
+await f.run('startPlay()');
+posts.length = 0; f.timers.length = 0; f.run('doTick()'); f.timers.pop().f(); await settle();
+assert.equal(f.run('isPlaying'), false); assert.equal(f.run('trabajoEnCursoPatronId'), null);
+assert(!posts.some(p=>p.includes('/api/errores')), posts.join('|'));
+
+// ── T20: una consulta de estado que salió ANTES de tocar ▶ y vuelve después con "pausado" no
+// frena la reproducción recién iniciada (antes la frenaba con la máquina ya tejiendo)
+telar = { id:8, estado:'pausado', patron_actual_id:3, historial_actual_id:9, fila_actual:1, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(routes); await f.run('iniciarApp()'); await settle();
+const enVuelo = f.run('actualizarEstadoTelar()');          // sale con el telar todavía pausado
+f.run('generacionPlay++; isPlaying = true;');               // mientras viaja, ▶ empezó a reproducir
+await enVuelo; await settle();
+assert.equal(f.run('isPlaying'), true, 'una respuesta vieja no frena la reproducción nueva');
+// una consulta posterior que de verdad ve "pausado" sí la frena
+await f.run('actualizarEstadoTelar()'); await settle();
+assert.equal(f.run('isPlaying'), false);
+
 console.log('frontend OK');

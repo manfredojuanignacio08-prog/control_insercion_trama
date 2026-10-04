@@ -308,7 +308,8 @@ export async function avanzarTelar(req, res, next) {
     await client.query('BEGIN');
 
     const telar = await client.query(
-      `SELECT id, (ultimo_reporte_sensor IS NOT NULL
+      `SELECT id, estado, motivo_pausa,
+              (ultimo_reporte_sensor IS NOT NULL
                    AND ultimo_reporte_sensor > now() - interval '${SENSOR_VIGENTE_SEG} seconds') AS sensor_activo
          FROM telares WHERE id = $1`,
       [id]
@@ -334,7 +335,8 @@ export async function avanzarTelar(req, res, next) {
       [id]
     );
     if (enCurso.rows.length === 0) {
-      throw conflict(`El telar ${id} no tiene una producción en curso.`);
+      // El trabajo se terminó (otra pantalla tocó ⏹): la pantalla que seguía avanzando se frena.
+      throw conflict(`El telar ${id} no tiene una producción en curso.`, 'SIN_TRABAJO');
     }
     // Una producción que ya tiene pasadas medidas es del sensor aunque el nodo esté sin red un
     // rato: si el reloj la moviera mientras tanto, al volver el nodo su posición ya no coincidiría
@@ -344,6 +346,22 @@ export async function avanzarTelar(req, res, next) {
       return res.status(409).json({
         error: 'El conteo y la posición los lleva el sensor de pasada: la web no avanza por reloj.',
         codigo: 'SENSOR_ACTIVO',
+      });
+    }
+
+    // El reloj solo cuenta con el telar tejiendo. Si alguien lo pausó desde la botonera o desde
+    // otra pantalla, o el equipo se reinició, la pantalla que llevaba el avance seguía sumando
+    // pasadas con la máquina parada mientras no estuviera mirando el editor (la consulta del
+    // estado solo corre ahí). Se responde con el estado y la posición, para que se frene ahí.
+    if (telar.rows[0].estado !== 'tejiendo') {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        error: 'El telar no está tejiendo: el reloj no suma pasadas.',
+        codigo: 'TELAR_NO_TEJIENDO',
+        estado: telar.rows[0].estado,
+        motivo_pausa: telar.rows[0].motivo_pausa,
+        fila_actual: enCurso.rows[0].fila_actual,
+        repeticion_en_fila: enCurso.rows[0].repeticion_en_fila,
       });
     }
 
