@@ -1189,7 +1189,7 @@ async function actualizarEstadoTelar() {
         itemConteo.style.display = 'none';
       }
     }
-    sensorManda = !!telar.sensor_activo;
+    sensorManda = sensorLleva(telar);
     // Solo si el dibujo abierto en el editor ES el que está tejiendo el telar: si no, la fila del
     // sensor se marcaría sobre una matriz que no tiene nada que ver.
     // Lo mismo si otra pantalla está llevando el tejido (esta es seguidora).
@@ -1568,7 +1568,7 @@ async function restaurarTrabajoEnCurso() {
     const fila = Number.isInteger(telar.fila_actual) && telar.fila_actual >= 0 && telar.fila_actual < nR ? telar.fila_actual : 0;
     curRow = fila; curCol = 0; curPass = 0;
     repRestantes = restantesDesde(fila, telar.repeticion_en_fila);   // la pasada exacta dentro de la fila
-    sensorManda = !!telar.sensor_activo;
+    sensorManda = sensorLleva(telar);
 
     if (telar.estado === 'tejiendo') {
       // La página se cerró con el telar en marcha: se sigue mostrando. Sin sensor, el conteo por
@@ -1707,6 +1707,13 @@ async function startPlay() {
 // deja de avanzar por su cuenta: sigue la posición que informa el sensor (se sincroniza
 // en actualizarEstadoTelar).
 let sensorManda = false;
+
+// Mismo criterio que el backend para responder 409 SENSOR_ACTIVO: el nodo del Nivel 2 está
+// conectado, o la producción ya tiene pasadas medidas por el sensor (aunque el nodo esté sin red
+// un rato, ese trabajo es del sensor y el reloj no lo toca).
+function sensorLleva(telar) {
+  return !!telar.sensor_activo || (!!telar.historial_actual_id && Number(telar.pasadas_sensor) > 0);
+}
 
 // Un solo "conductor" del reloj por telar. Cada pestaña se identifica al avanzar; si otra ya
 // está llevando el tejido, el backend responde 409 OTRO_CONDUCTOR y esta pasa a SEGUIR la

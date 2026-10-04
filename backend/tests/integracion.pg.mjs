@@ -85,6 +85,51 @@ r = await api('POST',`/telares/${T}/detener`,{alertas_disparadas:'mucho'}); asse
 r = await api('POST',`/telares/${T}/detener`,{}); assert.equal(r.s,200);
 r = await api('POST',`/telares/${T}/pausar`); assert.equal(r.b.estado,'apagado');
 r = await api('DELETE',`/patrones/${P}`); assert.equal(r.s,409);
+// Nivel 2 instalado, telar quieto más de 30 s (el nodo no reporta pasadas, pero consulta cada
+// 2,5 s): su consulta lo mantiene "activo", así que al tocar ▶ la web NO avanza por reloj y el
+// primer reporte del sensor coincide con la posición guardada. Antes la web avanzaba unas pasadas
+// mientras la máquina arrancaba y el backend rechazaba ese reporte y todos los siguientes.
+r = await api('POST','/telares',{codigo:'TELAR-02'}); assert.equal(r.s,201); const T2 = r.b.id;
+r = await api('POST',`/telares/${T2}/asignar-patron`,{patron_id:P}); assert.equal(r.s,201);
+r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,200, 'sin nodo, la web estima por reloj');
+psql(`update telares set ultimo_reporte_sensor = now() - interval '5 minutes' where id=${T2}`);
+r = await api('GET',`/telares/${T2}?origen=nivel2`,null,{ck:null,dev:true}); assert.equal(r.s,200);
+r = await api('GET',`/telares/${T2}`); assert.equal(r.b.sensor_activo,true, 'la consulta del nodo es su señal de vida');
+r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,409); assert.equal(r.b.codigo,'SENSOR_ACTIVO');
+r = await api('GET',`/telares/${T2}/patron-actual`,null,{ck:null,dev:true}); assert.equal(r.b.fila_actual,0); assert.equal(r.b.repeticion_en_fila,1);
+r = await api('POST',`/telares/${T2}/pasadas`,{pasadas_sensor:2,fila_actual:1,repeticion_en_fila:1},{ck:null,dev:true}); assert.equal(r.b.aplicado,true, JSON.stringify(r));
+// el nodo pierde la red: la producción sigue siendo del sensor (tiene pasadas medidas) y el reloj no la toca
+psql(`update telares set ultimo_reporte_sensor = now() - interval '5 minutes' where id=${T2}`);
+r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,409); assert.equal(r.b.codigo,'SENSOR_ACTIVO');
+r = await api('POST',`/telares/${T2}/retroceder`,{pasos:1}); assert.equal(r.s,409);
+// al volver, su reporte (siguió contando) coincide y se acepta
+r = await api('POST',`/telares/${T2}/pasadas`,{pasadas_sensor:9,fila_actual:2,repeticion_en_fila:2},{ck:null,dev:true}); assert.equal(r.b.aplicado,true, JSON.stringify(r));
+// cambio de vuelta: guardado en la última pasada de la vuelta (6 por vuelta: 2+1+3); el conteo ya
+// sumó una pero la fila se leyó un instante antes y sigue en la última. Es una pasada de
+// diferencia, no una vuelta entera: se acepta (antes se rechazaba).
+r = await api('POST',`/telares/${T2}/pasadas`,{pasadas_sensor:10,fila_actual:2,repeticion_en_fila:2},{ck:null,dev:true}); assert.equal(r.b.aplicado,true, JSON.stringify(r));
+r = await api('POST',`/telares/${T2}/pasadas`,{pasadas_sensor:11,fila_actual:0,repeticion_en_fila:0},{ck:null,dev:true}); assert.equal(r.b.aplicado,true, JSON.stringify(r));
+// pedidos simultáneos que antes tomaban los bloqueos en orden opuesto: ninguno termina en error 500
+for (let i = 0; i < 15; i++) {
+  const par = await Promise.all([
+    api('POST',`/telares/${T2}/evento-fisico`,{tipo:'pausa'},{ck:null,dev:true}),
+    api('POST',`/telares/${T2}/pasadas`,{pasadas_sensor:11,fila_actual:0,repeticion_en_fila:0},{ck:null,dev:true}),
+  ]);
+  assert(par.every(x => x.s === 200), JSON.stringify(par));
+}
+for (let i = 0; i < 15; i++) {
+  const par = await Promise.all([
+    api('POST',`/telares/${T2}/detener`,{}),
+    api('POST',`/telares/${T2}/asignar-patron`,{patron_id:P}),
+    api('POST',`/telares/${T2}/reanudar`),
+  ]);
+  assert(par.every(x => [200,201,409].includes(x.s)), JSON.stringify(par.map(x=>x.s)));
+  const est = psql(`select t.estado||','||(select count(*) from historial_produccion h where h.telar_id=t.id and h.estado='en_curso') from telares t where id=${T2}`);
+  assert(est === 'apagado,0' || est === 'tejiendo,1', 'nunca "tejiendo" sin trabajo abierto: ' + est);
+}
+r = await api('POST',`/telares/${T2}/detener`,{});
+r = await api('POST',`/telares/${T2}/reanudar`); assert.equal(r.s,409);
+r = await api('POST','/telares/987654/reanudar'); assert.equal(r.s,404);
 // registro: 3 libres, el 4.º necesita invitación; una invitación sirve UNA vez aunque lleguen dos a la vez
 const reg = (usuario, invitacion) => api('POST','/auth/registro/iniciar',{usuario, invitacion},{ck:null, headers:{Origin:'http://localhost:3999'}});
 for (const u of ['uno','dos','tres']) { r = await reg(u); assert.equal(r.s,200, JSON.stringify(r)); }

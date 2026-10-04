@@ -169,4 +169,13 @@ telar = { id:8, estado:'pausado', patron_actual_id:null, historial_actual_id:nul
 f = boot(routes); await f.run('iniciarApp()'); await settle(); await f.run('actualizarEstadoTelar()'); await settle();
 assert.equal(f.els['telar-conexion-txt'].textContent, 'ESP32 conectado');
 
+// ── T17: un trabajo con pasadas del sensor es del sensor aunque el nodo esté sin red: la pantalla
+// no avanza por reloj (si lo hiciera, al volver el nodo sus reportes ya no coincidirían)
+telar = { id:8, estado:'tejiendo', patron_actual_id:3, historial_actual_id:9, fila_actual:2, repeticion_en_fila:0, pasadas_sensor:120, origen_conteo:'sensor', sensor_activo:false };
+f = boot(routes); await f.run('iniciarApp()'); await settle();
+assert.equal(f.run('sensorManda'), true);
+f.timers.length = 0; f.run('doTick()'); assert.equal(f.timers.pop().ms, 1000, 'sigue al sensor, no avanza por reloj');
+await f.run('actualizarEstadoTelar()'); await settle(); assert.equal(f.run('sensorManda'), true);
+f.run('isPlaying=false');
+
 console.log('frontend OK');

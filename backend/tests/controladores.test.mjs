@@ -115,6 +115,61 @@ assert.equal(x.r.code, 409); assert.equal(x.r.body.codigo, 'OTRO_CONDUCTOR'); as
 x = await call(T.avanzarTelar, { params:{id:'8'}, body:{cliente:'A'} }); assert.equal(x.err, null); assert.notEqual(x.r.code, 409);
 
 
+// producción con pasadas medidas por el sensor, aunque el nodo esté sin red: el reloj no la mueve
+globalThis.__q = (sql) => {
+  if (/AS sensor_activo/.test(sql)) return { rows:[{id:8, sensor_activo:false}] };
+  if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:3, pasadas_sensor:250, matriz_pasadas:MAT}] };
+};
+for (const fn of [T.avanzarTelar, T.retrocederTelar]) {
+  x = await call(fn, { params:{id:'8'}, body:{} });
+  assert.equal(x.r.code, 409); assert.equal(x.r.body.codigo, 'SENSOR_ACTIVO');
+  assert(!x.log.some(l=>/UPDATE historial_produccion/.test(l.sql))); assert(x.log.some(l=>l.sql==='ROLLBACK'));
+}
+// un telar que no existe no queda anotado como "conducido" (el mapa no crece con ids inventados)
+globalThis.__q = () => ({ rows:[] });
+x = await call(T.avanzarTelar, { params:{id:'777'}, body:{cliente:'Z'} }); assert.equal(x.err?.status, 404);
+globalThis.__q = (sql) => {
+  if (/AS sensor_activo/.test(sql)) return { rows:[{id:777, sensor_activo:false}] };
+  if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:0, matriz_pasadas:MAT}] };
+  if (/UPDATE historial_produccion/.test(sql)) return { rows:[{id:5, fila_actual:1}] };
+};
+x = await call(T.avanzarTelar, { params:{id:'777'}, body:{cliente:'Y'} }); assert.notEqual(x.r.code, 409);
+
+// detener: bloquea el telar antes que la producción (mismo orden que asignar-patron)
+globalThis.__q = (sql) => {
+  if (/FROM telares WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{id:8}] };
+  if (/FROM historial_produccion WHERE telar_id = \$1 AND estado = 'en_curso' FOR UPDATE/.test(sql)) return { rows:[{id:5, pasadas_totales:40}] };
+  if (/UPDATE historial_produccion/.test(sql)) return { rows:[{id:5, estado:'finalizado'}] };
+};
+x = await call(T.detenerTelar, { params:{id:'8'}, body:{} });
+assert.equal(x.err, null); assert.equal(x.r.body.estado, 'finalizado');
+{ const iT = x.log.findIndex(l=>/FROM telares WHERE id = \$1 FOR UPDATE/.test(l.sql));
+  const iH = x.log.findIndex(l=>/FROM historial_produccion WHERE/.test(l.sql));
+  assert(iT >= 0 && iT < iH, 'telar antes que historial'); }
+globalThis.__q = () => ({ rows:[] });
+x = await call(T.detenerTelar, { params:{id:'99'}, body:{} }); assert.equal(x.err?.status, 404);
+
+// reanudar: en una transacción con el telar bloqueado; sin trabajo abierto, 409 y ROLLBACK
+globalThis.__q = (sql) => {
+  if (/FROM telares WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{id:8}] };
+  if (/FROM historial_produccion WHERE telar_id = \$1 AND estado = 'en_curso'/.test(sql)) return { rows:[{id:5}] };
+  if (/SET estado = 'tejiendo'/.test(sql)) return { rows:[{id:8, estado:'tejiendo'}] };
+};
+x = await call(T.reanudarTelar, { params:{id:'8'} });
+assert.equal(x.r.body.estado, 'tejiendo'); assert.equal(x.log[0].sql, 'BEGIN'); assert(x.log.some(l=>l.sql==='COMMIT'));
+globalThis.__q = (sql) => { if (/FROM telares WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{id:8}] }; };
+x = await call(T.reanudarTelar, { params:{id:'8'} });
+assert.equal(x.err?.status, 409); assert(x.log.some(l=>l.sql==='ROLLBACK')); assert(!x.log.some(l=>/SET estado = 'tejiendo'/.test(l.sql)));
+
+// la consulta periódica del Nivel 2 (con clave de dispositivo) es la señal de vida del sensor
+globalThis.__q = (sql) => { if (/SELECT[\s\S]*FROM telares t/.test(sql)) return { rows:[{id:8, estado:'pausado'}] }; };
+x = await call(T.obtenerTelar, { params:{id:'8'}, query:{origen:'nivel2'}, esDispositivo:true });
+assert(x.log.some(l=>/SET ultimo_reporte_sensor = now\(\)/.test(l.sql)));
+x = await call(T.obtenerTelar, { params:{id:'8'}, query:{origen:'nivel2'} });   // sin clave: no cuenta
+assert(!x.log.some(l=>/ultimo_reporte_sensor = now\(\)/.test(l.sql)));
+x = await call(T.obtenerTelar, { params:{id:'8'}, query:{origen:'esp32'}, esDispositivo:true });   // el Nivel 1 no es el sensor
+assert(!x.log.some(l=>/ultimo_reporte_sensor = now\(\)/.test(l.sql))); assert(x.log.some(l=>/ultimo_ping_esp32 = now\(\)/.test(l.sql)));
+
 // 7) retrocederTelar (sin sensor activo: retrocede por reloj)
 globalThis.__q = (sql) => {
   if (/AS sensor_activo\s+FROM telares/.test(sql)) return { rows:[{id:8, sensor_activo:false}] };
@@ -162,6 +217,7 @@ assert.equal(x.r.body.precision_conteo,'mixto'); assert(x.r.body.aviso);
 
 // 10) nivel2: reportarPasadas
 const rp = (actual) => { globalThis.__q = (sql) => {
+  if (/FROM telares WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{id:8}] };
   if (/FROM historial_produccion h JOIN patrones p ON p.id = h.patron_id WHERE h.telar_id = \$1 AND h.estado = 'en_curso' ORDER BY/.test(sql)) return { rows:[actual] }; }; };
 rp({id:5, pasadas_sensor:100, filas:4});
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:120, fila_actual:2} });
@@ -175,6 +231,25 @@ assert.equal(x.r.body.aplicado, true);
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:120, fila_actual:99} });  // fila fuera de rango => se ignora la fila
 assert.equal(x.log.find(l=>/SET pasadas_sensor/.test(l.sql)).params[1], null);
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:-5} }); assert.equal(x.err.status, 400);
+// el telar se bloquea ANTES que la producción (mismo orden que evento-fisico: sin interbloqueos)
+rp({id:5, pasadas_sensor:100, filas:4});
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:0} });
+{ const iT = x.log.findIndex(l=>/FROM telares WHERE id = \$1 FOR UPDATE/.test(l.sql));
+  const iH = x.log.findIndex(l=>/FROM historial_produccion h JOIN patrones/.test(l.sql));
+  assert(iT >= 0 && iT < iH, 'telar antes que historial'); }
+// cambio de vuelta: guardado en la última pasada del dibujo; el conteo sube 2 pero la fila leída
+// ya dio la vuelta y quedó una pasada atrás (fila 0 en vez de 1). Es una pasada de diferencia,
+// no una vuelta entera: se acepta.
+rp({id:5, pasadas_sensor:100, filas:4, fila_actual:3, repeticion_en_fila:0});
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:102, fila_actual:0, repeticion_en_fila:0} });
+assert.equal(x.err, null, x.err && x.err.message); assert.equal(x.r.body.aplicado, true);
+// una fila de verdad incoherente con el conteo se sigue rechazando
+rp({id:5, pasadas_sensor:100, filas:8, fila_actual:0, repeticion_en_fila:0});
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:5, repeticion_en_fila:0} });
+assert.equal(x.err?.status, 400);
+// telar inexistente
+globalThis.__q = () => ({ rows:[] });
+x = await call(N.reportarPasadas, { params:{id:'99'}, body:{pasadas_sensor:1} }); assert.equal(x.err?.status, 404);
 
 // 11) obtenerPatronActual
 globalThis.__q = (sql) => ({ rows:[{id:3, nombre:'Raya', filas:4, columnas:4, matriz_pasadas:MAT, fila_actual:17, pasadas_sensor:900}] });

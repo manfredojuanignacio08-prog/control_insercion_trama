@@ -108,6 +108,12 @@ export async function reportarPasadas(req, res, next) {
 
     await cliente.query('BEGIN');
 
+    // Primero el telar y después la producción, el mismo orden que evento-fisico: con el orden al
+    // revés, un retroceso de la botonera (Nivel 1) y este reporte (Nivel 2) en el mismo instante se
+    // esperaban mutuamente y PostgreSQL cortaba uno de los dos con error.
+    const telar = await cliente.query('SELECT id FROM telares WHERE id = $1 FOR UPDATE', [telarId]);
+    if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${telarId}.`);
+
     // Se bloquea la fila del historial mientras se actualiza, para que dos
     // reportes seguidos no se pisen entre sí.
     const { rows } = await cliente.query(
@@ -166,7 +172,13 @@ export async function reportarPasadas(req, res, next) {
       const esperada = delta >= 0
         ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0)
         : retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0);
-      const diferencia = Math.abs(aPasadas(fila_actual, repeticion_en_fila) - aPasadas(esperada.fila_actual, esperada.repeticion_en_fila));
+      // La distancia se mide sobre el lazo: la última pasada del dibujo y la primera de la vuelta
+      // siguiente están a una pasada, no a una vuelta entera. Antes, si el reporte caía justo en
+      // el cambio de vuelta (el conteo y la fila se leen con un instante de diferencia), se
+      // rechazaba un reporte correcto.
+      const porVuelta = aPasadas(actual.filas, 0);
+      const lineal = Math.abs(aPasadas(fila_actual, repeticion_en_fila) - aPasadas(esperada.fila_actual, esperada.repeticion_en_fila)) % porVuelta;
+      const diferencia = Math.min(lineal, porVuelta - lineal);
       if (diferencia > TOLERANCIA_POSICION_PASADAS) {
         await cliente.query('ROLLBACK');
         throw badRequest(

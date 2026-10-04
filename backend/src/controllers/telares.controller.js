@@ -4,9 +4,10 @@ import { avanzarPosicionTejido, retrocederPosicionTejido } from '../utils/posici
 
 // ─── Conteo de pasadas: estimado vs. medido ───────────────────────────
 // Mientras el sensor inductivo (Nivel 2) no esté instalado, pasadas_totales sale
-// del reloj de la web (una pasada cada 500 ms), no de la máquina: es una ESTIMACIÓN.
-// Si el sensor está reportando (ultimo_reporte_sensor reciente) la posición y el
-// conteo los lleva él, y la web no debe seguir avanzándolos por su cuenta.
+// del reloj de la web (una pasada cada 200 ms), no de la máquina: es una ESTIMACIÓN.
+// Si el nodo del Nivel 2 está conectado (ultimo_reporte_sensor reciente: lo renuevan sus
+// reportes y su consulta periódica) o la producción ya tiene pasadas medidas, la posición y el
+// conteo los lleva el sensor, y la web no debe seguir avanzándolos por su cuenta.
 //
 // origen_conteo:
 //   'estimado'         → reloj de la web (Nivel 1)
@@ -67,11 +68,24 @@ export async function listarTelares(req, res, next) {
 // deseado, agregando ?origen=esp32. Eso, MÁS la clave de dispositivo válida
 // (X-Device-Key), es lo que deja un "heartbeat" real del dispositivo. Antes alcanzaba
 // con el parámetro en la URL, y cualquiera podía falsear el "ESP32 conectado".
+//
+// El nodo del Nivel 2 consulta este mismo endpoint cada 2,5 s con ?origen=nivel2. Esa consulta
+// también es su señal de vida: mientras el nodo esté conectado, la posición y el conteo los lleva
+// él (sensor_activo), aunque el telar esté quieto y no tenga pasadas que reportar. Antes solo
+// contaban los reportes de pasadas, que no se mandan con la máquina detenida: tras una pausa de
+// más de 30 s, al tocar ▶ la web volvía a avanzar la posición por reloj mientras la máquina
+// arrancaba, el primer reporte del sensor ya no coincidía con esa posición y el backend
+// rechazaba ese y todos los siguientes.
 export async function obtenerTelar(req, res, next) {
   try {
     if (req.esDispositivo && req.query.origen === 'esp32') {
       await pool.query(
         `UPDATE telares SET ultimo_ping_esp32 = now() WHERE id = $1`,
+        [req.params.id]
+      );
+    } else if (req.esDispositivo && req.query.origen === 'nivel2') {
+      await pool.query(
+        `UPDATE telares SET ultimo_reporte_sensor = now() WHERE id = $1`,
         [req.params.id]
       );
     }
@@ -184,7 +198,7 @@ export async function asignarPatron(req, res, next) {
     await client.query('COMMIT');
     res.status(201).json(advertencia ? { ...nuevoHistorial.rows[0], advertencia } : nuevoHistorial.rows[0]);
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK').catch(() => {});
     next(err);
   } finally {
     client.release();
@@ -207,6 +221,12 @@ export async function detenerTelar(req, res, next) {
     }
 
     await client.query('BEGIN');
+
+    // Primero el telar y después la producción: el mismo orden de bloqueo que asignar-patron,
+    // evento-fisico y el reporte del sensor. Con el orden al revés, un detener y un asignar (o un
+    // reporte del Nivel 2) simultáneos se esperaban mutuamente y PostgreSQL cortaba uno con error.
+    const telar = await client.query('SELECT id FROM telares WHERE id = $1 FOR UPDATE', [id]);
+    if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
 
     const enCurso = await client.query(
       `SELECT * FROM historial_produccion WHERE telar_id = $1 AND estado = 'en_curso' FOR UPDATE`,
@@ -236,7 +256,7 @@ export async function detenerTelar(req, res, next) {
     await client.query('COMMIT');
     res.json(historialActualizado.rows[0]);
   } catch (err) {
-    await client.query('ROLLBACK');
+    await client.query('ROLLBACK').catch(() => {});
     next(err);
   } finally {
     client.release();
@@ -274,8 +294,8 @@ export async function avanzarTelar(req, res, next) {
     const pasos = leerPasos(req.body.pasos);
 
     const quien = typeof req.body.cliente === 'string' && req.body.cliente.length <= 64 ? req.body.cliente : null;
+    const ahora = Date.now();
     if (quien) {
-      const ahora = Date.now();
       const actual = conductores.get(id);
       if (actual && actual.cliente !== quien && ahora - actual.t < VIGENCIA_CONDUCTOR_MS) {
         return res.status(409).json({
@@ -283,7 +303,6 @@ export async function avanzarTelar(req, res, next) {
           codigo: 'OTRO_CONDUCTOR',
         });
       }
-      conductores.set(id, { cliente: quien, t: ahora });
     }
 
     await client.query('BEGIN');
@@ -295,6 +314,8 @@ export async function avanzarTelar(req, res, next) {
       [id]
     );
     if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    // Se anota recién acá, con el telar confirmado: el mapa no crece con ids que no existen.
+    if (quien) conductores.set(id, { cliente: quien, t: ahora });
 
     if (telar.rows[0].sensor_activo) {
       await client.query('ROLLBACK');
@@ -314,6 +335,16 @@ export async function avanzarTelar(req, res, next) {
     );
     if (enCurso.rows.length === 0) {
       throw conflict(`El telar ${id} no tiene una producción en curso.`);
+    }
+    // Una producción que ya tiene pasadas medidas es del sensor aunque el nodo esté sin red un
+    // rato: si el reloj la moviera mientras tanto, al volver el nodo su posición ya no coincidiría
+    // con la guardada y el backend rechazaría sus reportes.
+    if (Number(enCurso.rows[0].pasadas_sensor) > 0) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        error: 'El conteo y la posición los lleva el sensor de pasada: la web no avanza por reloj.',
+        codigo: 'SENSOR_ACTIVO',
+      });
     }
 
     const row = enCurso.rows[0];
@@ -377,10 +408,18 @@ export async function pausarTelar(req, res, next) {
 // Vuelve a poner el telar en 'tejiendo' después de una pausa, sin tocar la
 // posición ni reasignar el patrón. Exige que haya una producción en curso:
 // si no la hay, lo que corresponde es asignar un patrón, no reanudar.
+//
+// En una transacción con el telar bloqueado: antes la comprobación y el cambio eran dos consultas
+// sueltas, y un "Terminar trabajo" que llegara justo entre las dos dejaba el telar "tejiendo" sin
+// ningún trabajo (y el Nivel 1 pulsaba Marcha).
 export async function reanudarTelar(req, res, next) {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
-    const enCurso = await pool.query(
+    await client.query('BEGIN');
+    const telar = await client.query('SELECT id FROM telares WHERE id = $1 FOR UPDATE', [id]);
+    if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    const enCurso = await client.query(
       `SELECT id FROM historial_produccion
        WHERE telar_id = $1 AND estado = 'en_curso'`,
       [id]
@@ -388,16 +427,19 @@ export async function reanudarTelar(req, res, next) {
     if (enCurso.rows.length === 0) {
       throw conflict(`El telar ${id} no tiene una producción en curso para reanudar.`);
     }
-    const { rows } = await pool.query(
+    const { rows } = await client.query(
       `UPDATE telares SET estado = 'tejiendo', motivo_pausa = NULL
        WHERE id = $1
        RETURNING id, estado, patron_actual_id`,
       [id]
     );
-    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    await client.query('COMMIT');
     res.json(rows[0]);
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
     next(err);
+  } finally {
+    client.release();
   }
 }
 
@@ -712,9 +754,16 @@ export async function retrocederTelar(req, res, next) {
     if (enCurso.rows.length === 0) {
       throw conflict(`El telar ${id} no tiene una producción en curso.`);
     }
+    if (Number(enCurso.rows[0].pasadas_sensor) > 0) {   // ver avanzarTelar
+      await client.query('ROLLBACK');
+      return res.status(409).json({
+        error: 'El conteo y la posición los lleva el sensor de pasada: la web no retrocede por reloj.',
+        codigo: 'SENSOR_ACTIVO',
+      });
+    }
 
     const row = enCurso.rows[0];
-const { fila_actual, repeticion_en_fila, vueltas_deshechas, al_inicio } =
+    const { fila_actual, repeticion_en_fila, vueltas_deshechas, al_inicio } =
       retrocederPosicionTejido(row.fila_actual, row.matriz_pasadas, pasos, row.repeticiones_por_fila, row.repeticion_en_fila);
 
     const actualizado = await client.query(

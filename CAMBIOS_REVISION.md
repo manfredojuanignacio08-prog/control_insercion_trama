@@ -747,3 +747,21 @@ real, un navegador real y el hardware.
 un GPIO de 3,3 V puede dejar el LED del optoacoplador apenas encendido cuando la salida está en alto (3,3 V contra 5 V
 de alimentación del opto). En los módulos con jumper JD-VCC, alimentar VCC del lado lógico con 3,3 V lo evita; si no,
 medir que el relé no quede a medio accionar.
+
+### Segunda pasada de esta revisión (sobre el código ya corregido)
+
+| Problema | Corrección |
+|---|---|
+| **Con el Nivel 2 instalado, el sensor quedaba rechazado para siempre.** El sensor contaba como "activo" solo si había reportado pasadas en los últimos 30 s, y el nodo no reporta con el telar quieto. Tras una pausa de más de 30 s (o al empezar un trabajo nuevo), al tocar ▶ la web volvía a avanzar la posición por reloj durante los segundos que tarda la máquina en arrancar; el primer reporte del sensor ya no coincidía con esa posición, el backend lo rechazaba (400), el sensor nunca volvía a "activo" y desde ahí se rechazaban todos. | La consulta periódica del nodo (cada 2,5 s, con su clave) también renueva la señal del sensor: mientras el nodo esté conectado, la web no avanza por reloj. Y una producción que ya tiene pasadas medidas es del sensor aunque el nodo se quede sin red un rato (el reloj no la mueve, así al volver sus reportes coinciden). Migración 018: solo la descripción de la columna. |
+| Interbloqueos en la base: `detener` y el reporte del sensor tomaban los bloqueos en orden inverso al de `asignar-patron` y `evento-fisico`. Con pedidos simultáneos (por ejemplo, un retroceso en la botonera mientras el Nivel 2 reporta) PostgreSQL cortaba uno con error 500. **Medido:** 198 interbloqueos en 200 rondas de pedidos simultáneos con el código anterior. | Todos bloquean primero el telar y después la producción. Con el código nuevo: 0 interbloqueos y 0 errores 500 en la misma prueba. |
+| `reanudar` comprobaba que hubiera trabajo y después ponía "tejiendo" en dos consultas sueltas: un "Terminar trabajo" justo en el medio dejaba el telar "tejiendo" sin trabajo (y el Nivel 1 pulsaba Marcha). | Una transacción con el telar bloqueado. Probado con 15 rondas de `detener`, `asignar` y `reanudar` simultáneos: nunca queda "tejiendo" sin trabajo. |
+| El reporte del sensor se comparaba con la posición esperada en línea recta: en el cambio de vuelta (última pasada del dibujo contra la primera de la siguiente) una pasada de diferencia se medía como una vuelta entera y se rechazaba un reporte correcto. | La distancia se mide sobre el lazo. |
+| Si la conexión con la base se cortaba a mitad de una transacción, el `ROLLBACK` de `asignar-patron` y `detener` fallaba y el pedido quedaba sin respuesta. | Igual que en el resto: el error del `ROLLBACK` se ignora y se responde el error original. |
+| El registro de "conductor" del reloj se anotaba antes de comprobar que el telar existiera (un pedido con ids inventados hacía crecer la memoria). | Se anota con el telar confirmado. |
+| Comentarios con datos viejos ("una pasada cada 500 ms", "para repetir una pasada se dibuja la fila dos veces"). | Corregidos (200 ms, repeticiones por fila). |
+| `DESPLIEGUE_RENDER.md` decía "diecisiete migraciones" y mostraba "(16 nueva/s)". | Dieciocho, con el ejemplo correcto. |
+| `README.md`: la estructura de carpetas y los diagramas apuntaban a la ubicación vieja; decía "relés Marcha/Pausa" (son tres: también Retroceder). | Al día. |
+| En el repositorio quedaban 29 copias viejas (del 14/09) de diagramas y documentos que la versión actual ya había movido a otras carpetas, con datos ya corregidos (por ejemplo, "seis SSR"). | Borradas: el repositorio queda igual al zip, más las pruebas nuevas. |
+
+Las pruebas de la integración contra PostgreSQL se ampliaron con estos casos (incluida la pausa larga con el
+nodo conectado) y se verificó que la versión anterior las falla y la corregida las pasa.

@@ -20,9 +20,13 @@ Mientras el sensor no esté instalado, `pasadas_totales` sale del **reloj de la 
 
 - el conteo medido se guarda en `pasadas_sensor` (nunca en `pasadas_totales`, para
   poder compararlos durante la jornada de validación);
-- `telares.ultimo_reporte_sensor` se actualiza en cada reporte, y mientras sea
-  reciente (30 s) `POST /avanzar` responde `409 SENSOR_ACTIVO`: la web deja de
-  avanzar por reloj y sigue la posición que informa el sensor;
+- `telares.ultimo_reporte_sensor` se actualiza en cada reporte **y en cada consulta
+  del nodo** (`GET /telares/:id?origen=nivel2`, cada 2,5 s, aunque el telar esté
+  quieto), y mientras sea reciente (30 s) `POST /avanzar` responde
+  `409 SENSOR_ACTIVO`: la web deja de avanzar por reloj y sigue la posición que
+  informa el sensor. Lo mismo si la producción ya tiene pasadas medidas
+  (`pasadas_sensor > 0`), aunque el nodo esté sin red un rato: si el reloj la
+  moviera, al volver el nodo sus reportes ya no coincidirían;
 - el conteo pasa a `origen_conteo: "sensor"` y solo pasa a `"sensor_validado"`
   después de `POST /validar-conteo`. Los metros de las estadísticas se marcan como
   estimados mientras no esté validado.
