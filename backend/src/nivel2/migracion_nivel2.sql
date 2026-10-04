@@ -1,0 +1,7 @@
+-- Este archivo ya no contiene nada que ejecutar.
+--
+-- Las columnas pasadas_sensor, conteo_validado y pasadas_objetivo pasaron a la
+-- migración común backend/src/db/migracion_012_conteo_sensor_y_retrocesos.sql, que
+-- se aplica sola al arrancar el servidor (y con `npm run migrate`). Se dejó de
+-- mantener acá porque, al no aplicarse nunca, el resto del backend no podía
+-- apoyarse en esas columnas.
