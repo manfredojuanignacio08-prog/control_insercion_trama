@@ -3,6 +3,29 @@
 Este directorio contiene el firmware del **Nivel 2**: el conteo real de pasadas
 (Bloque C) y la selección del dibujo (Bloque D).
 
+## Una sola placa
+
+El gabinete tiene **un único ESP32**. Por eso este firmware hace también todo lo del Nivel 1:
+los tres relés en paralelo con Marcha, Pausa y Retroceder y el sensado de esos botones (Bloque A),
+con la misma lógica que `esp32/control_trama_esp32/`. Los pines no se pisan:
+
+| Función | Pines |
+|---|---|
+| Relés de Marcha, Pausa y Retroceder (Bloque A) | 25, 26, 27 |
+| Sensado de la botonera (Bloque A) | 32, 33, 34 |
+| Sensor de pasada (Bloque C) | 35 |
+| Canales de selección, relés LCA110 (Bloque D) | 18, 19, 21, 22 |
+| LED de la placa (conectado a la red) | 2 |
+
+Qué se carga en la placa según lo que esté armado:
+
+- **Solo el Bloque A** (hoy): `esp32/control_trama_esp32/control_trama_esp32.ino`, con su `config.h`.
+- **Bloques A, C y D**: `esp32/nivel2/nivel2.ino`, con `config_nivel2.h`. Reemplaza al anterior.
+
+Con dibujo nuevo, la placa pulsa Marcha recién cuando tiene el dibujo cargado, así la máquina no
+arranca tejiendo sin la selección. Su consulta al backend (`?origen=nivel2`) mantiene a la vez el
+"ESP32 conectado" de la web y la señal de vida del sensor.
+
 ## Sobre el telar de destino
 
 La fábrica tiene once telares Vamatex de tres modelos: C 201, C 301 y C 401. El
@@ -92,8 +115,8 @@ aunque en la documentación aparezcan como bloques separados.
 revisarlo y probarlo en banco antes de que existan las mediciones que faltan.
 
 El firmware que hoy corre en el telar es el del Nivel 1, que está en
-`esp32/control_trama_esp32/`. Los dos son proyectos separados a propósito: el
-Nivel 1 ya funciona y no conviene tocarlo mientras se desarrolla el Nivel 2.
+`esp32/control_trama_esp32/`. No se modifica mientras se desarrolla este: cuando se
+instalen los Bloques C y D, este firmware lo reemplaza en la misma placa (ver «Una sola placa»).
 
 ## Qué falta antes de poder usarlo
 
@@ -160,7 +183,9 @@ multímetro entre las patas 4 y 6, y `p` vuelve al patrón.
 programa no espera pulsos reales del sensor: los genera él mismo a 5 por segundo
 mientras el telar está "tejiendo" (como la máquina, que en pausa no da pulsos), que es el
 ritmo del telar a 300 pasadas por minuto. Necesita la red y el backend como en la máquina:
-el dibujo se asigna desde la web y se arranca con ▶. Sirve para verificar la
+el dibujo se asigna desde la web y se arranca con ▶. Como el mismo firmware maneja los relés
+del Bloque A, ▶ también pulsa el relé de Marcha: en el banco, los relés no tienen que estar
+conectados a la botonera del telar. Sirve para verificar la
 lógica de avance y el comando de las salidas con un LED en cada canal.
 
 **Por defecto está en `false`, y tiene que volver a `false` antes de instalar**: con el

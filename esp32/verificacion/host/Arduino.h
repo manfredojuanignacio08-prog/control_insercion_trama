@@ -30,7 +30,8 @@ static unsigned long g_ms=0;
 inline unsigned long millis(){ return g_ms; }
 inline void delay(unsigned long){} inline void delayMicroseconds(unsigned long){}
 inline int g_pin[64] = {0};
-inline void digitalWrite(int p,int v){ if(p>=0&&p<64) g_pin[p]=v; } inline int digitalRead(int){return 0;} inline void pinMode(int,int){}
+inline int g_cambios[64] = {0};   // cuántas veces cambió cada pin (para contar pulsos)
+inline void digitalWrite(int p,int v){ if(p>=0&&p<64){ if(g_pin[p]!=v) g_cambios[p]++; g_pin[p]=v; } } inline int digitalRead(int){return 0;} inline void pinMode(int,int){}
 inline int digitalPinToInterrupt(int p){return p;}
 inline void attachInterrupt(int, void(*)(), int){}
 inline void noInterrupts(){} inline void interrupts(){}

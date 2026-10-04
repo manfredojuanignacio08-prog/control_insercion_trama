@@ -20,8 +20,8 @@
 #define WIFI_PASSWORD_ALT  ""
 #define WIFI_ESPERA_SEG    15
 
-// Mismos valores que en config.h del Nivel 1: los dos nodos hablan con el mismo backend
-// y con el mismo telar. (Antes el Nivel 1 apuntaba a una PC local con TELAR_ID 1 y este
+// Mismos valores que en config.h del Nivel 1 (es la misma placa, con el otro firmware): el
+// mismo backend y el mismo telar. (Antes el Nivel 1 apuntaba a una PC local con TELAR_ID 1 y este
 // a Render con TELAR_ID 8, y uno de los dos accionaba/consultaba un telar equivocado.)
 // SIN barra final ni "/api": las rutas se arman en el programa.
 #define API_BASE_URL       "https://control-trama-backend.onrender.com"
@@ -34,10 +34,30 @@
 // Certificado raíz para verificar el HTTPS del backend (opcional). Ver config.h del Nivel 1.
 // #define API_CA_CERT "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
 
+// --------------------------------------- Bloque A · botonera (lo mismo que el Nivel 1)
+// El gabinete tiene UN SOLO ESP32. Con el Nivel 2 instalado, este firmware es el único que
+// corre en él, así que también hace todo lo del Nivel 1: los tres relés en paralelo con los
+// botones de Marcha, Pausa y Retroceder, y el sensado de esos tres botones. Pines y
+// polaridades IGUALES a los de esp32/control_trama_esp32 (verif_coherencia.py lo comprueba):
+// es el mismo cableado del Bloque A.
+static const int PIN_RELE_MARCHA       = 25;   // IN1 del módulo de 2 canales
+static const int PIN_RELE_PAUSA        = 26;   // IN2 del módulo de 2 canales
+static const int PIN_RELE_RETROCEDER   = 27;   // IN3, módulo individual
+static const int PIN_BOTON_MARCHA      = 32;   // PC817: sensa el botón Marcha (solo lectura)
+static const int PIN_BOTON_PAUSA       = 33;   // PC817: sensa el botón Pausa
+static const int PIN_BOTON_RETROCEDER  = 34;   // PC817: sensa el botón Retroceder (solo entrada)
+static const int PIN_LED               = 2;    // LED de la placa: encendido = conectado a la red
+// Polaridad de cada módulo de relé (ver config.h del Nivel 1): el de 2 canales es activo-bajo
+// y el individual de Retroceder, activo-alto.
+#define RELE_MARCHA_ACTIVO_BAJO      true
+#define RELE_PAUSA_ACTIVO_BAJO       true
+#define RELE_RETROCEDER_ACTIVO_BAJO  false
+
 // ------------------------------------------------------------ Modo de prueba
-// En true el programa NO usa el sensor real: genera pulsos por su cuenta cada 200 ms,
-// sin ninguna relación con lo que hace la máquina. Es solo para verificar la lógica en
-// el banco de trabajo.
+// En true el programa NO usa el sensor real: con el telar en "tejiendo" genera pulsos por su
+// cuenta cada 200 ms, sin ninguna relación con lo que hace la máquina. Es solo para verificar
+// la lógica en el banco de trabajo. Los relés del Bloque A siguen funcionando: en el banco no
+// tienen que estar conectados a la botonera (▶ en la web pulsa Marcha).
 //
 // DEBE QUEDAR EN false. Si este sketch se sube tal cual a la máquina con el modo banco
 // activado, las filas del dibujo se aplican al ritmo de un reloj interno, desfasadas del

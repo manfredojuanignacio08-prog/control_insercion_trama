@@ -177,6 +177,7 @@ assert.equal(x.err?.status, 409); assert(x.log.some(l=>l.sql==='ROLLBACK')); ass
 globalThis.__q = (sql) => { if (/SELECT[\s\S]*FROM telares t/.test(sql)) return { rows:[{id:8, estado:'pausado'}] }; };
 x = await call(T.obtenerTelar, { params:{id:'8'}, query:{origen:'nivel2'}, esDispositivo:true });
 assert(x.log.some(l=>/SET ultimo_reporte_sensor = now\(\)/.test(l.sql)));
+assert(x.log.some(l=>/ultimo_ping_esp32 = now\(\)/.test(l.sql)), 'una sola placa: también es el "ESP32 conectado"');
 x = await call(T.obtenerTelar, { params:{id:'8'}, query:{origen:'nivel2'} });   // sin clave: no cuenta
 assert(!x.log.some(l=>/ultimo_reporte_sensor = now\(\)/.test(l.sql)));
 x = await call(T.obtenerTelar, { params:{id:'8'}, query:{origen:'esp32'}, esDispositivo:true });   // el Nivel 1 no es el sensor

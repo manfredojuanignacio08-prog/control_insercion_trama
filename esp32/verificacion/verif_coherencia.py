@@ -158,6 +158,27 @@ canal = _leer('diagramas/hardware/canal_rele.svg')
 chk("Pines de las bobinas del Nivel 2 iguales en firmware y diagrama (18, 19, 21, 22)",
     pines == [18, 19, 21, 22] and '18 · 19 · 21 · 22' in canal, f"firmware={pines}")
 
+# ── 15. Una sola placa: el firmware del Nivel 2 usa el mismo Bloque A que el del Nivel 1 ──
+# El gabinete tiene un único ESP32: con el Nivel 2 instalado, su firmware también maneja los
+# relés y el sensado de la botonera. Pines y polaridades tienen que ser los del Nivel 1, y no
+# pueden pisarse con los del Nivel 2 (sensor y canales).
+def _pin(nombre, txt):
+    return _num(rf'{nombre}\s*=\s*(\d+)', txt)
+def _pol(nombre, txt):
+    m = re.search(rf'#define\s+{nombre}\s+(true|false)', txt)
+    return m.group(1) if m else None
+bloque_a_n1 = [_pin('PIN_RELE_MARCHA', ino), _pin('PIN_RELE_PAUSA', ino), _pin('PIN_RELE_RETROCEDER', ino),
+               _pin('PIN_SENSOR_MARCHA', ino), _pin('PIN_SENSOR_PAUSA', ino), _pin('PIN_SENSOR_RETROCEDER', ino)]
+bloque_a_n2 = [_pin('PIN_RELE_MARCHA', cfg2), _pin('PIN_RELE_PAUSA', cfg2), _pin('PIN_RELE_RETROCEDER', cfg2),
+               _pin('PIN_BOTON_MARCHA', cfg2), _pin('PIN_BOTON_PAUSA', cfg2), _pin('PIN_BOTON_RETROCEDER', cfg2)]
+pol_n1 = [_pol(n, cfg) for n in ('RELE_MARCHA_ACTIVO_BAJO', 'RELE_PAUSA_ACTIVO_BAJO', 'RELE_RETROCEDER_ACTIVO_BAJO')]
+pol_n2 = [_pol(n, cfg2) for n in ('RELE_MARCHA_ACTIVO_BAJO', 'RELE_PAUSA_ACTIVO_BAJO', 'RELE_RETROCEDER_ACTIVO_BAJO')]
+nivel2 = pines + [_pin('PIN_SENSOR_PASADA', cfg2)]
+sin_choques = len(set(bloque_a_n2 + nivel2)) == len(bloque_a_n2 + nivel2) and None not in bloque_a_n2 + nivel2
+chk("Una sola placa: el Nivel 2 maneja el Bloque A con los pines y polaridades del Nivel 1, sin choques",
+    bloque_a_n1 == bloque_a_n2 and pol_n1 == pol_n2 and None not in pol_n1 and sin_choques,
+    f"Nivel 1={bloque_a_n1} {pol_n1} · Nivel 2={bloque_a_n2} {pol_n2} · sensor y canales={nivel2}")
+
 # ── RESULTADO ──
 ok = sum(1 for c,_,_ in checks if c)
 print(f"{'='*66}")

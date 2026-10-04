@@ -18,7 +18,8 @@ backend/          El servidor y la aplicación web
   src/nivel2/     Endpoints del Nivel 2 (en desarrollo, sin montar)
 esp32/            El firmware
   control_trama_esp32/   Nivel 1: el que hoy corre en la máquina
-  nivel2/                Nivel 2: en desarrollo, proyecto separado
+  nivel2/                Nivel 2: en desarrollo. Reemplaza al del Nivel 1 en la
+                         misma placa (un solo ESP32) y hace lo de los dos niveles
   documentacion/         Recomendaciones eléctricas, checklist y niveles
   verificacion/          Scripts que comprueban la lógica sin hardware
 diagramas/        Los diagramas del proyecto, en SVG y PNG
@@ -191,9 +192,11 @@ la botonera del telar.
 ## Nivel 2, en desarrollo
 
 El código del Nivel 2 (conteo real de pasadas y selección del dibujo) está en
-desarrollo y se mantiene **separado** del que hoy corre en la máquina:
+desarrollo y se mantiene **separado** del que hoy corre en la máquina. El gabinete tiene
+**un solo ESP32**: hoy se le carga el firmware del Nivel 1, y cuando se instalen los
+Bloques C y D se le carga el del Nivel 2, que hace también todo lo del Nivel 1.
 
-- `esp32/nivel2/`, firmware, con su propio archivo de configuración
+- `esp32/nivel2/`, firmware (`nivel2.ino`), con su propio archivo de configuración
 - `backend/src/nivel2/`, endpoints y migración de base de datos
 - `esp32/verificacion/sim_nivel2_firmware.py`, verificación de la lógica
 

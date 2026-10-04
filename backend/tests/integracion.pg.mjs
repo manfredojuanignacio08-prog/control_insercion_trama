@@ -97,6 +97,7 @@ r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equ
 psql(`update telares set ultimo_reporte_sensor = now() - interval '5 minutes' where id=${T2}`);
 r = await api('GET',`/telares/${T2}?origen=nivel2`,null,{ck:null,dev:true}); assert.equal(r.s,200);
 r = await api('GET',`/telares/${T2}`); assert.equal(r.b.sensor_activo,true, 'la consulta del nodo es su señal de vida');
+assert(r.b.segundos_desde_ping < 5, 'y también la de la placa ("ESP32 conectado"): es el único ESP32');
 r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,409); assert.equal(r.b.codigo,'SENSOR_ACTIVO');
 r = await api('GET',`/telares/${T2}/patron-actual`,null,{ck:null,dev:true}); assert.equal(r.b.fila_actual,0); assert.equal(r.b.repeticion_en_fila,1);
 { const prod = r.b.historial_id; const t2 = await api('GET',`/telares/${T2}?origen=nivel2`,null,{ck:null,dev:true});

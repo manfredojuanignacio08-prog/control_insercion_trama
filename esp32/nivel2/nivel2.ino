@@ -5,8 +5,13 @@
 //  Equipo N.º 5 · 7mo Informática · Instituto Leonardo Murialdo · 2026
 //
 //  ESTADO: en desarrollo. No está instalado en la máquina.
-//  El firmware que hoy corre en el telar es el del Nivel 1, en
-//  esp32/control_trama_esp32/. Los dos son proyectos separados a propósito.
+//  El firmware que hoy corre en el telar es el del Nivel 1, en esp32/control_trama_esp32/.
+//
+//  UNA SOLA PLACA. El gabinete tiene un único ESP32. Mientras solo esté armado el Bloque A,
+//  se le carga el firmware del Nivel 1. Cuando se instalen los Bloques C y D, se le carga ESTE,
+//  que hace todo lo del Nivel 1 (relés de Marcha, Pausa y Retroceder y sensado de la botonera,
+//  con la misma lógica) más el conteo de pasadas y la selección del dibujo. Los pines no se
+//  pisan: Bloque A en 25, 26, 27, 32, 33 y 34; sensor en 35; canales en 18, 19, 21 y 22.
 //
 //  Cómo funciona, en una línea: el sensor avisa que empezó una pasada nueva y
 //  el programa aplica en ese momento la fila del dibujo que corresponda.
@@ -15,7 +20,8 @@
 //   - Núcleo 1, loop(): TIEMPO REAL. Solo cuenta pulsos del sensor y aplica filas.
 //     Nunca espera a la red: cada iteración dura ~1 ms.
 //   - Núcleo 0, tareaRed(): TODA la red (consultas al backend, descarga del dibujo,
-//     reporte de pasadas). Puede tardar segundos sin afectar al núcleo 1.
+//     reporte de pasadas, avisos de la botonera) y los pulsos de los relés del Bloque A.
+//     Puede tardar segundos sin afectar al núcleo 1.
 //
 //  Antes todo corría en loop(): una consulta lenta (hasta 6 s) o una descarga (hasta
 //  8 s) detenían el conteo y la aplicación de filas. A 5 pasadas por segundo eso eran
@@ -139,6 +145,240 @@ void conectarWifi() {
   bool ok = intentarRed(WIFI_SSID, WIFI_PASSWORD);
   if (!ok) ok = intentarRed(WIFI_SSID_ALT, WIFI_PASSWORD_ALT);
   log(ok ? "Red conectada" : "Sin red: el sistema queda en reposo");
+}
+
+// ============================================================================
+//  Bloque A: relés de Marcha, Pausa y Retroceder, y sensado de la botonera
+//
+//  Lo mismo que hace el firmware del Nivel 1 (control_trama_esp32.ino), con la misma lógica:
+//  ver los comentarios de ese archivo para el porqué de cada protección. La diferencia es dónde
+//  corre: los pulsos y los avisos van en la tarea de red (núcleo 0), así un pulso de 300 ms
+//  no frena el conteo de pasadas ni la aplicación de filas (núcleo 1).
+// ============================================================================
+static const unsigned long DURACION_PULSO_MS     = 300;   // "apretar el botón"
+static const unsigned long MIN_ENTRE_COMANDOS_MS = 2000;  // anti-doble-pulso
+static const unsigned long DEBOUNCE_BOTON_MS     = 400;   // rebotes del pulsador sensado
+static const unsigned long IGNORAR_ECO_MS        = 800;   // el sensado ve el pulso del propio relé
+static const unsigned long REINTENTO_AVISO_MS    = 3000;  // entre reintentos si el backend no responde
+static const int           FALLOS_PARA_AVISAR    = 5;     // consultas fallidas seguidas = caída
+
+int estadoDeseado = -1;           // -1 desconocido | 0 detenido | 1 tejiendo (lo último que ordenó el backend)
+int retrocederSeqConocido = -1;   // -1 desconocido: no se pulsa hasta la primera lectura
+unsigned long ultimoComando = 0;
+
+volatile bool eventoMarchaPendiente     = false;
+volatile bool eventoPausaPendiente      = false;
+volatile bool eventoRetrocederPendiente = false;
+volatile unsigned long ultimoEventoMarcha     = 0;
+volatile unsigned long ultimoEventoPausa      = 0;
+volatile unsigned long ultimoEventoRetroceder = 0;
+volatile unsigned long ultimoPulsoMarcha      = 0;
+volatile unsigned long ultimoPulsoPausa       = 0;
+volatile unsigned long ultimoPulsoRetroceder  = 0;
+unsigned long ultimoIntentoAviso = 0;
+
+// Avisos de error del propio equipo (POST /api/errores), que se mandan al volver la red.
+int           fallosConsecutivos = 0;
+bool          caidaBackendMarcada = false;
+unsigned long caidaBackendDesde = 0;
+unsigned long wifiPerdidoDesde = 0;
+String        errTitulo = "", errDetalle = "", errCodigo = "";
+bool          errPendiente = false;
+// Arranque en frío (corte de luz o traslado): se avisa para que "tejiendo" pase a "pausado".
+bool          avisoReinicioPendiente = false;
+
+int nivelActivo(int pin) {
+  if (pin == PIN_RELE_MARCHA)     return RELE_MARCHA_ACTIVO_BAJO     ? LOW : HIGH;
+  if (pin == PIN_RELE_PAUSA)      return RELE_PAUSA_ACTIVO_BAJO      ? LOW : HIGH;
+  if (pin == PIN_RELE_RETROCEDER) return RELE_RETROCEDER_ACTIVO_BAJO ? LOW : HIGH;
+  return LOW;
+}
+int nivelInactivo(int pin) { return nivelActivo(pin) == LOW ? HIGH : LOW; }
+
+void encolarError(const String& codigo, const String& titulo, const String& detalle) {
+  if (errPendiente) return;   // se conserva el más viejo
+  errCodigo = codigo; errTitulo = titulo; errDetalle = detalle; errPendiente = true;
+}
+
+void IRAM_ATTR isrBotonMarcha() {
+  const unsigned long ahora = millis();
+  if (ahora - ultimoPulsoMarcha < IGNORAR_ECO_MS) return;   // eco del propio relé
+  if (ahora - ultimoEventoMarcha >= DEBOUNCE_BOTON_MS) { ultimoEventoMarcha = ahora; eventoMarchaPendiente = true; }
+}
+void IRAM_ATTR isrBotonPausa() {
+  const unsigned long ahora = millis();
+  if (ahora - ultimoPulsoPausa < IGNORAR_ECO_MS) return;
+  if (ahora - ultimoEventoPausa >= DEBOUNCE_BOTON_MS) { ultimoEventoPausa = ahora; eventoPausaPendiente = true; }
+}
+void IRAM_ATTR isrBotonRetroceder() {
+  const unsigned long ahora = millis();
+  if (ahora - ultimoPulsoRetroceder < IGNORAR_ECO_MS) return;
+  if (ahora - ultimoEventoRetroceder >= DEBOUNCE_BOTON_MS) { ultimoEventoRetroceder = ahora; eventoRetrocederPendiente = true; }
+}
+
+// Arranque seguro: primero el nivel inactivo y recién después el pin como salida (al revés, el
+// relé da un pulso fantasma al encender). Es lo primero que hace setup().
+void botoneraIniciar() {
+  digitalWrite(PIN_RELE_MARCHA,     nivelInactivo(PIN_RELE_MARCHA));
+  digitalWrite(PIN_RELE_PAUSA,      nivelInactivo(PIN_RELE_PAUSA));
+  digitalWrite(PIN_RELE_RETROCEDER, nivelInactivo(PIN_RELE_RETROCEDER));
+  pinMode(PIN_RELE_MARCHA,     OUTPUT);
+  pinMode(PIN_RELE_PAUSA,      OUTPUT);
+  pinMode(PIN_RELE_RETROCEDER, OUTPUT);
+  digitalWrite(PIN_RELE_MARCHA,     nivelInactivo(PIN_RELE_MARCHA));
+  digitalWrite(PIN_RELE_PAUSA,      nivelInactivo(PIN_RELE_PAUSA));
+  digitalWrite(PIN_RELE_RETROCEDER, nivelInactivo(PIN_RELE_RETROCEDER));
+  // Pull-ups externas de 10 kΩ (el GPIO 34 no tiene interna).
+  pinMode(PIN_BOTON_MARCHA,     INPUT);
+  pinMode(PIN_BOTON_PAUSA,      INPUT);
+  pinMode(PIN_BOTON_RETROCEDER, INPUT);
+  attachInterrupt(digitalPinToInterrupt(PIN_BOTON_MARCHA),     isrBotonMarcha,     FALLING);
+  attachInterrupt(digitalPinToInterrupt(PIN_BOTON_PAUSA),      isrBotonPausa,      FALLING);
+  attachInterrupt(digitalPinToInterrupt(PIN_BOTON_RETROCEDER), isrBotonRetroceder, FALLING);
+  pinMode(PIN_LED, OUTPUT);
+  digitalWrite(PIN_LED, LOW);
+}
+
+// Pulso de relé = apretar y soltar el botón. Duración fija: nunca queda pegado. Solo la tarea
+// de red lo llama.
+void pulsarRele(int pin) {
+  const unsigned long ahora = millis();   // se anota ANTES: el sensado de ese botón va a ver el pulso
+  if (pin == PIN_RELE_MARCHA)          ultimoPulsoMarcha     = ahora;
+  else if (pin == PIN_RELE_PAUSA)      ultimoPulsoPausa      = ahora;
+  else if (pin == PIN_RELE_RETROCEDER) ultimoPulsoRetroceder = ahora;
+  digitalWrite(pin, nivelActivo(pin));
+  esp_task_wdt_reset();
+  vTaskDelay(pdMS_TO_TICKS(DURACION_PULSO_MS));
+  digitalWrite(pin, nivelInactivo(pin));
+  esp_task_wdt_reset();
+}
+
+// POST /evento-fisico: alguien usó un botón a mano (o el equipo arrancó en frío). Devuelve true
+// si el backend lo recibió. Toma de la respuesta el estado en que quedó el telar, así la
+// consulta siguiente no lo toma por una orden nueva y no da un pulso que nadie pidió.
+bool reportarEventoFisico(const char* tipo) {
+  if (WiFi.status() != WL_CONNECTED) return false;
+  HTTPClient http;
+  if (!iniciarHttp(http, urlTelar("/evento-fisico"))) return false;
+  http.addHeader("Content-Type", "application/json");
+  http.setTimeout(2000);
+  JsonDocument doc;
+  doc["tipo"] = tipo;
+  String cuerpo;
+  serializeJson(doc, cuerpo);
+  const int codigo = http.POST(cuerpo);
+  const String respuesta = (codigo == 200) ? http.getString() : String("");
+  http.end();
+  esp_task_wdt_reset();
+  if (codigo != 200) {
+    log(String("Error avisando el evento ") + tipo + ": HTTP " + String(codigo) + " (se reintenta)");
+    cerrarTlsSiFalla(codigo);
+    return false;
+  }
+  JsonDocument filtroResp;
+  filtroResp["estado"] = true;
+  JsonDocument resp;
+  const char* estadoResp = nullptr;
+  if (!deserializeJson(resp, respuesta, DeserializationOption::Filter(filtroResp))) estadoResp = resp["estado"];
+  if (estadoResp != nullptr)            estadoDeseado = (strcmp(estadoResp, "tejiendo") == 0) ? 1 : 0;
+  else if (strcmp(tipo, "marcha") == 0) estadoDeseado = 1;
+  else if (strcmp(tipo, "pausa") == 0 || strcmp(tipo, "reinicio") == 0) estadoDeseado = 0;
+  return true;
+}
+
+// POST /api/errores. Devuelve true si el backend lo recibió.
+bool reportarError(const String& codigoError, const String& titulo, const String& detalle) {
+  if (WiFi.status() != WL_CONNECTED) return false;
+  HTTPClient http;
+  if (!iniciarHttp(http, String(API_BASE_URL) + "/api/errores")) return false;
+  http.addHeader("Content-Type", "application/json");
+  http.setTimeout(3000);
+  JsonDocument doc;
+  doc["telar_id"] = TELAR_ID;
+  doc["titulo"]   = titulo;
+  doc["mensaje"]  = detalle;
+  doc["codigo"]   = codigoError;
+  String cuerpo;
+  serializeJson(doc, cuerpo);
+  const int codigo = http.POST(cuerpo);
+  cerrarTlsSiFalla(codigo);
+  http.end();
+  esp_task_wdt_reset();
+  return codigo == 200 || codigo == 201;
+}
+
+// Lo que ordena el backend en cada consulta: Marcha al pasar a "tejiendo", Pausa al dejar de
+// estarlo, y un pulso de Retroceder por cada cambio de retroceder_seq. `listoParaArrancar` es
+// false mientras el dibujo asignado no esté cargado: así la máquina no arranca tejiendo sin la
+// selección (con dos placas eso podía pasar). La orden queda para la consulta siguiente.
+void botoneraAplicarEstado(const char* estado, long retrocederSeqAhora, bool listoParaArrancar) {
+  const int deseadoAhora = (strcmp(estado, "tejiendo") == 0) ? 1 : 0;
+
+  // Primera lectura tras el arranque: solo se memoriza, no se pulsa nada.
+  if (estadoDeseado == -1) {
+    estadoDeseado = deseadoAhora;
+    if (retrocederSeqAhora >= 0) retrocederSeqConocido = retrocederSeqAhora;
+    log(String("Estado inicial: ") + (deseadoAhora ? "tejiendo" : "detenido") + " (sin actuar)");
+    return;
+  }
+
+  if (deseadoAhora != estadoDeseado) {
+    if (millis() - ultimoComando < MIN_ENTRE_COMANDOS_MS) return;   // queda para la próxima consulta
+    if (deseadoAhora == 1) {
+      if (!listoParaArrancar) { log("Marcha en espera: falta cargar el dibujo"); return; }
+      log("El backend pide TEJER: pulso en el relé de MARCHA");
+      pulsarRele(PIN_RELE_MARCHA);
+    } else {
+      log("El backend pide DETENER: pulso en el relé de PAUSA");
+      pulsarRele(PIN_RELE_PAUSA);
+    }
+    estadoDeseado = deseadoAhora;
+    ultimoComando = millis();
+  }
+
+  if (retrocederSeqAhora < 0) return;
+  if (retrocederSeqConocido < 0) { retrocederSeqConocido = retrocederSeqAhora; return; }
+  if (retrocederSeqAhora != retrocederSeqConocido) {
+    if (millis() - ultimoComando < MIN_ENTRE_COMANDOS_MS) return;   // primero Pausa, después Retroceder
+    log("El backend pide RETROCEDER: pulso en el relé de RETROCEDER");
+    pulsarRele(PIN_RELE_RETROCEDER);
+    retrocederSeqConocido = retrocederSeqAhora;
+    ultimoComando = millis();
+  }
+}
+
+// Avisos pendientes: botones usados a mano, arranque en frío y errores del equipo. Espaciados:
+// con el backend caído no se lo golpea cada 50 ms.
+void botoneraDespacharAvisos() {
+  if ((eventoMarchaPendiente || eventoPausaPendiente || eventoRetrocederPendiente) &&
+      millis() - ultimoIntentoAviso >= REINTENTO_AVISO_MS) {
+    ultimoIntentoAviso = millis();
+    // La bandera se baja ANTES de enviar: una pulsación nueva durante el envío no se pierde.
+    if (eventoMarchaPendiente) {
+      eventoMarchaPendiente = false;
+      log("Botonera: alguien apretó MARCHA");
+      if (!reportarEventoFisico("marcha")) eventoMarchaPendiente = true;
+    }
+    if (eventoPausaPendiente) {
+      eventoPausaPendiente = false;
+      log("Botonera: alguien apretó PAUSA");
+      if (!reportarEventoFisico("pausa")) eventoPausaPendiente = true;
+    }
+    if (eventoRetrocederPendiente) {
+      eventoRetrocederPendiente = false;
+      log("Botonera: alguien apretó RETROCEDER");
+      if (!reportarEventoFisico("retroceder")) eventoRetrocederPendiente = true;
+    }
+  }
+  if (avisoReinicioPendiente && estadoDeseado != -1 && millis() - ultimoIntentoAviso >= REINTENTO_AVISO_MS) {
+    ultimoIntentoAviso = millis();
+    log("Arranque en frío: se avisa al backend (el tejido queda en pausa, sin perder la posición)");
+    if (reportarEventoFisico("reinicio")) avisoReinicioPendiente = false;
+  }
+  if (errPendiente && fallosConsecutivos == 0 && millis() - ultimoIntentoAviso >= REINTENTO_AVISO_MS) {
+    ultimoIntentoAviso = millis();
+    if (reportarError(errCodigo, errTitulo, errDetalle)) errPendiente = false;
+  }
 }
 
 // ============================================================================
@@ -318,20 +558,29 @@ void consultarEstado() {
     filtro["patron_actual_id"] = true;
     filtro["retrocesos_contados"] = true;
     filtro["historial_actual_id"] = true;
+    filtro["retroceder_seq"] = true;
     JsonDocument doc;
     const DeserializationError err = deserializeJson(doc, http.getString(), DeserializationOption::Filter(filtro));
     http.end();
     esp_task_wdt_reset();
+    fallosConsecutivos = 0;
+    if (caidaBackendMarcada) {
+      caidaBackendMarcada = false;
+      encolarError("BACKEND_SIN_RESPUESTA", "El backend no respondió al ESP32",
+                   "Sin respuesta del backend durante unos " + String((millis() - caidaBackendDesde) / 1000) +
+                   " s (o la clave del dispositivo era inválida). Durante ese tiempo no se accionó ningún relé.");
+    }
     if (err) return;
 
     const char* estado = doc["estado"] | "apagado";
     bool debeTejer = (strcmp(estado, "tejiendo") == 0);
 
     // ---- Retrocesos --------------------------------------------------------------
-    // El Nivel 2 corre en su propia placa y no sensa la botonera: eso es del Bloque A. Pero el
-    // backend cuenta CADA retroceso (desde la aplicación o desde el botón físico) en
-    // retrocesos_contados. Comparándolo con el último valor visto, esta placa sabe cuántos
-    // hubo y le avisa al sensor, que descuenta esas pasadas.
+    // El backend cuenta CADA retroceso (desde la aplicación o desde la botonera, que sensa el
+    // Bloque A de esta misma placa y avisa con evento-fisico) en retrocesos_contados.
+    // Comparándolo con el último valor visto, se sabe cuántos hubo y se le avisa al sensor, que
+    // descuenta esas pasadas. Se procesa ANTES de dar el pulso de Retroceder (más abajo): así el
+    // aviso llega primero y el pulso del sensor se descuenta en vez de sumarse.
     //
     // (No se usa retroceder_seq: es la ORDEN que la web le da al Nivel 1 y solo sube por
     // pedidos de la web, así que los retrocesos hechos en la botonera pasaban inadvertidos.)
@@ -377,10 +626,19 @@ void consultarEstado() {
     const bool nuevoTejiendo = debeTejer && !avisoSinSenalPendiente;
     if (nuevoTejiendo != tejiendo) log(nuevoTejiendo ? "Arranca el tejido" : "Se detiene el tejido");
     tejiendo = nuevoTejiendo;   // el loop reacciona al cambio (apaga canales / inicia la gracia)
+
+    // ---- Bloque A: Marcha, Pausa y Retroceder ----------------------------------------
+    // Después del dibujo: con un dibujo nuevo, la máquina arranca recién con la selección cargada.
+    botoneraAplicarEstado(estado, doc["retroceder_seq"] | -1L, patronAhora == 0 || hayDibujo);
   } else {
     log("Error consultando estado: HTTP " + String(codigo));
+    if (codigo == 401) log("401: DEVICE_KEY no coincide con ESP32_DEVICE_KEY del backend");
     cerrarTlsSiFalla(codigo);
     http.end();
+    if (++fallosConsecutivos >= FALLOS_PARA_AVISAR && !caidaBackendMarcada) {
+      caidaBackendMarcada = true;
+      caidaBackendDesde = millis();
+    }
   }
   esp_task_wdt_reset();
 }
@@ -480,7 +738,10 @@ void tareaRed(void* /*parametro*/) {
 
     if (WiFi.status() != WL_CONNECTED) {
       // Sin red no se acciona nada. El criterio es el mismo del Nivel 1: ante la duda, el
-      // sistema no toca la máquina. El loop ve el cambio y apaga todos los canales.
+      // sistema no toca la máquina. El loop ve el cambio y apaga todos los canales; los relés
+      // del Bloque A quedan sueltos y la botonera sigue funcionando a mano.
+      digitalWrite(PIN_LED, LOW);
+      if (wifiPerdidoDesde == 0) wifiPerdidoDesde = millis();
       if (tejiendo) {
         log("Se perdió la red: se apagan todos los canales");
         tejiendo = false;
@@ -488,6 +749,13 @@ void tareaRed(void* /*parametro*/) {
       conectarWifi();
       vTaskDelay(pdMS_TO_TICKS(500));
       continue;
+    }
+    digitalWrite(PIN_LED, HIGH);
+    if (wifiPerdidoDesde != 0) {
+      encolarError("WIFI_PERDIDO", "El ESP32 perdió la conexión Wi-Fi",
+                   "Sin Wi-Fi durante unos " + String((millis() - wifiPerdidoDesde) / 1000) +
+                   " s. Durante ese tiempo no se accionó ningún relé.");
+      wifiPerdidoDesde = 0;
     }
 
     if (primeraVez) {
@@ -519,6 +787,9 @@ void tareaRed(void* /*parametro*/) {
       consultarEstado();
     }
 
+    // Botones usados a mano, arranque en frío y errores del equipo (Bloque A).
+    botoneraDespacharAvisos();
+
     // Se reporta mientras teje y una vez más justo al detenerse, para que la web quede con la
     // posición final exacta y no con la del reporte anterior. También con el telar en pausa si
     // el conteo cambió (por ejemplo, el operario retrocedió): antes eso recién llegaba al
@@ -543,18 +814,44 @@ void tareaRed(void* /*parametro*/) {
 //  Setup
 // ============================================================================
 void setup() {
+  // Primero las salidas en reposo, antes que cualquier otra cosa (incluida la espera del puerto
+  // serie): los relés del Bloque A y los canales de selección no pueden moverse al encender.
+  botoneraIniciar();
+  seleccionIniciar();
+  sensorPasadaIniciar();
+
   if (LOG_SERIAL) {
     Serial.begin(BAUD_SERIAL);
     delay(300);
   }
   log("");
-  log("=== Nivel 2, Control de Inserción de Trama ===");
+  log("=== Control de Inserción de Trama: Nivel 1 + Nivel 2 en una sola placa ===");
   log(MODO_BANCO ? "MODO BANCO: los pulsos se generan por software (NO instalar así)"
                  : "Modo normal: los pulsos vienen del sensor");
 
-  // Primero las salidas en reposo, antes que cualquier otra cosa.
-  seleccionIniciar();
-  sensorPasadaIniciar();
+  // Si el reinicio no fue un encendido normal, queda registrado en el backend. Un encendido
+  // normal (corte de luz, traslado) se avisa como "reinicio": "tejiendo" pasa a "pausado".
+  switch (esp_reset_reason()) {
+    case ESP_RST_TASK_WDT:
+    case ESP_RST_INT_WDT:
+    case ESP_RST_WDT:
+      encolarError("REINICIO_WDT", "El ESP32 se reinició por watchdog",
+                   "El programa se colgó y el watchdog lo reinició. Revisar red y alimentación.");
+      break;
+    case ESP_RST_BROWNOUT:
+      encolarError("REINICIO_BROWNOUT", "El ESP32 se reinició por caída de tensión",
+                   "Brownout: la alimentación cayó por debajo del mínimo. Revisar la fuente de 5 V.");
+      break;
+    case ESP_RST_PANIC:
+      encolarError("REINICIO_PANIC", "El ESP32 se reinició por un error del programa",
+                   "Panic (excepción no controlada). Revisar el monitor serie.");
+      break;
+    case ESP_RST_POWERON:
+      avisoReinicioPendiente = true;
+      break;
+    default:
+      break;
+  }
 
   // Watchdog (core 3.x). Puede venir ya inicializado por el sistema: en ese caso se
   // reconfigura. Es el mismo bloque que usa el Nivel 1.
