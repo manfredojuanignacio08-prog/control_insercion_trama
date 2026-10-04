@@ -127,7 +127,7 @@ chk("Pull-up a 3,3 V en IN1/IN2 y pull-down a GND en IN3, ninguno a 5 V (diagram
 # aceptaría dibujos que el servidor, la base o la placa rechazan.
 web = _leer('backend/public/index.html')
 val = _leer('backend/src/utils/validacion.js')
-n2  = _leer('esp32/nivel2/nivel2_seleccion.ino')
+n2  = _leer('esp32/nivel2/nivel2.ino')
 mig = _leer('backend/src/db/migracion_017_filas_hasta_300.sql')
 def _num(pat, txt):
     m = re.search(pat, txt)

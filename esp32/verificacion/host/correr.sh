@@ -24,5 +24,5 @@ g++ -std=c++17 -I. -include Arduino.h -Wall test_prueba_rele.cpp -o /tmp/test_pr
 echo "== 2) sintaxis de los sketches"
 python3 generar_prototipos.py $ESP/control_trama_esp32/control_trama_esp32.ino /tmp/n1.cpp
 g++ -std=c++17 -fsyntax-only -I. -I$ESP/control_trama_esp32 -include Arduino.h -Wall /tmp/n1.cpp && echo "Nivel 1: OK"
-python3 generar_prototipos.py $ESP/nivel2/nivel2_seleccion.ino /tmp/n2.cpp
+python3 generar_prototipos.py $ESP/nivel2/nivel2.ino /tmp/n2.cpp
 g++ -std=c++17 -fsyntax-only -I. -I$ESP/nivel2 -include Arduino.h -Wall /tmp/n2.cpp && echo "Nivel 2: OK"

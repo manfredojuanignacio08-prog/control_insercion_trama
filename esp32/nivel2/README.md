@@ -111,7 +111,10 @@ son estimaciones y no deben darse por buenos.
 
 ## Archivos
 
-- `nivel2_seleccion.ino`, el programa principal
+- `nivel2.ino`, el programa principal. Se llama igual que la carpeta porque el Arduino IDE lo exige:
+  antes se llamaba `nivel2_seleccion.ino`, y al abrirlo el IDE ofrecía moverlo solo a otra carpeta,
+  sin los `.h`, y no compilaba. Se abre `esp32/nivel2/nivel2.ino` y los demás archivos aparecen
+  como pestañas.
 - `config_nivel2.h`, parámetros y credenciales, en un solo lugar
 - `sensor_pasada.h`, el conteo de pasadas (Bloque C)
 - `seleccion_dibujo.h`, el comando de los cuatro canales (Bloque D)
@@ -154,8 +157,10 @@ multímetro entre las patas 4 y 6, y `p` vuelve al patrón.
 **Después, el firmware de este nivel:**
 
 `config_nivel2.h` tiene una constante `MODO_BANCO`. Con ella en `true`, el
-programa no espera pulsos reales del sensor: los genera él mismo a 5 por segundo,
-que es el ritmo del telar a 300 pasadas por minuto. Sirve para verificar la
+programa no espera pulsos reales del sensor: los genera él mismo a 5 por segundo
+mientras el telar está "tejiendo" (como la máquina, que en pausa no da pulsos), que es el
+ritmo del telar a 300 pasadas por minuto. Necesita la red y el backend como en la máquina:
+el dibujo se asigna desde la web y se arranca con ▶. Sirve para verificar la
 lógica de avance y el comando de las salidas con un LED en cada canal.
 
 **Por defecto está en `false`, y tiene que volver a `false` antes de instalar**: con el

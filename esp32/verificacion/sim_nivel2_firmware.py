@@ -2,7 +2,7 @@
 """
 Verificación de la lógica del firmware del Nivel 2.
 
-Reproduce en Python lo que hace nivel2_seleccion.ino, para comprobar que el
+Reproduce en Python lo que hace nivel2.ino, para comprobar que el
 avance de filas y el comando de los canales son correctos antes de subir el
 código al microcontrolador.
 

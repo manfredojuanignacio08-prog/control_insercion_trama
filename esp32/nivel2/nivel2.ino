@@ -580,15 +580,19 @@ void setup() {
 void loop() {
   esp_task_wdt_reset();
 
-  sensorPasadaSimular();          // no hace nada si MODO_BANCO es false
+  const bool tej = tejiendo;
+  const bool dib = hayDibujo;
+
+  // En modo banco (sin sensor) se generan pulsos solo con el telar "tejiendo", como la máquina:
+  // antes también en pausa, y en una prueba de mesa la posición seguía avanzando con el telar
+  // pausado desde la web. Con MODO_BANCO en false no hace nada.
+  if (tej) sensorPasadaSimular();
   sensorPasadaActualizar();       // libera la traba cuando la paleta pasó de largo
   seleccionSoltarSiCorresponde(); // suelta los canales pasada la duración de la selección
 
   // ---- cambios de estado que decidió la tarea de red ----
   static bool tejiendoAntes = false;
   static bool hayDibujoAntes = false;
-  const bool tej = tejiendo;
-  const bool dib = hayDibujo;
 
   if (tej && !tejiendoAntes) {
     sensorPasadaMarcarArranque();   // empieza el período de gracia del sensor
