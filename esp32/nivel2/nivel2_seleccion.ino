@@ -69,6 +69,7 @@ long  totalReportado  = -1;   // último conteo que el backend aceptó (para rep
 long  retrocesosVisto = -1;   // último valor de retrocesos_contados; -1 = todavía no se leyó ninguno
 long  patronCargado   = 0;    // id del dibujo que está en memoria (para detectar que asignaron otro)
 long  produccionCargada = 0;  // id de la producción cuya posición y conteo adoptó (0 = ninguna)
+bool  volverABajarDibujo = false;   // el backend descartó un reporte: hay que readoptar posición y conteo
 static const unsigned long INTERVALO_CONSULTA_MS = 2500;
 
 // Con el telar en marcha se reporta la posición cada segundo (no cada 2,5 s): si se corta la luz,
@@ -425,9 +426,13 @@ void reportarPasadas() {
       const bool aplicado = resp["aplicado"] | true;
       const long guardado = resp["pasadas_sensor"] | -1L;
       if (!aplicado && guardado >= 0) {
+        // Se readoptan posición Y conteo (en tareaRed, con este pedido ya cerrado: comparten el
+        // socket). Antes solo se corregía el conteo y la fila quedaba donde estaba: desde ahí
+        // ningún reporte coincidía y el backend los rechazaba todos.
         sensorPasadaFijarTotal((unsigned long)guardado);
         totalReportado = guardado;
-        log("El conteo local se reacomodó al del backend: " + String(guardado));
+        volverABajarDibujo = true;
+        log("El backend descartó el conteo (" + String(guardado) + " guardadas): se vuelven a bajar la posición y el conteo");
       } else {
         totalReportado = (long)totalEnviado;
       }
@@ -466,6 +471,7 @@ void tareaRed(void* /*parametro*/) {
   esp_task_wdt_add(NULL);   // esta tarea también la vigila el watchdog
   unsigned long ultimaConsulta = 0;
   unsigned long ultimoReporte = 0;
+  unsigned long ultimoIntentoBajar = 0;
   bool tejiendoAntes = false;
   bool primeraVez = true;
 
@@ -488,6 +494,18 @@ void tareaRed(void* /*parametro*/) {
       // Al arrancar se retoma lo que haya quedado guardado en el backend.
       primeraVez = false;
       descargarDibujo();
+    }
+
+    // El backend descartó un reporte: se readoptan posición y conteo. Si la descarga falla se
+    // reintenta al ritmo de las consultas (no en cada vuelta de 50 ms); sin dibujo asignado no
+    // hace falta: la próxima carga ya adopta todo.
+    if (volverABajarDibujo) {
+      if (!hayDibujo) {
+        volverABajarDibujo = false;
+      } else if (millis() - ultimoIntentoBajar >= INTERVALO_CONSULTA_MS) {
+        ultimoIntentoBajar = millis();
+        if (descargarDibujo()) volverABajarDibujo = false;
+      }
     }
 
     // El sensor declaró la parada: se avisa al backend hasta que lo confirme.

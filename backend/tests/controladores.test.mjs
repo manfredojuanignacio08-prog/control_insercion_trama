@@ -259,6 +259,14 @@ assert.equal(x.err, null, x.err && x.err.message); assert.equal(x.r.body.aplicad
 rp({id:5, pasadas_sensor:100, filas:8, fila_actual:0, repeticion_en_fila:0});
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:5, repeticion_en_fila:0} });
 assert.equal(x.err?.status, 400);
+// bajada grande (30 retrocesos con la red caída) con una fila que la acompaña: son retrocesos de
+// verdad, se aceptan. Con 8 filas de 1 pasada, desde la fila 0 treinta atrás es la fila 2.
+rp({id:5, pasadas_sensor:100, filas:8, fila_actual:0, repeticion_en_fila:0});
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:70, fila_actual:2, repeticion_en_fila:0} });
+assert.equal(x.err, null, x.err && x.err.message); assert.equal(x.r.body.aplicado, true);
+// la misma bajada con una fila que no acompaña: nodo reiniciado, se descarta
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:70, fila_actual:6, repeticion_en_fila:0} });
+assert.equal(x.r.body.aplicado, false); assert.equal(x.r.body.pasadas_sensor, 100);
 // telar inexistente
 globalThis.__q = () => ({ rows:[] });
 x = await call(N.reportarPasadas, { params:{id:'99'}, body:{pasadas_sensor:1} }); assert.equal(x.err?.status, 404);

@@ -137,32 +137,20 @@ export async function reportarPasadas(req, res, next) {
 
     const actual = rows[0];
 
-    // Un descenso grande casi seguro es un reinicio del nodo que volvió a contar
-    // desde cero: se ignora en lugar de retroceder el historial, que representa
-    // tela realmente tejida. Se devuelve el valor guardado para que el nodo se
-    // reacomode a él.
-    if (actual.pasadas_sensor - pasadasSensor > TOLERANCIA_RETROCESO) {
-      await cliente.query('ROLLBACK');
-      return res.json({
-        aplicado: false,
-        motivo: 'El conteo recibido es mucho menor que el registrado: probablemente el nodo se reinició.',
-        pasadas_sensor: actual.pasadas_sensor,
-      });
-    }
-
     // La fila que informa el nodo tiene que ser coherente con el conteo que trae
     // el mismo reporte: pasadas_sensor es la fuente de verdad del avance y la
     // posición se deriva de él. Se proyecta la posición guardada con el delta del
     // conteo (la misma matemática que usan /avanzar y /retroceder) y se compara
     // en "espacio de pasadas" contra la posición informada. Una fila fuera de
-    // rango se sigue ignorando como antes (no se rechaza); solo se rechaza una
-    // fila en rango que no corresponde al conteo. Sin posición guardada previa
-    // no hay contra qué cotejar y el reporte se acepta.
+    // rango se ignora (no se rechaza). Sin posición guardada previa no hay contra
+    // qué cotejar: coherente queda en null.
+    const delta = pasadasSensor - actual.pasadas_sensor;
+    let coherente = null;
+    let esperada = null;
     if (
       Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas &&
       Number.isInteger(actual.fila_actual) && Number.isInteger(actual.filas) && actual.filas > 0
     ) {
-      const delta = pasadasSensor - actual.pasadas_sensor;
       const repsDeFila = (i) => {
         const r = Array.isArray(actual.repeticiones_por_fila) ? Number(actual.repeticiones_por_fila[i]) : NaN;
         return Number.isInteger(r) && r >= 1 ? r : 1;
@@ -172,7 +160,7 @@ export async function reportarPasadas(req, res, next) {
         for (let i = 0; i < fila; i++) acc += repsDeFila(i);
         return acc + Math.max(0, Math.trunc(Number(rep) || 0));
       };
-      const esperada = delta >= 0
+      esperada = delta >= 0
         ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0)
         : retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0);
       // La distancia se mide sobre el lazo: la última pasada del dibujo y la primera de la vuelta
@@ -181,14 +169,29 @@ export async function reportarPasadas(req, res, next) {
       // rechazaba un reporte correcto.
       const porVuelta = aPasadas(actual.filas, 0);
       const lineal = Math.abs(aPasadas(fila_actual, repeticion_en_fila) - aPasadas(esperada.fila_actual, esperada.repeticion_en_fila)) % porVuelta;
-      const diferencia = Math.min(lineal, porVuelta - lineal);
-      if (diferencia > TOLERANCIA_POSICION_PASADAS) {
-        await cliente.query('ROLLBACK');
-        throw badRequest(
-          `La posición informada (fila ${fila_actual}) no coincide con el conteo del sensor: ` +
-          `para ${pasadasSensor} pasadas se esperaba la fila ${esperada.fila_actual}.`
-        );
-      }
+      coherente = Math.min(lineal, porVuelta - lineal) <= TOLERANCIA_POSICION_PASADAS;
+    }
+
+    // Un descenso grande con una fila que NO acompaña es un nodo que volvió a contar desde cero:
+    // se ignora en lugar de retroceder el historial, que representa tela realmente tejida, y se
+    // devuelve el valor guardado (el nodo vuelve a bajar posición y conteo). Si la fila sí
+    // acompaña la bajada, son retrocesos de verdad (por ejemplo, muchos con la red caída) y se
+    // aceptan: antes se rechazaban igual, el nodo corregía solo el conteo y no la fila, y desde
+    // ahí el backend rechazaba todos sus reportes.
+    if (-delta > TOLERANCIA_RETROCESO && coherente !== true) {
+      await cliente.query('ROLLBACK');
+      return res.json({
+        aplicado: false,
+        motivo: 'El conteo recibido es mucho menor que el registrado: probablemente el nodo se reinició.',
+        pasadas_sensor: actual.pasadas_sensor,
+      });
+    }
+    if (coherente === false) {
+      await cliente.query('ROLLBACK');
+      throw badRequest(
+        `La posición informada (fila ${fila_actual}) no coincide con el conteo del sensor: ` +
+        `para ${pasadasSensor} pasadas se esperaba la fila ${esperada.fila_actual}.`
+      );
     }
 
     const filaValida = Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas
