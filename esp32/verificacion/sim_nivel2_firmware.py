@@ -65,7 +65,17 @@ class Nivel2Simulado:
             return
         self.pasadas += 1
         if not tejiendo:
-            # La máquina se mueve por la botonera: se cuenta, pero no se comanda.
+            # La máquina se movió sin que el sistema esté "tejiendo" (por ejemplo, en los
+            # segundos que tarda la placa en enterarse de que apretaron Marcha a mano): se
+            # cuenta y la POSICIÓN la acompaña, pero no se comanda nada. Antes solo se contaba,
+            # y el conteo y la fila dejaban de coincidir.
+            self.restantes -= 1
+            if self.restantes <= 0:
+                self.fila_actual += 1
+                if self.fila_actual >= self.filas:
+                    self.fila_actual = 0
+                    self.vueltas += 1
+                self.restantes = self.repeticiones[self.fila_actual]
             return
         # El desplazamiento compensa el desfase entre el pulso del sensor y el
         # instante en que el telar lee la selección.
@@ -117,8 +127,18 @@ def verificar():
 
     s3 = Nivel2Simulado(dibujo)
     s3.pulso_del_sensor(tejiendo=False)
-    v.append(("Con el telar movido a mano se cuenta la pasada pero no se comanda",
-              s3.pasadas == 1 and s3.canales == [False] * 4 and s3.fila_actual == 0))
+    v.append(("Con el telar movido a mano se cuenta la pasada y avanza la posición, pero no se comanda",
+              s3.pasadas == 1 and s3.canales == [False] * 4 and s3.fila_actual == 1))
+    # El conteo y la posición siguen coincidiendo, mezclando pasadas con y sin el sistema
+    # tejiendo (la fila que se reporta al backend tiene que cuadrar con el conteo).
+    s3b = Nivel2Simulado(dibujo, repeticiones=[3, 1, 2, 1])
+    for k in range(20):
+        s3b.pulso_del_sensor(tejiendo=(k % 3 != 0))
+    por_vuelta = 3 + 1 + 2 + 1
+    hechas = s3b.repeticiones[s3b.fila_actual] - s3b.restantes
+    desplazamiento = sum(s3b.repeticiones[:s3b.fila_actual]) + hechas
+    v.append(("Pasadas con y sin el sistema tejiendo: el conteo y la posición siguen coincidiendo",
+              s3b.pasadas == 20 and desplazamiento == 20 % por_vuelta))
 
     s4 = Nivel2Simulado(dibujo)
     s4.pulso_del_sensor()

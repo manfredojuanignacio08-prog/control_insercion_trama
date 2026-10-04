@@ -495,12 +495,17 @@ void sincronizarConBackend() {
   if (estado == nullptr) return;
 
   int deseadoAhora = (strcmp(estado, "tejiendo") == 0) ? 1 : 0;
+  const int retrocederSeqAhora = doc["retroceder_seq"] | -1;
 
   // Primera lectura tras el arranque: solo se memoriza, NO se pulsa nada.
   // Evita que un reinicio del ESP32 (corte de luz, watchdog) le dé un
   // "arranque" o "pausa" inesperado a la máquina.
+  // retroceder_seq se memoriza en esta MISMA lectura: antes recién se tomaba en el sondeo
+  // siguiente, y un Retroceder pedido desde la web en esos 2,5 s se daba por "ya conocido"
+  // y no se pulsaba nunca.
   if (estadoDeseado == -1) {
     estadoDeseado = deseadoAhora;
+    if (retrocederSeqAhora != -1) retrocederSeqConocido = retrocederSeqAhora;
     Serial.printf("Estado inicial sincronizado: %s (sin actuar)\n",
                   deseadoAhora ? "tejiendo" : "detenido");
     return;
@@ -530,7 +535,6 @@ void sincronizarConBackend() {
   // valor conocido, hubo un pedido nuevo → un pulso, ni más ni menos,
   // sin importar cuánto haya cambiado el número.
   // ------------------------------------------------------------
-  int retrocederSeqAhora = doc["retroceder_seq"] | -1;
   if (retrocederSeqAhora == -1) return;  // el backend no mandó el campo
 
   if (retrocederSeqConocido == -1) {
@@ -576,6 +580,7 @@ bool reportarEventoFisico(const char* tipo) {
   String cuerpo;
   serializeJson(doc, cuerpo);
   int codigo = http.POST(cuerpo);
+  const String respuesta = (codigo == 200) ? http.getString() : String("");
   http.end();
 
   if (codigo != 200) {
@@ -584,6 +589,14 @@ bool reportarEventoFisico(const char* tipo) {
     return false;
   }
 
+  // El backend devuelve el estado en que dejó el telar: es el dato más confiable para "lo que
+  // ya sabe". Si por algún motivo no viniera, se usa lo que corresponde a cada aviso.
+  JsonDocument filtroResp;
+  filtroResp["estado"] = true;
+  JsonDocument resp;
+  const char* estadoResp = nullptr;
+  if (!deserializeJson(resp, respuesta, DeserializationOption::Filter(filtroResp))) estadoResp = resp["estado"];
+
   // ROMPE EL BUCLE DE REALIMENTACIÓN. El operario aprieta Marcha a mano → se avisa al
   // backend → el backend pone estado 'tejiendo' → el próximo sondeo vería "cambió a
   // tejiendo" y pulsaría el relé de Marcha OTRA VEZ, un pulso que nadie pidió sobre una
@@ -591,7 +604,8 @@ bool reportarEventoFisico(const char* tipo) {
   // "último conocido" se actualiza acá y el sondeo siguiente no lo interpreta como una
   // orden nueva. (Retroceder no tiene este problema: el backend no toca retroceder_seq
   // por un botón físico.)
-  if (strcmp(tipo, "marcha") == 0)     estadoDeseado = 1;
+  if (estadoResp != nullptr)           estadoDeseado = (strcmp(estadoResp, "tejiendo") == 0) ? 1 : 0;
+  else if (strcmp(tipo, "marcha") == 0) estadoDeseado = 1;
   else if (strcmp(tipo, "pausa") == 0) estadoDeseado = 0;
   else if (strcmp(tipo, "reinicio") == 0) estadoDeseado = 0;   // el backend pasó a 'pausado': coincide, no se pulsa nada
   return true;

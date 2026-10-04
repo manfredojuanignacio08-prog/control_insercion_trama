@@ -38,6 +38,7 @@
 #include "config_nivel2.h"
 #include "sensor_pasada.h"
 #include "seleccion_dibujo.h"
+#include "posicion_dibujo.h"
 
 // ---------------------------------------------------------------- El dibujo
 // La matriz que se está tejiendo. Cada fila es una combinación que se teje tantas pasadas como indique repeticiones[]; sus columnas son
@@ -64,6 +65,7 @@ volatile bool hayDibujo  = false;   // lo pone la red
 volatile bool avisoSinSenalPendiente = false;   // lo pone el loop; lo limpia la red al avisar al backend
 
 // Solo lo usa la tarea de red:
+long  totalReportado  = -1;   // último conteo que el backend aceptó (para reportar cambios en pausa)
 long  retrocesosVisto = -1;   // último valor de retrocesos_contados; -1 = todavía no se leyó ninguno
 long  patronCargado   = 0;    // id del dibujo que está en memoria (para detectar que asignaron otro)
 static const unsigned long INTERVALO_CONSULTA_MS = 2500;
@@ -275,6 +277,7 @@ bool descargarDibujo() {
   // contador local tiene que arrancar de cero, o el primer reporte le cargaría a la pieza
   // nueva todas las pasadas de la anterior.
   sensorPasadaFijarTotal((unsigned long)pasadasIniciales);
+  totalReportado = pasadasIniciales;   // es lo que el backend ya tiene
 
   // El id del dibujo se registra ACÁ, al cargarlo. Antes solo se registraba cuando la descarga
   // la había pedido el ciclo de consultas; la descarga del arranque no lo anotaba, y la
@@ -379,6 +382,7 @@ void reportarPasadas() {
 
   HTTPClient http;
   if (!iniciarHttp(http, urlTelar("/pasadas"))) return;
+  const unsigned long totalEnviado = sensorPasadaTotal();
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(5000);
 
@@ -393,7 +397,7 @@ void reportarPasadas() {
   portEXIT_CRITICAL(&mux);
 
   JsonDocument doc;
-  doc["pasadas_sensor"] = sensorPasadaTotal();   // va a pasadas_sensor: el conteo MEDIDO, no la estimación por reloj
+  doc["pasadas_sensor"] = totalEnviado;   // va a pasadas_sensor: el conteo MEDIDO, no la estimación por reloj
   doc["fila_actual"]    = filaAhora;
   doc["repeticion_en_fila"] = hechasAhora;   // para reanudar en la pasada exacta
   String cuerpo;
@@ -411,7 +415,10 @@ void reportarPasadas() {
       const long guardado = resp["pasadas_sensor"] | -1L;
       if (!aplicado && guardado >= 0) {
         sensorPasadaFijarTotal((unsigned long)guardado);
+        totalReportado = guardado;
         log("El conteo local se reacomodó al del backend: " + String(guardado));
+      } else {
+        totalReportado = (long)totalEnviado;
       }
     }
   } else if (codigo > 0) {
@@ -484,9 +491,13 @@ void tareaRed(void* /*parametro*/) {
     }
 
     // Se reporta mientras teje y una vez más justo al detenerse, para que la web quede con la
-    // posición final exacta y no con la del reporte anterior.
+    // posición final exacta y no con la del reporte anterior. También con el telar en pausa si
+    // el conteo cambió (por ejemplo, el operario retrocedió): antes eso recién llegaba al
+    // backend al volver a tejer, y mientras tanto la web mostraba una posición vieja.
     const bool acabaDeDetenerse = tejiendoAntes && !tejiendo;
-    if ((tejiendo || tejiendoAntes) && (acabaDeDetenerse || millis() - ultimoReporte >= INTERVALO_REPORTE_MS)) {
+    const bool cambioEnPausa = hayDibujo && (long)sensorPasadaTotal() != totalReportado;
+    if ((tejiendo || tejiendoAntes || cambioEnPausa) &&
+        (acabaDeDetenerse || millis() - ultimoReporte >= INTERVALO_REPORTE_MS)) {
       ultimoReporte = millis();
       reportarPasadas();
     }
@@ -534,11 +545,6 @@ void setup() {
 // ============================================================================
 //  Bucle principal (núcleo 1): tiempo real, sin esperar nunca a la red
 // ============================================================================
-static inline int envolver(int fila, int filas) {
-  int r = fila % filas;
-  return (r < 0) ? r + filas : r;   // el módulo de C conserva el signo
-}
-
 void loop() {
   esp_task_wdt_reset();
 
@@ -564,12 +570,15 @@ void loop() {
   tejiendoAntes = tej;
   hayDibujoAntes = dib;
 
-  // Pulsos que se contaron como "adelante" pero resultaron ser el retroceso avisado tarde:
-  // la fila del dibujo vuelve una hacia atrás por cada uno.
+  // Pulsos que se contaron como "adelante" pero resultaron ser el retroceso avisado tarde. El
+  // contador ya se corrigió en dos (se quita el +1 y se resta 1): la posición hace lo mismo,
+  // DOS pasadas atrás. Antes volvía una FILA entera, que con repeticiones no es lo mismo, y el
+  // conteo y la fila dejaban de coincidir.
   int reclasificados = sensorPasadaTomarReclasificados();
   while (reclasificados-- > 0) {
     portENTER_CRITICAL(&mux);
-    if (dibujoFilas > 0) filaActual = envolver(filaActual - 1, dibujoFilas);
+    posicionAtras(filaActual, repeticionesRestantes, repeticiones, dibujoFilas);
+    posicionAtras(filaActual, repeticionesRestantes, repeticiones, dibujoFilas);
     portEXIT_CRITICAL(&mux);
   }
 
@@ -591,7 +600,7 @@ void loop() {
         int filaAplicada, filasTotales, cambioA, restantes;
         portENTER_CRITICAL(&mux);
         filasTotales = dibujoFilas;
-        filaAplicada = envolver(filaActual + DESPLAZAMIENTO_FILAS, filasTotales);
+        filaAplicada = envolverFila(filaActual + DESPLAZAMIENTO_FILAS, filasTotales);
         seleccionAplicarFila(dibujo[filaAplicada], dibujoColumnas);
 
         // Avanzar o retroceder según el sentido del movimiento. En un retroceso el telar deshace
@@ -600,19 +609,8 @@ void loop() {
         // Cada fila se teje tantas pasadas como diga repeticiones[]. Solo cuando se
         // agotan se pasa a la fila siguiente: una fila con 100 repeticiones son 100
         // pasadas de la misma combinación de bobinas.
-        if (pulsoFueRetroceso) {
-          repeticionesRestantes++;
-          if (repeticionesRestantes > repeticiones[filaActual]) {
-            filaActual = envolver(filaActual - 1, filasTotales);
-            repeticionesRestantes = 1;   // queda una pasada por deshacer de la fila anterior
-          }
-        } else {
-          repeticionesRestantes--;
-          if (repeticionesRestantes <= 0) {
-            filaActual = envolver(filaActual + 1, filasTotales);
-            repeticionesRestantes = repeticiones[filaActual];
-          }
-        }
+        if (pulsoFueRetroceso) posicionAtras(filaActual, repeticionesRestantes, repeticiones, filasTotales);
+        else                   posicionAdelante(filaActual, repeticionesRestantes, repeticiones, filasTotales);
         cambioA = filaActual;
         restantes = repeticionesRestantes;
         portEXIT_CRITICAL(&mux);
@@ -622,15 +620,16 @@ void loop() {
             " (quedan " + String(restantes) + " de " + String(repeticiones[filaAplicada]) + ")" +
             " · " + seleccionEstadoTexto() +
             (pulsoFueRetroceso ? String(" · retroceso, la fila vuelve a ") + String(cambioA + 1) : String("")));
-      } else if (pulsoFueRetroceso) {
-        // Retroceso con el telar en pausa (lo normal: el operario pausa y retrocede). No se
-        // comanda nada, pero la fila del dibujo tiene que acompañar a la máquina.
+      } else {
+        // La máquina se movió sin que el sistema esté "tejiendo": un retroceso con el telar en
+        // pausa (lo normal: el operario pausa y retrocede), o pasadas en los segundos que tarda
+        // esta placa en enterarse de que alguien apretó Marcha a mano. No se comanda nada (los
+        // canales quedan en reposo), pero la posición acompaña a la máquina. Antes solo seguía
+        // a los retrocesos: las pasadas hacia adelante subían el conteo sin mover la fila, y
+        // desde ahí el backend rechazaba todos los reportes (la fila no cuadraba con el conteo).
         portENTER_CRITICAL(&mux);
-        repeticionesRestantes++;
-        if (repeticionesRestantes > repeticiones[filaActual]) {
-          filaActual = envolver(filaActual - 1, dibujoFilas);
-          repeticionesRestantes = 1;
-        }
+        if (pulsoFueRetroceso) posicionAtras(filaActual, repeticionesRestantes, repeticiones, dibujoFilas);
+        else                   posicionAdelante(filaActual, repeticionesRestantes, repeticiones, dibujoFilas);
         portEXIT_CRITICAL(&mux);
       }
     }

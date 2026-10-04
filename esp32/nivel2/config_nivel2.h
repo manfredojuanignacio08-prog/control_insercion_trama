@@ -14,8 +14,8 @@
 // El nodo intenta primero la red de la fábrica y, si falla, el punto de acceso del
 // celular. Ver la nota sobre el repositorio público en config.h del Nivel 1.
 // Los nombres de las constantes son los mismos que en el Nivel 1.
-#define WIFI_SSID          "Claro3747"
-#define WIFI_PASSWORD      "11335577"
+#define WIFI_SSID          "NOMBRE_DE_LA_RED"
+#define WIFI_PASSWORD      "CLAVE_DE_LA_RED"
 #define WIFI_SSID_ALT      ""
 #define WIFI_PASSWORD_ALT  ""
 #define WIFI_ESPERA_SEG    15

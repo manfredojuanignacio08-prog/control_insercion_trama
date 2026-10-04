@@ -18,11 +18,12 @@
 //  datos. Así una caída del router no deja al sistema sin comunicación: basta con
 //  encender el punto de acceso del celular y el nodo se engancha solo.
 //
-//  ATENCIÓN: este archivo va al repositorio. Si el repositorio es público, la
-//  contraseña queda a la vista de cualquiera. Ver la nota al pie de este bloque.
+//  ATENCIÓN: este archivo va al repositorio. La red y la clave se completan en la
+//  copia local antes de subir el sketch, y NO se suben con valores reales (igual que
+//  DEVICE_KEY). Ver la nota al pie de este bloque.
 // ---------------------------------------------------------------------------
-#define WIFI_SSID          "Claro3747"
-#define WIFI_PASSWORD      "11335577"
+#define WIFI_SSID          "NOMBRE_DE_LA_RED"
+#define WIFI_PASSWORD      "CLAVE_DE_LA_RED"
 
 // Red de respaldo: punto de acceso del celular. Cuando se conozcan el nombre y la
 // clave que use el dueño, se completan acá. Si quedan vacíos, el nodo simplemente
@@ -36,9 +37,10 @@
 // ---------------------------------------------------------------------------
 //  SOBRE LA CONTRASEÑA Y EL REPOSITORIO
 //
-//  Este archivo contiene la clave real de la red de la fábrica. Si el repositorio
-//  de GitHub es público, cualquiera puede leerla, y quien la tenga entra a la red
-//  donde vive el backend y el resto de las computadoras de la planta.
+//  Este archivo tenía escrita la clave real de la red de la fábrica, y el repositorio
+//  de GitHub es público: cualquiera podía leerla y entrar a la red donde están las
+//  computadoras de la planta. Ahora va con valores de ejemplo. Como la clave real
+//  quedó en el historial del repositorio, conviene CAMBIARLA en el router.
 //
 //  Tres formas de resolverlo, de menos a más trabajo:
 //
