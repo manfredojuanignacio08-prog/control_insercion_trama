@@ -237,7 +237,7 @@ src/
 
 Sin ninguna de las dos, la API responde **401**. Las acciones de la web (asignar dibujo, pausar, etc.) las rechaza si vienen con clave de dispositivo, y los avisos del hardware (`evento-fisico`, `pasadas`) los rechaza si vienen de una sesión: una persona no puede falsear lo que "sensó" el telar.
 
-Variables de entorno obligatorias en producción (ver `.env.example`): `DATABASE_URL` y `PGSSL=true` (con Neon), `SESSION_SECRET` (mínimo 32 caracteres), `RECOVERY_SECRET` (mínimo 16 caracteres), `ESP32_DEVICE_KEY` (la misma en `DEVICE_KEY` de los dos firmwares), y `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` con el dominio real. El login por huella exige HTTPS (o `localhost`): por `http://192.168.x.x` el navegador lo bloquea, así que en la red local hay que servir por HTTPS o entrar con el código de recuperación.
+Variables de entorno obligatorias en producción (ver `.env.example`): `DATABASE_URL` y `PGSSL=true` (con Neon), `SESSION_SECRET` (mínimo 32 caracteres), `RECOVERY_SECRET` (mínimo 16 caracteres), `ESP32_DEVICE_KEY` (la misma en `DEVICE_KEY` del firmware, `esp32/control_trama_esp32/config.h`), y `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` con el dominio real. El login por huella exige HTTPS (o `localhost`): por `http://192.168.x.x` el navegador lo bloquea, así que en la red local hay que servir por HTTPS o entrar con el código de recuperación.
 
 Además: el registro es libre solo para los primeros `REGISTRO_LIBRE_MAX` usuarios (defecto 3); después hace falta un código de invitación. Sumar una huella a un usuario existente exige haber iniciado sesión como ese usuario. El login y la recuperación tienen un límite de intentos por IP (`AUTH_INTENTOS_MAX`).
 

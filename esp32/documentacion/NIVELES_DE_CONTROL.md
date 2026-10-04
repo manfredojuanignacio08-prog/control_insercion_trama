@@ -9,7 +9,7 @@ del proyecto y para explicarlo bien en la presentación.
 > (no un Jacquard por tarjetas, como se suponía al principio; las secciones de abajo conservan ese
 > análisis inicial). El Nivel 2 dejó de ser "evolución futura": está en desarrollo por la vía de
 > control por marcos del final de este documento, con un sensor inductivo y cuatro relés LCA110
-> sobre los lectores ópticos. Todo corre en **un solo ESP32** (`esp32/nivel2/`).
+> sobre los lectores ópticos. Todo corre en **un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`).
 
 ## El telar tiene, en la práctica, dos "máquinas"
 
@@ -101,4 +101,4 @@ hasta 8), algo que el mismo ESP32 del Nivel 1 maneja sin problema.
 
 El desarrollo completo de esta solución -cómo funciona, el hardware, y cómo se
 conecta con lo que ya está hecho- está en:
-**`NIVEL2_CONTROL_POR_MARCOS.md`** (en esta misma carpeta), y el firmware en `esp32/nivel2/`.
+**`NIVEL2_CONTROL_POR_MARCOS.md`** (en esta misma carpeta), y el firmware en `esp32/control_trama_esp32/` (con `NIVEL2_INSTALADO` en `true`).

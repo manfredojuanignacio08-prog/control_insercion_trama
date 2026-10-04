@@ -1,8 +1,8 @@
-// Ejecuta la parte del Bloque A del firmware del Nivel 2 (el único ESP32 hace también lo del
-// Nivel 1) con un reloj simulado: arranque seguro, orden de los pulsos, anti-doble-pulso, Marcha
-// en espera hasta tener el dibujo, y el filtro del eco del propio relé en el sensado.
+// Ejecuta la parte del Bloque A del firmware (relés y sensado de la botonera) con un reloj
+// simulado: arranque seguro, orden de los pulsos, anti-doble-pulso, Marcha en espera hasta tener
+// el dibujo, y el filtro del eco del propio relé en el sensado.
 #include <cassert>
-#include "/tmp/n2_botonera.cpp"
+#include "/tmp/fw_botonera.cpp"
 static int pulsos(int pin) { return g_cambios[pin] / 2; }
 static void limpiar() { for (int i = 0; i < 64; i++) g_cambios[i] = 0; }
 int main() {
@@ -30,5 +30,5 @@ int main() {
   assert(!eventoPausaPendiente);
   g_ms = ultimoPulsoPausa + 1500; isrBotonPausa();             // pasada la ventana: es del operario
   assert(eventoPausaPendiente);
-  std::printf("  Bloque A en el firmware del Nivel 2: OK\n");
+  std::printf("  Bloque A del firmware: OK\n");
 }

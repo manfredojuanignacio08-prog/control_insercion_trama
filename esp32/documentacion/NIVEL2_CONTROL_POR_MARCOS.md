@@ -117,8 +117,8 @@ Encaja naturalmente con el sistema actual:
 - El **backend** ya guarda y entrega esa secuencia por la API. No hay que
   rediseñarlo: el ESP32 pediría la secuencia igual que hoy pide el estado.
 - El **firmware** del ESP32 pasa de accionar 3 relés (Marcha/Pausa/Retroceder) a
-  accionar además los 4 relés LCA110 de los lectores, siguiendo la secuencia (`esp32/nivel2/`,
-  en la misma placa).
+  accionar además los 4 relés LCA110 de los lectores, siguiendo la secuencia (el mismo programa,
+  `esp32/control_trama_esp32/`, con `NIVEL2_INSTALADO` en `true`).
 
 En otras palabras: **la parte de software ya está casi lista; lo que se suma
 es la parte física de los marcos, que ahora es chica.**

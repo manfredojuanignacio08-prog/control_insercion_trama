@@ -1,6 +1,6 @@
 # Backend del Nivel 2
 
-Endpoints que usa el firmware del Nivel 2 (conteo real de pasadas y selección del
+Endpoints que usa el firmware con el Nivel 2 instalado (conteo real de pasadas y selección del
 dibujo). Ya están **montados** en `server.js` bajo `/api/telares` y, como todo lo
 que toca el hardware, exigen la clave de dispositivo (header `X-Device-Key`, valor
 de `ESP32_DEVICE_KEY` en el `.env`).

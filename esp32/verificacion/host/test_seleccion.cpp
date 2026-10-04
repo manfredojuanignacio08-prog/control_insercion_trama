@@ -1,4 +1,4 @@
-// Prueba la lógica REAL de nivel2/seleccion_dibujo.h con un reloj simulado:
+// Prueba la lógica REAL de seleccion_dibujo.h con un reloj simulado:
 // en cada pasada los canales activos se cierran y se sueltan pasada la duración de
 // la selección, aunque la fila se repita (un agujero por pasada, como el papel).
 #include "seleccion_dibujo.h"

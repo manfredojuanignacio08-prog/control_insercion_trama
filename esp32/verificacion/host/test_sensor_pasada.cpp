@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include "config_nivel2.h"
+#include "config.h"
 #include "sensor_pasada.h"
 #include <cassert>
 #include <cstdio>

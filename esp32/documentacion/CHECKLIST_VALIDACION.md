@@ -107,7 +107,7 @@ pines (GPIO 25→IN1 Marcha, GPIO 26→IN2 Pausa), la cadena de voltajes
 (220V→5V→3,3V, con la fuente HLK-5M05), el jumper JD-VCC puesto (todo el módulo a 5V, sin llevar 3.3V al VCC), la conexión en paralelo, y la etapa de protección coinciden entre el
 firmware, el diagrama eléctrico y el documento de conexiones.
 
-> **Estado actual:** `verif_coherencia.py` da 18/18 (incluye que el firmware del Nivel 2, que corre en la misma placa, use los pines y polaridades del Bloque A sin pisarse con los suyos). Ya incluye el tercer relé (GPIO 27 → IN3), que
+> **Estado actual:** `verif_coherencia.py` da 18/18 (incluye que haya un solo firmware para la placa, que sus pines no se pisen y que `NIVEL2_INSTALADO` venga en `false`). Ya incluye el tercer relé (GPIO 27 → IN3), que
 > el diagrama muestra, y además compara los límites de filas y columnas entre la web, el servidor,
 > el firmware y la base, y los pines de las bobinas del Nivel 2 con su diagrama.
 

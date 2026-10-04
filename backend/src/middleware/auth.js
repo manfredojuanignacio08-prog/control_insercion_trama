@@ -18,7 +18,7 @@
 //    SESSION_SECRET      clave para firmar las cookies (mínimo 32 caracteres).
 //                        Generarla con:  node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 //    ESP32_DEVICE_KEY    clave compartida con los ESP32 (mismo valor que DEVICE_KEY
-//                        en config.h de los dos firmwares). Sin ella, los dispositivos
+//                        en config.h del firmware). Sin ella, los dispositivos
 //                        quedan rechazados.
 //    SESSION_HORAS       duración de la sesión, por defecto 12 (una jornada).
 //

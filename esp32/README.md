@@ -16,10 +16,16 @@ que consume la web. Cuando alguien asigna un patrón desde la
 web (estado pasa a `tejiendo`), el ESP32 pulsa Marcha en la máquina
 real; cuando alguien pausa, pulsa Pausa.
 
-**Una sola placa.** El gabinete tiene un único ESP32. Hoy, con solo el Bloque A armado, se le
-carga este firmware (`control_trama_esp32/`). Cuando se instalen los Bloques C y D (sensor de
-pasada y relés LCA110), se le carga el de `nivel2/nivel2.ino`, que hace todo lo de este más el
-Nivel 2 (ver `nivel2/README.md`). Los dos usan los mismos pines y la misma configuración de red.
+**Una sola placa, un solo programa.** El gabinete tiene un único ESP32 y se le carga siempre el
+mismo firmware: `control_trama_esp32/control_trama_esp32.ino`. Qué hace depende de
+`NIVEL2_INSTALADO` en `config.h`:
+
+- **`false` (hoy):** solo el Bloque A, los relés y el sensado de la botonera.
+- **`true`:** además el sensor de pasada (Bloque C) y los relés LCA110 de la selección
+  (Bloque D). Se cambia recién cuando los dos estén armados y conectados: con `true` la web deja
+  de estimar las pasadas y espera las del sensor.
+
+El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
 
 ---
 
@@ -85,7 +91,8 @@ a mano sin un trabajo abierto, la web marca la posición como incierta hasta que
    desde el Board Manager.
 2. *Tools → Manage Libraries* → instalá **ArduinoJson** (Benoît Blanchon,
    v7.x). `WiFi` y `HTTPClient` ya vienen con el core.
-3. Abrí `control_trama_esp32.ino` y **editá `config.h`**: Wi-Fi (en el repositorio
+3. Abrí `control_trama_esp32/control_trama_esp32.ino` (los demás archivos de la carpeta se abren
+   como pestañas) y **editá `config.h`**: `NIVEL2_INSTALADO` (`false` hoy), Wi-Fi (en el repositorio
    viene `NOMBRE_DE_LA_RED` / `CLAVE_DE_LA_RED`; los datos reales no se suben), `DEVICE_KEY` (la misma que
    `ESP32_DEVICE_KEY` del backend), `TELAR_ID` (8) y URL del
    backend (la del servidor Node, **no** la de Neon) y la polaridad
@@ -103,7 +110,8 @@ a mano sin un trabajo abierto, la web marca la posición como incierta hasta que
    alcanza para la prueba, con JD-VCC puenteado temporalmente al 5V del
    USB).
 2. Levantá el backend y asigná un patrón desde la web → a los pocos
-   segundos se **escucha el clic** del relé de Marcha y el LED parpadea.
+   segundos se **escucha el clic** del relé de Marcha (el LED azul de la placa queda encendido
+   mientras hay red).
 3. Tocá "Pausa" en la web → clic del relé de Pausa.
 4. Recién cuando eso funcione, cablear los contactos NO/COM a la botonera
    del telar según el documento eléctrico.
@@ -118,7 +126,7 @@ perforada, que dicta el dibujo pasada por pasada).
   Pausa al telar con los relés. Resuelto, sin inconvenientes de fondo.
 - **Nivel 2, Dictar el dibujo (en desarrollo):** contar las pasadas con un sensor inductivo
   y reemplazar la cinta de papel perforada del dobby con cuatro relés LCA110 sobre los lectores
-  ópticos. El firmware está en `nivel2/` y corre en la misma placa.
+  ópticos. Lo hace el mismo firmware, con `NIVEL2_INSTALADO` en `true`.
 
 El detalle completo de esta distinción -clave para entender el alcance del
 proyecto y para la presentación- está en **`documentacion/NIVELES_DE_CONTROL.md`**.

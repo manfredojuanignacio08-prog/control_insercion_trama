@@ -69,7 +69,8 @@ export async function listarTelares(req, res, next) {
 // (X-Device-Key), es lo que deja un "heartbeat" real del dispositivo. Antes alcanzaba
 // con el parámetro en la URL, y cualquiera podía falsear el "ESP32 conectado".
 //
-// El firmware del Nivel 2 consulta este mismo endpoint cada 2,5 s con ?origen=nivel2. Esa consulta
+// El firmware consulta este mismo endpoint cada 2,5 s: con ?origen=esp32 si solo está el Bloque A
+// (NIVEL2_INSTALADO en false) y con ?origen=nivel2 si además está el sensor. Esta última consulta
 // es la señal de vida de la placa y también la del sensor: mientras el nodo esté conectado, la posición y el conteo los lleva
 // él (sensor_activo), aunque el telar esté quieto y no tenga pasadas que reportar. Antes solo
 // contaban los reportes de pasadas, que no se mandan con la máquina detenida: tras una pausa de
@@ -84,8 +85,8 @@ export async function obtenerTelar(req, res, next) {
         [req.params.id]
       );
     } else if (req.esDispositivo && req.query.origen === 'nivel2') {
-      // El firmware del Nivel 2 corre en el mismo (y único) ESP32 y hace también lo del Nivel 1:
-      // su consulta es a la vez la señal de vida del sensor y la de la placa ("ESP32 conectado").
+      // Firmware con el Nivel 2 instalado: la consulta es a la vez la señal de vida del sensor y la
+      // de la placa ("ESP32 conectado").
       await pool.query(
         `UPDATE telares SET ultimo_reporte_sensor = now(), ultimo_ping_esp32 = now() WHERE id = $1`,
         [req.params.id]

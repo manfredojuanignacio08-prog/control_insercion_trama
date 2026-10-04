@@ -1,7 +1,7 @@
 #ifndef SENSOR_PASADA_H
 #define SENSOR_PASADA_H
 
-#include "config_nivel2.h"
+#include "config.h"
 
 // ============================================================================
 //  Bloque C, conteo de pasadas
@@ -65,7 +65,7 @@ volatile unsigned long ultimoAdelanteMs = 0;
 volatile int           reclasificadosPendientes = 0;
 static const unsigned long VENTANA_RECLASIFICAR_MS = 5000;
 
-// Un aviso de retroceso que NO llega a consumirse con un pulso (el relé del Nivel 1 no actuó, la
+// Un aviso de retroceso que NO llega a consumirse con un pulso (el relé de Retroceder no actuó, la
 // máquina no se movió) no puede quedar esperando para siempre: descontaría una pasada del pulso
 // que llegue horas después. Con la máquina en marcha un pulso llega cada 200 ms, así que un aviso
 // vigente se consume enseguida; pasado este tiempo sin consumirse, se descarta. También se

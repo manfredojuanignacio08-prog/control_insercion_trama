@@ -1,7 +1,7 @@
 #ifndef SELECCION_DIBUJO_H
 #define SELECCION_DIBUJO_H
 
-#include "config_nivel2.h"
+#include "config.h"
 
 // ============================================================================
 //  Bloque D, selección del dibujo

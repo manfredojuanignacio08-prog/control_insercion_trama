@@ -27,8 +27,8 @@ def chk(nombre, cond, detalle=""):
     checks.append((cond, nombre, detalle))
 
 # ── 1. Pines de relé coinciden en las 3 fuentes ──
-ino_marcha = bool(re.search(r'PIN_RELE_MARCHA\s*=\s*25', ino))
-ino_pausa  = bool(re.search(r'PIN_RELE_PAUSA\s*=\s*26', ino))
+ino_marcha = bool(re.search(r'PIN_RELE_MARCHA\s*=\s*25', cfg))
+ino_pausa  = bool(re.search(r'PIN_RELE_PAUSA\s*=\s*26', cfg))
 svg_g25 = 'GPIO 25' in svg
 svg_g26 = 'GPIO 26' in svg
 doc_g25 = 'GPIO 25' in doc
@@ -40,17 +40,17 @@ chk("GPIO 26 (Pausa) coincide en firmware+diagrama+doc", ino_pausa and svg_g26 a
 
 # ── 2. Mapeo GPIO→IN correcto (25→IN1, 26→IN2) ──
 # firmware: GPIO25 = IN1 (comentario), diagrama: "GPIO 25" ... "IN1", doc: "GPIO 25 ... IN1"
-ino_25_in1 = bool(re.search(r'PIN_RELE_MARCHA\s*=\s*25.*IN1', ino))
+ino_25_in1 = bool(re.search(r'PIN_RELE_MARCHA\s*=\s*25.*IN1', cfg))
 doc_25_in1 = bool(re.search(r'GPIO 25.*IN1', doc))
 svg_in1 = 'IN1' in svg and 'IN2' in svg
 svg_in3 = 'IN3' in svg
-ino_27 = bool(re.search(r'PIN_RELE_RETROCEDER\s*=\s*27', ino))
+ino_27 = bool(re.search(r'PIN_RELE_RETROCEDER\s*=\s*27', cfg))
 chk("GPIO25→IN1, GPIO26→IN2 y GPIO27→IN3 (mapeo consistente)",
     ino_25_in1 and doc_25_in1 and svg_in1 and svg_in3 and ino_27,
     f"ino_25→IN1={ino_25_in1} doc_25→IN1={doc_25_in1} svg_IN1/IN2={svg_in1} svg_IN3={svg_in3} ino_27={ino_27}")
 
 # ── 2b. Sensado de los 3 botones (GPIO32/33/34, solo lectura) ──
-ino_sens = all(bool(re.search(rf'PIN_SENSOR_{n}\s*=\s*{p}', ino))
+ino_sens = all(bool(re.search(rf'PIN_BOTON_{n}\s*=\s*{p}', cfg))
                for n, p in [('MARCHA', 32), ('PAUSA', 33), ('RETROCEDER', 34)])
 svg_sens = 'GPIO 32' in svg and 'GPIO 34' in svg
 chk("Sensado de los 3 botones en GPIO32/33/34 (firmware y diagrama)", ino_sens and svg_sens,
@@ -127,7 +127,6 @@ chk("Pull-up a 3,3 V en IN1/IN2 y pull-down a GND en IN3, ninguno a 5 V (diagram
 # aceptaría dibujos que el servidor, la base o la placa rechazan.
 web = _leer('backend/public/index.html')
 val = _leer('backend/src/utils/validacion.js')
-n2  = _leer('esp32/nivel2/nivel2.ino')
 mig = _leer('backend/src/db/migracion_017_filas_hasta_300.sql')
 def _num(pat, txt):
     m = re.search(pat, txt)
@@ -136,7 +135,7 @@ lim = {
     'web (casilla)':      _num(r'id="in-rows"[^>]*max="(\d+)"', web),
     'web (corrección)':   _num(r'const r = Math\.min\((\d+), Math\.max\(1, rNum\)\)', web),
     'servidor':           _num(r'const MAX_FILAS = (\d+);', val),
-    'firmware Nivel 2':   _num(r'static const int MAX_FILAS = (\d+);', n2),
+    'firmware':           _num(r'static const int MAX_FILAS = (\d+);', ino),
     'base (migración)':   _num(r'filas BETWEEN 1 AND (\d+)', mig),
 }
 chk("Límite de filas igual en web, servidor, firmware y base", len(set(lim.values())) == 1 and None not in lim.values(),
@@ -151,33 +150,32 @@ chk("Límite de columnas igual en web y servidor", len(set(col.values())) == 1 a
     ", ".join(f"{k}={v}" for k, v in col.items()))
 
 # ── 14. Pines de las bobinas del Nivel 2: firmware y diagrama del canal ──
-cfg2 = _leer('esp32/nivel2/config_nivel2.h')
-m = re.search(r'PIN_CANAL\[N_CANALES\]\s*=\s*\{\s*([\d,\s]+)\}', cfg2)
+m = re.search(r'PIN_CANAL\[N_CANALES\]\s*=\s*\{\s*([\d,\s]+)\}', cfg)
 pines = [int(x) for x in m.group(1).split(',')] if m else []
 canal = _leer('diagramas/hardware/canal_rele.svg')
 chk("Pines de las bobinas del Nivel 2 iguales en firmware y diagrama (18, 19, 21, 22)",
     pines == [18, 19, 21, 22] and '18 · 19 · 21 · 22' in canal, f"firmware={pines}")
 
-# ── 15. Una sola placa: el firmware del Nivel 2 usa el mismo Bloque A que el del Nivel 1 ──
-# El gabinete tiene un único ESP32: con el Nivel 2 instalado, su firmware también maneja los
-# relés y el sensado de la botonera. Pines y polaridades tienen que ser los del Nivel 1, y no
-# pueden pisarse con los del Nivel 2 (sensor y canales).
+# ── 15. Un solo programa para la única placa ──
+# El gabinete tiene un único ESP32 y un único firmware (esp32/control_trama_esp32). Los pines del
+# Bloque A, del sensor y de los canales no pueden pisarse. NIVEL2_INSTALADO tiene que venir en
+# false: con true y sin sensor, la consulta "?origen=nivel2" haría que la web dejara de estimar
+# las pasadas y el conteo quedaría en cero. Y no puede quedar ningún otro firmware para la placa.
 def _pin(nombre, txt):
     return _num(rf'{nombre}\s*=\s*(\d+)', txt)
-def _pol(nombre, txt):
-    m = re.search(rf'#define\s+{nombre}\s+(true|false)', txt)
-    return m.group(1) if m else None
-bloque_a_n1 = [_pin('PIN_RELE_MARCHA', ino), _pin('PIN_RELE_PAUSA', ino), _pin('PIN_RELE_RETROCEDER', ino),
-               _pin('PIN_SENSOR_MARCHA', ino), _pin('PIN_SENSOR_PAUSA', ino), _pin('PIN_SENSOR_RETROCEDER', ino)]
-bloque_a_n2 = [_pin('PIN_RELE_MARCHA', cfg2), _pin('PIN_RELE_PAUSA', cfg2), _pin('PIN_RELE_RETROCEDER', cfg2),
-               _pin('PIN_BOTON_MARCHA', cfg2), _pin('PIN_BOTON_PAUSA', cfg2), _pin('PIN_BOTON_RETROCEDER', cfg2)]
-pol_n1 = [_pol(n, cfg) for n in ('RELE_MARCHA_ACTIVO_BAJO', 'RELE_PAUSA_ACTIVO_BAJO', 'RELE_RETROCEDER_ACTIVO_BAJO')]
-pol_n2 = [_pol(n, cfg2) for n in ('RELE_MARCHA_ACTIVO_BAJO', 'RELE_PAUSA_ACTIVO_BAJO', 'RELE_RETROCEDER_ACTIVO_BAJO')]
-nivel2 = pines + [_pin('PIN_SENSOR_PASADA', cfg2)]
-sin_choques = len(set(bloque_a_n2 + nivel2)) == len(bloque_a_n2 + nivel2) and None not in bloque_a_n2 + nivel2
-chk("Una sola placa: el Nivel 2 maneja el Bloque A con los pines y polaridades del Nivel 1, sin choques",
-    bloque_a_n1 == bloque_a_n2 and pol_n1 == pol_n2 and None not in pol_n1 and sin_choques,
-    f"Nivel 1={bloque_a_n1} {pol_n1} · Nivel 2={bloque_a_n2} {pol_n2} · sensor y canales={nivel2}")
+usados = [_pin(n, cfg) for n in ('PIN_RELE_MARCHA', 'PIN_RELE_PAUSA', 'PIN_RELE_RETROCEDER',
+                                 'PIN_BOTON_MARCHA', 'PIN_BOTON_PAUSA', 'PIN_BOTON_RETROCEDER',
+                                 'PIN_SENSOR_PASADA', 'PIN_LED')] + pines
+sin_choques = None not in usados and len(set(usados)) == len(usados)
+apagado = bool(re.search(r'#define\s+NIVEL2_INSTALADO\s+false', cfg))
+origen = 'NIVEL2_INSTALADO ? "?origen=nivel2" : "?origen=esp32"' in ino
+sketches = sorted(os.path.relpath(os.path.join(d, f), RAIZ)
+                  for d, _, fs in os.walk(os.path.join(RAIZ, 'esp32')) for f in fs
+                  if f.endswith('.ino') and 'pruebas' not in d)
+uno = sketches == ['esp32/control_trama_esp32/control_trama_esp32.ino']
+chk("Un solo firmware, pines sin choques y NIVEL2_INSTALADO en false (origen=esp32 sin sensor)",
+    sin_choques and apagado and origen and uno,
+    f"pines={usados} sin_choques={sin_choques} NIVEL2_INSTALADO_false={apagado} origen={origen} sketches={sketches}")
 
 # ── RESULTADO ──
 ok = sum(1 for c,_,_ in checks if c)

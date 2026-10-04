@@ -1,4 +1,4 @@
-// Prueba de nivel2/posicion_dibujo.h, el MISMO código que corre en la placa: la posición
+// Prueba de posicion_dibujo.h, el MISMO código que corre en la placa: la posición
 // (fila y pasadas que le faltan) tiene que avanzar y retroceder igual que el backend
 // (backend/src/utils/posicion.js), que la ve como un desplazamiento en pasadas desde el
 // principio del dibujo, en un lazo.

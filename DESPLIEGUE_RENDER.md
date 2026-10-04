@@ -81,12 +81,12 @@ Después: abrir `https://control-trama-backend.onrender.com/api/health` (debe re
 Con el cambio al sistema de sesiones nuevo, **todos tienen que volver a iniciar sesión una vez**.
 Las huellas y los códigos de recuperación existentes siguen sirviendo.
 
-## 6. Las placas
+## 6. La placa
 
-Hasta que se carguen de nuevo, las placas quedan rechazadas: el servidor exige la clave.
+Hasta que se cargue de nuevo, la placa queda rechazada: el servidor exige la clave.
 
 1. Con la sesión iniciada, abrir `https://control-trama-backend.onrender.com/api/telares`. La
    web usa el **primero** de esa lista (ordenada por código). Su `id` va en `TELAR_ID`.
-2. En los dos firmwares (`config.h` y `config_nivel2.h`): `DEVICE_KEY` igual a
+2. En el firmware (`esp32/control_trama_esp32/config.h`): `DEVICE_KEY` igual a
    `ESP32_DEVICE_KEY` de Render, y `TELAR_ID` igual al id del paso anterior.
-3. Cargar los firmwares. En la web, el indicador tiene que dejar de decir "Sin datos del ESP32".
+3. Cargar el firmware. En la web, el indicador tiene que dejar de decir "Sin datos del ESP32".

@@ -1,7 +1,7 @@
 // ============================================================================
 //  Prueba de mesa de UN relé LCA110 (Bloque D), sin red, sin backend y sin telar
 //
-//  Sirve para comprobar el relé y su cableado antes de usar el firmware del Nivel 2.
+//  Sirve para comprobar el relé y su cableado antes de usar el firmware con NIVEL2_INSTALADO en true.
 //  No necesita WiFi, la clave del dispositivo ni la aplicación web: solo el ESP32 por USB.
 //
 //  Conexión (la misma de un canal definitivo, ver Guia_Conexion_Reles_LCA110.docx):
@@ -28,12 +28,12 @@
 //
 //  Esta prueba solo dice si el relé conduce cuando se le pide. Si en la máquina va en serie
 //  o en paralelo se decide con la medición del lector (sección 5 de la guía) y se configura
-//  en CANAL_ACTIVO_EN_ALTO de config_nivel2.h; acá no influye.
+//  en CANAL_ACTIVO_EN_ALTO de control_trama_esp32/config.h; acá no influye.
 // ============================================================================
 
 static const int PIN_CANAL = 18;                      // canal 1 (columna 1 del dibujo)
 static const unsigned long PASADA_MS = 200;           // 300 pasadas por minuto
-static const unsigned long PORCENTAJE_SELECCION = 50; // igual que config_nivel2.h
+static const unsigned long PORCENTAJE_SELECCION = 50; // igual que control_trama_esp32/config.h
 static const int REPETICIONES = 25;                   // pasadas de cada fila
 
 enum Modo { PATRON, FIJO_CERRADO, FIJO_ABIERTO };

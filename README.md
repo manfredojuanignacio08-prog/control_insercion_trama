@@ -15,11 +15,12 @@ web pensada para el celular**; un **backend** guarda y coordina todo en una
 backend/          El servidor y la aplicación web
   public/         La aplicación que ve el operario
   src/            Rutas, controladores y utilidades
-  src/nivel2/     Endpoints del Nivel 2 (en desarrollo, sin montar)
+  src/nivel2/     Endpoints del Nivel 2 (montados; los usa el firmware con el sensor)
 esp32/            El firmware
-  control_trama_esp32/   Nivel 1: el que hoy corre en la máquina
-  nivel2/                Nivel 2: en desarrollo. Reemplaza al del Nivel 1 en la
-                         misma placa (un solo ESP32) y hace lo de los dos niveles
+  control_trama_esp32/   El único programa de la placa (un solo ESP32). Con
+                         NIVEL2_INSTALADO en false (hoy) maneja la botonera;
+                         en true suma el sensor y la selección del dibujo
+  pruebas/               Prueba de mesa de un relé LCA110, sin red
   documentacion/         Recomendaciones eléctricas, checklist y niveles
   verificacion/          Scripts que comprueban la lógica sin hardware
 diagramas/        Los diagramas del proyecto, en SVG y PNG
@@ -144,14 +145,14 @@ mejoras eléctricas en `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md`.
 - `Dockerfile`, `docker-compose.yml`, `ecosystem.config.cjs`, despliegue.
 
 ### `esp32/`
-- `esp32/control_trama_esp32/control_trama_esp32.ino`, firmware gateway (Nivel 1):
+- `esp32/control_trama_esp32/control_trama_esp32.ino`, el único firmware de la placa:
   sondeo del estado del telar, pulsos de relé Marcha/Pausa/Retroceder, sensado de
-  la botonera, arranque seguro, watchdog, fail-safe sin red y reporte de errores.
-- `esp32/control_trama_esp32/config.h`, configuración (Wi-Fi, clave del
-  dispositivo, URL del backend, id del telar, polaridad del relé). En el
-  repositorio van textos de ejemplo: los datos reales no se suben.
-- `esp32/nivel2/`, firmware del Nivel 2 (sensor de pasada y selección del dibujo).
-- `esp32/verificacion/`, simulaciones y pruebas en la PC de la lógica de los firmwares.
+  la botonera, arranque seguro, watchdog, fail-safe sin red y reporte de errores; con
+  `NIVEL2_INSTALADO` en `true`, además el conteo de pasadas y la selección del dibujo.
+- `esp32/control_trama_esp32/config.h`, configuración (qué está instalado, Wi-Fi, clave
+  del dispositivo, URL del backend, id del telar, polaridad de los relés y parámetros del
+  Nivel 2). En el repositorio van textos de ejemplo: los datos reales no se suben.
+- `esp32/verificacion/`, simulaciones y pruebas en la PC de la lógica del firmware.
 - `esp32/documentacion/`, recomendaciones eléctricas, lista de validación y
   descripción de los niveles de control.
 
@@ -191,14 +192,13 @@ la botonera del telar.
 
 ## Nivel 2, en desarrollo
 
-El código del Nivel 2 (conteo real de pasadas y selección del dibujo) está en
-desarrollo y se mantiene **separado** del que hoy corre en la máquina. El gabinete tiene
-**un solo ESP32**: hoy se le carga el firmware del Nivel 1, y cuando se instalen los
-Bloques C y D se le carga el del Nivel 2, que hace también todo lo del Nivel 1.
+El conteo real de pasadas y la selección del dibujo están en desarrollo. El gabinete tiene
+**un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`): hoy se carga con
+`NIVEL2_INSTALADO` en `false` y solo maneja la botonera; cuando se instalen los Bloques C y D
+se pone en `true` y se vuelve a cargar el mismo programa.
 
-- `esp32/nivel2/`, firmware (`nivel2.ino`), con su propio archivo de configuración
-- `backend/src/nivel2/`, endpoints y migración de base de datos
+- `esp32/control_trama_esp32/`, el firmware (su README explica el Nivel 2)
+- `backend/src/nivel2/`, endpoints que usa el firmware con el sensor
 - `esp32/verificacion/sim_nivel2_firmware.py`, verificación de la lógica
 
-Ninguna de esas piezas está montada en producción. Cada carpeta tiene su README
-con el detalle de lo que falta antes de poder usarla.
+Cada carpeta tiene su README con el detalle de lo que falta antes de usar el Nivel 2.

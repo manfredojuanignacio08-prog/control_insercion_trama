@@ -1,13 +1,22 @@
-# Nivel 2, código en desarrollo
+# Firmware del ESP32 del telar (un solo programa)
 
-Este directorio contiene el firmware del **Nivel 2**: el conteo real de pasadas
-(Bloque C) y la selección del dibujo (Bloque D).
+Esta carpeta es **el único firmware** de la placa. Se abre `control_trama_esp32.ino` en el Arduino
+IDE (los demás archivos aparecen como pestañas) y se sube tal cual.
 
-## Una sola placa
+## Qué hace, según lo que esté armado
 
-El gabinete tiene **un único ESP32**. Por eso este firmware hace también todo lo del Nivel 1:
-los tres relés en paralelo con Marcha, Pausa y Retroceder y el sensado de esos botones (Bloque A),
-con la misma lógica que `esp32/control_trama_esp32/`. Los pines no se pisan:
+El gabinete tiene **un único ESP32**. En `config.h`, `NIVEL2_INSTALADO` dice qué está conectado:
+
+- **`false` (hoy):** solo el **Bloque A**. Los tres relés en paralelo con Marcha, Pausa y
+  Retroceder, y el sensado de esos botones para saber cuándo alguien los usa a mano. La consulta al
+  backend lleva `?origen=esp32`, que mantiene el "ESP32 conectado" de la web; las pasadas las estima
+  la web por tiempo.
+- **`true`:** además el **Bloque C** (conteo real de pasadas con el sensor inductivo) y el
+  **Bloque D** (selección del dibujo con los relés LCA110). La consulta pasa a `?origen=nivel2`, que
+  además es la señal de vida del sensor: la web deja de estimar y muestra el conteo del sensor. Por
+  eso se pone en `true` recién con el sensor conectado; sin él, el conteo quedaría en cero.
+
+Los pines no se pisan:
 
 | Función | Pines |
 |---|---|
@@ -17,14 +26,12 @@ con la misma lógica que `esp32/control_trama_esp32/`. Los pines no se pisan:
 | Canales de selección, relés LCA110 (Bloque D) | 18, 19, 21, 22 |
 | LED de la placa (conectado a la red) | 2 |
 
-Qué se carga en la placa según lo que esté armado:
+Con el Nivel 2 y un dibujo nuevo, la placa pulsa Marcha recién cuando tiene el dibujo cargado, así la
+máquina no arranca tejiendo sin la selección.
 
-- **Solo el Bloque A** (hoy): `esp32/control_trama_esp32/control_trama_esp32.ino`, con su `config.h`.
-- **Bloques A, C y D**: `esp32/nivel2/nivel2.ino`, con `config_nivel2.h`. Reemplaza al anterior.
-
-Con dibujo nuevo, la placa pulsa Marcha recién cuando tiene el dibujo cargado, así la máquina no
-arranca tejiendo sin la selección. Su consulta al backend (`?origen=nivel2`) mantiene a la vez el
-"ESP32 conectado" de la web y la señal de vida del sensor.
+Antes había dos programas (`control_trama_esp32` para el Bloque A y `nivel2` para todo). Se
+unificaron en este: el del Nivel 2 ya hacía todo lo del Bloque A con la misma lógica, y ahora el
+interruptor `NIVEL2_INSTALADO` reemplaza a cambiar de programa.
 
 ## Sobre el telar de destino
 
@@ -109,36 +116,31 @@ Sin ese pulso, el nodo no tiene reloj: no sabe cuándo cambiar de fila y el dibu
 no avanza. Por eso el orden de instalación es Bloque C primero, Bloque D después,
 aunque en la documentación aparezcan como bloques separados.
 
-## Estado
+## Estado del Nivel 2
 
-**No está instalado en la máquina.** Es código de desarrollo, escrito para poder
-revisarlo y probarlo en banco antes de que existan las mediciones que faltan.
-
-El firmware que hoy corre en el telar es el del Nivel 1, que está en
-`esp32/control_trama_esp32/`. No se modifica mientras se desarrolla este: cuando se
-instalen los Bloques C y D, este firmware lo reemplaza en la misma placa (ver «Una sola placa»).
+**El Nivel 2 no está instalado en la máquina.** Su parte del código está escrita para poder
+revisarla y probarla en banco antes de que existan las mediciones que faltan. Hasta entonces la
+placa corre este mismo programa con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
 
 ## Qué falta antes de poder usarlo
 
 | Medición | Para qué |
 |---|---|
-| Tensión rectificada de los 24 V AC del telar | Elegir la resistencia del canal del sensor |
+| Tensión continua que entrega el telar al sensor (12 a 14 V), con la máquina en marcha | Confirmar la resistencia del canal del sensor (1,2 kΩ; con 24 V sería de 2,2 kΩ) |
 | Relación de giro del eje elegido | Confirmado el 10/09/2026: una vuelta por pasada |
 | Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado |
 | Si el agujero del papel abre o cierra el circuito | Definir si el relé va en serie o en paralelo, y el valor de `CANAL_ACTIVO_EN_ALTO` |
 | Sincronización entre el pulso del sensor y la lectura del telar | Ajustar `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba |
 | Qué parte de cada pasada dura la señal del lector con la cinta | Ajustar `PORCENTAJE_SELECCION` (hoy 50 %): la selección se activa y se suelta en cada pasada, como el papel |
 
-Hasta tener esos datos, los valores marcados como `A_CONFIRMAR` en `config_nivel2.h`
+Hasta tener esos datos, los valores marcados como `A_CONFIRMAR` en `config.h`
 son estimaciones y no deben darse por buenos.
 
 ## Archivos
 
-- `nivel2.ino`, el programa principal. Se llama igual que la carpeta porque el Arduino IDE lo exige:
-  antes se llamaba `nivel2_seleccion.ino`, y al abrirlo el IDE ofrecía moverlo solo a otra carpeta,
-  sin los `.h`, y no compilaba. Se abre `esp32/nivel2/nivel2.ino` y los demás archivos aparecen
-  como pestañas.
-- `config_nivel2.h`, parámetros y credenciales, en un solo lugar
+- `control_trama_esp32.ino`, el programa principal. Se llama igual que la carpeta porque el Arduino
+  IDE lo exige: si no, al abrirlo ofrece moverlo solo a otra carpeta, sin los `.h`, y no compila.
+- `config.h`, parámetros y credenciales, en un solo lugar (incluido `NIVEL2_INSTALADO`)
 - `sensor_pasada.h`, el conteo de pasadas (Bloque C)
 - `seleccion_dibujo.h`, el comando de los cuatro canales (Bloque D)
 - `posicion_dibujo.h`, la posición dentro del dibujo (fila y pasadas que le faltan), el mismo
@@ -151,8 +153,8 @@ a la red. Toda la red (consultas, descarga del dibujo, reporte de pasadas, aviso
 parada) corre en `tareaRed()` (núcleo 0). Antes todo estaba en `loop()` y una consulta
 lenta dejaba pasar hasta 30 pasadas con la fila anterior congelada.
 
-Mismas librerías que el Nivel 1: core ESP32 3.x y ArduinoJson 7.x. La URL del backend,
-el `TELAR_ID` (8) y la clave `DEVICE_KEY` son los mismos que en el Nivel 1.
+Librerías: core ESP32 3.x y ArduinoJson 7.x. Los pulsos de los relés del Bloque A también corren
+en el núcleo 0, así un pulso de 300 ms no frena el conteo.
 
 ## Retomar tras un corte de luz o un traslado
 
@@ -166,8 +168,9 @@ como mucho ~5 pasadas (la posición queda marcada como incierta para que el oper
 Si con el telar en "tejiendo" no llega ningún pulso durante `TIMEOUT_SIN_PULSOS_MS` (3 s;
 en el arranque rige `GRACIA_ARRANQUE_MS`, 15 s, hasta el primer pulso), el firmware apaga
 los canales y avisa al backend (`evento-fisico` con `sin_senal`), que pasa el telar a
-"pausado" y deja un registro en el log de errores. El Nivel 1 ve el cambio de estado y
-pulsa Pausa: ante una parada inesperada, el sistema termina con la máquina detenida.
+"pausado" y deja un registro en el log de errores. En la consulta siguiente el Bloque A ve el
+cambio de estado y pulsa Pausa: ante una parada inesperada, el sistema termina con la máquina
+detenida.
 
 ## Cómo probarlo sin el telar
 
@@ -177,9 +180,9 @@ activar, a 300 por minuto: el LED de la salida parpadea 5 veces por segundo dura
 apagado 5 s. Por el monitor serie, `1` / `0` dejan el relé cerrado o abierto fijo para medir con el
 multímetro entre las patas 4 y 6, y `p` vuelve al patrón.
 
-**Después, el firmware de este nivel:**
+**Después, el firmware completo:**
 
-`config_nivel2.h` tiene una constante `MODO_BANCO`. Con ella en `true`, el
+`config.h` tiene una constante `MODO_BANCO` (necesita `NIVEL2_INSTALADO` en `true`). Con ella en `true`, el
 programa no espera pulsos reales del sensor: los genera él mismo a 5 por segundo
 mientras el telar está "tejiendo" (como la máquina, que en pausa no da pulsos), que es el
 ritmo del telar a 300 pasadas por minuto. Necesita la red y el backend como en la máquina:
@@ -188,6 +191,7 @@ del Bloque A, ▶ también pulsa el relé de Marcha: en el banco, los relés no 
 conectados a la botonera del telar. Sirve para verificar la
 lógica de avance y el comando de las salidas con un LED en cada canal.
 
-**Por defecto está en `false`, y tiene que volver a `false` antes de instalar**: con el
+**Por defecto está en `false`, y tiene que volver a `false` antes de instalar** (y
+`NIVEL2_INSTALADO` también, si el sensor todavía no está conectado): con el
 modo banco activo el firmware ignora el sensor real y aplica las filas al ritmo de un
 reloj interno, desfasado del telar.

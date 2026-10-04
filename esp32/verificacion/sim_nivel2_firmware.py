@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
-Verificación de la lógica del firmware del Nivel 2.
+Verificación de la lógica del Nivel 2 del firmware.
 
-Reproduce en Python lo que hace nivel2.ino, para comprobar que el
+Reproduce en Python lo que hace el firmware (control_trama_esp32.ino) con NIVEL2_INSTALADO
+en true, para comprobar que el
 avance de filas y el comando de los canales son correctos antes de subir el
 código al microcontrolador.
 
