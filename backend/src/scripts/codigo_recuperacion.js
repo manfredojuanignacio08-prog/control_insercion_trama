@@ -10,6 +10,8 @@
 //  Uso:
 //    node src/scripts/codigo_recuperacion.js <usuario>
 //    node src/scripts/codigo_recuperacion.js <usuario> --rotar
+//    npm run codigo -- <usuario> --rotar     (con npm, los dos guiones hacen falta: sin
+//                                             ellos npm se queda con --rotar y no se rota)
 //
 //  Con --rotar se genera un código NUEVO (el anterior deja de funcionar).
 //  Úsalo si el código se filtró o si el cifrado no se puede leer porque
@@ -42,12 +44,20 @@ function cifrarCodigo(codigo) {
   return `gcm1.${iv.toString('base64url')}.${enc.toString('base64url')}.${c.getAuthTag().toString('base64url')}`;
 }
 
+// Devuelve el código; null si es texto plano legado; undefined si está cifrado con OTRA clave
+// (se cambió RECOVERY_SECRET). Antes lanzaba un error en ese caso, y como se llamaba antes de
+// mirar --rotar, justo el arreglo que indica la documentación ("regenerarlos con --rotar")
+// terminaba en "Ocurrió un error".
 function descifrarCodigo(guardado) {
   const partes = String(guardado || '').split('.');
   if (partes.length !== 4 || partes[0] !== 'gcm1') return null; // legado: texto plano
-  const d = crypto.createDecipheriv('aes-256-gcm', claveRecovery(), Buffer.from(partes[1], 'base64url'));
-  d.setAuthTag(Buffer.from(partes[3], 'base64url'));
-  return Buffer.concat([d.update(Buffer.from(partes[2], 'base64url')), d.final()]).toString('utf8');
+  try {
+    const d = crypto.createDecipheriv('aes-256-gcm', claveRecovery(), Buffer.from(partes[1], 'base64url'));
+    d.setAuthTag(Buffer.from(partes[3], 'base64url'));
+    return Buffer.concat([d.update(Buffer.from(partes[2], 'base64url')), d.final()]).toString('utf8');
+  } catch {
+    return undefined;
+  }
 }
 
 function generarCodigo(prefijo) {
@@ -81,6 +91,13 @@ async function main() {
   let creado = false;
   let rotado = process.argv.includes('--rotar');
   const dec = user.recovery_code ? descifrarCodigo(user.recovery_code) : null;
+  if (dec === undefined && !rotado) {
+    console.error('\n  El código guardado de este usuario está cifrado con otra RECOVERY_SECRET (se cambió la clave),');
+    console.error('  así que no se puede mostrar. Para darle uno nuevo:');
+    console.error(`    node src/scripts/codigo_recuperacion.js ${usuario} --rotar\n`);
+    await pool.end();
+    process.exit(1);
+  }
   if (typeof dec === 'string' && dec && !rotado) {
     codigo = dec;
   } else if (dec === null && user.recovery_code && !rotado) {

@@ -102,7 +102,7 @@ en vez de la del proxy.
 | `NODE_ENV=production` | Logs en formato `combined`, optimizaciones de Express |
 | `PGSSL=true` | **Obligatoria con Neon.** Activa la conexión cifrada a la base; el `sslmode` de la URL no alcanza, porque el código fija el cifrado según esta variable |
 | `SESSION_SECRET` | **Obligatoria.** Firma las cookies de sesión (mínimo 32 caracteres). En producción sin ella el servidor no arranca; en desarrollo se usa clave temporal y las sesiones se pierden en cada reinicio |
-| `RECOVERY_SECRET` | **Obligatoria en producción.** Cifra los códigos de recuperación en la base (mínimo 16 caracteres). Si cambia, los códigos viejos dejan de leerse: rotarlos con `npm run codigo <usuario> --rotar` |
+| `RECOVERY_SECRET` | **Obligatoria en producción.** Cifra los códigos de recuperación en la base (mínimo 16 caracteres). Si cambia, los códigos viejos dejan de leerse: rotarlos con `npm run codigo -- <usuario> --rotar` (los dos guiones hacen falta: sin ellos npm se queda con `--rotar` y el código no se rota) |
 | `ESP32_DEVICE_KEY` | **Obligatoria.** Clave que mandan los ESP32 en `X-Device-Key` (la misma en `DEVICE_KEY` de los dos `config`). Sin ella los ESP32 reciben 401 |
 | `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | Dominio real para el login por huella (requiere HTTPS) |
 | `REGISTRO_LIBRE_MAX` | Usuarios que se registran libres (defecto 3); después hace falta invitación |

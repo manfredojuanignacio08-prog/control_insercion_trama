@@ -49,6 +49,15 @@ export function errorHandler(err, req, res, next) {
     });
   }
 
+  // Dos pedidos se esperaron mutuamente (40P01) o chocaron (40001) y Postgres canceló uno.
+  // Los controladores toman los bloqueos en el mismo orden para que no pase, pero si pasa,
+  // reintentar enseguida funciona: se responde 503 "probá de nuevo" y no un 500.
+  if (err.code === '40P01' || err.code === '40001') {
+    return res.status(503).json({
+      error: 'Otra operación sobre el telar se cruzó con esta. Probá de nuevo.',
+    });
+  }
+
   // La transacción quedó "a mitad de camino" demasiado tiempo y Postgres
   // la cerró sola (idle_in_transaction_session_timeout).
   if (err.code === '25P03') {
