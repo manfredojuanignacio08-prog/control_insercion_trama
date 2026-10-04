@@ -4,6 +4,13 @@ Este documento aclara **qué parte del telar controla el sistema hoy** y qué
 quedaría como evolución futura. Es importante para entender el alcance real
 del proyecto y para explicarlo bien en la presentación.
 
+> **Estado actual (relevamiento confirmado).** El telar de implementación es el Vamatex C 201:
+> la secuencia la lee un **dobby con cinta de papel perforada** y **cuatro bobinas de selección**
+> (no un Jacquard por tarjetas, como se suponía al principio; las secciones de abajo conservan ese
+> análisis inicial). El Nivel 2 dejó de ser "evolución futura": está en desarrollo por la vía de
+> control por marcos del final de este documento, con un sensor inductivo y cuatro relés LCA110
+> sobre los lectores ópticos. Todo corre en **un solo ESP32** (`esp32/nivel2/`).
+
 ## El telar tiene, en la práctica, dos "máquinas"
 
 En este tipo de telar (tejido plano con mecanismo **Jacquard**) conviven dos
@@ -11,7 +18,7 @@ funciones bien separadas:
 
 1. **La máquina de accionamiento.** Es la que mueve el telar: arranca, para,
    avanza y retrocede el tejido. Se opera con la botonera física
-   (Marcha / Pausa).
+   (Marcha / Pausa / Retroceder).
 
 2. **La máquina lectora de secuencia (el Jacquard con tarjetas perforadas).**
    Es la que "lee" el dibujo y le dicta al telar, pasada por pasada, qué hacer
@@ -44,7 +51,7 @@ resto de esta documentación.
 **Este nivel es el alcance actual del proyecto y no tiene inconvenientes de
 fondo.**
 
-### 🟡 Nivel 2, Dictar la secuencia del patrón (evolución futura)
+### 🟡 Nivel 2, Dictar la secuencia del patrón (en desarrollo: ver el final)
 
 Reemplazar **por completo** a la máquina lectora significa que el sistema no
 solo dé Play, sino que le entregue al telar la **secuencia completa del
@@ -88,10 +95,10 @@ ocupando el lugar de las tarjetas del Jacquard, es la evolución que sigue.**
 Dado que los tejidos de esta planta son **mayormente patrones repetitivos**
 (tipo cortina), el Nivel 2 es alcanzable como prototipo real mediante
 **control por marcos (dobby)** en lugar de control hilo por hilo. Esto reduce
-el hardware de "cientos de electroimanes" a solo **8 actuadores** (máximo
-confirmado del telar tras el relevamiento del 19/08/26), algo que
-un ESP32 maneja sin problema.
+el hardware de "cientos de electroimanes" a las **cuatro bobinas de selección** que el
+telar ya tiene (confirmado por el dueño el 19/09/26; un relevamiento anterior había estimado
+hasta 8), algo que el mismo ESP32 del Nivel 1 maneja sin problema.
 
 El desarrollo completo de esta solución -cómo funciona, el hardware, y cómo se
 conecta con lo que ya está hecho- está en:
-**`NIVEL2_CONTROL_POR_MARCOS.md`** (en esta misma carpeta).
+**`NIVEL2_CONTROL_POR_MARCOS.md`** (en esta misma carpeta), y el firmware en `esp32/nivel2/`.

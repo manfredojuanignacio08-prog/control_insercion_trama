@@ -782,3 +782,12 @@ con 3,3 V y JD-VCC con 5 V.
 
 Las pruebas de la integración contra PostgreSQL se ampliaron con estos casos (incluida la pausa larga con el
 nodo conectado) y se verificó que la versión anterior las falla y la corregida las pasa.
+
+### Revisión con un solo ESP32
+
+| Problema | Corrección |
+|---|---|
+| La espera del WiFi (los dos firmwares) calculaba el límite sumando a `millis()`: cuando el contador da la vuelta (a los 49 días encendido) la espera terminaba al instante o no terminaba. | Se mide el tiempo transcurrido con una resta. |
+| `RECOMENDACIONES_ELECTRICAS.md` y `NIVEL2_CONTROL_POR_MARCOS.md` recomendaban para el Nivel 2 un SSR de alterna o MOC3041 + BT136 sobre las bobinas, y decían que "los MOSFET no sirven", cuando el proyecto usa el LCA110 (salida MOSFET bidireccional) sobre la señal del lector; la lista de compras pedía 6. | Reescritas según el diseño real: cuatro LCA110, por qué sirven y qué no. |
+| `NIVELES_DE_CONTROL.md` y `NIVEL2_CONTROL_POR_MARCOS.md` seguían hablando de un Jacquard por tarjetas, de 8 actuadores y de 3 bobinas, y del Nivel 2 como "fuera de alcance". | Estado actual al principio: dobby con cinta de papel, cuatro bobinas, Nivel 2 en desarrollo en la misma placa. |
+| `esp32/README.md`: sondeo de `/api/telares/1`, rutas viejas de los documentos, el sensado descripto como "botones Avanzar e Impulso sin relé", y "no conectar el USB con los 24 V" (la placa se alimenta de 220 V con la HLK-5M05). | Corregido, con la sección «Una sola placa». |

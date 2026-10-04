@@ -11,10 +11,15 @@ y **Retroceder** (GPIO 27 → IN3). Un pulso breve del relé equivale a una
 pulsación manual, y la botonera física sigue funcionando exactamente
 igual.
 
-**Idea clave:** el ESP32 sondea `GET /api/telares/1`, el mismo endpoint
-que consumen la web y la app. Cuando alguien asigna un patrón desde la
-web/app (estado pasa a `tejiendo`), el ESP32 pulsa Marcha en la máquina
-real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
+**Idea clave:** el ESP32 sondea `GET /api/telares/{TELAR_ID}` (8), el mismo endpoint
+que consume la web. Cuando alguien asigna un patrón desde la
+web (estado pasa a `tejiendo`), el ESP32 pulsa Marcha en la máquina
+real; cuando alguien pausa, pulsa Pausa.
+
+**Una sola placa.** El gabinete tiene un único ESP32. Hoy, con solo el Bloque A armado, se le
+carga este firmware (`control_trama_esp32/`). Cuando se instalen los Bloques C y D (sensor de
+pasada y relés LCA110), se le carga el de `nivel2/nivel2.ino`, que hace todo lo de este más el
+Nivel 2 (ver `nivel2/README.md`). Los dos usan los mismos pines y la misma configuración de red.
 
 ---
 
@@ -45,13 +50,13 @@ real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
   módulos activo-bajo (los más comunes) o activo-alto.
 
 > Las recomendaciones sobre la parte **eléctrica** (pull-ups en IN1/IN2,
-> fusible, convivencia USB+24V, cableado, etc.) están en
-> `RECOMENDACIONES_ELECTRICAS.md`, en esta misma carpeta.
+> fusible, convivencia del USB con la fuente, cableado, etc.) están en
+> `documentacion/RECOMENDACIONES_ELECTRICAS.md`.
 
 ## 3. Conexión (resumen del documento eléctrico del equipo)
 
-> 📐 **Diagrama visual completo**: `diagrama_conexion_electrica.svg` (y su
-> versión `.png` para pegar en Word/PowerPoint), en esta misma carpeta.
+> 📐 **Diagrama visual completo**: `diagramas/hardware/diagrama_conexion_electrica.svg` (y su
+> versión `.png` para pegar en Word/PowerPoint).
 > Muestra las 4 etapas con las mejoras recomendadas marcadas en ámbar.
 
 | Etapa | Conexión |
@@ -64,16 +69,14 @@ real; cuando alguien detiene, pulsa Pausa. **Cero cambios en el backend.**
 
 ### Sensado de los botones del telar (solo lectura)
 
-Estos dos botones **no** tienen relé: siguen siendo 100% manuales. El ESP32
-únicamente los "escucha", con un optoacoplador PC817 por canal que aísla el
-24V AC de la botonera del micro.
-
-Hace falta porque el sensor de pasada no distingue en qué sentido se movió
-el telar: si el operario usa Avanzar o Impulso a mano y el ESP32 no se
-entera, el conteo de posición se desincroniza en silencio. Al detectar el
-flanco, el firmware avisa al backend (`POST /evento-fisico`) y la web marca
-la posición como incierta hasta que alguien la confirme
+Los mismos tres botones que tienen relé (Marcha, Pausa y Retroceder) se **escuchan** además,
+con un optoacoplador PC817 por canal que aísla los 24 V AC de la botonera del micro. Si un
+operario los aprieta a mano, el ESP32 avisa al backend (`POST /evento-fisico`) y la web refleja
+lo que pasa en la máquina: arrancada, pausada o una pasada atrás. El firmware descarta el eco de
+sus propios pulsos (el relé cierra el mismo circuito que el botón). Si alguien arranca o retrocede
+a mano sin un trabajo abierto, la web marca la posición como incierta hasta que se confirme
 (`POST /confirmar-posicion`).
+
 | Filtrado | Capacitores de 100 nF de desacople junto al ESP32 y al módulo de relés |
 
 ## 4. Cómo compilar y subir
@@ -90,9 +93,9 @@ la posición como incierta hasta que alguien la confirme
 4. Placa: *ESP32 Dev Module* → puerto → **Upload**.
 5. Monitor serie a **115200 baudios** para ver conexión, sondeos y pulsos.
 
-> ⚠️ **No conectar el USB con los 24V puestos** sin la protección del
-> punto 2 de `RECOMENDACIONES_ELECTRICAS.md`. Para programar: desconectar
-> la entrada de 24V primero.
+> ⚠️ **No conectar el USB con la fuente HLK-5M05 encendida** sin la protección del
+> punto 2 de `documentacion/RECOMENDACIONES_ELECTRICAS.md`. Para programar: desenchufar
+> primero la fuente (220 V).
 
 ## 5. Cómo probarlo sin conectar el telar todavía
 
@@ -108,15 +111,14 @@ la posición como incierta hasta que alguien la confirme
 ## 6. Alcance del control: dos niveles (importante)
 
 El telar tiene, en la práctica, dos "máquinas": la de **accionamiento**
-(arranca/para) y la **lectora de secuencia** (el Jacquard con tarjetas
-perforadas, que dicta el dibujo pasada por pasada).
+(arranca/para) y la **lectora de secuencia** (el dobby con cinta de papel
+perforada, que dicta el dibujo pasada por pasada).
 
 - **Nivel 1, Arranque y parada (lo que hace el ESP32 hoy):** darle Play y
   Pausa al telar con los relés. Resuelto, sin inconvenientes de fondo.
-- **Nivel 2, Dictar la secuencia completa (evolución futura):** reemplazar
-  las tarjetas perforadas del Jacquard, lo que implica un retrofit del
-  mecanismo. Fuera del alcance de esta etapa.
+- **Nivel 2, Dictar el dibujo (en desarrollo):** contar las pasadas con un sensor inductivo
+  y reemplazar la cinta de papel perforada del dobby con cuatro relés LCA110 sobre los lectores
+  ópticos. El firmware está en `nivel2/` y corre en la misma placa.
 
 El detalle completo de esta distinción -clave para entender el alcance del
-proyecto y para la presentación- está en **`NIVELES_DE_CONTROL.md`**, en
-esta misma carpeta.
+proyecto y para la presentación- está en **`documentacion/NIVELES_DE_CONTROL.md`**.

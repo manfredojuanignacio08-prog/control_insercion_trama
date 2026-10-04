@@ -326,8 +326,8 @@ static bool intentarRed(const char* ssid, const char* pass) {
   WiFi.disconnect(true);
   delay(100);
   WiFi.begin(ssid, pass);
-  const unsigned long limite = millis() + (unsigned long)WIFI_ESPERA_SEG * 1000UL;
-  while (WiFi.status() != WL_CONNECTED && millis() < limite) {
+  const unsigned long inicio = millis();   // resta, no suma: sigue bien cuando millis() da la vuelta (49 días)
+  while (WiFi.status() != WL_CONNECTED && millis() - inicio < (unsigned long)WIFI_ESPERA_SEG * 1000UL) {
     delay(400);
     Serial.print(".");
     esp_task_wdt_reset();  // que el watchdog no nos reinicie mientras conecta

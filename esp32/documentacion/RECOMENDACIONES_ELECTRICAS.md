@@ -45,9 +45,10 @@ no un detalle.
    firmware **solo memoriza** el estado del backend sin pulsar nada, hasta
    detectar un cambio real.
 
-**Elección de pines (bien elegidos):** los seis pines en uso -GPIO 25, 26 y
-27 para los relés (Marcha, Pausa, Retroceder) y GPIO 32, 33 y 34 para el
-sensado de los tres botones- **no** son pines de arranque del ESP32 (los "strapping
+**Elección de pines (bien elegidos):** los pines en uso -GPIO 25, 26 y
+27 para los relés (Marcha, Pausa, Retroceder), GPIO 32, 33 y 34 para el
+sensado de los tres botones y, con el Nivel 2 en la misma placa, GPIO 35 para el
+sensor de pasada y 18, 19, 21 y 22 para los relés LCA110- **no** son pines de arranque del ESP32 (los "strapping
 pins" 0, 2, 5, 12 y 15 cambian de nivel solos durante el boot). Mantenerlos;
 no mover ni los relés ni las entradas de sensado a un pin de arranque: un
 relé conectado ahí puede dar un pulso fantasma al encender la placa.
@@ -124,27 +125,22 @@ usar para comandarlas y qué no.
   papel interrumpa el haz, lo hace un interruptor electrónico. El sistema
   conmuta entonces la señal del lector, no la corriente de la bobina, y las
   plaquetas del telar quedan intactas.
-- **Relé de estado sólido (SSR), uno por lector óptico: cuatro en total (una por cada una de las cuatro bobinas de selección del telar).** Un relé mecánico común no
-  sirve para esta tarea: el telar hace 5 pasadas por segundo y cada bobina
-  puede activarse una vez por pasada, lo que da hasta 180.000 conmutaciones en
-  una jornada de 10 horas. La vida típica de un relé mecánico con carga ronda las
-  100.000, así que se gastaría en una jornada de trabajo. Los relés mecánicos del Bloque A
-  quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas
-  pocas veces por día.
-- Sirve un **módulo SSR** con entrada de 3-32 V DC (lo que entrega el ESP32) y
-  salida para carga de alterna, o el circuito **MOC3041 + BT136**, que además
-  conmuta en el cruce por cero y genera menos ruido.
-- **Los MOSFET no sirven acá.** Un IRLZ44N conduce en un solo sentido y su
-  diodo interno deja pasar el otro semiciclo: la bobina quedaría siempre
-  parcialmente energizada. Los MOSFET y los diodos flyback valen para cargas de
-  continua, que no es el caso de este telar.
-- **Un optoacoplador común tampoco sirve.** Un PC817 tiene salida de
-  fototransistor, que conduce en un solo sentido: con corriente alterna deja
-  pasar medio ciclo. Para alterna hace falta un optotriac (MOC3041) o un SSR,
-  que internamente ya lleva el optoacoplador más una etapa de triac.
-- **Antes de comprar hay que medir** la tensión y la corriente en la salida de
-  un lector óptico, que definen el SSR, y la velocidad real de la máquina. Como
-  referencia, los telares de rapier de esta generación trabajan 300 pasadas por minuto.
+- **Relé de estado sólido LCA110 (OptoMOS), uno por lector óptico: cuatro en total**, uno por
+  cada bobina de selección. Un relé mecánico común no sirve: el telar hace 5 pasadas por segundo y
+  cada canal se activa y se suelta en cada pasada, hasta 180.000 conmutaciones en una jornada de 10
+  horas, y la vida típica de un relé mecánico con carga ronda las 100.000. Los relés mecánicos del
+  Bloque A quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas pocas veces
+  por día.
+- **Por qué el LCA110.** Como va sobre la señal del lector (unos pocos mA, menos de 24 V) y no sobre
+  la bobina, no hace falta un SSR de potencia. Su salida son dos MOSFET en antiserie, así que
+  conduce en los dos sentidos: sirve con continua y con alterna (hasta 350 V y 120 mA). Se comanda
+  directo desde un pin del ESP32 (330 Ω en serie, unos 6 mA) y aísla los dos lados (3.750 V).
+- **Lo que no sirve.** Un MOSFET suelto (por ejemplo un IRLZ44N) conduce en un solo sentido y su
+  diodo interno deja pasar el otro semiciclo; un optoacoplador común (PC817) también conduce en un
+  solo sentido. Con una señal de alterna, cualquiera de los dos dejaría pasar medio ciclo.
+- **Antes de conectarlo hay que medir** la tensión y la corriente en la salida de un lector óptico,
+  y si el agujero abre o cierra el circuito: eso decide si el relé va en paralelo o en serie
+  (`Guia_Conexion_Reles_LCA110.docx`, sección 5).
 
 ## 7. Protecciones que ya quedaron aplicadas en el firmware
 
@@ -166,7 +162,7 @@ relés):
 | Ítem | Cantidad | Para qué |
 |---|---|---|
 | Resistencia 10 kΩ | 6 | Polarización de IN1/IN2/IN3 (3 relés) y de los 3 canales de sensado (punto 1). La del canal de Retroceder va a GND, no a 3V3. |
-| Relé de estado sólido (SSR) o MOC3041 + BT136 | 6 | Comandan las bobinas de selección de 24 V AC en el Nivel 2 (punto 6). Un relé mecánico se gastaría en un turno por la frecuencia de conmutación. |
+| Relé LCA110 (OptoMOS, DIP-6) + 330 Ω + 10 kΩ | 4 de cada uno (+1 LCA110 de repuesto) | Cortan la señal de cada lector óptico en el Nivel 2 (punto 6). Un relé mecánico se gastaría en una jornada por la frecuencia de conmutación. |
 | Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
 | Optoacoplador PC817 + puente DB157 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |
 | Capacitor electrolítico 22–47 µF 50 V | 3 | En paralelo a la salida del puente, antes de la resistencia. Aplana el AC rectificado: sin él el LED del optoacoplador pulsa 100 veces por segundo y el firmware lee varias pulsaciones donde hubo una sola. Es crítico en el canal de Retroceder, donde cada evento repetido retrocede una pasada de más. TIENE POLARIDAD. |
