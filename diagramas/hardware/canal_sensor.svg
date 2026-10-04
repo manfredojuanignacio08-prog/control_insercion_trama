@@ -29,7 +29,7 @@
 
 <text x="174" y="378" text-anchor="middle" font-size="9.5" fill="#9C5C0A" font-weight="bold">Este negativo NO se une al del ESP32</text>
 <text x="174" y="393" text-anchor="middle" font-size="9" fill="#6B7684">Unirlos anula el aislamiento y expone el microcontrolador</text>
-<text x="174" y="415" text-anchor="middle" font-size="9" fill="#6B7684" font-style="italic">Al gabinete van solo dos hilos: negro y azul</text>
+<text x="174" y="415" text-anchor="middle" font-size="9" fill="#6B7684" font-style="italic">Al gabinete van dos hilos: el positivo (el del marrón) y el negro</text>
 
 <!-- resistencia -->
 <line x1="324" y1="212" x2="380" y2="212" stroke="#8B4513" stroke-width="2"/>

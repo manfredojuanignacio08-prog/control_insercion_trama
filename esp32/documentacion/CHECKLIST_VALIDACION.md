@@ -21,7 +21,6 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 - [ ] Cortá la alimentación. Confirmá que el **jumper JD-VCC del módulo relé
       esté PUESTO** (une JD-VCC con VCC: así el módulo se alimenta con los
       mismos 5 V, sin fuente separada para las bobinas).
-      dañarlo).
 
 ## Etapa 2, El ESP32 solo (SIN el relé, SIN el telar)
 
@@ -37,9 +36,8 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 
 - [ ] Conectá el módulo relé por el conector de las señales (GND · IN1 · IN2 · VCC),
       con el jumper JD-VCC puesto y el conector del jumper sin usar: VCC a 5V (nunca a
-      los 3.3V del ESP32), GND común, GPIO 25 → IN1, GPIO 26 → IN2, GPIO 27 → IN3 (relé adicional para
-      Retroceder, si el módulo es de 2 canales, hace falta sumar un
-      tercer relé o pasar a un módulo de 3-4 canales).
+      los 3.3V del ESP32), GND común, GPIO 25 → IN1, GPIO 26 → IN2, GPIO 27 → S del módulo individual de
+      Retroceder (activo-alto: su resistencia de 10 kΩ va a GND, no a 3,3 V).
 - [ ] En lugar del telar, poné un **LED con resistencia** (o un zumbador, o
       simplemente escuchá el "clic" del relé) en los contactos NO/COM de
       cada uno de los tres relés.
@@ -50,18 +48,20 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       relé de **Retroceder** una vez.
 - [ ] **Prueba del arranque seguro:** reiniciá el ESP32 con todo conectado.
       Los tres relés **NO deben dispararse solos** al encender. Si se
-      disparan, revisá los pull-ups de 10 kΩ en IN1/IN2/IN3.
+      disparan, revisá los pull-ups de 10 kΩ en IN1/IN2 y el pull-down de GPIO 27.
 - [ ] **Reposo del módulo de 2 canales:** con el ESP32 encendido y sin pulsos, el LED de
       IN1 e IN2 tiene que quedar **apagado del todo** (ni siquiera tenue). La entrada queda
       en 3,3 V y el módulo en 5 V: en la mayoría de los módulos eso no hace circular
       corriente, pero en algunos sí. Si queda encendido, cambiá el módulo o sacá el
-      jumper JD-VCC y alimentá VCC con 3,3 V y JD-VCC con 5 V.
+      jumper JD-VCC y alimentá VCC con 3,3 V y JD-VCC con 5 V. Cómo medirlo: tensión
+      IN–GND ≈ 3,3 V y VCC–IN ≈ 1,7 V; corriente con el multímetro en mA en serie entre
+      el GPIO y el IN: menos de 0,1 mA está bien, más de 0,5 mA es un problema.
 
 ## Etapa 3b, Sensado de los botones (banco, sin telar)
 
 - [ ] Armá un canal de sensado: puente rectificador (DB157) + capacitor 22-47 µF + R 2,2 kΩ 1W
       → LED del PC817; del otro lado, colector con pull-up de 10 kΩ a 3.3V
-      → GPIO 32 (Avanzar). Repetí para GPIO 33 (Impulso).
+      → GPIO 32 (Marcha). Repetí para GPIO 33 (Pausa) y GPIO 34 (Retroceder).
 - [ ] Con el multímetro, confirmá que **en reposo el GPIO lee 3.3V** (alto).
 - [ ] Simulá el botón: aplicá una fuente de 24V AC (o el propio telar, más
       adelante) a la entrada del puente. El GPIO debe caer a **0V** (bajo)

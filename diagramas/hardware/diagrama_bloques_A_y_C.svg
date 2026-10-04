@@ -88,5 +88,5 @@
 <text x="982" y="598" font-size="9" fill="#6B7684">Sin sensor, el Nivel 2 no funciona.</text>
 <rect x="28" y="812" width="1184" height="46" rx="6" fill="#F2F5F8" stroke="#9C5C0A" stroke-width="1.4"/>
 <text x="42" y="832" font-size="9.5" font-weight="bold" fill="#9C5C0A">Los dos bloques comparten el gabinete y el microcontrolador, pero sus alimentaciones están separadas.</text>
-<text x="42" y="847" font-size="9.5" fill="#1F2937">El Bloque A se alimenta de la red por su propia fuente; el Bloque C, de los 24 V que entrega el telar. Los negativos nunca se unen: el aislamiento lo dan los optoacopladores.</text>
+<text x="42" y="847" font-size="9.5" fill="#1F2937">El Bloque A se alimenta de la red por su propia fuente; el Bloque C, de los 12 a 14 V continuos que entrega el telar. Los negativos nunca se unen: el aislamiento lo dan los optoacopladores.</text>
 </svg>
