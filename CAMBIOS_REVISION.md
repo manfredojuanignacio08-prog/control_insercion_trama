@@ -768,6 +768,8 @@ medir que el relé no quede a medio accionar.
 | "Cerrar sesión" con el tejido en marcha en esa pantalla: el siguiente avance salía sin sesión y el ingreso mostraba "Tu sesión venció". | Al cerrar sesión la pantalla deja de llevar el avance (el telar sigue como está). |
 | `npm run codigo <usuario> --rotar` (como decía la documentación) no rotaba: npm se queda con `--rotar`. Y con `RECOVERY_SECRET` cambiada, justo el caso para el que se indica, el script terminaba en error porque intentaba descifrar el código viejo antes de mirar `--rotar`. | El comando correcto es `npm run codigo -- <usuario> --rotar` (documentación corregida); el script rota aunque el código viejo sea ilegible y, sin `--rotar`, explica qué hacer. Probado contra PostgreSQL. |
 | El historial de errores en memoria de la web crecía sin tope con la red caída. | Últimos 200. |
+| "Cargar" en la biblioteca el mismo dibujo que se estaba tejiendo frenaba la reproducción de esa pantalla (la estimación se cortaba con el telar andando) y volvía a contar las repeticiones de la fila desde el principio. | Si es el mismo dibujo en marcha, solo se vuelve al editor. |
+| La aplicación se inicializaba una sola vez: si se entraba como invitado con la base vacía y después se iniciaba sesión, el operario quedaba sin telar hasta recargar; y al volver a entrar tras una sesión vencida no se recuperaba el trabajo en curso. | Al volver a entrar se recargan los dibujos, el telar y el trabajo en curso. |
 
 Las pruebas de la integración contra PostgreSQL se ampliaron con estos casos (incluida la pausa larga con el
 nodo conectado) y se verificó que la versión anterior las falla y la corregida las pasa.

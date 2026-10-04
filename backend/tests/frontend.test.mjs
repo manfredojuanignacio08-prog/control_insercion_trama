@@ -211,4 +211,19 @@ assert.equal(f.run('isPlaying'), true, 'una respuesta vieja no frena la reproduc
 await f.run('actualizarEstadoTelar()'); await settle();
 assert.equal(f.run('isPlaying'), false);
 
+// ── T21: entró como invitado con la base sin telares y después inicia sesión: el operario
+// queda con el telar creado sin tener que recargar la página
+const sinTelares = (m,u,b) => (m==='GET' && u==='/api/telares') ? [] : routes(m,u,b);
+telar = { id:8, estado:'apagado', patron_actual_id:null, historial_actual_id:null, fila_actual:null };
+f = boot(sinTelares); f.run('setUsuarioActual(null, null)'); await f.run('iniciarApp()'); await settle();
+assert.equal(f.run('telarPorDefectoId'), null, 'el invitado no crea el telar');
+posts.length = 0; f.run("setUsuarioActual('ana', 'Ana', 'huella')"); f.run('entrarAlSistema()'); await settle();
+assert(posts.some(p=>p.startsWith('POST /api/telares ')), posts.join('|')); assert.equal(f.run('telarPorDefectoId'), 8);
+
+// ── T22: "Cargar" el mismo dibujo que se está tejiendo no frena la reproducción de esta pantalla
+telar = { id:8, estado:'pausado', patron_actual_id:3, historial_actual_id:9, fila_actual:2, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(routes); await f.run('iniciarApp()'); await settle(); await f.run('startPlay()');
+f.run("loadDrawInEditor('3')");
+assert.equal(f.run('isPlaying'), true); assert.equal(f.run('curRow'), 2);
+
 console.log('frontend OK');

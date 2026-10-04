@@ -2110,6 +2110,10 @@ function loadDrawInEditor(id, restaurando = false) {
 	    toast('Pausá el tejido (⏸) antes de cargar otro dibujo');
 	    return;
 	  }
+	  // El mismo dibujo que se está tejiendo: solo se vuelve al editor. Recargarlo frenaba la
+	  // reproducción de esta pantalla (la estimación se cortaba con el telar andando) y volvía a
+	  // contar las repeticiones de la fila desde el principio.
+	  if (!restaurando && isPlaying) { goTo('sc-editor'); return; }
 	  editId = d.id;
 	  currentDrawId = d.id;
 	  versionDibujo = d.modificadoAt || null;
@@ -2305,7 +2309,7 @@ function esc(s) {
 // Solo se ejecuta con sesión iniciada (la API rechaza todo lo demás con 401), y una sola vez.
 let appIniciada = false;
 async function iniciarApp() {
-  if (appIniciada) return;
+  if (appIniciada) return reingresar();
   appIniciada = true;
   await loadStore();
   await obtenerOCrearTelarPorDefecto();
@@ -2315,6 +2319,19 @@ async function iniciarApp() {
   // Si el telar tiene un trabajo abierto (pausado, o tejiendo desde antes de cerrar la
   // página), se recupera tal cual estaba: mismo dibujo, misma fila. No se empieza de nuevo.
   await restaurarTrabajoEnCurso();
+}
+
+// Volver a entrar sin recargar la página (se cerró la sesión o venció). Antes no se volvía a
+// cargar nada: si se había entrado como invitado con la base vacía, el operario que entraba
+// después quedaba sin telar hasta recargar, y tras una sesión vencida no se recuperaba el
+// trabajo en curso (la pantalla quedaba en pausa con el telar tejiendo).
+async function reingresar() {
+  await loadStore();
+  if (!telarPorDefectoId) await obtenerOCrearTelarPorDefecto();
+  renderLib();
+  updateStats();
+  updPlayUI();
+  if (!isPlaying) await restaurarTrabajoEnCurso();
 }
 
 // Al abrir la página: si el navegador ya tiene una sesión válida (cookie), se entra directo;
