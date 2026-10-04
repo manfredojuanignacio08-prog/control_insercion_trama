@@ -145,6 +145,14 @@ pulsa Pausa: ante una parada inesperada, el sistema termina con la máquina dete
 
 ## Cómo probarlo sin el telar
 
+**Primero, un relé solo y sin red:** `esp32/pruebas/prueba_rele_lca110/prueba_rele_lca110.ino`
+maneja un LCA110 en el GPIO 18 sin WiFi ni backend. Imita 25 pasadas con el canal activo y 25 sin
+activar, a 300 por minuto: el LED de la salida parpadea 5 veces por segundo durante 5 s y queda
+apagado 5 s. Por el monitor serie, `1` / `0` dejan el relé cerrado o abierto fijo para medir con el
+multímetro entre las patas 4 y 6, y `p` vuelve al patrón.
+
+**Después, el firmware de este nivel:**
+
 `config_nivel2.h` tiene una constante `MODO_BANCO`. Con ella en `true`, el
 programa no espera pulsos reales del sensor: los genera él mismo a 5 por segundo,
 que es el ritmo del telar a 300 pasadas por minuto. Sirve para verificar la

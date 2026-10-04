@@ -35,7 +35,7 @@ inline int digitalPinToInterrupt(int p){return p;}
 inline void attachInterrupt(int, void(*)(), int){}
 inline void noInterrupts(){} inline void interrupts(){}
 struct SerialT { void begin(int){} void println(const char*){} void println(const String&){} void print(const char*){}
-  void printf(const char*, ...){} } static Serial;
+  void printf(const char*, ...){} int available(){ return 0; } int read(){ return -1; } } static Serial;
 typedef struct { int x; } portMUX_TYPE;
 #define portMUX_INITIALIZER_UNLOCKED {0}
 inline void portENTER_CRITICAL(portMUX_TYPE*){} inline void portEXIT_CRITICAL(portMUX_TYPE*){}
