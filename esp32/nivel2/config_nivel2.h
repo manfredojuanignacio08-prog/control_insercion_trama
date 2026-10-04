@@ -29,7 +29,7 @@
 
 // Clave del dispositivo: se manda en el header X-Device-Key. Tiene que ser IGUAL a
 // ESP32_DEVICE_KEY del .env del backend y a DEVICE_KEY del Nivel 1.
-#define DEVICE_KEY         "cc1ce04d-f582-4150-be55-dc06a0d1faf33e97df76-6c70-407d-963b-518b3a931f7c"
+#define DEVICE_KEY         "CAMBIAR_POR_LA_CLAVE_DE_ESP32_DEVICE_KEY"
 
 // Certificado raíz para verificar el HTTPS del backend (opcional). Ver config.h del Nivel 1.
 // #define API_CA_CERT "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
