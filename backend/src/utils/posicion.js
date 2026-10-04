@@ -56,6 +56,39 @@ function contarFilas(matrizOFilas) {
 }
 
 /**
+ * La posición como un solo número: cuántas pasadas hay desde el principio del dibujo
+ * hasta (fila, dentro). Con eso avanzar o retroceder es una suma y un módulo, y el costo
+ * no depende de cuántas pasadas se muevan. Antes se recorrían de a una: un pedido con
+ * `pasos` enorme (o un conteo del sensor gigante) dejaba al servidor ocupado durante
+ * segundos o minutos sin atender a nadie más.
+ */
+function aDesplazamiento(fila, dentro, reps) {
+  let acc = 0;
+  for (let i = 0; i < fila; i++) acc += reps[i];
+  return acc + dentro;
+}
+
+function desdeDesplazamiento(desplazamiento, reps) {
+  let resto = desplazamiento;
+  for (let fila = 0; fila < reps.length; fila++) {
+    if (resto < reps[fila]) return { fila, dentro: resto };
+    resto -= reps[fila];
+  }
+  return { fila: 0, dentro: 0 };   // no ocurre: el desplazamiento siempre es menor que una vuelta
+}
+
+// Fila y pasada dentro de la fila, normalizadas como siempre: la fila envuelta al rango
+// del dibujo y una pasada fuera de rango (dato incoherente) reencuadrada al principio.
+function posicionInicial(filaActual, repeticionEnFila, filas, reps) {
+  const fila = ((Number(filaActual) || 0) % filas + filas) % filas;
+  let dentro = Math.max(0, Math.trunc(Number(repeticionEnFila) || 0));
+  if (dentro >= reps[fila]) dentro = 0;
+  return { fila, dentro };
+}
+
+const pasosValidos = (pasos) => Math.max(0, Math.trunc(Number(pasos) || 0));
+
+/**
  * Avanza la posición `pasos` pasadas.
  * `matrizOFilas` puede ser la matriz del dibujo o directamente su cantidad de filas.
  * Devuelve la nueva fila y cuántas vueltas completas del dibujo se dieron.
@@ -66,26 +99,18 @@ export function avanzarPosicionTejido(filaActual, matrizOFilas, pasos = 1, repet
     return { fila_actual: 0, columna_actual: 0, pasada_actual: 0, repeticion_en_fila: 0, vueltas_completadas: 0 };
   }
   const reps = normalizarRepeticiones(repeticiones, filas);
+  const porVuelta = reps.reduce((a, r) => a + r, 0);
+  const { fila, dentro } = posicionInicial(filaActual, repeticionEnFila, filas, reps);
 
-  let fila = ((Number(filaActual) || 0) % filas + filas) % filas;
-  let dentro = Math.max(0, Math.trunc(Number(repeticionEnFila) || 0));
-  if (dentro >= reps[fila]) dentro = 0;   // dato incoherente: se reencuadra
-  let vueltas = 0;
-
-  for (let i = 0; i < Math.max(0, Math.trunc(pasos)); i++) {
-    dentro++;
-    if (dentro >= reps[fila]) {
-      dentro = 0;
-      fila++;
-      if (fila >= filas) { fila = 0; vueltas++; }
-    }
-  }
+  const total = aDesplazamiento(fila, dentro, reps) + pasosValidos(pasos);
+  const vueltas = Math.floor(total / porVuelta);
+  const destino = desdeDesplazamiento(total - vueltas * porVuelta, reps);
 
   return {
-    fila_actual: fila,
+    fila_actual: destino.fila,
     columna_actual: 0,
     pasada_actual: 0,
-    repeticion_en_fila: dentro,
+    repeticion_en_fila: destino.dentro,
     vueltas_completadas: vueltas,
   };
 }
@@ -104,27 +129,18 @@ export function retrocederPosicionTejido(filaActual, matrizOFilas, pasos = 1, re
     return { fila_actual: 0, columna_actual: 0, pasada_actual: 0, repeticion_en_fila: 0, vueltas_deshechas: 0, al_inicio: false };
   }
   const reps = normalizarRepeticiones(repeticiones, filas);
+  const porVuelta = reps.reduce((a, r) => a + r, 0);
+  const { fila, dentro } = posicionInicial(filaActual, repeticionEnFila, filas, reps);
 
-  let fila = ((Number(filaActual) || 0) % filas + filas) % filas;
-  let dentro = Math.max(0, Math.trunc(Number(repeticionEnFila) || 0));
-  if (dentro >= reps[fila]) dentro = 0;
-  let vueltasDeshechas = 0;
-
-  for (let i = 0; i < Math.max(0, Math.trunc(pasos)); i++) {
-    if (dentro > 0) {
-      dentro--;                       // se deshace una pasada dentro de la misma fila
-    } else {
-      fila--;
-      if (fila < 0) { fila = filas - 1; vueltasDeshechas++; }
-      dentro = reps[fila] - 1;        // queda en la última pasada de la fila anterior
-    }
-  }
+  const total = aDesplazamiento(fila, dentro, reps) - pasosValidos(pasos);
+  const vueltasDeshechas = total < 0 ? -Math.floor(total / porVuelta) : 0;
+  const destino = desdeDesplazamiento(total + vueltasDeshechas * porVuelta, reps);
 
   return {
-    fila_actual: fila,
+    fila_actual: destino.fila,
     columna_actual: 0,
     pasada_actual: 0,
-    repeticion_en_fila: dentro,
+    repeticion_en_fila: destino.dentro,
     vueltas_deshechas: vueltasDeshechas,
     al_inicio: vueltasDeshechas > 0,
   };

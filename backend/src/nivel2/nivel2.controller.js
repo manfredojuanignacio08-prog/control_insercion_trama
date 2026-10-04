@@ -101,7 +101,8 @@ export async function reportarPasadas(req, res, next) {
     const { fila_actual, repeticion_en_fila } = req.body;
 
     if (!Number.isInteger(telarId)) throw badRequest('El identificador del telar debe ser un número.');
-    if (!Number.isInteger(pasadasSensor) || pasadasSensor < 0) {
+    // La columna es INTEGER: un valor más grande no entra en la base.
+    if (!Number.isInteger(pasadasSensor) || pasadasSensor < 0 || pasadasSensor > 2147483647) {
       throw badRequest('pasadas_sensor debe ser un número entero no negativo.');
     }
 

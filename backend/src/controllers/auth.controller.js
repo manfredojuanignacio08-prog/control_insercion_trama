@@ -64,8 +64,10 @@ const CHALLENGE_TTL_MIN = 5; // los desafíos vencen a los 5 minutos
 // Esto importa para la seguridad: como registrarse da acceso a la API, un registro
 // abierto y sin límite dejaría entrar a cualquiera que escribiera un nombre de usuario.
 // Para volver al registro abierto (solo pruebas): REGISTRO_LIBRE_MAX=Infinity en el .env.
+// Se acepta "Infinity": antes Number.isFinite lo descartaba y el límite volvía a 3 sin aviso,
+// justo lo contrario de lo que dice este comentario.
 const _limiteEnv = process.env.REGISTRO_LIBRE_MAX;
-const LIMITE_LIBRE = (_limiteEnv !== undefined && _limiteEnv !== '' && Number.isFinite(Number(_limiteEnv)))
+const LIMITE_LIBRE = (_limiteEnv !== undefined && _limiteEnv !== '' && !Number.isNaN(Number(_limiteEnv)) && Number(_limiteEnv) >= 0)
   ? Number(_limiteEnv)
   : 3;
 
@@ -185,15 +187,19 @@ function generarCodigo(prefijo) {
   return `${prefijo}-${s.slice(0, 3)}${s.slice(3)}`;
 }
 
-// Valida un código de invitación. Devuelve {ok, id?, motivo?}.
-async function validarInvitacion(codigo) {
+// Consume un código de invitación. Devuelve {ok, id?, motivo?}.
+// Se marca como usado EN la misma consulta que lo valida (UPDATE ... WHERE usada = false): antes
+// se validaba con un SELECT y se marcaba después, y dos registros simultáneos con el mismo código
+// pasaban los dos. Corre dentro de la transacción del registro: si el alta falla, no se gasta.
+async function consumirInvitacion(cliente, codigo) {
   if (!codigo || typeof codigo !== 'string' || !codigo.trim()) {
-    return { ok: false, motivo: 'Ya hay tres usuarios registrados: para crear una cuenta nueva hace falta un código de invitación. Pedíselo a alguien que ya tenga cuenta.' };
+    return { ok: false, motivo: `Ya hay ${LIMITE_LIBRE} usuarios registrados: para crear una cuenta nueva hace falta un código de invitación. Pedíselo a alguien que ya tenga cuenta.` };
   }
-  const h = hashCodigo(codigo);
-  const { rows } = await pool.query(
-    'SELECT * FROM invitaciones WHERE codigo_hash = $1 AND usada = false AND expira_at >= now()',
-    [h]
+  const { rows } = await cliente.query(
+    `UPDATE invitaciones SET usada = true
+      WHERE codigo_hash = $1 AND usada = false AND expira_at >= now()
+      RETURNING id`,
+    [hashCodigo(codigo)]
   );
   if (!rows[0]) return { ok: false, motivo: 'El código de invitación es inválido, ya se usó o venció.' };
   return { ok: true, id: rows[0].id };
@@ -222,6 +228,12 @@ export async function iniciarRegistro(req, res, next) {
       return res.status(400).json({ error: 'El usuario debe tener entre 3 y 40 caracteres.' });
     }
     const nom = usuario.trim();
+    // El nombre visible es opcional; si viene, texto corto. Antes se guardaba cualquier cosa
+    // (un objeto, miles de caracteres).
+    if (nombre !== undefined && nombre !== null &&
+        (typeof nombre !== 'string' || nombre.trim().length > 60 || /[\u0000-\u001f\u007f]/.test(nombre))) {
+      return res.status(400).json({ error: 'El nombre debe ser un texto de hasta 60 caracteres.' });
+    }
     // "invitado" es el nombre de la sesión sin cuenta: no puede usarse para registrarse.
     if (nom.toLowerCase() === 'invitado') {
       return res.status(400).json({ error: 'Ese nombre de usuario está reservado. Elegí otro.' });
@@ -258,33 +270,43 @@ export async function iniciarRegistro(req, res, next) {
     // ahí hace falta un código de invitación válido, que cualquier usuario ya
     // registrado puede generar. No hay roles: todos los usuarios son iguales.
     if (!user) {
-      const { rows: cnt } = await pool.query('SELECT COUNT(*)::int AS n FROM usuarios');
-      const totalUsuarios = cnt[0].n;
-      let invitacionId = null;
-
-      if (totalUsuarios >= LIMITE_LIBRE) {
-        const inv = await validarInvitacion(invitacion);
-        if (!inv.ok) {
-          return res.status(403).json({
-            error: inv.motivo || 'El registro está cerrado. Necesitás un código de invitación de un usuario ya registrado.',
-            requiere_invitacion: true,
-          });
+      // Todo el alta va en una transacción, con un bloqueo que ordena los registros de a uno:
+      // así dos personas que se registran al mismo tiempo no pasan las dos el cupo libre, ni
+      // usan las dos la misma invitación. Si algo falla, no queda ni el usuario ni la
+      // invitación gastada.
+      const cliente = await pool.connect();
+      try {
+        await cliente.query('BEGIN');
+        await cliente.query('SELECT pg_advisory_xact_lock(724001)');
+        const { rows: cnt } = await cliente.query('SELECT COUNT(*)::int AS n FROM usuarios');
+        let invitacionId = null;
+        if (cnt[0].n >= LIMITE_LIBRE) {
+          const inv = await consumirInvitacion(cliente, invitacion);
+          if (!inv.ok) {
+            await cliente.query('ROLLBACK');
+            return res.status(403).json({
+              error: inv.motivo || 'El registro está cerrado. Necesitás un código de invitación de un usuario ya registrado.',
+              requiere_invitacion: true,
+            });
+          }
+          invitacionId = inv.id;
         }
-        invitacionId = inv.id;
-      }
 
-      const webauthnId = aB64(crypto.randomBytes(32));
-      const ins = await pool.query(
-        'INSERT INTO usuarios (usuario, nombre, webauthn_id) VALUES ($1, $2, $3) RETURNING *',
-        [nom, nombre || null, webauthnId]
-      );
-      user = ins.rows[0];
-
-      // La invitación se consume acá, al crear el usuario. Antes se guardaba en
-      // req._invitacionId para consumirla en verificarRegistro, pero son dos pedidos
-      // HTTP distintos y el valor se perdía: las invitaciones nunca se gastaban.
-      if (invitacionId) {
-        await pool.query('UPDATE invitaciones SET usada = true, usada_por = $1 WHERE id = $2', [user.id, invitacionId]);
+        const webauthnId = aB64(crypto.randomBytes(32));
+        const ins = await cliente.query(
+          'INSERT INTO usuarios (usuario, nombre, webauthn_id) VALUES ($1, $2, $3) RETURNING *',
+          [nom, (typeof nombre === 'string' && nombre.trim()) || null, webauthnId]
+        );
+        user = ins.rows[0];
+        if (invitacionId) {
+          await cliente.query('UPDATE invitaciones SET usada_por = $1 WHERE id = $2', [user.id, invitacionId]);
+        }
+        await cliente.query('COMMIT');
+      } catch (err) {
+        await cliente.query('ROLLBACK').catch(() => {});
+        throw err;
+      } finally {
+        cliente.release();
       }
     }
 

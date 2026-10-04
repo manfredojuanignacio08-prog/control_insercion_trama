@@ -71,7 +71,10 @@ function leerCookie(req, nombre) {
   for (const parte of raw.split(';')) {
     const i = parte.indexOf('=');
     if (i < 0) continue;
-    if (parte.slice(0, i).trim() === nombre) return decodeURIComponent(parte.slice(i + 1).trim());
+    if (parte.slice(0, i).trim() !== nombre) continue;
+    // Una cookie mal codificada ("%E0") hacía lanzar a decodeURIComponent, y como el límite
+    // de pedidos lee la sesión en toda la API, ese navegador recibía error 500 en todo.
+    try { return decodeURIComponent(parte.slice(i + 1).trim()); } catch { return null; }
   }
   return null;
 }

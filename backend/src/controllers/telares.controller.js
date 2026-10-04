@@ -14,11 +14,26 @@ import { avanzarPosicionTejido, retrocederPosicionTejido } from '../utils/posici
 //   'sensor_validado'  → medido y validado contra el contador mecánico
 const SENSOR_VIGENTE_SEG = 30;
 
+// Pasos de /avanzar y /retroceder: entero positivo (por defecto 1). La web manda de a uno;
+// el tope evita que un pedido mal armado mueva la posición miles de vueltas de golpe.
+const MAX_PASOS = 10000;
+function leerPasos(pasos) {
+  if (pasos === undefined || pasos === null) return 1;
+  if (!Number.isInteger(pasos) || pasos < 1 || pasos > MAX_PASOS) {
+    throw badRequest(`pasos debe ser un entero entre 1 y ${MAX_PASOS}.`);
+  }
+  return pasos;
+}
+
 const COLUMNAS_TELAR = `
   t.*, p.nombre AS patron_actual_nombre,
   h.id AS historial_actual_id, h.fila_actual, h.columna_actual, h.repeticion_en_fila,
   h.pasada_actual, h.vueltas_completadas, h.pasadas_totales AS pasadas_actuales,
   h.pasadas_sensor, h.conteo_validado,
+  -- Segundos desde el último sondeo del ESP32, medidos con el reloj del SERVIDOR. La web
+  -- comparaba ultimo_ping_esp32 con el reloj del celular: con el celular unos segundos
+  -- adelantado o atrasado mostraba "Sin conexión" con el ESP32 andando.
+  EXTRACT(EPOCH FROM (now() - t.ultimo_ping_esp32))::float8 AS segundos_desde_ping,
   (t.ultimo_reporte_sensor IS NOT NULL
      AND t.ultimo_reporte_sensor > now() - interval '${SENSOR_VIGENTE_SEG} seconds') AS sensor_activo`;
 
@@ -182,6 +197,14 @@ export async function detenerTelar(req, res, next) {
   try {
     const { id } = req.params;
     const { pasadas_totales, alertas_disparadas = 0 } = req.body;
+    // Un valor que no es un entero no negativo llegaba a la base y volvía como error 500.
+    if (pasadas_totales !== undefined && pasadas_totales !== null &&
+        (!Number.isInteger(pasadas_totales) || pasadas_totales < 0)) {
+      throw badRequest('pasadas_totales debe ser un entero no negativo.');
+    }
+    if (!Number.isInteger(alertas_disparadas) || alertas_disparadas < 0) {
+      throw badRequest('alertas_disparadas debe ser un entero no negativo.');
+    }
 
     await client.query('BEGIN');
 
@@ -233,11 +256,35 @@ export async function detenerTelar(req, res, next) {
 // El patrón no tiene "final": al llegar a la última fila, vuelve a la fila 0 y
 // sigue (igual que la cinta de papel, que es un lazo). Se informa
 // vueltas_completadas si dio una vuelta entera o más.
+//
+// UN SOLO CONDUCTOR. Cada pestaña de la web que muestra el telar tejiendo avanza por reloj.
+// Con dos pantallas abiertas (el celular del operario y la PC) cada una mandaba su pasada
+// cada 200 ms y el conteo estimado corría al doble. Ahora cada pestaña se identifica
+// (body.cliente) y solo una "conduce": si otra avanzó hace menos de VIGENCIA_CONDUCTOR_MS,
+// se responde 409 OTRO_CONDUCTOR sin tocar nada, y esa pantalla sigue la posición del
+// backend. Si la que conducía se cierra, a los pocos segundos otra toma la posta.
+// Vive en memoria: con un reinicio del servidor se pierde y se vuelve a elegir sola.
+const VIGENCIA_CONDUCTOR_MS = 1500;
+const conductores = new Map();   // telar id -> { cliente, t }
+
 export async function avanzarTelar(req, res, next) {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const pasos = Number.isInteger(req.body.pasos) && req.body.pasos > 0 ? req.body.pasos : 1;
+    const pasos = leerPasos(req.body.pasos);
+
+    const quien = typeof req.body.cliente === 'string' && req.body.cliente.length <= 64 ? req.body.cliente : null;
+    if (quien) {
+      const ahora = Date.now();
+      const actual = conductores.get(id);
+      if (actual && actual.cliente !== quien && ahora - actual.t < VIGENCIA_CONDUCTOR_MS) {
+        return res.status(409).json({
+          error: 'Otra pantalla está llevando el avance de este telar: esta sigue la posición del servidor.',
+          codigo: 'OTRO_CONDUCTOR',
+        });
+      }
+      conductores.set(id, { cliente: quien, t: ahora });
+    }
 
     await client.query('BEGIN');
 
@@ -310,7 +357,11 @@ export async function pausarTelar(req, res, next) {
   try {
     const { id } = req.params;
     const { rows } = await pool.query(
-      `UPDATE telares SET estado = 'pausado', motivo_pausa = NULL
+      // Un telar apagado (sin trabajo) queda apagado: antes pasaba a "pausado" sin ninguna
+      // producción, y la web mostraba una pausa de nada.
+      `UPDATE telares
+          SET estado = CASE WHEN estado = 'apagado' THEN 'apagado' ELSE 'pausado' END,
+              motivo_pausa = NULL
        WHERE id = $1
        RETURNING id, estado, patron_actual_id`,
       [id]
@@ -415,7 +466,11 @@ export async function eventoFisico(req, res, next) {
 
     await client.query('BEGIN');
 
-    const telar = await client.query('SELECT id, estado FROM telares WHERE id = $1 FOR UPDATE', [id]);
+    const telar = await client.query(
+      `SELECT id, estado,
+              (ultimo_reporte_sensor IS NOT NULL
+                 AND ultimo_reporte_sensor > now() - interval '${SENSOR_VIGENTE_SEG} seconds') AS sensor_activo
+         FROM telares WHERE id = $1 FOR UPDATE`, [id]);
     if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
 
     // Producción abierta (si la hay). Sin ella no se puede ubicar la posición.
@@ -493,7 +548,17 @@ export async function eventoFisico(req, res, next) {
     } else if (tipo === 'pausa') {
       nuevoEstado = 'pausado';
     } else if (tipo === 'retroceder') {
-      if (enCurso.rows.length > 0) {
+      // Con el sensor del Nivel 2 llevando esta producción (ya reportó pasadas, o está
+      // reportando), la posición la mueve el NODO: su sensor ve el pulso del retroceso y lo
+      // descuenta (por eso se suma retrocesos_contados, más abajo). Si además se movía acá,
+      // el retroceso se aplicaba dos veces: con tres retrocesos seguidos la posición del
+      // backend quedaba tres pasadas por delante de la del nodo y el backend rechazaba (400)
+      // todos los reportes siguientes, con la posición congelada.
+      const sensorLleva = enCurso.rows.length > 0 &&
+        (Number(enCurso.rows[0].pasadas_sensor) > 0 || telar.rows[0].sensor_activo === true);
+      if (sensorLleva) {
+        // nada que mover acá: lo hace el nodo con el próximo reporte
+      } else if (enCurso.rows.length > 0) {
         const row = enCurso.rows[0];
         const { fila_actual, repeticion_en_fila, vueltas_deshechas } =
           retrocederPosicionTejido(row.fila_actual, row.matriz_pasadas, 1, row.repeticiones_por_fila, row.repeticion_en_fila);
@@ -614,7 +679,7 @@ export async function retrocederTelar(req, res, next) {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const pasos = Number.isInteger(req.body.pasos) && req.body.pasos > 0 ? req.body.pasos : 1;
+    const pasos = leerPasos(req.body.pasos);
 
     await client.query('BEGIN');
 

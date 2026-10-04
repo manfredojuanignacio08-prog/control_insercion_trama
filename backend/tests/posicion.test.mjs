@@ -45,3 +45,43 @@ assert.equal(lim.repeticion_en_fila, 99);
 assert.equal(av(2,M,1,R,50).fila_actual, 3);
 
 console.log('posicion OK');
+
+// ── La versión aritmética coincide con avanzar/retroceder pasada por pasada ──
+// Referencia: el algoritmo de antes, que movía la posición de a una pasada.
+{
+  const { avanzarPosicionTejido: av, retrocederPosicionTejido: rt } = await import('../src/utils/posicion.js');
+  const reps1 = (reps, filas) => Array.from({ length: filas }, (_, i) => {
+    const r = Array.isArray(reps) ? Number(reps[i]) : NaN;
+    return Number.isInteger(r) && r >= 1 ? r : 1;
+  });
+  const paso = (filaAct, filas, pasos, reps, dentro0, atras) => {
+    const R = reps1(reps, filas);
+    let fila = ((Number(filaAct) || 0) % filas + filas) % filas;
+    let dentro = Math.max(0, Math.trunc(Number(dentro0) || 0));
+    if (dentro >= R[fila]) dentro = 0;
+    let v = 0;
+    for (let i = 0; i < Math.max(0, Math.trunc(pasos)); i++) {
+      if (!atras) { dentro++; if (dentro >= R[fila]) { dentro = 0; fila++; if (fila >= filas) { fila = 0; v++; } } }
+      else if (dentro > 0) dentro--;
+      else { fila--; if (fila < 0) { fila = filas - 1; v++; } dentro = R[fila] - 1; }
+    }
+    return { fila, dentro, v };
+  };
+  let semilla = 12345;
+  const azar = (n) => { semilla = (semilla * 1103515245 + 12345) % 2147483648; return semilla % n; };
+  for (let t = 0; t < 20000; t++) {
+    const filas = 1 + azar(7);
+    const reps = azar(5) === 0 ? null : Array.from({ length: filas }, () => azar(10) === 0 ? 0 : 1 + azar(5));
+    const fila = azar(20) - 5, dentro = azar(7) - 1, pasos = azar(60) - 3;
+    const a = av(fila, filas, pasos, reps, dentro), ea = paso(fila, filas, pasos, reps, dentro, false);
+    assert.deepEqual([a.fila_actual, a.repeticion_en_fila, a.vueltas_completadas], [ea.fila, ea.dentro, ea.v]);
+    const r = rt(fila, filas, pasos, reps, dentro), er = paso(fila, filas, pasos, reps, dentro, true);
+    assert.deepEqual([r.fila_actual, r.repeticion_en_fila, r.vueltas_deshechas], [er.fila, er.dentro, er.v]);
+  }
+  // Una cantidad enorme de pasos ya no bloquea el servidor: se resuelve con aritmética.
+  const t0 = Date.now();
+  const lejos = av(0, 300, 1e15, Array(300).fill(9999), 0);
+  assert(Date.now() - t0 < 50);
+  assert.equal(lejos.vueltas_completadas, Math.floor(1e15 / (300 * 9999)));
+  console.log('posicion (aritmética = paso a paso) OK');
+}

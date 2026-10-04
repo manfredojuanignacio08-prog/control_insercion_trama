@@ -5,11 +5,11 @@
 -- Decisiones de diseño (ver Analisis_Frontend_y_Plan_Backend.md):
 --   - matriz_pasadas y matriz_ligamento son campos separados.
 --   - Esquema multi-telar desde el día 1 (el piloto arranca con 1).
---   - Sin tabla de usuarios / autenticación en esta versión.
---   - La repetición es DE FILA ENTERA: una FILA equivale a una PASADA del
---     telar, y las columnas de esa fila son los elementos que se activan de
---     forma simultánea. Si una fila tiene valores mayores a 1, esa pasada se
---     repite esa cantidad de veces (se toma el mayor valor de la fila).
+--   - Usuarios con login por huella (WebAuthn): tablas usuarios,
+--     credenciales_biometricas, desafios_webauthn e invitaciones (más abajo).
+--   - Una FILA es una combinación de bobinas: sus columnas se activan de forma
+--     simultánea (cada celda vale 0 o 1). Cuántas pasadas seguidas se teje cada
+--     fila lo dice repeticiones_por_fila (migración 014); sin ese dato, una.
 --   - fila_actual / columna_actual / pasada_actual en historial_produccion:
 --     posición exacta de la producción en curso (mismo significado que
 --     curRow/curCol/curPass del frontend), para soportar "retroceder un
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS telares (
   retroceder_seq    INTEGER NOT NULL DEFAULT 0,  -- migración 007: botón físico Retroceder
   posicion_incierta BOOLEAN NOT NULL DEFAULT false,  -- migración 008: uso manual de los botones del telar
   ultimo_evento_manual      TIMESTAMPTZ,          -- migración 008
-  ultimo_evento_manual_tipo TEXT,                 -- migración 008: 'avanzar' | 'impulso'
+  ultimo_evento_manual_tipo TEXT,                 -- migración 008: 'marcha' | 'pausa' | 'retroceder' | 'reinicio'
   -- migración 010: cuántos elementos de selección (bobinas) tiene la máquina.
   -- Un dibujo con más columnas que este número no puede ejecutarse completo.
   elementos_seleccion INTEGER NOT NULL DEFAULT 4 CHECK (elementos_seleccion BETWEEN 1 AND 8)

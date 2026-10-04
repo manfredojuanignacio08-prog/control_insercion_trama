@@ -55,6 +55,15 @@ x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'retroceder'} });
 const upd = x.log.find(l=>/UPDATE historial_produccion/.test(l.sql));
 assert.equal(upd.params[0], 3); assert.equal(upd.params[1], 1);
 assert(x.log.some(l=>/retrocesos_contados = retrocesos_contados \+ CASE/.test(l.sql) && l.params[3]==='retroceder'));
+// con el sensor llevando la producción, el retroceso manual NO mueve la posición (la mueve el nodo)
+globalThis.__q = (sql) => {
+  if (/FROM telares WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{id:8, estado:'pausado', sensor_activo:false}] };
+  if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:2, pasadas_sensor:40, matriz_pasadas:MAT}] };
+  if (/RETURNING id, estado, posicion_incierta/.test(sql)) return { rows:[{id:8}] };
+};
+x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'retroceder'} });
+assert(!x.log.some(l=>/UPDATE historial_produccion/.test(l.sql)));
+assert(x.log.some(l=>/retrocesos_contados = retrocesos_contados \+ CASE/.test(l.sql) && l.params[3]==='retroceder'));
 
 // 4) tipo inválido
 x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'volar'} }); assert.equal(x.err.status, 400);
@@ -97,6 +106,14 @@ globalThis.__q = (sql) => {
 };
 x = await call(T.avanzarTelar, { params:{id:'8'}, body:{} });
 const u = x.log.find(l=>/UPDATE historial_produccion/.test(l.sql)); assert.deepEqual(u.params.slice(0,3), [0,1,1]); assert.equal(x.r.body.origen_conteo,'estimado');
+// pasos fuera de rango => 400 (antes un número enorme dejaba al servidor ocupado)
+x = await call(T.avanzarTelar, { params:{id:'8'}, body:{pasos:1e9} }); assert.equal(x.err.status, 400);
+// un solo conductor: la pestaña A avanza; la B, al rato, recibe 409 OTRO_CONDUCTOR sin tocar la base
+x = await call(T.avanzarTelar, { params:{id:'8'}, body:{cliente:'A'} }); assert.equal(x.err, null);
+x = await call(T.avanzarTelar, { params:{id:'8'}, body:{cliente:'B'} });
+assert.equal(x.r.code, 409); assert.equal(x.r.body.codigo, 'OTRO_CONDUCTOR'); assert(!x.log.some(l=>/UPDATE historial_produccion/.test(l.sql)));
+x = await call(T.avanzarTelar, { params:{id:'8'}, body:{cliente:'A'} }); assert.equal(x.err, null); assert.notEqual(x.r.code, 409);
+
 
 // 7) retrocederTelar (sin sensor activo: retrocede por reloj)
 globalThis.__q = (sql) => {
@@ -218,13 +235,25 @@ assert(!x.log.some(l=>/INSERT INTO usuarios/.test(l.sql)));
 globalThis.__q = (sql) => {
   if (/FROM usuarios WHERE usuario = \$1/.test(sql)) return { rows:[] };
   if (/COUNT\(\*\)::int AS n FROM usuarios/.test(sql)) return { rows:[{n:3}] };
-  if (/FROM invitaciones WHERE codigo_hash/.test(sql)) return { rows:[{id:7}] };
+  if (/UPDATE invitaciones SET usada = true\s+WHERE codigo_hash/.test(sql)) return { rows:[{id:7}] };
   if (/INSERT INTO usuarios/.test(sql)) return { rows:[{id:9, usuario:'operario4', webauthn_id:'CCCC'}] };
   if (/FROM credenciales_biometricas WHERE usuario_id/.test(sql)) return { rows:[] };
 };
 x = await callA(A.iniciarRegistro, { body:{usuario:'operario4', invitacion:'TRAMA-XXXX'} });
 assert.equal(x.r.code, 200);
-const consumo = x.log.find(l=>/UPDATE invitaciones SET usada = true/.test(l.sql)); assert.deepEqual(consumo.params, [9, 7]);
+// se consume en la misma consulta que la valida (no se puede usar dos veces), dentro de la transacción
+assert(x.log.some(l=>/UPDATE invitaciones SET usada = true WHERE codigo_hash = \$1 AND usada = false/.test(l.sql)));
+const consumo = x.log.find(l=>/UPDATE invitaciones SET usada_por/.test(l.sql)); assert.deepEqual(consumo.params, [9, 7]);
+assert(x.log.some(l=>l.sql==='COMMIT'));
+// invitación ya usada (el UPDATE no devuelve fila) => 403 y no se crea el usuario
+globalThis.__q = (sql) => {
+  if (/FROM usuarios WHERE usuario = \$1/.test(sql)) return { rows:[] };
+  if (/COUNT\(\*\)::int AS n FROM usuarios/.test(sql)) return { rows:[{n:3}] };
+};
+x = await callA(A.iniciarRegistro, { body:{usuario:'operario5', invitacion:'TRAMA-XXXX'} });
+assert.equal(x.r.code, 403); assert(!x.log.some(l=>/INSERT INTO usuarios/.test(l.sql))); assert(x.log.some(l=>l.sql==='ROLLBACK'));
+// nombre visible inválido => 400
+x = await callA(A.iniciarRegistro, { body:{usuario:'operario6', nombre:{a:1}} }); assert.equal(x.r.code, 400);
 // sesión
 let rs = resA(); A.estadoSesion({ headers:{ cookie: hs.c.split(';')[0] } }, rs); assert.equal(rs.body.autenticado, true); assert.equal(rs.body.usuario, 'mia');
 rs = resA(); A.estadoSesion({ headers:{} }, rs); assert.equal(rs.body.autenticado, false);

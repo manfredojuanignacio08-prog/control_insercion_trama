@@ -92,7 +92,7 @@ export async function actualizarPatron(req, res, next) {
     // aviso. Nombre, colores y metadatos sí se pueden cambiar. Para modificar la
     // matriz hay que detener el trabajo primero (eso libera el dibujo).
     const actual = await pool.query(
-      `SELECT filas, columnas, matriz_pasadas,
+      `SELECT filas, columnas, matriz_pasadas, repeticiones_por_fila,
               date_trunc('milliseconds', modificado_at) AS version
          FROM patrones WHERE id = $1`, [id]);
     if (actual.rows.length === 0) throw notFound(`No existe el dibujo con id ${id}.`);
@@ -113,10 +113,17 @@ export async function actualizarPatron(req, res, next) {
       }
     }
     const previo = actual.rows[0];
+    // Las repeticiones también son contenido: cambiarlas cambia lo que se teje, y la posición
+    // guardada (fila y pasada dentro de la fila) puede quedar fuera de rango. Se comparan
+    // normalizadas: sin repeticiones (null) es lo mismo que una pasada por fila.
+    const repsNormalizadas = (reps, n) => Array.from({ length: n }, (_, i) =>
+      (Array.isArray(reps) && Number.isInteger(reps[i]) && reps[i] >= 1) ? reps[i] : 1);
     const cambiaForma =
       previo.filas !== filas ||
       previo.columnas !== columnas ||
-      JSON.stringify(previo.matriz_pasadas) !== JSON.stringify(matriz_pasadas);
+      JSON.stringify(previo.matriz_pasadas) !== JSON.stringify(matriz_pasadas) ||
+      JSON.stringify(repsNormalizadas(previo.repeticiones_por_fila, previo.filas)) !==
+        JSON.stringify(repsNormalizadas(repeticiones_por_fila, filas));
     if (cambiaForma) {
       const enUso = await pool.query(
         `SELECT t.codigo

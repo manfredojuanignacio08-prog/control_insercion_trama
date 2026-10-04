@@ -3,7 +3,7 @@
  * Devuelve un array de strings con los errores encontrados (vacío si está OK).
  */
 export function validarPatron(body) {
-  const { nombre, filas, columnas, matriz_pasadas, colores_filas, metadata, repeticiones_por_fila } = body;
+  const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila } = body;
   const errores = [];
 
   if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
@@ -53,6 +53,18 @@ export function validarPatron(body) {
     if (filaInvalida) {
       errores.push(`cada fila de matriz_pasadas debe tener ${columnasOk ? columnas : 'la misma cantidad de'} números >= 0.`);
     }
+  }
+
+  // matriz_ligamento es opcional (si no viene, el servidor la deriva de matriz_pasadas). Si
+  // viene, tiene que tener la misma forma y solo ceros y unos: antes se guardaba cualquier
+  // JSON que llegara, de cualquier tamaño.
+  if (matriz_ligamento !== undefined && matriz_ligamento !== null) {
+    const malo = !Array.isArray(matriz_ligamento) ||
+      (filasOk && matriz_ligamento.length !== filas) ||
+      matriz_ligamento.some((fila) => !Array.isArray(fila) ||
+        (columnasOk && fila.length !== columnas) ||
+        fila.some((c) => c !== 0 && c !== 1));
+    if (malo) errores.push('matriz_ligamento debe tener la misma forma que matriz_pasadas, con valores 0 o 1.');
   }
 
   if (colores_filas !== undefined && colores_filas !== null) {

@@ -131,4 +131,42 @@ telar = { ...telar, origen_conteo:'sensor_validado' }; await settle(); await f.r
 assert.equal(f.els['telar-conteo-btn'].style.display, 'none'); assert.equal(f.els['telar-conteo-txt'].textContent, 'Conteo del sensor validado');
 telar = { ...telar, origen_conteo:'estimado', sensor_activo:false }; await settle(); await f.run('actualizarEstadoTelar()'); await settle();
 assert.equal(f.els['telar-conteo'].style.display, 'none');
+
+// ── T13: crear un dibujo nuevo NO pausa el telar real (antes, con solo haber tocado una celda, sí)
+telar = { id:8, estado:'tejiendo', patron_actual_id:null, historial_actual_id:null, fila_actual:null, origen_conteo:'estimado', sensor_activo:false };
+const conPatronNuevo = (m,u,b) => (m==='POST' && u==='/api/patrones')
+  ? (posts.push('POST /api/patrones'), { status:201, body: patron(5, b.nombre) }) : routes(m,u,b);
+f = boot(conPatronNuevo); await f.run('iniciarApp()'); await settle();
+f.run('repFilas[0] = 7'); f.run('tapCell(0,0)'); await settle();
+posts.length = 0; f.run('resetEditorForNew()'); await settle();
+assert(!posts.some(p=>p.includes('/pausar')), 'un dibujo nuevo no debe pausar el telar: ' + posts.join('|'));
+assert.equal(f.run('repFilas.every(r => r === 1)'), true, 'el dibujo nuevo no hereda las repeticiones del anterior');
+// el botón ⏸ sí pausa el telar, aunque esta pantalla no estuviera animando
+posts.length = 0; await f.run('pausePlay(true)');
+assert(posts.some(p=>p.includes('/api/telares/8/pausar')), posts.join('|'));
+
+// ── T14: ⏪ pausa el TELAR antes de retroceder (antes solo frenaba la pantalla)
+telar = { id:8, estado:'tejiendo', patron_actual_id:3, historial_actual_id:9, fila_actual:2, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(routes); await f.run('iniciarApp()'); await settle();
+posts.length = 0; await f.run('ejecutarRetroceso()'); await settle();
+const iPausa = posts.findIndex(p=>p.includes('/pausar')), iRet = posts.findIndex(p=>p.includes('/retroceder ')), iFis = posts.findIndex(p=>p.includes('/retroceder-fisico'));
+assert(iPausa >= 0 && iRet > iPausa && iFis > iRet, 'orden pausar → retroceder → retroceder-fisico: ' + posts.join('|'));
+
+// ── T15: si otra pantalla lleva el tejido (409 OTRO_CONDUCTOR), esta la sigue y no suma pasadas
+const conOtro = (m,u,b) => (m==='POST' && u==='/api/telares/8/avanzar')
+  ? { status:409, body:{ error:'otra', codigo:'OTRO_CONDUCTOR' } } : routes(m,u,b);
+telar = { id:8, estado:'pausado', patron_actual_id:3, historial_actual_id:9, fila_actual:1, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(conOtro); await f.run('iniciarApp()'); await settle();
+await f.run('startPlay()'); f.timers.length = 0; f.run('doTick()'); f.timers.pop().f(); await settle();
+assert.equal(f.run('seguidor'), true, 'con otra pantalla conduciendo, esta queda como seguidora');
+// como seguidora toma la posición del servidor en cada consulta
+telar = { ...telar, estado:'tejiendo', fila_actual:3 }; await f.run('actualizarEstadoTelar()'); await settle();
+assert.equal(f.run('curRow'), 3);
+f.timers.length = 0; f.run('doTick()'); assert.equal(f.timers.pop().ms, 1000, 'la seguidora no avanza por reloj');
+
+// ── T16: "ESP32 conectado" se decide con el reloj del servidor, no con el del celular
+telar = { id:8, estado:'pausado', patron_actual_id:null, historial_actual_id:null, ultimo_ping_esp32:'2000-01-01T00:00:00Z', segundos_desde_ping:2, origen_conteo:'estimado' };
+f = boot(routes); await f.run('iniciarApp()'); await settle(); await f.run('actualizarEstadoTelar()'); await settle();
+assert.equal(f.els['telar-conexion-txt'].textContent, 'ESP32 conectado');
+
 console.log('frontend OK');
