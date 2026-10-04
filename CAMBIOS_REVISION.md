@@ -743,10 +743,14 @@ PostgreSQL real** (`backend/tests/integracion.pg.mjs`), no solo con la base simu
 `verif_coherencia.py` sin errores y la integración contra PostgreSQL 16. **No probado:** compilación con el core ESP32
 real, un navegador real y el hardware.
 
-**Hardware (para revisar en el armado, no se cambió nada):** un módulo de relé de 5 V activo en bajo manejado desde
-un GPIO de 3,3 V puede dejar el LED del optoacoplador apenas encendido cuando la salida está en alto (3,3 V contra 5 V
-de alimentación del opto). En los módulos con jumper JD-VCC, alimentar VCC del lado lógico con 3,3 V lo evita; si no,
-medir que el relé no quede a medio accionar.
+**Hardware (para medir en el armado, no se cambió nada):** el módulo de 2 canales es activo en bajo y va a 5 V, pero
+el GPIO en reposo queda en 3,3 V (pull-up a 3,3 V): entre el VCC del módulo y la entrada quedan 1,7 V. En la mayoría de
+los módulos el LED indicador va en serie con el del optoacoplador (unos 3 V entre los dos) y con 1,7 V no circula
+corriente, así que no pasa nada; pero en un módulo con el indicador en otra posición puede circular una corriente chica
+por el optoacoplador. Con el montaje de la documentación (jumper JD-VCC puesto), verificar con el ESP32 encendido y sin
+pulsos que el LED de cada canal quede apagado y el relé suelto (el paso de la lista de validación que comprueba que el
+relé arranca suelto lo cubre). Si quedara encendido, el arreglo es cambiar de módulo o quitar el jumper y alimentar VCC
+con 3,3 V y JD-VCC con 5 V.
 
 ### Segunda pasada de esta revisión (sobre el código ya corregido)
 
@@ -769,6 +773,7 @@ medir que el relé no quede a medio accionar.
 | `npm run codigo <usuario> --rotar` (como decía la documentación) no rotaba: npm se queda con `--rotar`. Y con `RECOVERY_SECRET` cambiada, justo el caso para el que se indica, el script terminaba en error porque intentaba descifrar el código viejo antes de mirar `--rotar`. | El comando correcto es `npm run codigo -- <usuario> --rotar` (documentación corregida); el script rota aunque el código viejo sea ilegible y, sin `--rotar`, explica qué hacer. Probado contra PostgreSQL. |
 | El historial de errores en memoria de la web crecía sin tope con la red caída. | Últimos 200. |
 | "Cargar" en la biblioteca el mismo dibujo que se estaba tejiendo frenaba la reproducción de esa pantalla (la estimación se cortaba con el telar andando) y volvía a contar las repeticiones de la fila desde el principio. | Si es el mismo dibujo en marcha, solo se vuelve al editor. |
+| Nivel 2: el nodo solo volvía a bajar el dibujo si cambiaba el **dibujo** asignado. Con ⏹ y ▶ seguidos sobre el mismo dibujo (antes de su próxima consulta, 2,5 s), seguía con la posición y el conteo del trabajo anterior: no empezaba en la fila 1 como promete ⏹, y la producción nueva heredaba las pasadas de la vieja (contadas dos veces en las estadísticas). Además, con la descarga fallida reportaba una fila vieja. | El nodo compara también el id de la producción (`historial_id` en `patron-actual`, `historial_actual_id` en la consulta) y la vuelve a bajar si es otra; sin dibujo cargado no reporta. |
 | La aplicación se inicializaba una sola vez: si se entraba como invitado con la base vacía y después se iniciaba sesión, el operario quedaba sin telar hasta recargar; y al volver a entrar tras una sesión vencida no se recuperaba el trabajo en curso. | Al volver a entrar se recargan los dibujos, el telar y el trabajo en curso. |
 
 Las pruebas de la integración contra PostgreSQL se ampliaron con estos casos (incluida la pausa larga con el

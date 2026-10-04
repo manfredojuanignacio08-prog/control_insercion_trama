@@ -68,6 +68,7 @@ volatile bool avisoSinSenalPendiente = false;   // lo pone el loop; lo limpia la
 long  totalReportado  = -1;   // último conteo que el backend aceptó (para reportar cambios en pausa)
 long  retrocesosVisto = -1;   // último valor de retrocesos_contados; -1 = todavía no se leyó ninguno
 long  patronCargado   = 0;    // id del dibujo que está en memoria (para detectar que asignaron otro)
+long  produccionCargada = 0;  // id de la producción cuya posición y conteo adoptó (0 = ninguna)
 static const unsigned long INTERVALO_CONSULTA_MS = 2500;
 
 // Con el telar en marcha se reporta la posición cada segundo (no cada 2,5 s): si se corta la luz,
@@ -202,6 +203,7 @@ bool descargarDibujo() {
   filtroDibujo["pasadas_sensor"] = true;
   filtroDibujo["repeticion_en_fila"] = true;
   filtroDibujo["patron_id"] = true;
+  filtroDibujo["historial_id"] = true;
   JsonDocument doc;
   const DeserializationError err =
       deserializeJson(doc, cuerpoDibujo, DeserializationOption::Filter(filtroDibujo));
@@ -284,6 +286,7 @@ bool descargarDibujo() {
   // primera consulta creía que "cambió el dibujo" y lo volvía a bajar desde la fila 0,
   // anulando la posición recién retomada.
   patronCargado = doc["patron_id"] | 0L;
+  produccionCargada = doc["historial_id"] | 0L;
   hayDibujo = true;
 
   long totalPasadas = 0;
@@ -313,6 +316,7 @@ void consultarEstado() {
     filtro["estado"] = true;
     filtro["patron_actual_id"] = true;
     filtro["retrocesos_contados"] = true;
+    filtro["historial_actual_id"] = true;
     JsonDocument doc;
     const DeserializationError err = deserializeJson(doc, http.getString(), DeserializationOption::Filter(filtro));
     http.end();
@@ -347,11 +351,18 @@ void consultarEstado() {
     // seguiría tejiendo el anterior: la tela saldría con un patrón que nadie pidió y el
     // operario no tendría forma de notarlo hasta ver la pieza terminada.
     const long patronAhora = doc["patron_actual_id"] | 0L;
+    // Una producción NUEVA del mismo dibujo (alguien tocó ⏹ y enseguida ▶, antes de que esta
+    // placa viera el telar sin dibujo) también obliga a bajarlo: la producción nueva empieza en
+    // la fila 0 con el conteo en 0. Antes solo se miraba el dibujo, y el nodo seguía con la
+    // posición y el conteo del trabajo anterior, que la producción nueva heredaba.
+    const long produccionAhora = doc["historial_actual_id"] | 0L;
+    const bool otraProduccion = produccionAhora > 0 && produccionCargada > 0 && produccionAhora != produccionCargada;
     if (patronAhora == 0) {
       hayDibujo = false;     // sin dibujo asignado: el loop deja los canales en reposo
       debeTejer = false;
-    } else if (patronAhora != patronCargado) {
-      log("Cambió el dibujo asignado: se descarga el nuevo");
+    } else if (patronAhora != patronCargado || otraProduccion) {
+      log(otraProduccion ? "Empezó una producción nueva: se vuelve a bajar el dibujo desde el principio"
+                         : "Cambió el dibujo asignado: se descarga el nuevo");
       hayDibujo = false;     // mientras tanto el loop deja los canales en reposo, no congelados
       if (!descargarDibujo()) {
         log("No se pudo descargar el dibujo nuevo: se reintenta en la próxima consulta");
@@ -496,7 +507,10 @@ void tareaRed(void* /*parametro*/) {
     // backend al volver a tejer, y mientras tanto la web mostraba una posición vieja.
     const bool acabaDeDetenerse = tejiendoAntes && !tejiendo;
     const bool cambioEnPausa = hayDibujo && (long)sensorPasadaTotal() != totalReportado;
-    if ((tejiendo || tejiendoAntes || cambioEnPausa) &&
+    // Sin dibujo cargado (por ejemplo, falló la descarga) no hay posición que informar: el
+    // reporte llevaría una fila vieja y el backend lo rechazaría. Al cargarse, el conteo se
+    // alinea con el del backend.
+    if (hayDibujo && (tejiendo || tejiendoAntes || cambioEnPausa) &&
         (acabaDeDetenerse || millis() - ultimoReporte >= INTERVALO_REPORTE_MS)) {
       ultimoReporte = millis();
       reportarPasadas();

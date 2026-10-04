@@ -51,6 +51,11 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 - [ ] **Prueba del arranque seguro:** reiniciá el ESP32 con todo conectado.
       Los tres relés **NO deben dispararse solos** al encender. Si se
       disparan, revisá los pull-ups de 10 kΩ en IN1/IN2/IN3.
+- [ ] **Reposo del módulo de 2 canales:** con el ESP32 encendido y sin pulsos, el LED de
+      IN1 e IN2 tiene que quedar **apagado del todo** (ni siquiera tenue). La entrada queda
+      en 3,3 V y el módulo en 5 V: en la mayoría de los módulos eso no hace circular
+      corriente, pero en algunos sí. Si queda encendido, cambiá el módulo o sacá el
+      jumper JD-VCC y alimentá VCC con 3,3 V y JD-VCC con 5 V.
 
 ## Etapa 3b, Sensado de los botones (banco, sin telar)
 

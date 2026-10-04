@@ -99,6 +99,8 @@ r = await api('GET',`/telares/${T2}?origen=nivel2`,null,{ck:null,dev:true}); ass
 r = await api('GET',`/telares/${T2}`); assert.equal(r.b.sensor_activo,true, 'la consulta del nodo es su señal de vida');
 r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,409); assert.equal(r.b.codigo,'SENSOR_ACTIVO');
 r = await api('GET',`/telares/${T2}/patron-actual`,null,{ck:null,dev:true}); assert.equal(r.b.fila_actual,0); assert.equal(r.b.repeticion_en_fila,1);
+{ const prod = r.b.historial_id; const t2 = await api('GET',`/telares/${T2}?origen=nivel2`,null,{ck:null,dev:true});
+  assert(prod > 0 && t2.b.historial_actual_id === prod, 'el nodo compara la producción que cargó con la del telar'); }
 r = await api('POST',`/telares/${T2}/pasadas`,{pasadas_sensor:2,fila_actual:1,repeticion_en_fila:1},{ck:null,dev:true}); assert.equal(r.b.aplicado,true, JSON.stringify(r));
 // el nodo pierde la red: la producción sigue siendo del sensor (tiene pasadas medidas) y el reloj no la toca
 psql(`update telares set ultimo_reporte_sensor = now() - interval '5 minutes' where id=${T2}`);
@@ -129,6 +131,10 @@ for (let i = 0; i < 15; i++) {
   const est = psql(`select t.estado||','||(select count(*) from historial_produccion h where h.telar_id=t.id and h.estado='en_curso') from telares t where id=${T2}`);
   assert(est === 'apagado,0' || est === 'tejiendo,1', 'nunca "tejiendo" sin trabajo abierto: ' + est);
 }
+r = await api('POST',`/telares/${T2}/detener`,{});
+r = await api('POST',`/telares/${T2}/asignar-patron`,{patron_id:P}); assert.equal(r.s,201);
+{ const nueva = r.b.id; const pa = await api('GET',`/telares/${T2}/patron-actual`,null,{ck:null,dev:true});
+  assert.equal(pa.b.historial_id, nueva); assert.equal(pa.b.fila_actual, 0); assert.equal(pa.b.pasadas_sensor, 0, 'la producción nueva no hereda pasadas'); }
 r = await api('POST',`/telares/${T2}/detener`,{});
 r = await api('POST',`/telares/${T2}/reanudar`); assert.equal(r.s,409);
 psql(`update telares set ultimo_reporte_sensor = null where id=${T2}`);

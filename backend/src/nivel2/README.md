@@ -7,7 +7,7 @@ de `ESP32_DEVICE_KEY` en el `.env`).
 
 | Endpoint | Quién | Para qué |
 |---|---|---|
-| `GET /api/telares/:id/patron-actual` | dispositivo o sesión | El firmware descarga la matriz del dibujo asignado y la posición donde quedó |
+| `GET /api/telares/:id/patron-actual` | dispositivo o sesión | El firmware descarga la matriz del dibujo asignado y la posición donde quedó. Incluye `historial_id` (la producción en curso): el nodo lo compara con `historial_actual_id` de su consulta periódica y, si cambió (⏹ y ▶ seguidos con el mismo dibujo), lo vuelve a bajar desde el principio |
 | `POST /api/telares/:id/pasadas` | solo dispositivo | El firmware reporta el conteo real del sensor (`pasadas_sensor`, `fila_actual`) |
 | `POST /api/telares/:id/evento-fisico` con `{tipo:"sin_senal"}` | solo dispositivo | El sensor dejó de recibir pulsos con el telar en marcha: la web pasa a "pausado" y queda un registro en el log de errores |
 | `POST /api/telares/:id/validar-conteo` con `{confirmo:true}` | sesión | El operario da por bueno el conteo del sensor tras compararlo con el contador mecánico |

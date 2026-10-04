@@ -43,7 +43,7 @@ export async function obtenerPatronActual(req, res, next) {
     // fila, dejando un salto visible en la tela a mitad de una pieza.
     const { rows } = await pool.query(
       `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas, p.repeticiones_por_fila,
-              h.fila_actual, h.repeticion_en_fila, h.pasadas_sensor
+              h.id AS historial_id, h.fila_actual, h.repeticion_en_fila, h.pasadas_sensor
          FROM telares t
          JOIN patrones p ON p.id = t.patron_actual_id
          LEFT JOIN historial_produccion h
@@ -74,6 +74,9 @@ export async function obtenerPatronActual(req, res, next) {
       fila_actual: p.fila_actual ?? null,
       repeticion_en_fila: p.repeticion_en_fila ?? 0,
       pasadas_sensor: p.pasadas_sensor ?? null,
+      // Id de la producción en curso: el nodo lo compara con historial_actual_id de su consulta
+      // periódica para notar una producción NUEVA del mismo dibujo (⏹ y ▶ seguidos).
+      historial_id: p.historial_id ?? null,
     });
   } catch (err) {
     next(err);

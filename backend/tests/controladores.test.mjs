@@ -264,8 +264,9 @@ globalThis.__q = () => ({ rows:[] });
 x = await call(N.reportarPasadas, { params:{id:'99'}, body:{pasadas_sensor:1} }); assert.equal(x.err?.status, 404);
 
 // 11) obtenerPatronActual
-globalThis.__q = (sql) => ({ rows:[{id:3, nombre:'Raya', filas:4, columnas:4, matriz_pasadas:MAT, fila_actual:17, pasadas_sensor:900}] });
+globalThis.__q = (sql) => ({ rows:[{id:3, nombre:'Raya', filas:4, columnas:4, matriz_pasadas:MAT, historial_id:41, fila_actual:17, pasadas_sensor:900}] });
 x = await call(N.obtenerPatronActual, { params:{id:'8'} }); assert.equal(x.r.body.fila_actual, 17); assert.equal(x.r.body.pasadas_sensor, 900); assert.equal(x.r.body.patron_id, 3);
+assert.equal(x.r.body.historial_id, 41, 'el nodo necesita el id de la producción para notar una nueva del mismo dibujo');
 
 // 12) validarConteo, retrocederFisico, pausar/reanudar
 globalThis.__q = (sql) => /conteo_validado = true/.test(sql) ? { rows:[{id:5}] } : undefined;
