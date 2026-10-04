@@ -24,14 +24,17 @@ Son tres contraseñas largas que el servidor necesita. Se cargan como **variable
    guardar (Render redespliega solo). Agregar también `WEBAUTHN_RP_ID` (solo el dominio, ej. `control-trama-backend.onrender.com`) y `WEBAUTHN_ORIGIN` (con https, ej. `https://control-trama-backend.onrender.com`).
 3. Copiar **el mismo valor** de `ESP32_DEVICE_KEY` en `DEVICE_KEY` de `esp32/control_trama_esp32/config.h`
    (Nivel 1) y de `esp32/nivel2/config_nivel2.h` (Nivel 2), y volver a cargar los firmwares. Tienen que ser
-   idénticos, carácter por carácter. En esos mismos dos archivos están `WIFI_SSID` y `WIFI_PASSWORD` de la red de la fábrica:
-   si la clave del router cambia, hay que actualizarla en los dos.
+   idénticos, carácter por carácter. En esos mismos dos archivos van `WIFI_SSID` y `WIFI_PASSWORD` de la red de la fábrica:
+   en el repositorio quedan con un texto de ejemplo (`NOMBRE_DE_LA_RED`, `CLAVE_DE_LA_RED`); los datos reales se escriben
+   solo en la copia que se carga a la placa y **no se suben** al repositorio. Si la clave del router cambia, hay que
+   actualizarla en los dos.
 4. Comprobar: el monitor serie no muestra errores 401 y en la web se puede iniciar sesión.
 
-No publicar estas claves en el repositorio ni compartirlas. La del WiFi de la fábrica sí está en los dos
-`config`: si el repositorio es público, cualquiera que lo lea la ve. En el repo queda el texto de ejemplo; la clave
-real va solo en la copia que se carga a la placa y en Render. Si se sospecha que una se filtró, se cambia en
-Render y en los firmwares.
+No publicar estas claves en el repositorio ni compartirlas. En el repo quedan los textos de ejemplo; la clave del
+dispositivo real va solo en Render y en la copia que se carga a la placa, y lo mismo el WiFi de la fábrica. Si se
+sospecha que una se filtró, se cambia en Render y en los firmwares (y la del WiFi, en el router). **Las versiones
+anteriores del repositorio tenían escritas la clave del dispositivo y la del WiFi**: siguen en el historial de git,
+así que hay que cambiar las dos antes de poner el sistema en la fábrica.
 
 ## 2. Ajustar la sincronización (Nivel 2)
 

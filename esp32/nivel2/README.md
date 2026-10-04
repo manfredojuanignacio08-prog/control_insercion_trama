@@ -115,6 +115,8 @@ son estimaciones y no deben darse por buenos.
 - `config_nivel2.h`, parámetros y credenciales, en un solo lugar
 - `sensor_pasada.h`, el conteo de pasadas (Bloque C)
 - `seleccion_dibujo.h`, el comando de los cuatro canales (Bloque D)
+- `posicion_dibujo.h`, la posición dentro del dibujo (fila y pasadas que le faltan), el mismo
+  modelo que `backend/src/utils/posicion.js`; se prueba en la PC con `verificacion/host/correr.sh`
 
 ## Cómo está organizado (dos núcleos)
 

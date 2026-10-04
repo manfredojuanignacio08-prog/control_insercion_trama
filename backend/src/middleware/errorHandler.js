@@ -1,7 +1,12 @@
 // Middleware centralizado de manejo de errores.
 // Cualquier controller que llame a next(err) termina acá.
 export function errorHandler(err, req, res, next) {
-  if (!err.status || err.status >= 500) console.error(err);
+  // Se registra solo lo que es una falla del servidor. Los datos mal formados que la base
+  // rechaza (22xxx, 23xxx) son errores del pedido y se responden 400/409 más abajo: antes
+  // también se volcaban enteros al log, como si fueran fallas, y tapaban las de verdad.
+  const RESPONDIDOS = ['22P02', '22003', '22001', '22007', '22008', '23502', '23514', '22021', '22P05', '23505', '23503'];
+  const esDelPedido = RESPONDIDOS.includes(err.code);
+  if ((!err.status || err.status >= 500) && !esDelPedido) console.error(err);
 
   // Datos mal formados que llegan hasta PostgreSQL: un id que no es número, un número
   // fuera de rango, un campo obligatorio vacío o un valor que viola una restricción.

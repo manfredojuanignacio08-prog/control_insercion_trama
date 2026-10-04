@@ -11,7 +11,8 @@ de datos y documentación. Cada punto lleva el número que tenía en la revisió
 | `esp32/verificacion/host/correr.sh`: lógica real de `sensor_pasada.h` con reloj simulado; sintaxis de los dos sketches contra stubs de Arduino | OK |
 | Scripts de verificación existentes (13/13, 6/6, 6/6, 21/21) | OK |
 | `node --check` de todo el backend y del JavaScript de la web | OK |
-| Backend contra una base PostgreSQL real, navegador real, compilación con el core ESP32 real | **NO se pudo** (no hay base ni placa en este entorno). Probar primero en una base de prueba. |
+| Backend contra una base PostgreSQL real (`tests/integracion.pg.mjs`, desde la revisión completísima de octubre de 2026) | OK |
+| Navegador real, compilación con el core ESP32 real, hardware | **NO se pudo** (no hay navegador gráfico, placa ni telar en este entorno). |
 
 ## Críticos
 
@@ -684,3 +685,65 @@ Probados los cinco casos. Manual (web y Word) actualizado.
   los fondos oscuros).
 - Verificado y sin cambios: los controles de tamaño atenuados mientras el telar teje son intencionales (la edición está
   bloqueada y se avisa en pantalla), y las pautas de accesibilidad eximen del contraste a los controles inactivos.
+
+## Revisión completísima: software, firmware y hardware (octubre de 2026)
+
+Revisión línea por línea de todo el proyecto (backend, web, base, los dos firmwares, documentación), repetida sobre el
+código ya corregido hasta que una pasada completa no encontró nada. Esta vez el backend se probó además **contra un
+PostgreSQL real** (`backend/tests/integracion.pg.mjs`), no solo con la base simulada.
+
+**Seguridad**
+
+| Problema | Corrección |
+|---|---|
+| El repositorio público tenía escritas la clave de dispositivo (`DEVICE_KEY`) y la red y clave del WiFi de la fábrica en `config.h` y `config_nivel2.h`. | Quedan textos de ejemplo (`NOMBRE_DE_LA_RED`, `CLAVE_DE_LA_RED`, la clave de ejemplo). **Siguen en el historial de git: hay que cambiar la clave del dispositivo en Render y en las placas, y la del router.** |
+| Una cookie mal codificada (`%E0%A4%A`) hacía fallar `decodeURIComponent` y devolvía error 500 en **cada** pedido de ese navegador hasta borrar las cookies. | Se trata como "sin sesión" (401). |
+| `pasos` sin tope en `/avanzar` y `/retroceder`: con `pasos: 1e9` el servidor recorría mil millones de pasos y quedaba colgado para todos. Lo mismo con un conteo enorme del sensor. | `pasos` de 1 a 10.000 (400 si no). La posición se calcula con aritmética (sin bucle, verificado igual al paso a paso en 400.000 casos al azar). Conteo del sensor hasta 2.147.483.647. |
+| Invitaciones: dos registros simultáneos con el mismo código entraban los dos; y el cupo de registro libre (3) se podía pasar con registros simultáneos. `REGISTRO_LIBRE_MAX=Infinity` no funcionaba. | El código se consume en una sola sentencia (`UPDATE … AND usada = false RETURNING`) dentro de una transacción con un bloqueo, junto con el conteo y el alta. Probado contra PostgreSQL: dos registros a la vez con la misma invitación dan exactamente un 200 y un 403. |
+| `matriz_ligamento` no se validaba (se guardaba cualquier cosa). El nombre del registro tampoco. | Misma forma que la matriz y solo 0/1; nombre hasta 60 caracteres, sin caracteres de control. |
+
+**Posición y conteo**
+
+| Problema | Corrección |
+|---|---|
+| Retroceso a mano con el sensor del Nivel 2 instalado: el backend movía la posición **y** el nodo también la descontaba. Con tres retrocesos seguidos el backend quedaba tres pasadas adelante y **rechazaba todos los reportes siguientes** (posición congelada). | Si el sensor lleva la producción, el backend solo suma `retrocesos_contados`; la posición la informa el nodo. Probado contra PostgreSQL. |
+| Nivel 2: una pasada con el telar sin tejer (en pausa, impulso) sumaba al conteo pero **no movía la posición**, y el pulso reclasificado como retroceso movía la posición de forma distinta al backend. Posición y conteo se separaban y el backend rechazaba los reportes. | `posicion_dibujo.h`: el mismo modelo que el backend, adelante y atrás espejo; probado en la PC con 1,2 millones de pasadas al azar contra el modelo del backend. El nodo reporta también en pausa si el conteo cambió. |
+| Las repeticiones de las filas se podían cambiar con un trabajo abierto (el backend solo comparaba la matriz), lo que dejaba la posición guardada sin sentido. | Cuentan como cambio de forma: 409 `PATRON_EN_PRODUCCION`. |
+| Con la PC y el celular abiertos a la vez en el editor, las dos pantallas sumaban pasadas: el conteo estimado corría al doble. | Un solo "conductor" por telar: la otra pantalla recibe 409 `OTRO_CONDUCTOR` y solo sigue la posición; si la primera se cierra, toma la posta en un par de segundos. |
+| Al retomar, al recargar y al sincronizar con el sensor, la pantalla reiniciaba las repeticiones de la fila (volvía a contar desde la primera pasada). Un dibujo nuevo heredaba las repeticiones del anterior. | Se toma `repeticion_en_fila` del backend; el dibujo nuevo empieza con 1 en todas las filas. |
+
+**Control del telar**
+
+| Problema | Corrección |
+|---|---|
+| Crear un dibujo nuevo, cambiar el tamaño o limpiar la grilla **pausaba el telar real** (la misma función que el botón ⏸). Desde un celular se podía frenar la máquina que otra persona estaba tejiendo. | Solo el botón ⏸ le da la orden de Pausa al telar; las acciones del editor solo frenan la animación. Abrir otro dibujo o "guardar y crear uno nuevo" mientras se teje quedan bloqueados. |
+| ⏪ desde la web frenaba la animación pero dejaba el telar en "tejiendo": el Nivel 1 mandaba Retroceder con la máquina en marcha. | Primero `/pausar`, después `/retroceder`, después el relé. |
+| Pausar un telar apagado (sin trabajo) lo dejaba "pausado". | Queda apagado. |
+| Nivel 1: si el primer sondeo después de arrancar traía un retroceso pendiente, se perdía. | Se memoriza antes del primer sondeo. |
+| Nivel 1: después de avisar un evento de la botonera, el estado esperado se deducía del tipo de evento y no de lo que respondió el servidor. | Se usa el `estado` de la respuesta. |
+| El indicador "ESP32 conectado" comparaba con la hora del celular: con el reloj corrido decía "Sin conexión" con el ESP32 andando. | El servidor manda `segundos_desde_ping`, medido con su propio reloj. |
+| El cartel "se puso en marcha desde la botonera" se repetía cada 4 s. | Una vez por evento. |
+| `detener` aceptaba `pasadas_totales` y `alertas_disparadas` de cualquier tipo. | Enteros no negativos (400 si no). |
+
+**Web, registros y documentación**
+
+- Mensajes del servidor (`d.aviso`, errores) escapados antes de insertarse en la ficha; "Fila - / -" en lugar de "Fila 0 / 0"
+  sin dibujo; registrarse sin código de recuperación entra igual al sistema.
+- El registro de errores del servidor ya no se llena con rechazos esperados (400/409 de la base por datos inválidos):
+  solo los errores reales.
+- `Manual_Pagina_Web_Telar.docx` (sección 4.6) todavía decía que Pausa solo frenaba la animación, que al retomar se
+  volvía a la fila 1 y que la "posición incierta" la causaban los botones Avanzar/Impulso. Reescrito según cómo funciona
+  hoy, con ⏹ Terminar trabajo, el bloqueo de edición con trabajo abierto, las repeticiones por fila y la pantalla que
+  lleva la cuenta. El manual de instalación tenía el mismo problema con los controles.
+- `PUESTA_EN_MARCHA.md`, `esp32/README.md`, `backend/README.md` (API: `cliente`, `OTRO_CONDUCTOR`, tope de `pasos`,
+  `segundos_desde_ping`, retroceso con sensor; pruebas), `esp32/nivel2/README.md` y `verificacion/LEEME.md` al día.
+
+**Pruebas:** `npm test` (seis suites, con casos nuevos para cada corrección), `esp32/verificacion/host/correr.sh`
+(con la prueba nueva de `posicion_dibujo.h`), las simulaciones de Python (`sim_nivel2_firmware.py` 29/29),
+`verif_coherencia.py` sin errores y la integración contra PostgreSQL 16. **No probado:** compilación con el core ESP32
+real, un navegador real y el hardware.
+
+**Hardware (para revisar en el armado, no se cambió nada):** un módulo de relé de 5 V activo en bajo manejado desde
+un GPIO de 3,3 V puede dejar el LED del optoacoplador apenas encendido cuando la salida está en alto (3,3 V contra 5 V
+de alimentación del opto). En los módulos con jumper JD-VCC, alimentar VCC del lado lógico con 3,3 V lo evita; si no,
+medir que el relé no quede a medio accionar.

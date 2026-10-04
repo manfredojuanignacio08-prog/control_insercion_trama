@@ -368,13 +368,15 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
 
 - **Nombre, filas y columnas**: definen el patrón y el tamaño de la
   cuadrícula. Si el nombre ya existe, el sistema lo avisa.
-- **Cuadrícula**: tocando una celda se le asigna un número de pasadas; las
-  celdas con pasadas se muestran en color.
+- **Cuadrícula**: cada fila es una pasada y tocar una celda marca la bobina
+  que se activa en ella; el número a la derecha de la fila (columna ×) dice
+  cuántas pasadas seguidas se teje esa fila.
 - **Color por fila**: a cada fila se le puede asignar un color de hilo.
-- **Controles de simulación (▶ ⏸ ⏹ ↺)**: animan la grilla y al mismo tiempo
-  avisan al telar (por ahora hay un solo telar, se usa automáticamente). ▶
-  asigna el patrón y arranca; ↺ retrocede usando la posición real que
-  devuelve el servidor; ⏹ cierra esa producción en el historial.
+- **Controles (⏸ ▶ ⏪ ⏹)**: mueven la grilla y al mismo tiempo dan la orden al
+  telar (por ahora hay un solo telar, se usa automáticamente). ▶ asigna el
+  patrón y arranca, o retoma donde quedó si es el mismo; ⏸ pausa la máquina
+  sin cerrar el trabajo; ⏪ pausa y retrocede una pasada la máquina real (pide
+  confirmación); ⏹ termina el trabajo (cierra esa producción en el historial).
 - **Exportar ficha técnica**: descarga un **PDF real** con el nombre, las
   dimensiones y la grilla coloreada, generado en el navegador con `jsPDF`
   (no depende de internet).

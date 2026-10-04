@@ -16,7 +16,8 @@ de los archivos que leen si hiciera falta).
 
 - **`host/correr.sh`**, prueba la lógica REAL de `../nivel2/sensor_pasada.h` (retrocesos
   acumulados, reclasificación del pulso de retroceso, período de gracia del sensor)
-  con un reloj simulado, y comprueba que los dos sketches compilan contra stubs
+  con un reloj simulado, la de `../nivel2/posicion_dibujo.h` (1,2 millones de pasadas
+  al azar adelante y atrás contra el mismo modelo del backend), y comprueba que los dos sketches compilan contra stubs
   mínimos de Arduino. Es un chequeo de lógica y de sintaxis: no reemplaza compilar
   con el core ESP32 real.
 

@@ -1695,13 +1695,13 @@ async function startPlay() {
   doTick();
 }
 
-// UNA FILA = UNA PASADA.
 // En cada pasada, la fila del dibujo define qué marcos suben: cada columna es una
 // bobina/electroimán del dobby. Las columnas NO se recorren una por una (son
-// simultáneas dentro de la misma pasada). Lo que avanza es la fila. Para repetir una
-// pasada, se dibuja la misma fila dos veces. Espejo de utils/posicion.js en el backend.
+// simultáneas dentro de la misma pasada). Lo que avanza es la fila, y cada fila se teje
+// tantas pasadas seguidas como diga su número de repeticiones (repFilas). Espejo de
+// utils/posicion.js en el backend.
 //
-// OJO: este avance es un RELOJ (una pasada cada 500 ms), no la máquina. Mientras no
+// OJO: este avance es un RELOJ (una pasada cada 200 ms), no la máquina. Mientras no
 // haya sensor de pasada, el conteo que se guarda es una estimación. Cuando el sensor
 // del Nivel 2 está reportando, el backend responde 409 SENSOR_ACTIVO y esta pantalla
 // deja de avanzar por su cuenta: sigue la posición que informa el sensor (se sincroniza
