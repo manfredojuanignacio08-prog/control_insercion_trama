@@ -86,6 +86,12 @@ r = await api('POST','/errores',{titulo:'x'},{ck:INV}); assert.equal(r.s,403);
 r = await api('POST',`/telares/${T}/detener`,{alertas_disparadas:'mucho'}); assert.equal(r.s,400);
 r = await api('POST',`/telares/${T}/detener`,{}); assert.equal(r.s,200);
 r = await api('POST',`/telares/${T}/pausar`); assert.equal(r.b.estado,'apagado');
+// Marcha a mano sin trabajo (queda tejiendo, posición incierta) y Pausa: vuelve a apagado
+r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'marcha'},{ck:null,dev:true}); assert.equal(r.b.estado,'tejiendo'); assert.equal(r.b.posicion_incierta,true);
+r = await api('POST',`/telares/${T}/pausar`); assert.equal(r.b.estado,'apagado');
+r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'marcha'},{ck:null,dev:true});
+r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'pausa'},{ck:null,dev:true}); assert.equal(r.b.estado,'apagado');
+r = await api('POST',`/telares/${T}/confirmar-posicion`,{}); assert.equal(r.b.posicion_incierta,false);
 r = await api('DELETE',`/patrones/${P}`); assert.equal(r.s,409);
 // Nivel 2 instalado, telar quieto más de 30 s (el nodo no reporta pasadas, pero consulta cada
 // 2,5 s): su consulta lo mantiene "activo", así que al tocar ▶ la web NO avanza por reloj y el

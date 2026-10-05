@@ -83,4 +83,9 @@ t = await call(A.recuperarUsuario, { usuario: 'u1', codigo: COD },
   { id: 1, usuario: 'u1', nombre: 'U', recovery_code: 'gcm1.AAAA.BBBB.CCCC', recovery_hash: null });
 assert.equal(t.r.code, 401);
 
+// 6) Usuario inexistente: la misma respuesta que un código equivocado (no revela qué usuarios existen)
+t = await call(A.recuperarUsuario, { usuario: 'nadie', codigo: COD }, undefined);
+assert.equal(t.r.code, 401);
+assert.equal(t.r.body.error, 'El usuario o el código de recuperación son incorrectos.');
+
 console.log('recovery OK');

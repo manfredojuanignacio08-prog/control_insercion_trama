@@ -226,4 +226,30 @@ f = boot(routes); await f.run('iniciarApp()'); await settle(); await f.run('star
 f.run("loadDrawInEditor('3')");
 assert.equal(f.run('isPlaying'), true); assert.equal(f.run('curRow'), 2);
 
+// ── T23: el telar se puso a tejer desde la botonera (u otra pantalla) con el mismo dibujo en el
+// editor: esta pantalla se suma y cuenta desde la fila del servidor. Con otro dibujo, no.
+telar = { id:8, estado:'pausado', patron_actual_id:3, historial_actual_id:9, fila_actual:2, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(routes); await f.run('iniciarApp()'); await settle();
+assert.equal(f.run('isPlaying'), false);
+telar = { ...telar, estado:'tejiendo', fila_actual:3 };
+await f.run('actualizarEstadoTelar()'); await settle();
+assert.equal(f.run('isPlaying'), true, 'se suma al tejido'); assert.equal(f.run('seguidor'), true);
+assert.equal(f.run('curRow'), 3, 'toma la fila del servidor');
+f.run('isPlaying=false');
+telar = { ...telar, estado:'pausado', fila_actual:2 };
+f = boot(routes); await f.run('iniciarApp()'); await settle(); f.run("loadDrawInEditor('4')");
+telar = { ...telar, estado:'tejiendo' };
+await f.run('actualizarEstadoTelar()'); await settle();
+assert.equal(f.run('isPlaying'), false, 'con otro dibujo en el editor no se suma');
+
+// ── T24: una consulta de estado que salió antes de "Terminar trabajo" (telar todavía tejiendo)
+// y vuelve después no suma la pantalla al trabajo recién terminado
+telar = { id:8, estado:'tejiendo', patron_actual_id:3, historial_actual_id:9, fila_actual:1, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(routes); await f.run('iniciarApp()'); await settle();
+f.run('isPlaying=false; generacionPlay++;');
+const vieja = f.run('actualizarEstadoTelar()');
+f.run("showConfirm = function(t,m,yes){ yes(); };"); f.run('terminarTrabajo()');
+await vieja; await settle();
+assert.equal(f.run('isPlaying'), false, 'no se vuelve a sumar a un trabajo que se está terminando');
+
 console.log('frontend OK');

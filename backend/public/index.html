@@ -736,7 +736,7 @@ function cerrarSesion() {
     try { await apiAuth('/logout', {}); } catch (e) { /* si falla, igual se vuelve al login */ }
     // Esta pantalla deja de llevar el tejido (el telar sigue como está). Si no, el próximo
     // avance por reloj ya salía sin sesión y el ingreso mostraba "Tu sesión venció".
-    isPlaying = false; seguidor = false;
+    isPlaying = false; seguidor = false; generacionPlay++;
     clearTimeout(playTimer);
     if (telarStatusTimer) { clearInterval(telarStatusTimer); telarStatusTimer = null; }
     setUsuarioActual(null, null);
@@ -865,7 +865,7 @@ async function apiFetch(path, options = {}) {
 // Vuelve al login sin recargar: se detiene el tejido en pantalla y se muestra el ingreso.
 function sesionVencida() {
   if (appIniciada === false && document.getElementById('login-overlay').style.display !== 'none') return;
-  isPlaying = false;
+  isPlaying = false; seguidor = false; generacionPlay++;
   clearTimeout(playTimer);
   if (telarStatusTimer) { clearInterval(telarStatusTimer); telarStatusTimer = null; }   // sin sesión no hay nada que consultar
   setUsuarioActual(null, null);
@@ -1165,6 +1165,23 @@ async function actualizarEstadoTelar() {
     if (isPlaying && gen === generacionPlay) {
       if (telar.estado === 'pausado') frenarPorEstadoDelTelar(telar);
       else if (telar.estado === 'apagado' || !telar.historial_actual_id) frenarPorEstadoDelTelar(null);
+    } else if (!isPlaying && gen === generacionPlay && telar.estado === 'tejiendo' && telar.historial_actual_id &&
+               String(editId) === String(telar.patron_actual_id) && origenSesion !== 'invitado' && nR > 0) {
+      // El telar se puso a tejer sin que esta pantalla tocara ▶ (desde la botonera, o desde otra
+      // pantalla que después se cerró): esta se suma al tejido. Empieza siguiendo la posición del
+      // servidor y, si nadie más lleva la cuenta, la toma. Antes la web decía "Tejiendo" pero ninguna
+      // pantalla contaba, y el conteo estimado quedaba congelado con la máquina andando.
+      if (Number.isInteger(telar.fila_actual) && telar.fila_actual >= 0 && telar.fila_actual < nR) {
+        curRow = telar.fila_actual; curCol = 0; curPass = 0;
+        repRestantes = restantesDesde(curRow, telar.repeticion_en_fila);
+      } else if (curRow < 0 || curRow >= nR) {
+        curRow = 0; curCol = 0; curPass = 0; repRestantes = repFilas[0] || 1;
+      }
+      isPlaying = true;
+      seguidor = true;
+      generacionPlay++;
+      updPlayUI(); renderGrid();
+      doTick();
     }
 
     // Con el sensor de pasada reportando, la posición y el conteo son los del sensor:
@@ -1598,6 +1615,10 @@ function terminarTrabajo() {
     'Se cierra la producción de este dibujo: la próxima vez que toques ▶ empieza desde la fila 1 y no se puede retomar donde quedó. ¿Terminar?',
     async () => {
       isPlaying = false;
+      seguidor = false;
+      // Una consulta de estado que salió antes (con el telar todavía tejiendo) no puede volver a
+      // sumar esta pantalla al trabajo que se está terminando.
+      generacionPlay++;
       clearTimeout(playTimer);
       try {
         await apiFetch(`/telares/${telarPorDefectoId}/detener`, { method: 'POST', body: JSON.stringify({}) });
@@ -1920,6 +1941,7 @@ async function ejecutarRetroceso() {
   //    en marcha. El Nivel 1 respeta el orden: primero Pausa, después Retroceder.
   isPlaying = false;
   seguidor = false;
+  generacionPlay++;   // una consulta de estado anterior no vuelve a sumar la pantalla al tejido
   clearTimeout(playTimer);
   updPlayUI();
   try {
@@ -2779,7 +2801,12 @@ function logError(title, msg, code) {
   if (origenSesion === 'invitado') return;
   apiFetch('/errores', {
     method: 'POST',
-    body: JSON.stringify({ titulo: title, mensaje: msg, codigo: code }),
+    // Recortados a lo que acepta el servidor (200 / 2000 / 64 caracteres).
+    body: JSON.stringify({
+      titulo: String(title).slice(0, 200),
+      mensaje: msg == null ? null : String(msg).slice(0, 2000),
+      codigo: code == null ? null : String(code).slice(0, 64),
+    }),
   }).catch(() => {});
 }
 
@@ -3056,7 +3083,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="modal-content" style="background:var(--srf);border-radius:var(--r-lg);padding:24px;max-width:90%;width:100%;max-height:80vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <h2 style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--tx);">Simulador de Color</h2>
-      <button type="button" onclick="document.getElementById('modal-color').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--tx);">×</button>
+      <button type="button" aria-label="Cerrar" onclick="document.getElementById('modal-color').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--tx);">×</button>
     </div>
     <div style="background:#1E3A5F;width:100%;height:100px;border-radius:var(--r-md);margin-bottom:16px;border:1px solid var(--bd);" id="color-sample"></div>
     <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Color del Hilo:</label>
