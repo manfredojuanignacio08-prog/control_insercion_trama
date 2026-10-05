@@ -814,3 +814,16 @@ nodo conectado) y se verificó que la versión anterior las falla y la corregida
 - **Nueva `documentacion_proyecto/Guia_Mediciones_y_Verificaciones.docx`:** junta en un solo documento todo lo que hay que medir y comprobar, en orden. Cubre el Bloque A con el telar apagado (seguro aunque esté todo conectado) y encendido, el sensor de pasada con su validación de una jornada, los lectores ópticos y los LCA110 con la sincronización, una tabla para anotar los valores medidos y qué se cambia en `config.h` según cada resultado. Tiene 56 verificaciones, cada una con una casilla.
 - **`Guia_Bloques_C_y_D.docx`:** decía que la salida del LCA110 son las patas 3 y 4 (son la 4 y la 6; la 3 y la 5 quedan sin conectar), que en paralelo también hay que cortar un hilo (en paralelo no se corta nada) y que después del primer canal se suman "los otros dos" (son tres).
 - **`Guia_Conexion_Reles_LCA110.docx`:** el subtítulo decía "Vamatex C 401"; el telar es el C 201.
+
+### Revisión completa de cierre (backend, web, firmware, hardware y documentación)
+
+| Problema | Corrección |
+|---|---|
+| Apretar Pausa en la botonera con el telar sin trabajo (apagado) lo dejaba "pausado", a diferencia de la pausa desde la web. | `evento-fisico` con `pausa` deja el telar apagado si estaba apagado, igual que `/pausar`. Con test. |
+| El límite de 20 intentos de ingreso por IP se aplicaba también al login y al registro con huella: en la fábrica todos los teléfonos salen por la misma IP y en un rato normal de uso quedaban todos bloqueados 15 minutos. | Login y registro con huella usan un límite propio (`AUTH_HUELLA_MAX`, 300 cada 15 min); el de 20 queda solo para el código de recuperación, que es el que se puede adivinar. |
+| `POST /api/errores` guardaba título, mensaje y código de cualquier largo y tipo. | Se validan: título hasta 200 caracteres, mensaje hasta 2000 y código hasta 64. La web los recorta antes de mandarlos. |
+| El nombre del dibujo se validaba sin espacios al principio y al final, pero se guardaba con ellos: " Raya" y "Raya" quedaban como dos dibujos distintos. | Se guarda recortado. |
+| La recuperación con código respondía distinto para un usuario inexistente y para un código incorrecto: servía para averiguar qué usuarios existen. | Mismo 401 y mismo mensaje en los dos casos. Con test. |
+| Si el telar se ponía a tejer desde la botonera (o desde otra pantalla) con el mismo dibujo abierto en el editor, la pantalla seguía mostrando "En pausa" y nadie estimaba las pasadas hasta tocar ▶. | La pantalla se suma al tejido y cuenta desde la fila que tiene el servidor (no lo hace un invitado ni otro dibujo). Con test. |
+
+Sin errores nuevos en: firmware (pruebas en la PC en los dos modos, coherencia 18/18, simulaciones 6/6, 6/6 y 29/29), cuentas eléctricas (PC817 del Bloque A ≈ 14 mA con 2,2 kΩ de 1 W, sensor ≈ 10 mA con 1,2 kΩ, LCA110 ≈ 6,4 mA con 330 Ω), planillas, documentos Word, enlaces de los `.md` y de los sitios web, e integración contra PostgreSQL real.
