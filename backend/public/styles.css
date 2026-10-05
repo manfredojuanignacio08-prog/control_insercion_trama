@@ -403,7 +403,7 @@ font-family:var(--font-mono);}
 .grid-inner{display:inline-block;min-width:100%}
 .grid-head{display:flex;padding-left:36px;margin-bottom:2px}
 .g-col-n{
-  width:42px;height:18px;font-size:9px;font-weight:700;
+  width:calc(var(--cel,42px) + 2px);height:18px;font-size:9px;font-weight:700;
   color:var(--acc);text-align:center;line-height:18px;
   flex-shrink:0;font-variant-numeric:tabular-nums;
 }
@@ -416,7 +416,7 @@ font-family:var(--font-mono);}
 }
 .grid-row.active-row .g-row-n{color:var(--acc);font-weight:900}
 .g-cell{
-  width:42px;height:42px;border:1px solid var(--bd);
+  width:var(--cel,42px);height:var(--cel,42px);border:1px solid var(--bd);
   border-radius:4px;background:var(--srf);flex-shrink:0;
   margin-right:2px;transition:background .07s,transform .06s;
   cursor:pointer;user-select:none;
