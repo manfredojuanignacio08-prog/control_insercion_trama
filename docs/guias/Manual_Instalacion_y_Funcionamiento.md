@@ -119,15 +119,22 @@ PGUSER=postgres
 PGPASSWORD=TU_CONTRASEÑA
 PGDATABASE=control_trama
 PORT=3000
-NODE_ENV=production
+NODE_ENV=development
+SESSION_SECRET=una-clave-larga-de-al-menos-32-caracteres
+RECOVERY_SECRET=otra-clave-de-al-menos-16
+ESP32_DEVICE_KEY=la-clave-que-va-tambien-en-config.h
 ```
+Con `NODE_ENV=production` el servidor **no arranca** si falta `SESSION_SECRET` (mínimo 32
+caracteres) o `RECOVERY_SECRET` (mínimo 16): es a propósito, para no quedar en producción con
+claves temporales. Para generar una clave al azar:
+`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 
 **Paso 3, Crear la base de datos** (solo si es una base local nueva, no la del equipo):
 ```sql
 CREATE DATABASE control_trama;
 ```
 Si en cambio vas a conectarte a la base real del equipo en Neon, no creás
-nada (solo completá `DATABASE_URL` en el `).env` (ver sección 3.5, Paso 2).
+nada: solo completá `DATABASE_URL` en el `.env` (ver sección 3.5, Paso 2).
 
 **Paso 4, Crear o actualizar las tablas:**
 ```bash
@@ -142,8 +149,9 @@ npm run migrate
 
 Correr los dos siempre es seguro, sin importar el estado de la base: si algo
 ya existe, cada paso lo detecta y no hace nada. Debería responder
-`✅ Esquema creado/actualizado correctamente.` y luego
-`✅ Migración aplicada correctamente.` Si falla, revisar que PostgreSQL esté
+`✅ Esquema creado/actualizado correctamente.` y luego, por cada migración nueva,
+`✅ migracion_0NN_... aplicada.`, terminando con `Migraciones al día (N nueva/s).` Una línea con
+❌ indica una migración que falló (se reintenta en el próximo arranque). Si falla, revisar que PostgreSQL esté
 corriendo y que los datos del `.env` sean correctos.
 
 **Paso 5, Levantar el servidor:**
@@ -237,8 +245,8 @@ crear una base nueva en Render (solo conectar el backend a esa).
    ```
    postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require
    ```
-   (Reemplazá `LA_CONTRASEÑA` por la real. El resto, host, puerto, usuario,
-   nombre de base (ya está confirmado en la documentación de la base de datos del equipo).)
+   (Reemplazá `USUARIO`, `CONTRASEÑA` y el host `ep-xxxx-xxxx-pooler.REGION...` por los
+   datos reales de la base del equipo, que están en su documentación.)
 3. Guardá esa cadena completa (la vas a pegar como variable de entorno en el Paso 3).
 
 > Si en algún momento el equipo decide migrar a otra base (por ejemplo, una

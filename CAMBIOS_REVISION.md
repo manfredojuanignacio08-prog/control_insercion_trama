@@ -858,3 +858,13 @@ Sin errores nuevos en: firmware (pruebas en la PC en los dos modos, coherencia 1
 | Ficha en PDF: el nombre del dibujo admite 100 caracteres, pero el título (16 pt) entra en una línea hasta unos 60: con un nombre largo se salía de la hoja y el pie de página se pisaba con "Página x de y". Con más de cinco colores de hilo, los siguientes se dibujaban fuera de la hoja. | El título se achica hasta 11 pt y, si igual no entra, se recorta con "..."; lo mismo el encabezado de las hojas siguientes y el pie. Los colores que no entran se resumen en "y N más". Verificado generando la ficha con jsPDF (nombre de 100 caracteres y 8 colores). |
 | Ver el código de recuperación desde el perfil y tocar "Listo" volvía a "entrar al sistema": recargaba la biblioteca y recuperaba el trabajo en curso, y si se estaba editando otro dibujo, el editor saltaba solo al dibujo del telar. | Desde el perfil, "Listo" solo cierra la pantalla; después de un registro se sigue entrando. Con test (falla sin el arreglo). |
 | Comentarios del código que decían que el código de recuperación "se ve una sola vez". | Corregidos: se puede volver a ver desde el perfil. |
+
+### Quinta revisión de cierre
+
+| Problema | Corrección |
+|---|---|
+| `Manual_Instalacion_y_Funcionamiento.md`: el ejemplo de `.env` ponía `NODE_ENV=production` sin `SESSION_SECRET` ni `RECOVERY_SECRET`; siguiéndolo, el servidor no arrancaba (en producción exige las dos claves). | El ejemplo pasa a `development`, incluye las tres claves y explica por qué producción las exige, con el comando para generarlas. |
+| El mismo manual anunciaba "✅ Migración aplicada correctamente.", que el programa no imprime; tenía un error de tipeo ("en el `).env`") y pedía reemplazar `LA_CONTRASEÑA` en una cadena que dice `CONTRASEÑA`. | Corregidos con lo que se ve de verdad (`✅ migracion_0NN_... aplicada.` y `Migraciones al día (N nueva/s).`). |
+| El README del backend no mencionaba los casos nuevos de la prueba de integración. | Agregados. |
+
+Sin errores nuevos en: variables de entorno (todas en `.env.example`), Docker (el esquema es idempotente: dos arranques seguidos sin error), PM2 (una sola instancia, necesaria para el conductor en memoria), el script de códigos de recuperación y la estructura de la página (sin ids duplicados ni funciones inexistentes).
