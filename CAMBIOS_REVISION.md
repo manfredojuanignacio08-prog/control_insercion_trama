@@ -877,3 +877,16 @@ Sin errores nuevos en: variables de entorno (todas en `.env.example`), Docker (e
 | Un invitado tocaba ⏸, ⏪ (después de confirmar) o ⏹ y el pedido viajaba igual al servidor, que lo rechazaba con 403 (y quedaba un error en la consola). ▶ ya se frenaba en la pantalla. | Los cuatro botones avisan en la pantalla y no mandan nada. Con test (falla sin el arreglo). |
 
 Prueba nueva en Chromium contra el servidor real y PostgreSQL: inicio, editor, celdas, nombre, repeticiones, ▶ (se reinicia al completar la vuelta), ⏸, ⏪ con confirmación, bloqueo de edición con trabajo en curso, ficha PDF descargada (texto verificado), biblioteca, estadísticas, ⏹, tema oscuro y ancho de celular sin desplazamiento horizontal; y el recorrido de invitado. Sin errores de la aplicación (el único aviso es la fuente de Google, bloqueada por la red de este entorno).
+
+### Séptima revisión de cierre (pruebas de punta a punta en el navegador)
+
+| Problema | Corrección |
+|---|---|
+| En un celular (390 px), un dibujo de 8 columnas no entraba: con celdas de 42 px la fila necesita unos 466 px, y la columna 8 quedaba fuera de la pantalla, tapada por la casilla de repeticiones (había que deslizar de costado sin que nada lo indicara). | Las celdas se achican lo justo según el ancho disponible (mínimo 28 px) y se recalculan al entrar al editor y al girar el teléfono. Medido en Chromium: sin desborde a 390 y 360 px ni en tablet; con 4 columnas no cambia nada. |
+
+Pruebas nuevas en Chromium contra el servidor real y PostgreSQL, todas bien:
+- Dos pantallas: la segunda se suma como seguidora y el conteo va a ~5 pasadas/s (no al doble); al cerrar la primera, la segunda toma la cuenta.
+- ESP32 simulado (con la clave del dispositivo): "ESP32 conectado"; Pausa en la botonera frena la pantalla y no suma; Marcha la vuelve a sumar; un reinicio la frena con el aviso correspondiente.
+- Nivel 2 simulado: con el nodo conectado la pantalla deja de contar por reloj y sigue la fila que informa el sensor.
+- Dibujo de 300 × 8 (el máximo): la grilla se dibuja en ~10 ms y la ficha PDF sale en 8 hojas con su encabezado de continuación.
+- Pantallas de ingreso y recuperación a ancho de celular, sin desplazamiento horizontal.
