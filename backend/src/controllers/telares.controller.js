@@ -140,7 +140,9 @@ export async function asignarPatron(req, res, next) {
     const telar = await client.query('SELECT * FROM telares WHERE id = $1 FOR UPDATE', [id]);
     if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
 
-    const patron = await client.query('SELECT id, nombre, columnas FROM patrones WHERE id = $1', [patron_id]);
+    // FOR SHARE: si alguien está guardando un cambio de matriz de este dibujo, se espera a que
+    // termine (y ese guardado, al revés, ve esta producción y no cambia la matriz).
+    const patron = await client.query('SELECT id, nombre, columnas FROM patrones WHERE id = $1 FOR SHARE', [patron_id]);
     if (patron.rows.length === 0) throw notFound(`No existe el dibujo con id ${patron_id}.`);
 
     // Cada telar tiene una cantidad fija de elementos de selección (bobinas). Está

@@ -100,7 +100,8 @@ en vez de la del proxy.
 | Variable | Para qué sirve |
 |---|---|
 | `NODE_ENV=production` | Logs en formato `combined`, optimizaciones de Express |
-| `PGSSL=true` | **Obligatoria con Neon.** Activa la conexión cifrada a la base; el `sslmode` de la URL no alcanza, porque el código fija el cifrado según esta variable |
+| `PGSSL=true` | **Dejarla siempre con Neon.** Cifra la conexión y verifica el certificado del servidor. Si `DATABASE_URL` trae `?sslmode=...`, la librería `pg` usa eso (la URL manda): para Neon, `?sslmode=verify-full` |
+| `PGSSL_VERIFICAR=false` | Solo como salida de emergencia, para una base con certificado propio que no se pueda verificar: cifra sin comprobar con quién habla. Con Neon no hace falta |
 | `SESSION_SECRET` | **Obligatoria.** Firma las cookies de sesión (mínimo 32 caracteres). En producción sin ella el servidor no arranca; en desarrollo se usa clave temporal y las sesiones se pierden en cada reinicio |
 | `RECOVERY_SECRET` | **Obligatoria en producción.** Cifra los códigos de recuperación en la base (mínimo 16 caracteres). Si cambia, los códigos viejos dejan de leerse: rotarlos con `npm run codigo -- <usuario> --rotar` (los dos guiones hacen falta: sin ellos npm se queda con `--rotar` y el código no se rota) |
 | `ESP32_DEVICE_KEY` | **Obligatoria.** Clave que mandan los ESP32 en `X-Device-Key` (la misma en `DEVICE_KEY` de los dos `config`). Sin ella los ESP32 reciben 401 |
@@ -253,7 +254,7 @@ Cada `db/migracion_NNN_*.sql` se aplica **una sola vez**, dentro de una transacc
 
 `npm test` corre seis pruebas: la lógica de posición (avanzar/retroceder son espejos, y el cálculo directo coincide con el paso a paso en 400.000 casos al azar), la autenticación (cookie firmada, clave de dispositivo), el modo invitado, los **controladores con una base simulada** (retomar/reanudar, `reinicio`, `sin_senal`, retrocesos, bloqueo de edición, estadísticas, registro e invitaciones, conductor único, límite de `pasos`), la **lógica de la web ejecutada sin navegador** (recuperar el trabajo al abrir, reanudar sin reiniciar, 401, terminar trabajo, etiquetas de "estimado", pausa, retroceso, segunda pestaña) y los códigos de recuperación. No necesita base de datos.
 
-`tests/integracion.pg.mjs` es una prueba aparte, **contra el servidor real y un PostgreSQL real**: telar, dibujos, conductor del reloj, eventos de los ESP32, reportes del sensor, retrocesos con sensor, estadísticas, invitaciones y dos registros simultáneos con la misma invitación. Crea y borra datos, así que se corre **solo contra una base de prueba vacía**; los pasos están al principio del archivo. Ninguna de las dos reemplaza probar en un navegador real.
+`tests/integracion.pg.mjs` es una prueba aparte, **contra el servidor real y un PostgreSQL real**: telar, dibujos, conductor del reloj, eventos de los ESP32, reportes del sensor, retrocesos con sensor, estadísticas, invitaciones, dos registros simultáneos con la misma invitación, ocho guardados simultáneos del mismo dibujo (se guarda uno solo) y la pausa sin trabajo abierto. Crea y borra datos, así que se corre **solo contra una base de prueba vacía**; los pasos están al principio del archivo. Ninguna de las dos reemplaza probar en un navegador real.
 
 ## Retomar un trabajo (pausa, cierre de la página, corte de luz, traslado)
 

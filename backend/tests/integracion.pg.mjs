@@ -81,6 +81,16 @@ r = await api('GET',`/patrones/${P}/estadisticas`); assert.equal(r.s,200); asser
 r = await api('GET',`/historial?telar_id=${T}`); assert.equal(r.s,200); assert.equal(r.b.length,1);
 r = await api('GET',`/historial?desde=no-es-fecha`); assert.equal(r.s,400);
 r = await api('POST','/errores',{telar_id:T,titulo:'prueba',codigo:'X'},{ck:null,dev:true}); assert.equal(r.s,201);
+// dos guardados simultáneos con la misma versión: uno guarda y el otro recibe DIBUJO_MODIFICADO
+// (antes la versión se comprobaba en una consulta suelta y los dos podían pasar, pisándose)
+{
+  const v = (await api('GET',`/patrones/${P}`)).b.modificado_at;
+  const cuerpo = (n) => ({nombre:n,filas:3,columnas:4,matriz_pasadas:MAT,repeticiones_por_fila:[2,1,3],version_esperada:v});
+  const rs = await Promise.all(Array.from({ length: 8 }, (_, k) => api('PUT',`/patrones/${P}`,cuerpo('Raya ' + k))));
+  const guardados = rs.filter((x) => x.s === 200).length;
+  assert.equal(guardados, 1, 'se guarda uno solo: ' + rs.map((x) => x.s + ' ' + (x.b.codigo || '')).join(', '));
+  assert(rs.every((x) => x.s === 200 || x.b.codigo === 'DIBUJO_MODIFICADO'), JSON.stringify(rs));
+}
 r = await api('POST','/errores',{titulo:'x'},{ck:INV}); assert.equal(r.s,403);
 // terminar trabajo; pausar un telar apagado lo deja apagado
 r = await api('POST',`/telares/${T}/detener`,{alertas_disparadas:'mucho'}); assert.equal(r.s,400);

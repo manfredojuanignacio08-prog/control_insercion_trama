@@ -5,7 +5,18 @@ dotenv.config();
 
 const { Pool } = pg;
 
-const sslConfig = process.env.PGSSL === 'true' ? { rejectUnauthorized: false } : false;
+// Con PGSSL=true la conexión va cifrada Y se verifica el certificado del servidor (que de verdad
+// sea la base y no alguien en el medio). Antes se cifraba sin verificar (rejectUnauthorized: false).
+// Neon usa certificados de autoridades públicas, así que la verificación funciona sin configurar
+// nada más. Si alguna base usara un certificado propio que no se pueda verificar, PGSSL_VERIFICAR=false
+// vuelve al comportamiento anterior (solo como salida de emergencia).
+//
+// OJO: si DATABASE_URL trae ?sslmode=..., la librería pg usa ESO y no esta opción (la URL manda).
+// Para Neon conviene ?sslmode=verify-full: verifica hoy y lo va a seguir haciendo en la próxima
+// versión de pg, en la que sslmode=require dejará de verificar el certificado.
+const sslConfig = process.env.PGSSL === 'true'
+  ? { rejectUnauthorized: process.env.PGSSL_VERIFICAR !== 'false' }
+  : false;
 
 const connectionConfig = process.env.DATABASE_URL
   ? {

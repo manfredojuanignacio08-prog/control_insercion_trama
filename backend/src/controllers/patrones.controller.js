@@ -79,6 +79,11 @@ export async function crearPatron(req, res, next) {
 
 // PUT /api/patrones/:id
 export async function actualizarPatron(req, res, next) {
+  // En una transacción con la fila del dibujo bloqueada: antes la versión y el "¿se está tejiendo?"
+  // se comprobaban en consultas sueltas, y un guardado de otra persona (o un ▶ que asignaba este
+  // dibujo a un telar) que llegara justo en el medio se pisaba o quedaba con la matriz cambiada.
+  // asignar-patron lee el dibujo con FOR SHARE, así que espera a este guardado (o al revés).
+  const client = await pool.connect();
   try {
     const { id } = req.params;
     const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila } = req.body;
@@ -91,10 +96,11 @@ export async function actualizarPatron(req, res, next) {
     // con el Nivel 2 instalado la tela saldría con un dibujo distinto al pedido, sin
     // aviso. Nombre, colores y metadatos sí se pueden cambiar. Para modificar la
     // matriz hay que detener el trabajo primero (eso libera el dibujo).
-    const actual = await pool.query(
+    await client.query('BEGIN');
+    const actual = await client.query(
       `SELECT filas, columnas, matriz_pasadas, repeticiones_por_fila,
               date_trunc('milliseconds', modificado_at) AS version
-         FROM patrones WHERE id = $1`, [id]);
+         FROM patrones WHERE id = $1 FOR UPDATE`, [id]);
     if (actual.rows.length === 0) throw notFound(`No existe el dibujo con id ${id}.`);
 
     // Control de versión optimista. La web manda la fecha de modificación que tenía
@@ -125,7 +131,7 @@ export async function actualizarPatron(req, res, next) {
       JSON.stringify(repsNormalizadas(previo.repeticiones_por_fila, previo.filas)) !==
         JSON.stringify(repsNormalizadas(repeticiones_por_fila, filas));
     if (cambiaForma) {
-      const enUso = await pool.query(
+      const enUso = await client.query(
         `SELECT t.codigo
            FROM telares t
            JOIN historial_produccion h ON h.telar_id = t.id AND h.estado = 'en_curso'
@@ -142,7 +148,7 @@ export async function actualizarPatron(req, res, next) {
 
     const ligamento = matriz_ligamento ?? derivarLigamentoDesdePasadas(matriz_pasadas);
 
-    const { rows } = await pool.query(
+    const { rows } = await client.query(
       `UPDATE patrones
          SET nombre = $1, filas = $2, columnas = $3, matriz_pasadas = $4,
              matriz_ligamento = $5, colores_filas = $6, metadata = $7,
@@ -163,9 +169,13 @@ export async function actualizarPatron(req, res, next) {
     );
 
     if (rows.length === 0) throw notFound(`No existe el dibujo con id ${id}.`);
+    await client.query('COMMIT');
     res.json(rows[0]);
   } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
     next(err);
+  } finally {
+    client.release();
   }
 }
 

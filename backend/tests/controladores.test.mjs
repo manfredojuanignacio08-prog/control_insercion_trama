@@ -89,6 +89,24 @@ globalThis.__q = (sql) => {
 x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'pausa'} });
 assert.equal(x.log.find(l=>/RETURNING id, estado, posicion_incierta/.test(l.sql)).params[1], 'apagado');
 
+// guardar un dibujo: versión y uso se comprueban con la fila bloqueada, en la misma transacción
+globalThis.__q = (sql) => {
+  if (/FROM patrones WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{filas:4, columnas:4, matriz_pasadas:MAT, version:new Date()}] };
+  if (/UPDATE patrones/.test(sql)) return { rows:[{id:3}] };
+};
+x = await call(P.actualizarPatron, { params:{id:'3'}, body:{nombre:'Raya', filas:4, columnas:4, matriz_pasadas:MAT} });
+assert.equal(x.err, null, x.err && x.err.message);
+{ const i = (re) => x.log.findIndex(l=>re.test(l.sql));
+  assert(i(/^BEGIN$/) >= 0 && i(/^BEGIN$/) < i(/FOR UPDATE/) && i(/FOR UPDATE/) < i(/^UPDATE patrones/) && i(/^UPDATE patrones/) < i(/^COMMIT$/), x.log.map(l=>l.sql.slice(0,30)).join(' | ')); }
+// asignar un dibujo lo lee con FOR SHARE: espera a un guardado de matriz en curso
+globalThis.__q = (sql) => {
+  if (/FROM telares WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{id:8, elementos_seleccion:4}] };
+  if (/FROM patrones WHERE id = \$1 FOR SHARE/.test(sql)) return { rows:[{id:3, nombre:'Raya', columnas:4}] };
+  if (/INSERT INTO historial_produccion/.test(sql)) return { rows:[{id:9}] };
+};
+x = await call(T.asignarPatron, { params:{id:'8'}, body:{patron_id:3} });
+assert.equal(x.err, null, x.err && x.err.message); assert(x.log.some(l=>/FROM patrones WHERE id = \$1 FOR SHARE/.test(l.sql)));
+
 // 4) tipo inválido
 x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'volar'} }); assert.equal(x.err.status, 400);
 
@@ -407,8 +425,8 @@ console.log('controladores OK');
   const P2 = await import('../src/controllers/patrones.controller.js');
   const base = { nombre:'X', filas:2, columnas:2, matriz_pasadas:[[1,0],[0,1]] };
   const correr = async (body) => { let err=null, st=200; const res={ status(c){st=c;return this}, json(){return this} };
-    const db = await import('../src/db.js'); const orig=db.pool.query; db.pool.query=poolV.query;
-    await P2.actualizarPatron({ params:{id:'1'}, body }, res, (e)=>{err=e;}); db.pool.query=orig; return err ? (err.codigo||err.status) : st; };
+    const db = await import('../src/db.js'); const orig=db.pool.query, origC=db.pool.connect; db.pool.query=poolV.query; db.pool.connect=async()=>({ query: poolV.query, release(){} });
+    await P2.actualizarPatron({ params:{id:'1'}, body }, res, (e)=>{err=e;}); db.pool.query=orig; db.pool.connect=origC; return err ? (err.codigo||err.status) : st; };
   assert.equal(await correr({ ...base, version_esperada: V.toISOString() }), 200);            // misma versión: guarda
   assert.equal(await correr({ ...base, version_esperada: '2026-09-20T09:00:00.000Z' }), 'DIBUJO_MODIFICADO'); // otra: conflicto
   assert.equal(await correr({ ...base }), 200);                                              // sin versión: como antes

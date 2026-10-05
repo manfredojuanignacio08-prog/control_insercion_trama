@@ -54,7 +54,7 @@
     <h1 style="font-size:22px;color:var(--tx);margin:0 0 6px;">Control de Inserción de Trama</h1>
     <p style="color:var(--tx3);font-size:14px;margin:0 0 28px;">Ingresá con tu huella dactilar</p>
 
-    <input id="login-usuario" type="text" placeholder="Usuario"
+    <input id="login-usuario" type="text" placeholder="Usuario" aria-label="Usuario"
       autocomplete="username" autocapitalize="none" spellcheck="false"
       style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;" maxlength="40">
 
@@ -69,7 +69,7 @@
     </button>
 
     <!-- Campo de invitación: aparece solo si el registro ya está cerrado (4º en adelante) -->
-    <input id="login-invitacion" type="text" placeholder="Código de invitación (si te lo dieron)"
+    <input id="login-invitacion" type="text" placeholder="Código de invitación (si te lo dieron)" aria-label="Código de invitación"
       autocapitalize="characters" spellcheck="false"
       style="display:none;width:100%;padding:12px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:13px;font-family:inherit;margin-top:12px;box-sizing:border-box;text-align:center;">
 
@@ -102,9 +102,9 @@
     <h1 style="font-size:20px;color:var(--tx);margin:0 0 6px;">Entrar con tu código</h1>
     <p style="color:var(--tx3);font-size:13px;margin:0 0 22px;">Escribí tu usuario y tu código de recuperación (es fijo, siempre el mismo) y entrás directo a la app.</p>
 
-    <input id="rec-usuario" type="text" placeholder="Usuario" autocapitalize="none" spellcheck="false"
+    <input id="rec-usuario" type="text" placeholder="Usuario" aria-label="Usuario" autocapitalize="none" spellcheck="false"
       style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:12px;box-sizing:border-box;" maxlength="40">
-    <input id="rec-codigo" type="text" placeholder="Código (ej: TRAMA-ABC123)" autocapitalize="characters" spellcheck="false"
+    <input id="rec-codigo" type="text" placeholder="Código (ej: TRAMA-ABC123)" aria-label="Código de recuperación" autocapitalize="characters" spellcheck="false"
       style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;text-align:center;">
 
     <button type="button" onclick="hacerRecupero()" id="btn-recupero"
@@ -121,7 +121,7 @@
 </div>
 
 <!-- ════════════════════════════════════════════
-     OVERLAY: CÓDIGO DE RECUPERACIÓN (se ve una sola vez, bien destacado)
+     OVERLAY: CÓDIGO DE RECUPERACIÓN (bien destacado; se puede volver a ver desde el perfil)
 ════════════════════════════════════════════ -->
 <div id="codigo-overlay" style="display:none;position:fixed;inset:0;z-index:2002;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
   <div style="max-width:360px;width:100%;">
@@ -298,7 +298,7 @@
     </div>
 
     <div class="editor-namebar">
-      <input type="text" class="name-in" id="insercion-name" placeholder="Nombre del dibujo..." value="Nuevo Dibujo 1" maxlength="100">
+      <input type="text" class="name-in" id="insercion-name" placeholder="Nombre del dibujo..." aria-label="Nombre del dibujo" value="Nuevo Dibujo 1" maxlength="100">
       <span class="status-badge" id="ed-status">Nuevo</span>
       <button type="button" class="ficha-btn" id="ficha-btn" aria-label="Ficha y estadísticas del dibujo" title="Ficha y estadísticas">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true">
@@ -404,7 +404,7 @@
     </div>
 
     <div style="padding:0 14px 12px;display:flex;gap:8px;flex-wrap:wrap;">
-      <input type="text" id="lib-search" placeholder="Buscar dibujos..." oninput="filterDraws()" style="flex:1;min-width:150px;padding:10px 12px;border:2px solid var(--bd);border-radius:var(--r-md);font-family:inherit;font-size:14px;background:var(--srf);color:var(--tx);">
+      <input type="text" id="lib-search" placeholder="Buscar dibujos..." aria-label="Buscar dibujos" oninput="filterDraws()" style="flex:1;min-width:150px;padding:10px 12px;border:2px solid var(--bd);border-radius:var(--r-md);font-family:inherit;font-size:14px;background:var(--srf);color:var(--tx);">
       <button type="button" onclick="clearFilters()" class="lib-clear" style="padding:10px 12px;background:var(--srf2);border:1px solid var(--bd);border-radius:20px;font-size:12px;font-weight:500;color:var(--acc-md);cursor:pointer;">Limpiar</button>
     </div>
 
@@ -509,8 +509,8 @@ async function hacerRegistro() {
     const respuesta = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: opciones });
     const r = await apiAuth('/registro/verificar', { usuario, respuesta });
     setUsuarioActual(usuario, r.nombre, 'huella');
-    // Si vino un código de recuperación (primer registro), mostrarlo bien
-    // visible: es la ÚNICA vez que se ve. El usuario debe anotarlo.
+    // Si vino un código de recuperación (primer registro), mostrarlo bien visible para que el
+    // usuario lo anote. Después se puede volver a ver desde el perfil, verificando la huella.
     if (r.recovery_code) {
       mostrarCodigoRecuperacion(r.recovery_code);
     } else {
@@ -524,11 +524,13 @@ async function hacerRegistro() {
   }
 }
 
-// Muestra el código de recuperación en una pantalla propia, bien destacada
-// (se ve una sola vez). Se usa tanto al registrarse como al regenerarlo.
+// Muestra el código de recuperación en una pantalla propia, bien destacada. Se usa al
+// registrarse y al volver a verlo desde el perfil (el código es fijo: no se regenera).
 let _codigoRecuperacionActual = '';
+let _codigoDesdePerfil = false;   // true: se abrió desde el perfil, con la sesión ya adentro
 function mostrarCodigoRecuperacion(codigo, opts = {}) {
   _codigoRecuperacionActual = codigo;
+  _codigoDesdePerfil = Boolean(opts.desdePerfil);
   document.getElementById('codigo-valor').textContent = codigo;
   const t = document.getElementById('codigo-titulo');
   const p = document.getElementById('codigo-texto');
@@ -568,6 +570,10 @@ async function copiarCodigoRecuperacion() {
 // Cierra la pantalla del código y entra al sistema
 function cerrarCodigoYEntrar() {
   document.getElementById('codigo-overlay').style.display = 'none';
+  // Visto desde el perfil (ya adentro): solo se cierra. Antes volvía a "entrar al sistema", que
+  // recargaba la biblioteca y recuperaba el trabajo en curso: si se estaba editando otro dibujo,
+  // el editor cambiaba solo al dibujo del telar.
+  if (_codigoDesdePerfil) return;
   entrarAlSistema();
 }
 
@@ -621,6 +627,7 @@ async function verCodigoRecuperacion() {
         titulo: 'Tu código de recuperación',
         texto: 'Este es tu código de recuperación. <b>Es fijo: siempre es el mismo.</b> Guardalo en un lugar seguro; con tu usuario y este código podés entrar directo si la huella no funciona o cambiás de dispositivo.',
         botonEntrar: 'Listo',
+        desdePerfil: true,
       });
     }
   } catch (e) {
@@ -1608,7 +1615,12 @@ async function restaurarTrabajoEnCurso() {
 
 // Cierra la producción del telar ("Terminar trabajo"). Es la única forma de poder modificar la
 // matriz de un dibujo que tiene un trabajo abierto, y hace que el próximo ▶ empiece desde cero.
+// Mismo aviso que ▶ para los botones que comandan el telar: un invitado no puede hacerlo, y antes
+// ⏸, ⏪ y ⏹ mandaban el pedido igual (⏪ después de pedir confirmación) y recién el servidor lo rechazaba.
+const AVISO_INVITADO_TELAR = 'Estás como invitado: para controlar el telar hay que iniciar sesión con tu huella o tu código.';
+
 function terminarTrabajo() {
+  if (origenSesion === 'invitado') { toast(AVISO_INVITADO_TELAR); return; }
   if (!telarPorDefectoId || !trabajoEnCursoPatronId) { toast('No hay un trabajo en curso'); return; }
   showConfirm(
     'Terminar el trabajo',
@@ -1903,6 +1915,7 @@ async function pausePlay(pedirAlTelar = false) {
   // se conserva para que ▶ retome exactamente donde quedó.
   updPlayUI(); renderGrid();
   if (!pedirAlTelar) return;
+  if (origenSesion === 'invitado') { toast(AVISO_INVITADO_TELAR); return; }
   if (!telarPorDefectoId) { if (estabaTejiendo) toast('Tejido pausado'); return; }
   try {
     // /pausar (no /detener): deja la producción abierta y conserva el patrón, así ▶ retoma
@@ -1926,6 +1939,7 @@ async function pausePlay(pedirAlTelar = false) {
 // (en pantalla y en el backend) y le pide al ESP32 un pulso del relé de
 // Retroceder. Usa el modal propio de la app, no el confirm() del navegador.
 function retrocederFisico() {
+  if (origenSesion === 'invitado') { toast(AVISO_INVITADO_TELAR); return; }
   if (!telarPorDefectoId) { toast('No hay telar seleccionado'); return; }
   showConfirm(
     'Retroceder una pasada',
@@ -2484,6 +2498,14 @@ async function exportDrawToPDF() {
     const pasadasVuelta = reps.reduce((a, b) => a + b, 0);
     const colorFila = (r) => (d.colores && d.colores[r]) ? hexARgb(d.colores[r]) : null;
     const hayColores = d.colores && d.colores.some(Boolean);
+    // Recorta un texto al ancho disponible con la fuente actual (el nombre del dibujo admite 100
+    // caracteres y, sin esto, el título o el pie de página se salían de la hoja o se pisaban).
+    const recortar = (texto, ancho) => {
+      let t = String(texto);
+      if (doc.getTextWidth(t) <= ancho) return t;
+      while (t.length > 1 && doc.getTextWidth(t + '...') > ancho) t = t.slice(0, -1);
+      return t.trimEnd() + '...';
+    };
 
     // ── Encabezado ─────────────────────────────────────────────────────────
     doc.setFillColor(...AZUL); doc.rect(0, 0, W, 30, 'F');
@@ -2494,8 +2516,12 @@ async function exportDrawToPDF() {
     doc.text(`Control de Inserción de Trama · ${d.telar}`, M, 22.5);
     doc.text(d.fecha, W - M, 15, { align: 'right' });
 
-    doc.setTextColor(...AZUL); doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
-    doc.text(d.nombre, M, 43);
+    doc.setTextColor(...AZUL); doc.setFont('helvetica', 'bold');
+    // El título baja de tamaño si el nombre es largo (hasta 11 pt) y, si igual no entra, se recorta.
+    let fzTitulo = 16;
+    doc.setFontSize(fzTitulo);
+    while (fzTitulo > 11 && doc.getTextWidth(d.nombre) > W - 2 * M) { fzTitulo -= 0.5; doc.setFontSize(fzTitulo); }
+    doc.text(recortar(d.nombre, W - 2 * M), M, 43);
 
     // ── Tarjetas de datos ──────────────────────────────────────────────────
     const largoVuelta = d.metrosPorPasada ? pasadasVuelta * d.metrosPorPasada : null;
@@ -2564,7 +2590,14 @@ async function exportDrawToPDF() {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...GRIS);
     doc.text('COLORES DE HILO', M, y);
     if (usados.length) {
-      usados.forEach((c, i) => {
+      // Entran unos cinco por renglón: con más colores, los últimos se dibujaban fuera de la hoja.
+      const caben = Math.floor((W - M - (M + 36)) / 26);
+      const mostrar = usados.length > caben ? usados.slice(0, caben - 1) : usados;
+      if (mostrar.length < usados.length) {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...GRIS);
+        doc.text(`y ${usados.length - mostrar.length} más`, M + 36 + mostrar.length * 26, y);
+      }
+      mostrar.forEach((c, i) => {
         const x = M + 36 + i * 26;
         doc.setFillColor(...hexARgb(c)); doc.setDrawColor(200, 206, 214); doc.setLineWidth(0.2);
         doc.roundedRect(x, y - 3.6, 5, 5, 1, 1, 'FD');
@@ -2607,7 +2640,7 @@ async function exportDrawToPDF() {
       if (yFila + cel > (hoja === 1 ? baseMatriz : H - 22)) {
         doc.addPage(); hoja++;
         doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...AZUL);
-        doc.text(`${d.nombre}: matriz, desde la fila ${r + 1} de ${filas}`, M, 18);
+        doc.text(`${recortar(d.nombre, 110)}: matriz, desde la fila ${r + 1} de ${filas}`, M, 18);
         encabezadoMatriz(26); yFila = 29;
       }
       if (r % 2 === 1) { doc.setFillColor(246, 248, 250); doc.rect(colMatriz.x, yFila, colMatriz.w, cel, 'F'); }
@@ -2713,7 +2746,7 @@ async function exportDrawToPDF() {
       doc.setPage(i);
       doc.setDrawColor(215, 222, 230); doc.setLineWidth(0.3); doc.line(M, H - 12, W - M, H - 12);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...GRIS);
-      doc.text(`Control de Inserción de Trama · ${d.nombre}`, M, H - 7.5);
+      doc.text(recortar(`Control de Inserción de Trama · ${d.nombre}`, W - 2 * M - 30), M, H - 7.5);
       doc.text(`Página ${i} de ${total}`, W - M, H - 7.5, { align: 'right' });
     }
     return doc;
@@ -3086,10 +3119,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <button type="button" aria-label="Cerrar" onclick="document.getElementById('modal-color').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--tx);">×</button>
     </div>
     <div style="background:#1E3A5F;width:100%;height:100px;border-radius:var(--r-md);margin-bottom:16px;border:1px solid var(--bd);" id="color-sample"></div>
-    <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Color del Hilo:</label>
+    <label for="thread-color" style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Color del Hilo:</label>
     <input type="color" id="thread-color" class="color-hilo" value="#1E3A5F" onchange="updateColorPreview()">
     
-    <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Aplicar a:</label>
+    <label for="row-select" style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Aplicar a:</label>
     <select id="row-select" style="width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--bd);background:var(--srf);color:var(--tx);margin-bottom:16px;font-family:inherit;">
       <option value="all">Toda la matriz</option>
     </select>
