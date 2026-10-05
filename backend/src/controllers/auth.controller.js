@@ -563,19 +563,16 @@ export async function recuperarUsuario(req, res, next) {
     if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
     const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
     const user = rows[0];
-    if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
+    // La misma respuesta para un usuario que no existe, uno sin código y un código equivocado:
+    // antes "Usuario no encontrado" dejaba averiguar qué usuarios existen antes de probar códigos.
+    const rechazo = () => res.status(401).json({ error: 'El usuario o el código de recuperación son incorrectos.' });
+    if (!user || (!user.recovery_code && !user.recovery_hash)) return rechazo();
 
     // Validar contra lo guardado (cifrado, plano legado o hash viejo).
     // Si era legado y coincide, se migra a cifrado en el acto: la base
     // deja de tener ese texto plano.
     const { ok, migrar } = coincideCodigo(codigo, user);
-
-    if (!user.recovery_code && !user.recovery_hash) {
-      return res.status(400).json({ error: 'Este usuario todavía no tiene un código de recuperación.' });
-    }
-    if (!ok) {
-      return res.status(401).json({ error: 'El código de recuperación es incorrecto.' });
-    }
+    if (!ok) return rechazo();
     if (migrar) {
       try { await guardarCodigoCifrado(user.id, String(codigo).trim().toUpperCase()); } catch { /* no bloquea el login */ }
     }

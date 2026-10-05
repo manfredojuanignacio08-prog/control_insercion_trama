@@ -1165,6 +1165,23 @@ async function actualizarEstadoTelar() {
     if (isPlaying && gen === generacionPlay) {
       if (telar.estado === 'pausado') frenarPorEstadoDelTelar(telar);
       else if (telar.estado === 'apagado' || !telar.historial_actual_id) frenarPorEstadoDelTelar(null);
+    } else if (!isPlaying && gen === generacionPlay && telar.estado === 'tejiendo' && telar.historial_actual_id &&
+               String(editId) === String(telar.patron_actual_id) && origenSesion !== 'invitado' && nR > 0) {
+      // El telar se puso a tejer sin que esta pantalla tocara ▶ (desde la botonera, o desde otra
+      // pantalla que después se cerró): esta se suma al tejido. Empieza siguiendo la posición del
+      // servidor y, si nadie más lleva la cuenta, la toma. Antes la web decía "Tejiendo" pero ninguna
+      // pantalla contaba, y el conteo estimado quedaba congelado con la máquina andando.
+      if (Number.isInteger(telar.fila_actual) && telar.fila_actual >= 0 && telar.fila_actual < nR) {
+        curRow = telar.fila_actual; curCol = 0; curPass = 0;
+        repRestantes = restantesDesde(curRow, telar.repeticion_en_fila);
+      } else if (curRow < 0 || curRow >= nR) {
+        curRow = 0; curCol = 0; curPass = 0; repRestantes = repFilas[0] || 1;
+      }
+      isPlaying = true;
+      seguidor = true;
+      generacionPlay++;
+      updPlayUI(); renderGrid();
+      doTick();
     }
 
     // Con el sensor de pasada reportando, la posición y el conteo son los del sensor:

@@ -226,4 +226,20 @@ f = boot(routes); await f.run('iniciarApp()'); await settle(); await f.run('star
 f.run("loadDrawInEditor('3')");
 assert.equal(f.run('isPlaying'), true); assert.equal(f.run('curRow'), 2);
 
+// ── T23: el telar se puso a tejer desde la botonera (u otra pantalla) con el mismo dibujo en el
+// editor: esta pantalla se suma y cuenta desde la fila del servidor. Con otro dibujo, no.
+telar = { id:8, estado:'pausado', patron_actual_id:3, historial_actual_id:9, fila_actual:2, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(routes); await f.run('iniciarApp()'); await settle();
+assert.equal(f.run('isPlaying'), false);
+telar = { ...telar, estado:'tejiendo', fila_actual:3 };
+await f.run('actualizarEstadoTelar()'); await settle();
+assert.equal(f.run('isPlaying'), true, 'se suma al tejido'); assert.equal(f.run('seguidor'), true);
+assert.equal(f.run('curRow'), 3, 'toma la fila del servidor');
+f.run('isPlaying=false');
+telar = { ...telar, estado:'pausado', fila_actual:2 };
+f = boot(routes); await f.run('iniciarApp()'); await settle(); f.run("loadDrawInEditor('4')");
+telar = { ...telar, estado:'tejiendo' };
+await f.run('actualizarEstadoTelar()'); await settle();
+assert.equal(f.run('isPlaying'), false, 'con otro dibujo en el editor no se suma');
+
 console.log('frontend OK');
