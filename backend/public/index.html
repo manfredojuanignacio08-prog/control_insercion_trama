@@ -121,7 +121,7 @@
 </div>
 
 <!-- ════════════════════════════════════════════
-     OVERLAY: CÓDIGO DE RECUPERACIÓN (se ve una sola vez, bien destacado)
+     OVERLAY: CÓDIGO DE RECUPERACIÓN (bien destacado; se puede volver a ver desde el perfil)
 ════════════════════════════════════════════ -->
 <div id="codigo-overlay" style="display:none;position:fixed;inset:0;z-index:2002;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
   <div style="max-width:360px;width:100%;">
@@ -509,8 +509,8 @@ async function hacerRegistro() {
     const respuesta = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: opciones });
     const r = await apiAuth('/registro/verificar', { usuario, respuesta });
     setUsuarioActual(usuario, r.nombre, 'huella');
-    // Si vino un código de recuperación (primer registro), mostrarlo bien
-    // visible: es la ÚNICA vez que se ve. El usuario debe anotarlo.
+    // Si vino un código de recuperación (primer registro), mostrarlo bien visible para que el
+    // usuario lo anote. Después se puede volver a ver desde el perfil, verificando la huella.
     if (r.recovery_code) {
       mostrarCodigoRecuperacion(r.recovery_code);
     } else {
@@ -524,11 +524,13 @@ async function hacerRegistro() {
   }
 }
 
-// Muestra el código de recuperación en una pantalla propia, bien destacada
-// (se ve una sola vez). Se usa tanto al registrarse como al regenerarlo.
+// Muestra el código de recuperación en una pantalla propia, bien destacada. Se usa al
+// registrarse y al volver a verlo desde el perfil (el código es fijo: no se regenera).
 let _codigoRecuperacionActual = '';
+let _codigoDesdePerfil = false;   // true: se abrió desde el perfil, con la sesión ya adentro
 function mostrarCodigoRecuperacion(codigo, opts = {}) {
   _codigoRecuperacionActual = codigo;
+  _codigoDesdePerfil = Boolean(opts.desdePerfil);
   document.getElementById('codigo-valor').textContent = codigo;
   const t = document.getElementById('codigo-titulo');
   const p = document.getElementById('codigo-texto');
@@ -568,6 +570,10 @@ async function copiarCodigoRecuperacion() {
 // Cierra la pantalla del código y entra al sistema
 function cerrarCodigoYEntrar() {
   document.getElementById('codigo-overlay').style.display = 'none';
+  // Visto desde el perfil (ya adentro): solo se cierra. Antes volvía a "entrar al sistema", que
+  // recargaba la biblioteca y recuperaba el trabajo en curso: si se estaba editando otro dibujo,
+  // el editor cambiaba solo al dibujo del telar.
+  if (_codigoDesdePerfil) return;
   entrarAlSistema();
 }
 
@@ -621,6 +627,7 @@ async function verCodigoRecuperacion() {
         titulo: 'Tu código de recuperación',
         texto: 'Este es tu código de recuperación. <b>Es fijo: siempre es el mismo.</b> Guardalo en un lugar seguro; con tu usuario y este código podés entrar directo si la huella no funciona o cambiás de dispositivo.',
         botonEntrar: 'Listo',
+        desdePerfil: true,
       });
     }
   } catch (e) {
@@ -2484,6 +2491,14 @@ async function exportDrawToPDF() {
     const pasadasVuelta = reps.reduce((a, b) => a + b, 0);
     const colorFila = (r) => (d.colores && d.colores[r]) ? hexARgb(d.colores[r]) : null;
     const hayColores = d.colores && d.colores.some(Boolean);
+    // Recorta un texto al ancho disponible con la fuente actual (el nombre del dibujo admite 100
+    // caracteres y, sin esto, el título o el pie de página se salían de la hoja o se pisaban).
+    const recortar = (texto, ancho) => {
+      let t = String(texto);
+      if (doc.getTextWidth(t) <= ancho) return t;
+      while (t.length > 1 && doc.getTextWidth(t + '...') > ancho) t = t.slice(0, -1);
+      return t.trimEnd() + '...';
+    };
 
     // ── Encabezado ─────────────────────────────────────────────────────────
     doc.setFillColor(...AZUL); doc.rect(0, 0, W, 30, 'F');
@@ -2494,8 +2509,12 @@ async function exportDrawToPDF() {
     doc.text(`Control de Inserción de Trama · ${d.telar}`, M, 22.5);
     doc.text(d.fecha, W - M, 15, { align: 'right' });
 
-    doc.setTextColor(...AZUL); doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
-    doc.text(d.nombre, M, 43);
+    doc.setTextColor(...AZUL); doc.setFont('helvetica', 'bold');
+    // El título baja de tamaño si el nombre es largo (hasta 11 pt) y, si igual no entra, se recorta.
+    let fzTitulo = 16;
+    doc.setFontSize(fzTitulo);
+    while (fzTitulo > 11 && doc.getTextWidth(d.nombre) > W - 2 * M) { fzTitulo -= 0.5; doc.setFontSize(fzTitulo); }
+    doc.text(recortar(d.nombre, W - 2 * M), M, 43);
 
     // ── Tarjetas de datos ──────────────────────────────────────────────────
     const largoVuelta = d.metrosPorPasada ? pasadasVuelta * d.metrosPorPasada : null;
@@ -2564,7 +2583,14 @@ async function exportDrawToPDF() {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...GRIS);
     doc.text('COLORES DE HILO', M, y);
     if (usados.length) {
-      usados.forEach((c, i) => {
+      // Entran unos cinco por renglón: con más colores, los últimos se dibujaban fuera de la hoja.
+      const caben = Math.floor((W - M - (M + 36)) / 26);
+      const mostrar = usados.length > caben ? usados.slice(0, caben - 1) : usados;
+      if (mostrar.length < usados.length) {
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...GRIS);
+        doc.text(`y ${usados.length - mostrar.length} más`, M + 36 + mostrar.length * 26, y);
+      }
+      mostrar.forEach((c, i) => {
         const x = M + 36 + i * 26;
         doc.setFillColor(...hexARgb(c)); doc.setDrawColor(200, 206, 214); doc.setLineWidth(0.2);
         doc.roundedRect(x, y - 3.6, 5, 5, 1, 1, 'FD');
@@ -2607,7 +2633,7 @@ async function exportDrawToPDF() {
       if (yFila + cel > (hoja === 1 ? baseMatriz : H - 22)) {
         doc.addPage(); hoja++;
         doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...AZUL);
-        doc.text(`${d.nombre}: matriz, desde la fila ${r + 1} de ${filas}`, M, 18);
+        doc.text(`${recortar(d.nombre, 110)}: matriz, desde la fila ${r + 1} de ${filas}`, M, 18);
         encabezadoMatriz(26); yFila = 29;
       }
       if (r % 2 === 1) { doc.setFillColor(246, 248, 250); doc.rect(colMatriz.x, yFila, colMatriz.w, cel, 'F'); }
@@ -2713,7 +2739,7 @@ async function exportDrawToPDF() {
       doc.setPage(i);
       doc.setDrawColor(215, 222, 230); doc.setLineWidth(0.3); doc.line(M, H - 12, W - M, H - 12);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...GRIS);
-      doc.text(`Control de Inserción de Trama · ${d.nombre}`, M, H - 7.5);
+      doc.text(recortar(`Control de Inserción de Trama · ${d.nombre}`, W - 2 * M - 30), M, H - 7.5);
       doc.text(`Página ${i} de ${total}`, W - M, H - 7.5, { align: 'right' });
     }
     return doc;

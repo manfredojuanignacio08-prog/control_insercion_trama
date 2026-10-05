@@ -850,3 +850,11 @@ Sin errores nuevos en: firmware (pruebas en la PC en los dos modos, coherencia 1
 | El manual de la web no decía que pausar sin trabajo abierto deja el telar "Detenido" ni que la pantalla se suma al tejido iniciado desde la botonera; decía que el ESP32 aprieta "Marcha y Pausa" (también Retroceder). | Agregado en el Word y en la versión web. |
 | `Manual_Instalacion_y_Funcionamiento.md`: "tres relés en paralelo a los botones de Marcha y Pausa", el firmware "listo para armar el hardware", la conexión al telar "próxima etapa", un botón "Detener" que ya no existe y "sin hardware conectado". | Actualizado: tres relés (Marcha, Pausa y Retroceder) más el sensado; Bloque A instalado y probado el 19/09/2026; Nivel 2 escrito y simulado. |
 | `Lista_de_componentes`: los módulos de relé "en paralelo a los botones Marcha/Pausa" (son tres canales). | "Marcha, Pausa y Retroceder". |
+
+### Cuarta revisión de cierre
+
+| Problema | Corrección |
+|---|---|
+| Ficha en PDF: el nombre del dibujo admite 100 caracteres, pero el título (16 pt) entra en una línea hasta unos 60: con un nombre largo se salía de la hoja y el pie de página se pisaba con "Página x de y". Con más de cinco colores de hilo, los siguientes se dibujaban fuera de la hoja. | El título se achica hasta 11 pt y, si igual no entra, se recorta con "..."; lo mismo el encabezado de las hojas siguientes y el pie. Los colores que no entran se resumen en "y N más". Verificado generando la ficha con jsPDF (nombre de 100 caracteres y 8 colores). |
+| Ver el código de recuperación desde el perfil y tocar "Listo" volvía a "entrar al sistema": recargaba la biblioteca y recuperaba el trabajo en curso, y si se estaba editando otro dibujo, el editor saltaba solo al dibujo del telar. | Desde el perfil, "Listo" solo cierra la pantalla; después de un registro se sigue entrando. Con test (falla sin el arreglo). |
+| Comentarios del código que decían que el código de recuperación "se ve una sola vez". | Corregidos: se puede volver a ver desde el perfil. |

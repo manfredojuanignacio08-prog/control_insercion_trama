@@ -252,4 +252,16 @@ f.run("showConfirm = function(t,m,yes){ yes(); };"); f.run('terminarTrabajo()');
 await vieja; await settle();
 assert.equal(f.run('isPlaying'), false, 'no se vuelve a sumar a un trabajo que se está terminando');
 
+// ── T25: ver el código de recuperación desde el perfil y tocar "Listo" solo cierra la pantalla: no
+// vuelve a entrar (antes recargaba y el editor saltaba al dibujo del trabajo en curso). Después de
+// un registro, en cambio, sí se entra.
+telar = { id:8, estado:'pausado', patron_actual_id:3, historial_actual_id:9, fila_actual:1, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(routes); await f.run('iniciarApp()'); await settle(); f.run("loadDrawInEditor('4')");
+const antesP = f.calls.filter(c=>c==='GET /api/patrones').length;
+f.run("mostrarCodigoRecuperacion('TRAMA-ABC123', { desdePerfil: true })"); f.run('cerrarCodigoYEntrar()'); await settle();
+assert.equal(f.run('editId'), '4', 'el editor sigue en el dibujo que se estaba editando');
+assert.equal(f.calls.filter(c=>c==='GET /api/patrones').length, antesP, 'no se recargó nada');
+f.run("mostrarCodigoRecuperacion('TRAMA-ABC123')"); f.run('cerrarCodigoYEntrar()'); await settle();
+assert(f.calls.filter(c=>c==='GET /api/patrones').length > antesP, 'después de registrarse sí se entra');
+
 console.log('frontend OK');
