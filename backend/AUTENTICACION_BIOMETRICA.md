@@ -138,15 +138,19 @@ falta un código de invitación. No hay roles: todos los usuarios son iguales.
 
 ### Código de recuperación (por si la huella falla)
 
-Al registrar su huella, cada usuario recibe **una sola vez** un código de
-recuperación (tipo `TRAMA-ABC123`). Debe anotarlo. Si algún día no puede
-entrar con la huella (cambió de celular, se le rompió el lector, etc.), usa
-ese código en "No puedo entrar con mi huella" para volver a habilitar el
-registro de su huella en el dispositivo nuevo.
+Al registrar su huella, cada usuario recibe un código de recuperación (tipo
+`TRAMA-ABC123`). Debe anotarlo. Si algún día no puede entrar con la huella
+(cambió de celular, se le rompió el lector, etc.), escribe su usuario y ese
+código en "No puedo entrar con mi huella" y entra directo a la aplicación.
 
-- El código se guarda **hasheado** (nunca en texto plano).
-- Es de **un solo uso**: al recuperarse, se genera uno nuevo cuando el
-  usuario vuelve a registrar la huella.
+- El código es **fijo**: siempre es el mismo y no cambia al usarlo. Desde su
+  perfil, el usuario puede volver a verlo verificando antes su huella
+  (`POST /api/auth/recuperacion/ver`).
+- Se guarda **cifrado** con `RECOVERY_SECRET` (nunca en texto plano): por eso
+  se puede volver a mostrar. Si esa clave cambia, los códigos guardados dejan
+  de leerse y hay que rotarlos con `npm run codigo -- <usuario> --rotar`.
+- Un usuario inexistente y un código equivocado reciben la misma respuesta
+  (401), para no revelar qué usuarios existen.
 
 ### Sumar usuarios en el futuro (código de invitación)
 
@@ -160,11 +164,13 @@ un código válido, del 4º usuario en adelante no se puede registrar nadie.
 | Endpoint | Para qué |
 |---|---|
 | `GET /api/auth/estado-registro` | Dice si el registro está abierto o requiere invitación (la web lo usa para mostrar el campo de código). |
-| `POST /api/auth/recuperar` | Valida el código de recuperación y habilita re-registrar la huella. |
+| `POST /api/auth/recuperar` | Valida el usuario y su código de recuperación y, si son correctos, inicia la sesión (no toca la huella ni el código). |
+| `POST /api/auth/recuperacion/ver` | Muestra el código de recuperación del usuario, previa verificación de su huella (mismo desafío que el login). |
 | `POST /api/auth/invitacion` | Un usuario registrado genera un código de invitación para sumar a alguien. |
 
 Tablas nuevas: columnas `recovery_hash` / `recovery_usado` en `usuarios`, y la
-tabla `invitaciones`. Ver `src/db/migracion_004_recupero_usuarios.sql`.
+tabla `invitaciones`. Ver `src/db/migracion_004_recupero_usuarios.sql`. El
+cifrado actual del código se documenta en `migracion_016_recovery_cifrado.sql`.
 
 ## Sesión (cookie) y protección de la API
 

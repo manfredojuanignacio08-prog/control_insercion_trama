@@ -199,10 +199,18 @@ export async function reportarPasadas(req, res, next) {
       : null;
 
     // Cuántas pasadas de la fila actual ya se tejieron. El nodo la manda para que
-    // una reanudación caiga en la pasada exacta y no al principio de la fila.
-    const repValida = Number.isInteger(repeticion_en_fila) && repeticion_en_fila >= 0
-      ? repeticion_en_fila
-      : null;
+    // una reanudación caiga en la pasada exacta y no al principio de la fila. Solo vale junto con
+    // una fila válida y por debajo de las repeticiones de esa fila: antes se guardaba cualquier
+    // número, también al lado de la fila vieja cuando la informada no servía, y la posición
+    // guardada quedaba incoherente. Si no viene (o no sirve) con una fila nueva, la fila arranca
+    // en su primera pasada; con la misma fila se conserva la que había.
+    const repsFila = filaValida === null ? 0
+      : (Array.isArray(actual.repeticiones_por_fila) && Number.isInteger(Number(actual.repeticiones_por_fila[filaValida]))
+          && Number(actual.repeticiones_por_fila[filaValida]) >= 1 ? Number(actual.repeticiones_por_fila[filaValida]) : 1);
+    const repValida = filaValida === null ? null
+      : (Number.isInteger(repeticion_en_fila) && repeticion_en_fila >= 0 && repeticion_en_fila < repsFila)
+        ? repeticion_en_fila
+        : (filaValida === actual.fila_actual ? null : 0);
 
     // Una vuelta completa del dibujo son la SUMA de las repeticiones, no la
     // cantidad de filas: una fila con 100 repeticiones son 100 pasadas.

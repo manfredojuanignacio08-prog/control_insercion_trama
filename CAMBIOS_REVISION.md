@@ -827,3 +827,16 @@ nodo conectado) y se verificó que la versión anterior las falla y la corregida
 | Si el telar se ponía a tejer desde la botonera (o desde otra pantalla) con el mismo dibujo abierto en el editor, la pantalla seguía mostrando "En pausa" y nadie estimaba las pasadas hasta tocar ▶. | La pantalla se suma al tejido y cuenta desde la fila que tiene el servidor (no lo hace un invitado ni otro dibujo). Con test. |
 
 Sin errores nuevos en: firmware (pruebas en la PC en los dos modos, coherencia 18/18, simulaciones 6/6, 6/6 y 29/29), cuentas eléctricas (PC817 del Bloque A ≈ 14 mA con 2,2 kΩ de 1 W, sensor ≈ 10 mA con 1,2 kΩ, LCA110 ≈ 6,4 mA con 330 Ω), planillas, documentos Word, enlaces de los `.md` y de los sitios web, e integración contra PostgreSQL real.
+
+### Segunda revisión de cierre
+
+| Problema | Corrección |
+|---|---|
+| Si alguien arrancaba el telar a mano con Marcha sin trabajo abierto y después lo pausaba (desde la web o la botonera), quedaba "Pausado" sin ninguna producción: una pausa de nada que no se podía reanudar. | Pausar sin trabajo abierto deja el telar apagado ("Detenido"), en `/pausar` y en el Pausa de la botonera. Con tests e integración. |
+| El reporte del sensor guardaba `repeticion_en_fila` sin comprobar que fuera menor que las repeticiones de la fila, y también al lado de la fila vieja cuando la informada no servía. | Solo se guarda junto con una fila válida y dentro de sus repeticiones; con una fila nueva sin dato, la fila arranca en su primera pasada. Con tests. |
+| "Terminar trabajo", ⏪ Retroceder y cerrar sesión frenaban la pantalla sin marcar el cambio: una consulta de estado que había salido antes (con el telar tejiendo) podía volver a sumar la pantalla al tejido. | Marcan la generación, igual que ⏸. Con test (falla sin el arreglo). |
+| `Guia_Armado_Bloque_A.docx` decía en un párrafo un cerámico de 100 nF junto al ESP32 y uno junto a cada módulo, y en otro "los otros 2". | Son tres: uno junto al ESP32 y uno junto a cada módulo de relé. |
+| La fuente pasa a una plaqueta aparte (decisión del equipo). | `Componentes_en_placa.xlsx` (tres placas: principal, relés y fuente) y la guía de armado lo dicen; el modelo 3D también. |
+| `AUTENTICACION_BIOMETRICA.md`, la Documentación de Proyecto (Word y web) y el manual web decían que el código de recuperación es de un solo uso, que se guarda hasheado y que sirve para volver a registrar la huella. | El código es fijo, se guarda cifrado, se puede volver a ver desde el perfil y `/recuperar` hace entrar directo. |
+| El README de la API no documentaba `/pausar`, `/reanudar`, `metros-por-pasada` ni `estadisticas`, y le faltaban `repeticiones_por_fila`, `version_esperada` y el tipo `reinicio`. | Agregados. |
+| El botón × del simulador de color no tenía nombre accesible. | `aria-label="Cerrar"`. |

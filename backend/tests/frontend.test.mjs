@@ -242,4 +242,14 @@ telar = { ...telar, estado:'tejiendo' };
 await f.run('actualizarEstadoTelar()'); await settle();
 assert.equal(f.run('isPlaying'), false, 'con otro dibujo en el editor no se suma');
 
+// ── T24: una consulta de estado que salió antes de "Terminar trabajo" (telar todavía tejiendo)
+// y vuelve después no suma la pantalla al trabajo recién terminado
+telar = { id:8, estado:'tejiendo', patron_actual_id:3, historial_actual_id:9, fila_actual:1, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false };
+f = boot(routes); await f.run('iniciarApp()'); await settle();
+f.run('isPlaying=false; generacionPlay++;');
+const vieja = f.run('actualizarEstadoTelar()');
+f.run("showConfirm = function(t,m,yes){ yes(); };"); f.run('terminarTrabajo()');
+await vieja; await settle();
+assert.equal(f.run('isPlaying'), false, 'no se vuelve a sumar a un trabajo que se está terminando');
+
 console.log('frontend OK');

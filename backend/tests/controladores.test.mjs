@@ -80,6 +80,14 @@ globalThis.__q = (sql) => {
 };
 x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'pausa'} });
 assert.equal(x.log.find(l=>/RETURNING id, estado, posicion_incierta/.test(l.sql)).params[1], 'pausado');
+// Marcha a mano sin trabajo (tejiendo, sin producción) y después Pausa: queda apagado
+globalThis.__q = (sql) => {
+  if (/FROM telares WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{id:8, estado:'tejiendo'}] };
+  if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[] };
+  if (/RETURNING id, estado, posicion_incierta/.test(sql)) return { rows:[{id:8}] };
+};
+x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'pausa'} });
+assert.equal(x.log.find(l=>/RETURNING id, estado, posicion_incierta/.test(l.sql)).params[1], 'apagado');
 
 // 4) tipo inválido
 x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'volar'} }); assert.equal(x.err.status, 400);
@@ -250,8 +258,8 @@ const rp = (actual) => { globalThis.__q = (sql) => {
   if (/FROM historial_produccion h JOIN patrones p ON p.id = h.patron_id WHERE h.telar_id = \$1 AND h.estado = 'en_curso' ORDER BY/.test(sql)) return { rows:[actual] }; }; };
 rp({id:5, pasadas_sensor:100, filas:4});
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:120, fila_actual:2} });
-assert.equal(x.r.body.aplicado, true); const up = x.log.find(l=>/SET pasadas_sensor = \$1/.test(l.sql)); // El quinto parámetro es repeticion_en_fila (null si el nodo no la manda).
-assert.deepEqual(up.params, [120,2,5,30,null]);
+assert.equal(x.r.body.aplicado, true); const up = x.log.find(l=>/SET pasadas_sensor = \$1/.test(l.sql)); // El quinto parámetro es repeticion_en_fila: con una fila nueva y sin dato, la fila arranca en 0.
+assert.deepEqual(up.params, [120,2,5,30,0]);
 assert(x.log.some(l=>/ultimo_reporte_sensor = now\(\)/.test(l.sql)));
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:3, fila_actual:1} });   // reinicio del nodo: cae de 100 a 3
 assert.equal(x.r.body.aplicado, false); assert.equal(x.r.body.pasadas_sensor, 100);
@@ -284,6 +292,15 @@ assert.equal(x.err, null, x.err && x.err.message); assert.equal(x.r.body.aplicad
 // la misma bajada con una fila que no acompaña: nodo reiniciado, se descarta
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:70, fila_actual:6, repeticion_en_fila:0} });
 assert.equal(x.r.body.aplicado, false); assert.equal(x.r.body.pasadas_sensor, 100);
+// repeticion_en_fila: válida se guarda; fuera de las repeticiones de la fila no se guarda (fila nueva → 0);
+// sin dato y con la misma fila se conserva la que había (null → COALESCE)
+const repDe = () => x.log.find(l=>/SET pasadas_sensor/.test(l.sql)).params[4];
+rp({id:5, pasadas_sensor:100, filas:3, fila_actual:0, repeticion_en_fila:1, repeticiones_por_fila:[3,2,1]});
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:0, repeticion_en_fila:2} }); assert.equal(repDe(), 2);
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:102, fila_actual:1, repeticion_en_fila:0} }); assert.equal(repDe(), 0);
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:0} }); assert.equal(repDe(), null);
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:103, fila_actual:1, repeticion_en_fila:5} }); assert.equal(repDe(), 0);
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:99, repeticion_en_fila:1} }); assert.equal(repDe(), null);
 // telar inexistente
 globalThis.__q = () => ({ rows:[] });
 x = await call(N.reportarPasadas, { params:{id:'99'}, body:{pasadas_sensor:1} }); assert.equal(x.err?.status, 404);

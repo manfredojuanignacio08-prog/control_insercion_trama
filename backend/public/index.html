@@ -736,7 +736,7 @@ function cerrarSesion() {
     try { await apiAuth('/logout', {}); } catch (e) { /* si falla, igual se vuelve al login */ }
     // Esta pantalla deja de llevar el tejido (el telar sigue como está). Si no, el próximo
     // avance por reloj ya salía sin sesión y el ingreso mostraba "Tu sesión venció".
-    isPlaying = false; seguidor = false;
+    isPlaying = false; seguidor = false; generacionPlay++;
     clearTimeout(playTimer);
     if (telarStatusTimer) { clearInterval(telarStatusTimer); telarStatusTimer = null; }
     setUsuarioActual(null, null);
@@ -865,7 +865,7 @@ async function apiFetch(path, options = {}) {
 // Vuelve al login sin recargar: se detiene el tejido en pantalla y se muestra el ingreso.
 function sesionVencida() {
   if (appIniciada === false && document.getElementById('login-overlay').style.display !== 'none') return;
-  isPlaying = false;
+  isPlaying = false; seguidor = false; generacionPlay++;
   clearTimeout(playTimer);
   if (telarStatusTimer) { clearInterval(telarStatusTimer); telarStatusTimer = null; }   // sin sesión no hay nada que consultar
   setUsuarioActual(null, null);
@@ -1615,6 +1615,10 @@ function terminarTrabajo() {
     'Se cierra la producción de este dibujo: la próxima vez que toques ▶ empieza desde la fila 1 y no se puede retomar donde quedó. ¿Terminar?',
     async () => {
       isPlaying = false;
+      seguidor = false;
+      // Una consulta de estado que salió antes (con el telar todavía tejiendo) no puede volver a
+      // sumar esta pantalla al trabajo que se está terminando.
+      generacionPlay++;
       clearTimeout(playTimer);
       try {
         await apiFetch(`/telares/${telarPorDefectoId}/detener`, { method: 'POST', body: JSON.stringify({}) });
@@ -1937,6 +1941,7 @@ async function ejecutarRetroceso() {
   //    en marcha. El Nivel 1 respeta el orden: primero Pausa, después Retroceder.
   isPlaying = false;
   seguidor = false;
+  generacionPlay++;   // una consulta de estado anterior no vuelve a sumar la pantalla al tejido
   clearTimeout(playTimer);
   updPlayUI();
   try {
@@ -3078,7 +3083,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <div class="modal-content" style="background:var(--srf);border-radius:var(--r-lg);padding:24px;max-width:90%;width:100%;max-height:80vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <h2 style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--tx);">Simulador de Color</h2>
-      <button type="button" onclick="document.getElementById('modal-color').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--tx);">×</button>
+      <button type="button" aria-label="Cerrar" onclick="document.getElementById('modal-color').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--tx);">×</button>
     </div>
     <div style="background:#1E3A5F;width:100%;height:100px;border-radius:var(--r-md);margin-bottom:16px;border:1px solid var(--bd);" id="color-sample"></div>
     <label style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Color del Hilo:</label>
