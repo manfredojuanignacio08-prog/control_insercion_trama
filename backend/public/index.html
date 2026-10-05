@@ -1615,7 +1615,12 @@ async function restaurarTrabajoEnCurso() {
 
 // Cierra la producción del telar ("Terminar trabajo"). Es la única forma de poder modificar la
 // matriz de un dibujo que tiene un trabajo abierto, y hace que el próximo ▶ empiece desde cero.
+// Mismo aviso que ▶ para los botones que comandan el telar: un invitado no puede hacerlo, y antes
+// ⏸, ⏪ y ⏹ mandaban el pedido igual (⏪ después de pedir confirmación) y recién el servidor lo rechazaba.
+const AVISO_INVITADO_TELAR = 'Estás como invitado: para controlar el telar hay que iniciar sesión con tu huella o tu código.';
+
 function terminarTrabajo() {
+  if (origenSesion === 'invitado') { toast(AVISO_INVITADO_TELAR); return; }
   if (!telarPorDefectoId || !trabajoEnCursoPatronId) { toast('No hay un trabajo en curso'); return; }
   showConfirm(
     'Terminar el trabajo',
@@ -1910,6 +1915,7 @@ async function pausePlay(pedirAlTelar = false) {
   // se conserva para que ▶ retome exactamente donde quedó.
   updPlayUI(); renderGrid();
   if (!pedirAlTelar) return;
+  if (origenSesion === 'invitado') { toast(AVISO_INVITADO_TELAR); return; }
   if (!telarPorDefectoId) { if (estabaTejiendo) toast('Tejido pausado'); return; }
   try {
     // /pausar (no /detener): deja la producción abierta y conserva el patrón, así ▶ retoma
@@ -1933,6 +1939,7 @@ async function pausePlay(pedirAlTelar = false) {
 // (en pantalla y en el backend) y le pide al ESP32 un pulso del relé de
 // Retroceder. Usa el modal propio de la app, no el confirm() del navegador.
 function retrocederFisico() {
+  if (origenSesion === 'invitado') { toast(AVISO_INVITADO_TELAR); return; }
   if (!telarPorDefectoId) { toast('No hay telar seleccionado'); return; }
   showConfirm(
     'Retroceder una pasada',

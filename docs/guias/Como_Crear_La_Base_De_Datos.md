@@ -91,8 +91,11 @@ Esto es lo que el backend necesita para hablar con esta base.
 3. Buscá la sección **Connection string** y elegí la pestaña **URI**.
 4. Copiá esa cadena (tiene esta forma):
    ```
-   postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require
+   postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=verify-full
    ```
+   Neon la da terminada en `?sslmode=require` (a veces con `&channel_binding=require`): cambiá
+   solo `sslmode=require` por `sslmode=verify-full`. Así la conexión verifica que del otro lado
+   esté de verdad la base de Neon, y lo va a seguir haciendo con las próximas versiones de la librería.
 5. Reemplazá `[YOUR-PASSWORD]` por la contraseña que elegiste en el Paso 2.
    Guardá esta cadena completa (es tu `DATABASE_URL`).
 

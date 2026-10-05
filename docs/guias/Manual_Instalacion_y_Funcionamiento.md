@@ -243,8 +243,11 @@ crear una base nueva en Render (solo conectar el backend a esa).
    conexión de Neon (no está en este documento por seguridad).
 2. Con esos datos, armá la cadena de conexión con este formato:
    ```
-   postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require
+   postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=verify-full
    ```
+   Neon la da terminada en `?sslmode=require` (a veces con `&channel_binding=require`): cambiá
+   solo `sslmode=require` por `sslmode=verify-full`. Así la conexión verifica que del otro lado
+   esté de verdad la base de Neon, y lo va a seguir haciendo con las próximas versiones de la librería.
    (Reemplazá `USUARIO`, `CONTRASEÑA` y el host `ep-xxxx-xxxx-pooler.REGION...` por los
    datos reales de la base del equipo, que están en su documentación.)
 3. Guardá esa cadena completa (la vas a pegar como variable de entorno en el Paso 3).
@@ -330,8 +333,9 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 
 | Variable | Para qué sirve | Ejemplo |
 |---|---|---|
-| `DATABASE_URL` | URL de conexión completa. **Usar esta para conectar a la base de Neon del equipo.** Si se completa, ignora las variables `PG*` de abajo. | `postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require` |
-| `PGSSL` | Si la conexión exige SSL. **Obligatorio en `true` para Neon**, o la conexión falla. | `true` |
+| `DATABASE_URL` | URL de conexión completa. **Usar esta para conectar a la base de Neon del equipo.** Si se completa, ignora las variables `PG*` de abajo. | `postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=verify-full` |
+| `PGSSL` | Cifra la conexión y verifica el certificado del servidor. **Dejarlo en `true` con Neon.** Si la URL trae `?sslmode=`, manda la URL (para Neon, `verify-full`). | `true` |
+| `PGSSL_VERIFICAR` | Solo en `false` como salida de emergencia, para una base con certificado propio que no se pueda verificar. Con Neon no hace falta. | *(sin definir)* |
 | `PG_POOL_MAX` | Máximo de conexiones simultáneas a la base. No conviene subirlo sin necesidad (Neon free tiene un límite compartido entre todo el equipo). | `10` |
 | `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Datos de conexión sueltos, **solo para una base local de desarrollo** (se ignoran si `DATABASE_URL` tiene un valor) | `localhost` / `5432` / `postgres` /, / `control_trama` |
 | `PORT` | Puerto del servidor web | `3000` |

@@ -264,4 +264,10 @@ assert.equal(f.calls.filter(c=>c==='GET /api/patrones').length, antesP, 'no se r
 f.run("mostrarCodigoRecuperacion('TRAMA-ABC123')"); f.run('cerrarCodigoYEntrar()'); await settle();
 assert(f.calls.filter(c=>c==='GET /api/patrones').length > antesP, 'después de registrarse sí se entra');
 
+// ── T26: un invitado no manda ⏸, ⏪ ni ⏹ al servidor (como ▶): se avisa en la pantalla
+f = boot(routes); f.run('setUsuarioActual(null, null)'); await f.run('iniciarApp()'); await settle();
+posts.length = 0; f.run("showConfirm = function(t,m,yes){ yes(); };");
+await f.run('pausePlay(true)'); f.run('retrocederFisico()'); f.run('terminarTrabajo()'); await settle();
+assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('|'));
+
 console.log('frontend OK');

@@ -868,3 +868,12 @@ Sin errores nuevos en: firmware (pruebas en la PC en los dos modos, coherencia 1
 | El README del backend no mencionaba los casos nuevos de la prueba de integración. | Agregados. |
 
 Sin errores nuevos en: variables de entorno (todas en `.env.example`), Docker (el esquema es idempotente: dos arranques seguidos sin error), PM2 (una sola instancia, necesaria para el conductor en memoria), el script de códigos de recuperación y la estructura de la página (sin ids duplicados ni funciones inexistentes).
+
+### Sexta revisión de cierre (incluye prueba en un navegador real)
+
+| Problema | Corrección |
+|---|---|
+| La conexión a la base con `PGSSL=true` cifraba sin verificar el certificado del servidor (`rejectUnauthorized: false`). Además, el README decía que el `sslmode` de la URL "no alcanza" porque manda el código: es al revés, si la URL trae `sslmode` la librería `pg` usa eso. Con `?sslmode=require` (como da Neon) hoy ya se verifica, pero la próxima versión de `pg` dejará de hacerlo con `require`. | `PGSSL=true` ahora cifra y verifica; `PGSSL_VERIFICAR=false` queda como salida de emergencia para una base con certificado propio. Los ejemplos de URL pasan a `?sslmode=verify-full` y la documentación explica qué manda. Probado contra un PostgreSQL con certificado autofirmado: con verificación lo rechaza, con la salida de emergencia conecta cifrado. |
+| Un invitado tocaba ⏸, ⏪ (después de confirmar) o ⏹ y el pedido viajaba igual al servidor, que lo rechazaba con 403 (y quedaba un error en la consola). ▶ ya se frenaba en la pantalla. | Los cuatro botones avisan en la pantalla y no mandan nada. Con test (falla sin el arreglo). |
+
+Prueba nueva en Chromium contra el servidor real y PostgreSQL: inicio, editor, celdas, nombre, repeticiones, ▶ (se reinicia al completar la vuelta), ⏸, ⏪ con confirmación, bloqueo de edición con trabajo en curso, ficha PDF descargada (texto verificado), biblioteca, estadísticas, ⏹, tema oscuro y ancho de celular sin desplazamiento horizontal; y el recorrido de invitado. Sin errores de la aplicación (el único aviso es la fuente de Google, bloqueada por la red de este entorno).
