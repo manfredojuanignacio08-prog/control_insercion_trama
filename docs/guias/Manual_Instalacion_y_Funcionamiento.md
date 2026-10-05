@@ -20,7 +20,7 @@ telares de la planta. El producto tiene cuatro partes:
   alojada en la nube.
 - **Firmware ESP32**: el puente con el telar físico. Lee del backend si el
   telar debe estar tejiendo y acciona los relés conectados a los botones de
-  Marcha/Pausa de la máquina.
+  Marcha, Pausa y Retroceder de la máquina (y avisa cuando alguien los usa a mano).
 
 La web y el ESP32 hablan con el **mismo backend** por la **misma API**;
 nadie toca la base de datos directo. El mismo servidor Express sirve tanto
@@ -119,15 +119,22 @@ PGUSER=postgres
 PGPASSWORD=TU_CONTRASEÑA
 PGDATABASE=control_trama
 PORT=3000
-NODE_ENV=production
+NODE_ENV=development
+SESSION_SECRET=una-clave-larga-de-al-menos-32-caracteres
+RECOVERY_SECRET=otra-clave-de-al-menos-16
+ESP32_DEVICE_KEY=la-clave-que-va-tambien-en-config.h
 ```
+Con `NODE_ENV=production` el servidor **no arranca** si falta `SESSION_SECRET` (mínimo 32
+caracteres) o `RECOVERY_SECRET` (mínimo 16): es a propósito, para no quedar en producción con
+claves temporales. Para generar una clave al azar:
+`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
 
 **Paso 3, Crear la base de datos** (solo si es una base local nueva, no la del equipo):
 ```sql
 CREATE DATABASE control_trama;
 ```
 Si en cambio vas a conectarte a la base real del equipo en Neon, no creás
-nada (solo completá `DATABASE_URL` en el `).env` (ver sección 3.5, Paso 2).
+nada: solo completá `DATABASE_URL` en el `.env` (ver sección 3.5, Paso 2).
 
 **Paso 4, Crear o actualizar las tablas:**
 ```bash
@@ -142,8 +149,9 @@ npm run migrate
 
 Correr los dos siempre es seguro, sin importar el estado de la base: si algo
 ya existe, cada paso lo detecta y no hace nada. Debería responder
-`✅ Esquema creado/actualizado correctamente.` y luego
-`✅ Migración aplicada correctamente.` Si falla, revisar que PostgreSQL esté
+`✅ Esquema creado/actualizado correctamente.` y luego, por cada migración nueva,
+`✅ migracion_0NN_... aplicada.`, terminando con `Migraciones al día (N nueva/s).` Una línea con
+❌ indica una migración que falló (se reintenta en el próximo arranque). Si falla, revisar que PostgreSQL esté
 corriendo y que los datos del `.env` sean correctos.
 
 **Paso 5, Levantar el servidor:**
@@ -235,10 +243,13 @@ crear una base nueva en Render (solo conectar el backend a esa).
    conexión de Neon (no está en este documento por seguridad).
 2. Con esos datos, armá la cadena de conexión con este formato:
    ```
-   postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require
+   postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=verify-full
    ```
-   (Reemplazá `LA_CONTRASEÑA` por la real. El resto, host, puerto, usuario,
-   nombre de base (ya está confirmado en la documentación de la base de datos del equipo).)
+   Neon la da terminada en `?sslmode=require` (a veces con `&channel_binding=require`): cambiá
+   solo `sslmode=require` por `sslmode=verify-full`. Así la conexión verifica que del otro lado
+   esté de verdad la base de Neon, y lo va a seguir haciendo con las próximas versiones de la librería.
+   (Reemplazá `USUARIO`, `CONTRASEÑA` y el host `ep-xxxx-xxxx-pooler.REGION...` por los
+   datos reales de la base del equipo, que están en su documentación.)
 3. Guardá esa cadena completa (la vas a pegar como variable de entorno en el Paso 3).
 
 > Si en algún momento el equipo decide migrar a otra base (por ejemplo, una
@@ -322,8 +333,9 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 
 | Variable | Para qué sirve | Ejemplo |
 |---|---|---|
-| `DATABASE_URL` | URL de conexión completa. **Usar esta para conectar a la base de Neon del equipo.** Si se completa, ignora las variables `PG*` de abajo. | `postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=require` |
-| `PGSSL` | Si la conexión exige SSL. **Obligatorio en `true` para Neon**, o la conexión falla. | `true` |
+| `DATABASE_URL` | URL de conexión completa. **Usar esta para conectar a la base de Neon del equipo.** Si se completa, ignora las variables `PG*` de abajo. | `postgresql://USUARIO:CONTRASEÑA@ep-xxxx-xxxx-pooler.REGION.aws.neon.tech/neondb?sslmode=verify-full` |
+| `PGSSL` | Cifra la conexión y verifica el certificado del servidor. **Dejarlo en `true` con Neon.** Si la URL trae `?sslmode=`, manda la URL (para Neon, `verify-full`). | `true` |
+| `PGSSL_VERIFICAR` | Solo en `false` como salida de emergencia, para una base con certificado propio que no se pueda verificar. Con Neon no hace falta. | *(sin definir)* |
 | `PG_POOL_MAX` | Máximo de conexiones simultáneas a la base. No conviene subirlo sin necesidad (Neon free tiene un límite compartido entre todo el equipo). | `10` |
 | `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Datos de conexión sueltos, **solo para una base local de desarrollo** (se ignoran si `DATABASE_URL` tiene un valor) | `localhost` / `5432` / `postgres` /, / `control_trama` |
 | `PORT` | Puerto del servidor web | `3000` |
@@ -401,14 +413,14 @@ estado vive en la base de datos, no en el dispositivo.
 | Cargar patrones desde la base de datos | ✅ Funcionando |
 | Historial de producción (tablas de BD) | ✅ Funcionando |
 | Telar único automático (sin selector, por ahora hay uno solo) | ✅ Funcionando |
-| Avanzar/Retroceder/Detener con posición real en la base | ✅ Funcionando |
+| Iniciar / Pausa / Retroceder / Terminar trabajo con posición real en la base | ✅ Funcionando |
 | Log de errores en la base de datos | ✅ Funcionando |
 | Página web (editor, biblioteca, simulación) para el celular | ✅ Funcionando |
 | Modo claro / oscuro de la web | ✅ Funcionando |
 | Exportar ficha del patrón a PDF real | ✅ Funcionando |
 | Selector visual de telar (para cuando haya más de uno) | ⏳ Pendiente |
-| Firmware ESP32 (gateway relés Marcha/Pausa) | ✅ Escrito, listo para armar el hardware |
-| Conexión física al telar real | ⏳ Próxima etapa (armar la etapa eléctrica) |
+| Firmware ESP32 (un solo programa: Bloque A hoy, Nivel 2 con `NIVEL2_INSTALADO`) | ✅ Bloque A instalado y probado en el telar (19/09/2026); Nivel 2 escrito y simulado |
+| Conexión física al telar real | ✅ Bloque A (Marcha, Pausa, Retroceder y sensado) · ⏳ sensor de pasada y relés LCA110 (Nivel 2) |
 | App Android nativa | ⏳ A futuro (hay una base de referencia, no funcional) |
 
 ---
@@ -416,8 +428,8 @@ estado vive en la base de datos, no en el dispositivo.
 ## 8. Cuando se conecte el telar real (ESP32)
 
 Este hosting gratuito en internet (Render, Fly.io, etc.) es una **buena opción
-para la etapa actual de pruebas**, sin hardware conectado. Pero una vez que el
-ESP32 del telar tenga que hablar con este backend en producción real:
+para la etapa de pruebas**. Pero ahora que el ESP32 del telar habla con este
+backend, para la producción real hay que tener en cuenta:
 
 - Si el servidor "duerme" (plan free) o internet de la planta falla un
   segundo, el telar se queda sin backend mientras tanto.
@@ -435,11 +447,13 @@ todo de apuro cuando llegue ese momento.
 
 El firmware (carpeta `esp32/`) hace de **gateway**: no reemplaza la lógica de
 la máquina, la comanda. Tres relés van conectados **en paralelo** a los botones
-de Marcha y Pausa del telar. El ESP32 consulta al backend el estado del telar
-(la misma API que usa la app) y, cuando alguien asigna un patrón desde la app
-(el telar pasa a `tejiendo`), pulsa el relé de Marcha; cuando alguien detiene,
-pulsa el de Pausa. La botonera física del telar sigue funcionando igual, y si
-se cae la red el ESP32 no hace nada (fail-safe). El paso a paso del hardware,
+de Marcha, Pausa y Retroceder del telar. El ESP32 consulta al backend el estado
+del telar (la misma API que usa la app) y, cuando el telar pasa a `tejiendo`
+(▶ en la app), pulsa el relé de Marcha; cuando deja de estarlo (⏸), pulsa el de
+Pausa; y por cada pedido de ⏪, el de Retroceder. Además sensa esos mismos tres
+botones (optoacopladores PC817): si alguien los usa a mano, avisa al backend y la
+app se actualiza. La botonera física del telar sigue funcionando igual, y si se
+cae la red el ESP32 no acciona nada (fail-safe). El paso a paso del hardware,
 las protecciones eléctricas recomendadas y el diagrama del circuito están en
 `esp32/README.md`, `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md` y
 `diagramas/hardware/diagrama_conexion_electrica.svg`.

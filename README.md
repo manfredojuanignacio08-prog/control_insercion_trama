@@ -108,8 +108,8 @@ npm start                 # levanta la API + la web en http://localhost:3000
 ```
 
 El `.env.example` explica de dónde sacar la connection string de Neon
-(Project Settings → Database → Connection string → URI) y por qué `PGSSL`
-es necesario con Neon.
+(Project Settings → Database → Connection string → URI) y por qué conviene `PGSSL=true` y
+`?sslmode=verify-full` con Neon.
 
 Con esto ya tenés **la web funcionando**: abrí `http://localhost:3000` en el
 navegador (idealmente el del celular, o el modo responsive del navegador de

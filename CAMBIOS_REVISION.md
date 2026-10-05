@@ -840,3 +840,40 @@ Sin errores nuevos en: firmware (pruebas en la PC en los dos modos, coherencia 1
 | `AUTENTICACION_BIOMETRICA.md`, la Documentación de Proyecto (Word y web) y el manual web decían que el código de recuperación es de un solo uso, que se guarda hasheado y que sirve para volver a registrar la huella. | El código es fijo, se guarda cifrado, se puede volver a ver desde el perfil y `/recuperar` hace entrar directo. |
 | El README de la API no documentaba `/pausar`, `/reanudar`, `metros-por-pasada` ni `estadisticas`, y le faltaban `repeticiones_por_fila`, `version_esperada` y el tipo `reinicio`. | Agregados. |
 | El botón × del simulador de color no tenía nombre accesible. | `aria-label="Cerrar"`. |
+
+### Tercera revisión de cierre
+
+| Problema | Corrección |
+|---|---|
+| Guardar un dibujo comprobaba la versión y si se estaba tejiendo en consultas sueltas, antes del UPDATE: un guardado de otra persona en ese instante se pisaba, y un ▶ que asignaba el dibujo a un telar en ese instante dejaba la matriz cambiada con la producción ya abierta. | El guardado va en una transacción con la fila del dibujo bloqueada (`FOR UPDATE`) y asignar-patron la lee con `FOR SHARE`: las dos operaciones se ordenan. Con test de la estructura y prueba de integración con ocho guardados simultáneos (se guarda uno solo). |
+| Los campos de ingreso, de recuperación, del nombre del dibujo y de búsqueda no tenían etiqueta accesible (solo un texto de ejemplo), y las etiquetas del simulador de color no estaban asociadas a su campo. | `aria-label` y `for` en cada uno. |
+| El manual de la web no decía que pausar sin trabajo abierto deja el telar "Detenido" ni que la pantalla se suma al tejido iniciado desde la botonera; decía que el ESP32 aprieta "Marcha y Pausa" (también Retroceder). | Agregado en el Word y en la versión web. |
+| `Manual_Instalacion_y_Funcionamiento.md`: "tres relés en paralelo a los botones de Marcha y Pausa", el firmware "listo para armar el hardware", la conexión al telar "próxima etapa", un botón "Detener" que ya no existe y "sin hardware conectado". | Actualizado: tres relés (Marcha, Pausa y Retroceder) más el sensado; Bloque A instalado y probado el 19/09/2026; Nivel 2 escrito y simulado. |
+| `Lista_de_componentes`: los módulos de relé "en paralelo a los botones Marcha/Pausa" (son tres canales). | "Marcha, Pausa y Retroceder". |
+
+### Cuarta revisión de cierre
+
+| Problema | Corrección |
+|---|---|
+| Ficha en PDF: el nombre del dibujo admite 100 caracteres, pero el título (16 pt) entra en una línea hasta unos 60: con un nombre largo se salía de la hoja y el pie de página se pisaba con "Página x de y". Con más de cinco colores de hilo, los siguientes se dibujaban fuera de la hoja. | El título se achica hasta 11 pt y, si igual no entra, se recorta con "..."; lo mismo el encabezado de las hojas siguientes y el pie. Los colores que no entran se resumen en "y N más". Verificado generando la ficha con jsPDF (nombre de 100 caracteres y 8 colores). |
+| Ver el código de recuperación desde el perfil y tocar "Listo" volvía a "entrar al sistema": recargaba la biblioteca y recuperaba el trabajo en curso, y si se estaba editando otro dibujo, el editor saltaba solo al dibujo del telar. | Desde el perfil, "Listo" solo cierra la pantalla; después de un registro se sigue entrando. Con test (falla sin el arreglo). |
+| Comentarios del código que decían que el código de recuperación "se ve una sola vez". | Corregidos: se puede volver a ver desde el perfil. |
+
+### Quinta revisión de cierre
+
+| Problema | Corrección |
+|---|---|
+| `Manual_Instalacion_y_Funcionamiento.md`: el ejemplo de `.env` ponía `NODE_ENV=production` sin `SESSION_SECRET` ni `RECOVERY_SECRET`; siguiéndolo, el servidor no arrancaba (en producción exige las dos claves). | El ejemplo pasa a `development`, incluye las tres claves y explica por qué producción las exige, con el comando para generarlas. |
+| El mismo manual anunciaba "✅ Migración aplicada correctamente.", que el programa no imprime; tenía un error de tipeo ("en el `).env`") y pedía reemplazar `LA_CONTRASEÑA` en una cadena que dice `CONTRASEÑA`. | Corregidos con lo que se ve de verdad (`✅ migracion_0NN_... aplicada.` y `Migraciones al día (N nueva/s).`). |
+| El README del backend no mencionaba los casos nuevos de la prueba de integración. | Agregados. |
+
+Sin errores nuevos en: variables de entorno (todas en `.env.example`), Docker (el esquema es idempotente: dos arranques seguidos sin error), PM2 (una sola instancia, necesaria para el conductor en memoria), el script de códigos de recuperación y la estructura de la página (sin ids duplicados ni funciones inexistentes).
+
+### Sexta revisión de cierre (incluye prueba en un navegador real)
+
+| Problema | Corrección |
+|---|---|
+| La conexión a la base con `PGSSL=true` cifraba sin verificar el certificado del servidor (`rejectUnauthorized: false`). Además, el README decía que el `sslmode` de la URL "no alcanza" porque manda el código: es al revés, si la URL trae `sslmode` la librería `pg` usa eso. Con `?sslmode=require` (como da Neon) hoy ya se verifica, pero la próxima versión de `pg` dejará de hacerlo con `require`. | `PGSSL=true` ahora cifra y verifica; `PGSSL_VERIFICAR=false` queda como salida de emergencia para una base con certificado propio. Los ejemplos de URL pasan a `?sslmode=verify-full` y la documentación explica qué manda. Probado contra un PostgreSQL con certificado autofirmado: con verificación lo rechaza, con la salida de emergencia conecta cifrado. |
+| Un invitado tocaba ⏸, ⏪ (después de confirmar) o ⏹ y el pedido viajaba igual al servidor, que lo rechazaba con 403 (y quedaba un error en la consola). ▶ ya se frenaba en la pantalla. | Los cuatro botones avisan en la pantalla y no mandan nada. Con test (falla sin el arreglo). |
+
+Prueba nueva en Chromium contra el servidor real y PostgreSQL: inicio, editor, celdas, nombre, repeticiones, ▶ (se reinicia al completar la vuelta), ⏸, ⏪ con confirmación, bloqueo de edición con trabajo en curso, ficha PDF descargada (texto verificado), biblioteca, estadísticas, ⏹, tema oscuro y ancho de celular sin desplazamiento horizontal; y el recorrido de invitado. Sin errores de la aplicación (el único aviso es la fuente de Google, bloqueada por la red de este entorno).
