@@ -840,3 +840,13 @@ Sin errores nuevos en: firmware (pruebas en la PC en los dos modos, coherencia 1
 | `AUTENTICACION_BIOMETRICA.md`, la Documentación de Proyecto (Word y web) y el manual web decían que el código de recuperación es de un solo uso, que se guarda hasheado y que sirve para volver a registrar la huella. | El código es fijo, se guarda cifrado, se puede volver a ver desde el perfil y `/recuperar` hace entrar directo. |
 | El README de la API no documentaba `/pausar`, `/reanudar`, `metros-por-pasada` ni `estadisticas`, y le faltaban `repeticiones_por_fila`, `version_esperada` y el tipo `reinicio`. | Agregados. |
 | El botón × del simulador de color no tenía nombre accesible. | `aria-label="Cerrar"`. |
+
+### Tercera revisión de cierre
+
+| Problema | Corrección |
+|---|---|
+| Guardar un dibujo comprobaba la versión y si se estaba tejiendo en consultas sueltas, antes del UPDATE: un guardado de otra persona en ese instante se pisaba, y un ▶ que asignaba el dibujo a un telar en ese instante dejaba la matriz cambiada con la producción ya abierta. | El guardado va en una transacción con la fila del dibujo bloqueada (`FOR UPDATE`) y asignar-patron la lee con `FOR SHARE`: las dos operaciones se ordenan. Con test de la estructura y prueba de integración con ocho guardados simultáneos (se guarda uno solo). |
+| Los campos de ingreso, de recuperación, del nombre del dibujo y de búsqueda no tenían etiqueta accesible (solo un texto de ejemplo), y las etiquetas del simulador de color no estaban asociadas a su campo. | `aria-label` y `for` en cada uno. |
+| El manual de la web no decía que pausar sin trabajo abierto deja el telar "Detenido" ni que la pantalla se suma al tejido iniciado desde la botonera; decía que el ESP32 aprieta "Marcha y Pausa" (también Retroceder). | Agregado en el Word y en la versión web. |
+| `Manual_Instalacion_y_Funcionamiento.md`: "tres relés en paralelo a los botones de Marcha y Pausa", el firmware "listo para armar el hardware", la conexión al telar "próxima etapa", un botón "Detener" que ya no existe y "sin hardware conectado". | Actualizado: tres relés (Marcha, Pausa y Retroceder) más el sensado; Bloque A instalado y probado el 19/09/2026; Nivel 2 escrito y simulado. |
+| `Lista_de_componentes`: los módulos de relé "en paralelo a los botones Marcha/Pausa" (son tres canales). | "Marcha, Pausa y Retroceder". |
