@@ -609,7 +609,9 @@ export async function eventoFisico(req, res, next) {
       // dibujo: se marca la posición como incierta.
       if (enCurso.rows.length === 0) posicionIncierta = true;
     } else if (tipo === 'pausa') {
-      nuevoEstado = 'pausado';
+      // Igual que /pausar: un telar sin trabajo (apagado) queda apagado. Antes Pausa en la
+      // botonera lo pasaba a "pausado" sin ninguna producción, y la web mostraba una pausa de nada.
+      nuevoEstado = telar.rows[0].estado === 'apagado' ? 'apagado' : 'pausado';
     } else if (tipo === 'retroceder') {
       // Con el sensor del Nivel 2 llevando esta producción (ya reportó pasadas, o está
       // reportando), la posición la mueve el NODO: su sensor ve el pulso del retroceso y lo

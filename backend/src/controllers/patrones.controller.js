@@ -60,7 +60,7 @@ export async function crearPatron(req, res, next) {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING *`,
       [
-        nombre,
+        nombre.trim(),   // sin espacios sobrantes: "Raya" y "Raya " no son dos dibujos distintos
         filas,
         columnas,
         JSON.stringify(matriz_pasadas),
@@ -150,7 +150,7 @@ export async function actualizarPatron(req, res, next) {
        WHERE id = $8
        RETURNING *`,
       [
-        nombre,
+        nombre.trim(),   // sin espacios sobrantes: "Raya" y "Raya " no son dos dibujos distintos
         filas,
         columnas,
         JSON.stringify(matriz_pasadas),

@@ -2779,7 +2779,12 @@ function logError(title, msg, code) {
   if (origenSesion === 'invitado') return;
   apiFetch('/errores', {
     method: 'POST',
-    body: JSON.stringify({ titulo: title, mensaje: msg, codigo: code }),
+    // Recortados a lo que acepta el servidor (200 / 2000 / 64 caracteres).
+    body: JSON.stringify({
+      titulo: String(title).slice(0, 200),
+      mensaje: msg == null ? null : String(msg).slice(0, 2000),
+      codigo: code == null ? null : String(code).slice(0, 64),
+    }),
   }).catch(() => {});
 }
 

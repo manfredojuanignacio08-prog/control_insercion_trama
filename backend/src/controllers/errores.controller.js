@@ -27,6 +27,12 @@ export async function crearError(req, res, next) {
   try {
     const { telar_id, titulo, mensaje, codigo } = req.body;
     if (!titulo) throw badRequest('Falta el campo requerido: titulo.');
+    // Textos acotados: sin tope, un pedido mal armado (o un equipo con un error en bucle) podía
+    // guardar un registro de megas en cada aviso.
+    const texto = (v, max) => v === undefined || v === null || (typeof v === 'string' && v.length <= max);
+    if (typeof titulo !== 'string' || titulo.length > 200) throw badRequest('titulo debe ser texto de hasta 200 caracteres.');
+    if (!texto(mensaje, 2000)) throw badRequest('mensaje debe ser texto de hasta 2000 caracteres.');
+    if (!texto(codigo, 64)) throw badRequest('codigo debe ser texto de hasta 64 caracteres.');
 
     const { rows } = await pool.query(
       `INSERT INTO errores_log (telar_id, titulo, mensaje, codigo)

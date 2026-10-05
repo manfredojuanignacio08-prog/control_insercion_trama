@@ -26,6 +26,18 @@ const limiteIntentos = rateLimit({
   message: { error: 'Demasiados intentos. Esperá unos minutos antes de volver a probar.' },
 });
 
+// La huella (WebAuthn) no se puede adivinar: cada intento exige el dedo y la llave del
+// teléfono. Su límite es amplio. Antes compartía el de 20 cada 15 minutos con el código de
+// recuperación, contado por IP: en la fábrica todos los celulares salen por el mismo router,
+// y con unos diez ingresos al empezar el turno (dos pedidos cada uno) nadie más podía entrar.
+const limiteHuella = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.AUTH_HUELLA_MAX) || 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Demasiados intentos. Esperá unos minutos antes de volver a probar.' },
+});
+
 // ¿Este navegador ya tiene sesión? / cerrar sesión
 router.get('/sesion', estadoSesion);
 router.post('/logout', logout);
@@ -35,12 +47,12 @@ router.post('/invitado', entrarComoInvitado);
 router.get('/estado-registro', estadoRegistro);
 
 // Registro de una huella dactilar (dos pasos: iniciar → verificar)
-router.post('/registro/iniciar', limiteIntentos, iniciarRegistro);
-router.post('/registro/verificar', limiteIntentos, verificarRegistro);
+router.post('/registro/iniciar', limiteHuella, iniciarRegistro);
+router.post('/registro/verificar', limiteHuella, verificarRegistro);
 
 // Login con huella dactilar ya registrada (dos pasos: iniciar → verificar)
-router.post('/login/iniciar', limiteIntentos, iniciarLogin);
-router.post('/login/verificar', limiteIntentos, verificarLogin);
+router.post('/login/iniciar', limiteHuella, iniciarLogin);
+router.post('/login/verificar', limiteHuella, verificarLogin);
 
 // Recupero de acceso con código de recuperación
 router.post('/recuperar', limiteIntentos, recuperarUsuario);

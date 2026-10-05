@@ -65,6 +65,22 @@ x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'retroceder'} });
 assert(!x.log.some(l=>/UPDATE historial_produccion/.test(l.sql)));
 assert(x.log.some(l=>/retrocesos_contados = retrocesos_contados \+ CASE/.test(l.sql) && l.params[3]==='retroceder'));
 
+// Pausa en la botonera con el telar sin trabajo: queda apagado (como /pausar), no "pausado" de nada
+globalThis.__q = (sql) => {
+  if (/FROM telares WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{id:8, estado:'apagado'}] };
+  if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[] };
+  if (/RETURNING id, estado, posicion_incierta/.test(sql)) return { rows:[{id:8}] };
+};
+x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'pausa'} });
+assert.equal(x.log.find(l=>/RETURNING id, estado, posicion_incierta/.test(l.sql)).params[1], 'apagado');
+globalThis.__q = (sql) => {
+  if (/FROM telares WHERE id = \$1 FOR UPDATE/.test(sql)) return { rows:[{id:8, estado:'tejiendo'}] };
+  if (/FROM historial_produccion h JOIN patrones/.test(sql)) return { rows:[{id:5, fila_actual:1, matriz_pasadas:MAT}] };
+  if (/RETURNING id, estado, posicion_incierta/.test(sql)) return { rows:[{id:8}] };
+};
+x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'pausa'} });
+assert.equal(x.log.find(l=>/RETURNING id, estado, posicion_incierta/.test(l.sql)).params[1], 'pausado');
+
 // 4) tipo inválido
 x = await call(T.eventoFisico, { params:{id:'8'}, body:{tipo:'volar'} }); assert.equal(x.err.status, 400);
 
