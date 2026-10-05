@@ -1083,6 +1083,9 @@ function goTo(id) {
   if (id === 'sc-biblioteca') renderLib();
   if (id === 'sc-inicio') updateStats();
   if (id === 'sc-editor' && !editId) resetEditorForNew();
+  // La grilla se dibuja de nuevo con la pantalla ya visible: oculta mide 0 de ancho y el tamaño
+  // de las celdas no se podía ajustar al celular.
+  if (id === 'sc-editor') renderGrid();
 
   // La tarjeta de "ESP32 conectado / Tejiendo" solo tiene sentido con el
   // editor a la vista. Se prende el sondeo al entrar y se apaga al salir,
@@ -1382,6 +1385,16 @@ function mkGrid(r, c, keep = false) {
 function renderGrid() {
 	  const wrap = document.getElementById('grid-container');
 	  if (!wrap) return;
+	  // Tamaño de celda según el ancho disponible: con 8 columnas en un celular, a 42 px la grilla no
+	  // entraba y la columna 8 quedaba fuera de la pantalla, tapada por la casilla de repeticiones. Se
+	  // achica lo justo (mínimo 30 px, que se sigue tocando bien con el dedo); con pocas columnas no cambia.
+	  const area = document.getElementById('grid-area');
+	  const anchoArea = area && area.clientWidth ? area.clientWidth : 0;
+	  if (anchoArea > 0) {
+	    const libre = anchoArea - 24 - 30 - 62;   // relleno, número de fila y casilla de repeticiones
+	    const cel = Math.max(30, Math.min(42, Math.floor(libre / Math.max(1, nC)) - 2));
+	    wrap.style.setProperty('--cel', cel + 'px');
+	  }
 	  let h = '<div class="grid-head">';
 	  for (let c = 0; c < nC; c++)
 	    h += `<div class="g-col-n">${c+1}</div>`;
@@ -1404,6 +1417,15 @@ function renderGrid() {
 	    h += '</div>';
 	  }
 	  wrap.innerHTML = h;
+	  // Si con ese tamaño la fila igual no entra (los márgenes reales dependen del navegador), se achica
+	  // lo que falte, hasta 28 px. Cambia solo la variable del CSS: no hace falta volver a dibujar.
+	  if (anchoArea > 0) {
+	    const sobra = wrap.scrollWidth - (anchoArea - 24);
+	    const celActual = parseInt(wrap.style.getPropertyValue('--cel'), 10) || 42;
+	    if (sobra > 0 && celActual > 28) {
+	      wrap.style.setProperty('--cel', Math.max(28, celActual - Math.ceil(sobra / Math.max(1, nC))) + 'px');
+	    }
+	  }
 	  actualizarTotalPasadas();
 	}
 
@@ -3101,6 +3123,13 @@ async function generarInvitacionUI() {
   }
 }
 
+
+// Al girar el teléfono (o cambiar el ancho de la ventana) se recalcula el tamaño de las celdas.
+let redimTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(redimTimer);
+  redimTimer = setTimeout(() => { if (document.getElementById('sc-editor').classList.contains('active')) renderGrid(); }, 150);
+});
 
 // El ícono del telar está incrustado una sola vez, en la portada. Los logos de las barras
 // superiores lo toman de ahí al cargar (antes la misma imagen de 29 KB estaba tres veces).
