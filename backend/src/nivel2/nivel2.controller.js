@@ -212,12 +212,14 @@ export async function reportarPasadas(req, res, next) {
         ? repeticion_en_fila
         : (filaValida === actual.fila_actual ? null : 0);
 
-    // Una vuelta completa del dibujo son la SUMA de las repeticiones, no la
-    // cantidad de filas: una fila con 100 repeticiones son 100 pasadas.
-    const reps = Array.isArray(actual.repeticiones_por_fila) ? actual.repeticiones_por_fila : null;
-    const pasadasPorVuelta = reps && reps.length
-      ? reps.reduce((a, r) => a + (Number(r) || 1), 0)
-      : actual.filas;
+    // Vueltas del dibujo: se suman (o descuentan) las que cruza el delta del conteo desde la
+    // posición guardada, la misma cuenta que /avanzar y /retroceder. Antes se recalculaban como
+    // pasadas_sensor / pasadas por vuelta, como si el sensor hubiera contado desde el principio:
+    // si la producción ya había avanzado por reloj (el nodo arrancó sin red), al tomar el control
+    // el sensor (que cuenta desde 0) borraba del historial las vueltas ya tejidas.
+    const cruce = delta >= 0
+      ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0).vueltas_completadas
+      : -retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0).vueltas_deshechas;
 
     await cliente.query(
       `UPDATE historial_produccion
@@ -226,9 +228,9 @@ export async function reportarPasadas(req, res, next) {
               columna_actual = 0,
               pasada_actual = 0,
               repeticion_en_fila = COALESCE($5, repeticion_en_fila),
-              vueltas_completadas = $4
+              vueltas_completadas = GREATEST(COALESCE(vueltas_completadas, 0) + $4, 0)
         WHERE id = $3`,
-      [pasadasSensor, filaValida, actual.id, Math.floor(pasadasSensor / Math.max(1, pasadasPorVuelta)), repValida]
+      [pasadasSensor, filaValida, actual.id, cruce, repValida]
     );
 
     // Heartbeat del sensor: mientras sea reciente, la web deja de avanzar por reloj.

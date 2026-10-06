@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS patrones (
   -- migración 011: metros de tela que avanza el telar en una pasada, para este
   -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
   metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),
+  creado_por_invitado BOOLEAN NOT NULL DEFAULT false,  -- migración 019: lo creó un invitado (un invitado solo puede cambiar o borrar esos)
   modificado_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -124,6 +125,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   creado_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   ultimo_acceso TIMESTAMPTZ
 );
+-- migración 019: el usuario se busca sin distinguir mayúsculas
+CREATE INDEX IF NOT EXISTS idx_usuarios_usuario_lower ON usuarios (lower(usuario));
 
 CREATE TABLE IF NOT EXISTS credenciales_biometricas (
   id               SERIAL PRIMARY KEY,

@@ -508,7 +508,7 @@ async function hacerRegistro() {
     const opciones = await apiAuth('/registro/iniciar', { usuario, invitacion });
     const respuesta = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: opciones });
     const r = await apiAuth('/registro/verificar', { usuario, respuesta });
-    setUsuarioActual(usuario, r.nombre, 'huella');
+    setUsuarioActual(r.usuario || usuario, r.nombre, 'huella');
     // Si vino un código de recuperación (primer registro), mostrarlo bien visible para que el
     // usuario lo anote. Después se puede volver a ver desde el perfil, verificando la huella.
     if (r.recovery_code) {
@@ -898,6 +898,8 @@ function apiToLocal(p) {
     metrosPorPasada: p.metros_por_pasada != null ? Number(p.metros_por_pasada) : null,
     creadoAt: p.creado_at,
     modificadoAt: p.modificado_at,
+    // Lo creó un invitado: un invitado solo puede modificar estos (el servidor también lo exige).
+    creadoPorInvitado: p.creado_por_invitado === true,
   };
 }
 
@@ -1046,6 +1048,9 @@ async function sincronizarPatronAhora() {
       await recargarDibujoPorConflicto();
     } else if (e.codigo === 'PATRON_EN_PRODUCCION') {
       toast('Este dibujo se está tejiendo: detené el trabajo para modificar la matriz');
+    } else if (e.codigo === 'SOLO_OPERARIO') {
+      // Invitado editando un dibujo de los operarios: apiFetch ya mostró el aviso del servidor.
+      setStatus('Sin guardar', false);
     } else if (e.status === 409) {
       toast('No se pudo sincronizar: ya existe un dibujo con ese nombre');
     } else {
@@ -1511,17 +1516,17 @@ function clearGrid() {
 }
 
 function newDraw() {
-		  if (edicionBloqueada()) return;
-		  // Usa la misma rutina que al entrar al editor: nombre "Nuevo Dibujo N" que no exista
-		  // todavía. Antes tenía su propia versión ("Nueva Inserción N") sin esa verificación,
-		  // y el nombre podía repetirse y la base rechazarlo.
-		  const empezarNuevo = () => { resetEditorForNew(); toast('Dibujo nuevo listo'); };
-		  // Cada cambio se guarda solo. Solo hay algo que perder si el indicador quedó en
-		  // "Modificado", es decir, si un guardado no llegó al servidor (por ejemplo, sin conexión).
-		  const pendiente = document.getElementById('ed-status').textContent.trim() === 'Modificado';
-		  if (!pendiente) { empezarNuevo(); return; }
-		  showConfirm('¿Crear un dibujo nuevo?', 'Hay cambios de este dibujo que todavía no se guardaron (por ejemplo, por un problema de conexión). Si seguís, se pierden.', empezarNuevo);
-		}
+  if (edicionBloqueada({ nuevo: true })) return;
+  // Usa la misma rutina que al entrar al editor: nombre "Nuevo Dibujo N" que no exista
+  // todavía. Antes tenía su propia versión ("Nueva Inserción N") sin esa verificación,
+  // y el nombre podía repetirse y la base rechazarlo.
+  const empezarNuevo = () => { resetEditorForNew(); toast('Dibujo nuevo listo'); };
+  // Cada cambio se guarda solo. Solo hay algo que perder si el indicador quedó en
+  // "Modificado", es decir, si un guardado no llegó al servidor (por ejemplo, sin conexión).
+  const pendiente = document.getElementById('ed-status').textContent.trim() === 'Modificado';
+  if (!pendiente) { empezarNuevo(); return; }
+  showConfirm('¿Crear un dibujo nuevo?', 'Hay cambios de este dibujo que todavía no se guardaron (por ejemplo, por un problema de conexión). Si seguís, se pierden.', empezarNuevo);
+}
 
 function setPlayBar(state) {
   const bar = document.getElementById('play-bar');
@@ -1552,10 +1557,19 @@ function updPlayUI() {
 // editarla: ni agregar/quitar pasadas, ni cambiar color, ni tamaño, etc.
 // Solo se puede editar cuando está EN PAUSA o DETENIDA.
 // Devuelve true (y avisa) si la edición está bloqueada ahora mismo.
-function edicionBloqueada() {
+function edicionBloqueada({ nuevo = false } = {}) {
   if (isPlaying) {
     toast('Pausá o detené la ejecución para poder editar la matriz');
     return true;
+  }
+  // Un invitado no puede modificar los dibujos de los operarios (el servidor lo rechaza). Se avisa
+  // antes de tocar nada: si no, los cambios se veían en pantalla pero no se guardaban.
+  if (!nuevo && origenSesion === 'invitado' && editId) {
+    const d = draws.find((x) => String(x.id) === String(editId));
+    if (d && !d.creadoPorInvitado) {
+      toast('Estás como invitado: este dibujo es de los operarios. Podés mirarlo; para diseñar, creá uno nuevo.');
+      return true;
+    }
   }
   // Pausado pero con el trabajo abierto: la posición guardada se refiere a ESTA matriz, así que
   // cambiarla la invalidaría (y el backend lo rechaza). Se ofrece el camino: terminar el trabajo.
@@ -1993,7 +2007,10 @@ async function ejecutarRetroceso() {
       method: 'POST',
       body: JSON.stringify({ pasos: 1 }),
     });
-    if (r && r.fila_actual !== undefined && r.fila_actual !== null) {
+    // La posición es la del trabajo del telar: solo se aplica si el dibujo abierto es ese (si no,
+    // se marcaría una fila de otro dibujo, o una fuera de rango).
+    if (r && Number.isInteger(r.fila_actual) && r.fila_actual < nR &&
+        (!trabajoEnCursoPatronId || String(editId) === trabajoEnCursoPatronId)) {
       curRow = r.fila_actual;
       curCol = 0;
       curPass = 0;
@@ -2207,13 +2224,15 @@ function deleteDraw(id) {
       // ya no existe (y que se "revíviría" al tocar una celda).
       if (editId === id) {
         editId = null;
-  versionDibujo = null;
+        versionDibujo = null;
         resetEditorForNew();
       }
       renderLib();
       updateStats();
       toast('Dibujo eliminado');
     } catch(e) {
+      // Invitado con un dibujo de los operarios: apiFetch ya mostró el aviso del servidor.
+      if (e.codigo === 'SOLO_OPERARIO') return;
       if (e.status === 409) showAlert('No se puede eliminar',
         'Este dibujo ya se usó para tejer y quedó registrado en el historial de producción de la máquina. '
         + 'Ese registro documenta lo que el telar tejió, así que el dibujo se conserva para que el historial siga teniendo sentido. '
@@ -2987,6 +3006,7 @@ function fichaInicializar() {
       toast(v === null ? 'Se quitó el dato de metros por pasada.' : 'Metros por pasada guardados.');
       fichaCargar();
     } catch (e) {
+      if (e.codigo === 'SOLO_OPERARIO') return;   // apiFetch ya mostró el aviso del invitado
       toast(e.message);
     }
   });

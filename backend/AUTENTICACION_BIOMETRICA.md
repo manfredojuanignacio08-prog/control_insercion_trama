@@ -183,10 +183,16 @@ esa cookie o, en el caso de los ESP32, la clave de dispositivo (`X-Device-Key`).
 - `GET /api/auth/sesion`: la web lo consulta al abrir para no pedir el login de nuevo.
 - `POST /api/auth/logout`: borra la cookie.
 - `POST /api/auth/invitado`: entrar sin cuenta ("Continuar sin iniciar sesión"). Emite una
-  sesión marcada como invitado, que permite ver todo y diseñar dibujos pero **no comandar el
-  telar**: las acciones que mueven la máquina y las invitaciones pasan por `requerirOperario`,
-  que al invitado le responde 403 con código `SOLO_OPERARIO`. El nombre "invitado" queda
-  reservado para el registro.
+  sesión marcada como invitado, que permite ver todo y diseñar dibujos nuevos pero **no comandar
+  el telar**: las acciones que mueven la máquina y las invitaciones pasan por `requerirOperario`,
+  que al invitado le responde 403 con código `SOLO_OPERARIO`. Con los dibujos, el invitado solo
+  puede modificar o borrar los que creó él como invitado (`patrones.creado_por_invitado`, migración
+  019); los de los operarios los puede mirar, y si intenta cambiarlos recibe el mismo 403. Cuando
+  un operario guarda un dibujo hecho por un invitado, pasa a ser de los operarios. El nombre
+  "invitado" queda reservado para el registro.
+- El nombre de usuario se busca sin distinguir mayúsculas: "Juan" y "juan" son la misma cuenta
+  (el teclado del celular suele poner la primera letra en mayúscula), y no se puede registrar
+  otra cuenta que solo difiera en eso.
 - Sumar una huella a un usuario que ya existe exige haber iniciado sesión como ese usuario
   (si no, cualquiera que supiera el nombre podía registrar su huella en esa cuenta).
 - El código de invitación se consume al crear el usuario (antes se perdía entre los dos pasos

@@ -30,7 +30,7 @@ function res() {
 async function call(fn, body, userRow) {
   globalThis.__log = [];
   globalThis.__q = (sql) => {
-    if (/FROM usuarios WHERE usuario/.test(sql)) return { rows: [userRow] };
+    if (/FROM usuarios WHERE (lower\(usuario\)|usuario)/.test(sql)) return { rows: [userRow] };
     if (/ultimo_acceso/.test(sql)) return { rowCount: 1 };
     if (/UPDATE usuarios SET recovery_code/.test(sql)) {
       globalThis.__saved = { sql, params: null }; // params se capturan en __log

@@ -167,4 +167,30 @@ const [a1, a2] = await Promise.all([reg('cuatro', codigo), reg('cinco', codigo)]
 assert.deepEqual([a1.s, a2.s].sort(), [200, 403], `una invitación, dos registros simultáneos: ${a1.s} ${a2.s}`);
 assert.equal(psql(`select count(*) from usuarios`), '4');
 r = await api('POST','/auth/registro/iniciar',{usuario:'seis',nombre:{x:1}},{ck:null}); assert.equal(r.s,400);
+// el usuario no distingue mayúsculas: "UNO" es la cuenta "uno" (no se registra otra) y puede entrar
+r = await reg('UNO'); assert.equal(r.s,403, 'no se puede registrar "UNO" si existe "uno"');
+r = await api('POST','/auth/login/iniciar',{usuario:'Uno'},{ck:null, headers:{Origin:'http://localhost:3999'}}); assert.equal(r.s,200, JSON.stringify(r));
+assert.equal(psql(`select count(*) from usuarios where lower(usuario)='uno'`), '1');
+// invitado y dibujos: crea y cambia los suyos; los de los operarios no los modifica ni los borra
+r = await api('POST','/patrones',{nombre:'Boceto',filas:1,columnas:2,matriz_pasadas:[[1,0]]},{ck:INV}); assert.equal(r.s,201); const PI = r.b.id;
+assert.equal(r.b.creado_por_invitado, true);
+r = await api('PUT',`/patrones/${PI}`,{nombre:'Boceto',filas:1,columnas:2,matriz_pasadas:[[0,1]]},{ck:INV}); assert.equal(r.s,200);
+r = await api('PUT',`/patrones/${P}`,{nombre:'Raya azul',filas:3,columnas:4,matriz_pasadas:MAT,repeticiones_por_fila:[2,1,3]},{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
+r = await api('PUT',`/patrones/${P}/metros-por-pasada`,{metros_por_pasada:0.001},{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
+r = await api('DELETE',`/patrones/${P}`,null,{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
+r = await api('DELETE','/patrones/987654',null,{ck:INV}); assert.equal(r.s,404);
+// si un operario lo guarda, pasa a ser de los operarios
+r = await api('PUT',`/patrones/${PI}`,{nombre:'Boceto',filas:1,columnas:2,matriz_pasadas:[[1,1]]}); assert.equal(r.s,200); assert.equal(r.b.creado_por_invitado, false);
+r = await api('DELETE',`/patrones/${PI}`,null,{ck:INV}); assert.equal(r.s,403);
+r = await api('POST','/patrones',{nombre:'Boceto 2',filas:1,columnas:2,matriz_pasadas:[[1,0]]},{ck:INV});
+r = await api('DELETE',`/patrones/${r.b.id}`,null,{ck:INV}); assert.equal(r.s,204);
+// Nivel 2: el sensor toma una producción que ya avanzó por reloj y conserva sus vueltas
+// (dibujo P: repeticiones 2,1,3 = 6 pasadas por vuelta)
+r = await api('POST','/telares',{codigo:'TELAR-03'}); const T3 = r.b.id;
+r = await api('POST',`/telares/${T3}/asignar-patron`,{patron_id:P}); assert.equal(r.s,201);
+r = await api('POST',`/telares/${T3}/avanzar`,{pasos:13,cliente:'R'}); assert.equal(r.b.vueltas_completadas,2); assert.equal(r.b.fila_actual,0); assert.equal(r.b.repeticion_en_fila,1);
+r = await api('POST',`/telares/${T3}/pasadas`,{pasadas_sensor:1,fila_actual:1,repeticion_en_fila:0},{ck:null,dev:true}); assert.equal(r.b.aplicado,true, JSON.stringify(r));
+assert.equal(psql(`select vueltas_completadas from historial_produccion where telar_id=${T3} and estado='en_curso'`), '2', 'el sensor no borra las vueltas ya tejidas');
+r = await api('POST',`/telares/${T3}/pasadas`,{pasadas_sensor:6,fila_actual:0,repeticion_en_fila:1},{ck:null,dev:true}); assert.equal(r.b.aplicado,true, JSON.stringify(r));
+assert.equal(psql(`select vueltas_completadas from historial_produccion where telar_id=${T3} and estado='en_curso'`), '3', 'cruzar el inicio suma una vuelta');
 console.log('integración contra PostgreSQL real: OK');

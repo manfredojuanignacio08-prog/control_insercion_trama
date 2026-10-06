@@ -93,6 +93,17 @@ function usuarioValido(u) {
   return t;
 }
 
+// El usuario se busca sin distinguir mayúsculas: "Juan" y "juan" son la misma cuenta (en el
+// celular el teclado suele poner la primera letra en mayúscula). Si una base vieja tuviera dos
+// nombres que solo difieren en eso, gana el que coincide exacto.
+async function buscarUsuario(nombre) {
+  const { rows } = await pool.query(
+    'SELECT * FROM usuarios WHERE lower(usuario) = lower($1) ORDER BY (usuario = $1) DESC, id LIMIT 1',
+    [nombre]
+  );
+  return rows[0];
+}
+
 // Hash SHA-256 (para guardar códigos de recuperación e invitación sin texto plano)
 const hashCodigo = (codigo) =>
   crypto.createHash('sha256').update(String(codigo).trim().toUpperCase()).digest('hex');
@@ -240,8 +251,7 @@ export async function iniciarRegistro(req, res, next) {
     }
 
     // Buscar el usuario
-    let { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [nom]);
-    let user = rows[0];
+    let user = await buscarUsuario(nom);
 
     // ── Usuario que YA existe ────────────────────────────────────────
     // Agregar una huella a una cuenta existente equivale a poder entrar como ella.
@@ -278,6 +288,15 @@ export async function iniciarRegistro(req, res, next) {
       try {
         await cliente.query('BEGIN');
         await cliente.query('SELECT pg_advisory_xact_lock(724001)');
+        // Dentro del bloqueo: otra alta simultánea con el mismo nombre (aunque cambie alguna
+        // mayúscula) ya pudo crear la cuenta.
+        const { rows: yaExiste } = await cliente.query('SELECT 1 FROM usuarios WHERE lower(usuario) = lower($1)', [nom]);
+        if (yaExiste.length) {
+          await cliente.query('ROLLBACK');
+          return res.status(403).json({
+            error: 'Ese usuario ya existe. Para sumar una huella a esta cuenta, entrá primero con tu huella o tu código de recuperación.',
+          });
+        }
         const { rows: cnt } = await cliente.query('SELECT COUNT(*)::int AS n FROM usuarios');
         let invitacionId = null;
         if (cnt[0].n >= LIMITE_LIBRE) {
@@ -358,8 +377,7 @@ export async function verificarRegistro(req, res, next) {
     }
 
     if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
-    const user = rows[0];
+    const user = await buscarUsuario(usuarioValido(usuario));
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
     const challenge = await tomarDesafio('registro', user.id);
@@ -451,8 +469,7 @@ export async function iniciarLogin(req, res, next) {
     if (!usuario) return res.status(400).json({ error: 'Falta el usuario.' });
 
     if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
-    const user = rows[0];
+    const user = await buscarUsuario(usuarioValido(usuario));
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
     const { rows: creds } = await pool.query(
@@ -489,8 +506,7 @@ export async function verificarLogin(req, res, next) {
     }
 
     if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
-    const user = rows[0];
+    const user = await buscarUsuario(usuarioValido(usuario));
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
     const challenge = await tomarDesafio('login', user.id);
@@ -561,8 +577,7 @@ export async function recuperarUsuario(req, res, next) {
       return res.status(400).json({ error: 'Faltan datos (usuario y código de recuperación).' });
     }
     if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
-    const user = rows[0];
+    const user = await buscarUsuario(usuarioValido(usuario));
     // La misma respuesta para un usuario que no existe, uno sin código y un código equivocado:
     // antes "Usuario no encontrado" dejaba averiguar qué usuarios existen antes de probar códigos.
     const rechazo = () => res.status(401).json({ error: 'El usuario o el código de recuperación son incorrectos.' });
@@ -607,8 +622,7 @@ export async function regenerarCodigoRecuperacion(req, res, next) {
     }
 
     if (!usuarioValido(usuario)) return res.status(400).json({ error: 'El usuario no es válido.' });
-    const { rows } = await pool.query('SELECT * FROM usuarios WHERE usuario = $1', [usuarioValido(usuario)]);
-    const user = rows[0];
+    const user = await buscarUsuario(usuarioValido(usuario));
     if (!user) return res.status(404).json({ error: 'Usuario no encontrado.' });
 
     // Verificar la huella (reutiliza el desafío de tipo 'login')

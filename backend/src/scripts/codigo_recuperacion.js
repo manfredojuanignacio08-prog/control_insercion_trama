@@ -77,13 +77,14 @@ async function main() {
   }
 
   const { rows } = await pool.query(
-    'SELECT id, usuario, nombre, recovery_code FROM usuarios WHERE usuario = $1',
+    // Sin distinguir mayúsculas, igual que el ingreso (si hubiera dos que solo difieren en eso, gana el exacto)
+    'SELECT id, usuario, nombre, recovery_code FROM usuarios WHERE lower(usuario) = lower($1) ORDER BY (usuario = $1) DESC, id LIMIT 1',
     [usuario]
   );
   const user = rows[0];
   if (!user) {
     console.error(`\n  No existe ningún usuario llamado "${usuario}".`);
-    console.error('  Revisá cómo está escrito (respeta mayúsculas/minúsculas).\n');
+    console.error('  Revisá cómo está escrito.\n');
     process.exit(1);
   }
 

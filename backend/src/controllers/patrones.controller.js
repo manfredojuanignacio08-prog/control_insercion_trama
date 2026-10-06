@@ -1,7 +1,14 @@
 import { pool } from '../db.js';
 import { derivarLigamentoDesdePasadas } from '../utils/ligamento.js';
 import { validarPatron } from '../utils/validacion.js';
-import { notFound, badRequest, conflict } from '../middleware/errorHandler.js';
+import { notFound, badRequest, conflict, prohibido } from '../middleware/errorHandler.js';
+
+// Un invitado (sesión abierta a cualquiera que entre a la página) crea dibujos y cambia o borra
+// los que se crearon como invitado, pero no los de los operarios: antes podía borrar la
+// biblioteca entera de la fábrica.
+const AVISO_DIBUJO_DE_OPERARIO =
+  'Estás como invitado: podés crear dibujos nuevos y cambiar los que creaste, pero no modificar ni borrar los de los operarios. Para eso hay que iniciar sesión con tu huella o tu código.';
+const esInvitado = (req) => req.usuario?.invitado === true;
 
 
 // GET /api/patrones?buscar=texto&limit=500&offset=0
@@ -56,8 +63,8 @@ export async function crearPatron(req, res, next) {
     const ligamento = matriz_ligamento ?? derivarLigamentoDesdePasadas(matriz_pasadas);
 
     const { rows } = await pool.query(
-      `INSERT INTO patrones (nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO patrones (nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, creado_por_invitado)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         nombre.trim(),   // sin espacios sobrantes: "Raya" y "Raya " no son dos dibujos distintos
@@ -69,6 +76,7 @@ export async function crearPatron(req, res, next) {
         metadata ? JSON.stringify(metadata) : null,
         // En null, el telar teje una pasada por fila: el comportamiento de siempre.
         repeticiones_por_fila ?? null,
+        esInvitado(req),
       ]
     );
     res.status(201).json(rows[0]);
@@ -98,10 +106,11 @@ export async function actualizarPatron(req, res, next) {
     // matriz hay que detener el trabajo primero (eso libera el dibujo).
     await client.query('BEGIN');
     const actual = await client.query(
-      `SELECT filas, columnas, matriz_pasadas, repeticiones_por_fila,
+      `SELECT filas, columnas, matriz_pasadas, repeticiones_por_fila, creado_por_invitado,
               date_trunc('milliseconds', modificado_at) AS version
          FROM patrones WHERE id = $1 FOR UPDATE`, [id]);
     if (actual.rows.length === 0) throw notFound(`No existe el dibujo con id ${id}.`);
+    if (esInvitado(req) && !actual.rows[0].creado_por_invitado) throw prohibido(AVISO_DIBUJO_DE_OPERARIO, 'SOLO_OPERARIO');
 
     // Control de versión optimista. La web manda la fecha de modificación que tenía
     // cuando cargó (o guardó por última vez) el dibujo. Si no coincide, otra persona
@@ -152,7 +161,9 @@ export async function actualizarPatron(req, res, next) {
       `UPDATE patrones
          SET nombre = $1, filas = $2, columnas = $3, matriz_pasadas = $4,
              matriz_ligamento = $5, colores_filas = $6, metadata = $7,
-             repeticiones_por_fila = $9
+             repeticiones_por_fila = $9,
+             -- si lo guarda un operario, el dibujo pasa a ser de los operarios
+             creado_por_invitado = creado_por_invitado AND $10
        WHERE id = $8
        RETURNING *`,
       [
@@ -165,6 +176,7 @@ export async function actualizarPatron(req, res, next) {
         metadata ? JSON.stringify(metadata) : null,
         id,
         repeticiones_por_fila ?? null,
+        esInvitado(req),
       ]
     );
 
@@ -182,8 +194,15 @@ export async function actualizarPatron(req, res, next) {
 // DELETE /api/patrones/:id
 export async function eliminarPatron(req, res, next) {
   try {
-    const { rows } = await pool.query('DELETE FROM patrones WHERE id = $1 RETURNING id', [req.params.id]);
-    if (rows.length === 0) throw notFound(`No existe el dibujo con id ${req.params.id}.`);
+    const { rows } = await pool.query(
+      'DELETE FROM patrones WHERE id = $1 AND (NOT $2 OR creado_por_invitado) RETURNING id',
+      [req.params.id, esInvitado(req)]
+    );
+    if (rows.length === 0) {
+      const existe = await pool.query('SELECT 1 FROM patrones WHERE id = $1', [req.params.id]);
+      if (existe.rows.length === 0) throw notFound(`No existe el dibujo con id ${req.params.id}.`);
+      throw prohibido(AVISO_DIBUJO_DE_OPERARIO, 'SOLO_OPERARIO');
+    }
     res.status(204).send();
   } catch (err) {
     next(err);
@@ -215,12 +234,17 @@ export async function actualizarMetrosPorPasada(req, res, next) {
     const r = await pool.query(
       `UPDATE patrones
           SET metros_por_pasada = $1,
-              modificado_at = now()
-        WHERE id = $2
+              modificado_at = now(),
+              creado_por_invitado = creado_por_invitado AND $3
+        WHERE id = $2 AND (NOT $3 OR creado_por_invitado)
       RETURNING id, nombre, metros_por_pasada, modificado_at`,
-      [metros_por_pasada, id]
+      [metros_por_pasada, id, esInvitado(req)]
     );
-    if (r.rows.length === 0) return res.status(404).json({ error: `No existe el dibujo con id ${id}.` });
+    if (r.rows.length === 0) {
+      const existe = await pool.query('SELECT 1 FROM patrones WHERE id = $1', [id]);
+      if (existe.rows.length === 0) return res.status(404).json({ error: `No existe el dibujo con id ${id}.` });
+      throw prohibido(AVISO_DIBUJO_DE_OPERARIO, 'SOLO_OPERARIO');
+    }
     res.json(r.rows[0]);
   } catch (err) {
     next(err);

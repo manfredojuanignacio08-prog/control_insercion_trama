@@ -169,21 +169,25 @@ src/
 │   ├── migracion_006_ping_esp32.sql             Migración: ultimo_ping_esp32 (heartbeat del ESP32)
 │   ├── migracion_007_retroceder_fisico.sql      Migración: retroceder_seq (botón físico Retroceder)
 │   ├── migracion_008_evento_fisico.sql          Migración: posicion_incierta + ultimo_evento_manual (sensado de los botones)
-- `migracion_009_rango_dimensiones.sql`: acotó filas y columnas al rango de 2 a 32 (la 014 lo reemplazó, y la 017 amplió las filas).
-- `migracion_010_elementos_seleccion.sql`: guarda cuántos elementos de selección (bobinas) tiene cada telar, para avisar cuando un dibujo tiene más columnas de las que la máquina puede accionar. Documenta además que `columna_actual` es vestigial y queda siempre en cero.
-- `migracion_011_metros_por_pasada.sql`: guarda cuántos metros avanza la tela en una pasada, para convertir el conteo en metros reales y calcular estadísticas de producción.
-- `migracion_012_conteo_sensor_y_retrocesos.sql`: separa el conteo estimado del medido por el sensor (`pasadas_sensor`, `conteo_validado`), agrega `retrocesos_contados`, `ultimo_reporte_sensor` y `motivo_pausa`.
-- `migracion_013_indice_unico_en_curso.sql`: una sola producción `en_curso` por telar (índice único).
-- `migracion_014_repeticiones_por_fila.sql`: agrega las repeticiones de cada fila y fija los rangos de 1 a 100 filas y de 1 a 8 columnas.
-- `migracion_015_repeticion_en_fila.sql`: guarda cuántas pasadas de la fila actual ya se tejieron.
-- `migracion_016_recovery_cifrado.sql`: documenta el cifrado del código de recuperación (sin cambios de esquema).
-- `migracion_017_filas_hasta_300.sql`: el máximo de filas de un dibujo pasa de 100 a 300.
-- `migracion_018_senal_nivel2.sql`: solo actualiza la descripción de `ultimo_reporte_sensor`, que ahora también renueva la consulta periódica del nodo del Nivel 2.
+│   ├── migracion_009_rango_dimensiones.sql  Migración: acotó filas y columnas al rango de 2 a 32 (la 014 lo reemplazó, y la 017 amplió las filas).
+│   ├── migracion_010_elementos_seleccion.sql  Migración: guarda cuántos elementos de selección (bobinas) tiene cada telar, para avisar cuando un dibujo tiene más columnas de las que la máquina puede accionar. Documenta además que `columna_actual` es vestigial y queda siempre en cero.
+│   ├── migracion_011_metros_por_pasada.sql  Migración: guarda cuántos metros avanza la tela en una pasada, para convertir el conteo en metros reales y calcular estadísticas de producción.
+│   ├── migracion_012_conteo_sensor_y_retrocesos.sql  Migración: separa el conteo estimado del medido por el sensor (`pasadas_sensor`, `conteo_validado`), agrega `retrocesos_contados`, `ultimo_reporte_sensor` y `motivo_pausa`.
+│   ├── migracion_013_indice_unico_en_curso.sql  Migración: una sola producción `en_curso` por telar (índice único).
+│   ├── migracion_014_repeticiones_por_fila.sql  Migración: agrega las repeticiones de cada fila y fija los rangos de 1 a 100 filas y de 1 a 8 columnas.
+│   ├── migracion_015_repeticion_en_fila.sql  Migración: guarda cuántas pasadas de la fila actual ya se tejieron.
+│   ├── migracion_016_recovery_cifrado.sql  Migración: documenta el cifrado del código de recuperación (sin cambios de esquema).
+│   ├── migracion_017_filas_hasta_300.sql  Migración: el máximo de filas de un dibujo pasa de 100 a 300.
+│   ├── migracion_018_senal_nivel2.sql  Migración: solo actualiza la descripción de `ultimo_reporte_sensor`, que ahora también renueva la consulta periódica del nodo del Nivel 2.
+│   ├── migracion_019_dibujos_de_invitado.sql  Migración: marca los dibujos creados por un invitado (`creado_por_invitado`): el invitado solo puede cambiar o borrar esos. Índice para buscar el usuario sin distinguir mayúsculas.
 │   ├── migrator.js                               Aplica cada migración UNA vez (tabla migraciones_aplicadas)
 │   └── migrate.js                                Corre las migraciones pendientes (npm run migrate)
+├── scripts/
+│   ├── codigo_recuperacion.js   Muestra o rota el código de recuperación de un usuario (npm run codigo)
+│   └── generar_base_completa.js Regenera database/01_base_de_datos_completa.sql (npm run generar-sql)
 ├── utils/
 │   ├── ligamento.js        Deriva matriz_ligamento desde matriz_pasadas
-│   ├── posicion.js         Lógica pura de avanzar/retroceder (espejo 1):1 de doTick()/rollback() del frontend
+│   ├── posicion.js         Lógica pura de avanzar/retroceder (espejo 1:1 de doTick()/rollback() del frontend)
 │   └── validacion.js       Validación de patrones
 ├── middleware/errorHandler.js  Manejo centralizado de errores (404/400/409/500)
 ├── controllers/             Lógica de negocio por entidad
@@ -254,7 +258,7 @@ Cada `db/migracion_NNN_*.sql` se aplica **una sola vez**, dentro de una transacc
 
 `npm test` corre seis pruebas: la lógica de posición (avanzar/retroceder son espejos, y el cálculo directo coincide con el paso a paso en 400.000 casos al azar), la autenticación (cookie firmada, clave de dispositivo), el modo invitado, los **controladores con una base simulada** (retomar/reanudar, `reinicio`, `sin_senal`, retrocesos, bloqueo de edición, estadísticas, registro e invitaciones, conductor único, límite de `pasos`), la **lógica de la web ejecutada sin navegador** (recuperar el trabajo al abrir, reanudar sin reiniciar, 401, terminar trabajo, etiquetas de "estimado", pausa, retroceso, segunda pestaña) y los códigos de recuperación. No necesita base de datos.
 
-`tests/integracion.pg.mjs` es una prueba aparte, **contra el servidor real y un PostgreSQL real**: telar, dibujos, conductor del reloj, eventos de los ESP32, reportes del sensor, retrocesos con sensor, estadísticas, invitaciones, dos registros simultáneos con la misma invitación, ocho guardados simultáneos del mismo dibujo (se guarda uno solo) y la pausa sin trabajo abierto. Crea y borra datos, así que se corre **solo contra una base de prueba vacía**; los pasos están al principio del archivo. Ninguna de las dos reemplaza probar en un navegador real.
+`tests/integracion.pg.mjs` es una prueba aparte, **contra el servidor real y un PostgreSQL real**: telar, dibujos, conductor del reloj, eventos de los ESP32, reportes del sensor, retrocesos con sensor, estadísticas, invitaciones, dos registros simultáneos con la misma invitación, ocho guardados simultáneos del mismo dibujo (se guarda uno solo), la pausa sin trabajo abierto, los permisos del invitado sobre los dibujos, el usuario sin distinguir mayúsculas y las vueltas que cuenta el sensor del Nivel 2. Crea y borra datos, así que se corre **solo contra una base de prueba vacía**; los pasos están al principio del archivo. Ninguna de las dos reemplaza probar en un navegador real.
 
 ## Retomar un trabajo (pausa, cierre de la página, corte de luz, traslado)
 

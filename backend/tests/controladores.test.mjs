@@ -277,7 +277,9 @@ const rp = (actual) => { globalThis.__q = (sql) => {
 rp({id:5, pasadas_sensor:100, filas:4});
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:120, fila_actual:2} });
 assert.equal(x.r.body.aplicado, true); const up = x.log.find(l=>/SET pasadas_sensor = \$1/.test(l.sql)); // El quinto parámetro es repeticion_en_fila: con una fila nueva y sin dato, la fila arranca en 0.
-assert.deepEqual(up.params, [120,2,5,30,0]);
+// El cuarto son las vueltas que SUMA el reporte: 20 pasadas nuevas en un dibujo de 4 = 5 vueltas (antes se
+// recalculaban como 120 / 4 = 30, como si el sensor hubiera contado desde el principio del trabajo).
+assert.deepEqual(up.params, [120,2,5,5,0]);
 assert(x.log.some(l=>/ultimo_reporte_sensor = now\(\)/.test(l.sql)));
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:3, fila_actual:1} });   // reinicio del nodo: cae de 100 a 3
 assert.equal(x.r.body.aplicado, false); assert.equal(x.r.body.pasadas_sensor, 100);
@@ -356,7 +358,7 @@ const ahora = new Date();
 
 // usuario existente, con huella, SIN sesión => 403 (antes cualquiera podía sumar su huella)
 globalThis.__q = (sql) => {
-  if (/FROM usuarios WHERE usuario = \$1/.test(sql)) return { rows:[{id:1, usuario:'mia', creado_at:new Date(Date.now()-86400000), webauthn_id:'AAAA'}] };
+  if (/FROM usuarios WHERE (?:lower\(usuario\) = lower\(\$1\)|usuario = \$1)/.test(sql)) return { rows:[{id:1, usuario:'mia', creado_at:new Date(Date.now()-86400000), webauthn_id:'AAAA'}] };
   if (/FROM credenciales_biometricas WHERE usuario_id/.test(sql)) return { rows:[{credential_id:'c'}] };
 };
 x = await callA(A.iniciarRegistro, { body:{usuario:'mia'} });
@@ -367,13 +369,13 @@ x = await callA(A.iniciarRegistro, { body:{usuario:'mia'}, headers:{ host:'x.tes
 assert.equal(x.r.code, 200); assert.equal(x.r.body.challenge, 'c1');
 // cuenta recién creada y sin huella, sin sesión => se puede completar el registro
 globalThis.__q = (sql) => {
-  if (/FROM usuarios WHERE usuario = \$1/.test(sql)) return { rows:[{id:2, usuario:'nuevo', creado_at:ahora, webauthn_id:'BBBB'}] };
+  if (/FROM usuarios WHERE (?:lower\(usuario\) = lower\(\$1\)|usuario = \$1)/.test(sql)) return { rows:[{id:2, usuario:'nuevo', creado_at:ahora, webauthn_id:'BBBB'}] };
   if (/FROM credenciales_biometricas WHERE usuario_id/.test(sql)) return { rows:[] };
 };
 x = await callA(A.iniciarRegistro, { body:{usuario:'nuevo'} }); assert.equal(x.r.code, 200);
 // usuario nuevo con el registro cerrado (3 usuarios) y sin invitación => 403
 globalThis.__q = (sql) => {
-  if (/FROM usuarios WHERE usuario = \$1/.test(sql)) return { rows:[] };
+  if (/FROM usuarios WHERE (?:lower\(usuario\) = lower\(\$1\)|usuario = \$1)/.test(sql)) return { rows:[] };
   if (/COUNT\(\*\)::int AS n FROM usuarios/.test(sql)) return { rows:[{n:3}] };
 };
 x = await callA(A.iniciarRegistro, { body:{usuario:'intruso'} });
@@ -381,7 +383,7 @@ assert.equal(x.r.code, 403); assert.equal(x.r.body.requiere_invitacion, true);
 assert(!x.log.some(l=>/INSERT INTO usuarios/.test(l.sql)));
 // con invitación válida => se crea el usuario y la invitación se CONSUME
 globalThis.__q = (sql) => {
-  if (/FROM usuarios WHERE usuario = \$1/.test(sql)) return { rows:[] };
+  if (/FROM usuarios WHERE (?:lower\(usuario\) = lower\(\$1\)|usuario = \$1)/.test(sql)) return { rows:[] };
   if (/COUNT\(\*\)::int AS n FROM usuarios/.test(sql)) return { rows:[{n:3}] };
   if (/UPDATE invitaciones SET usada = true\s+WHERE codigo_hash/.test(sql)) return { rows:[{id:7}] };
   if (/INSERT INTO usuarios/.test(sql)) return { rows:[{id:9, usuario:'operario4', webauthn_id:'CCCC'}] };
@@ -395,7 +397,7 @@ const consumo = x.log.find(l=>/UPDATE invitaciones SET usada_por/.test(l.sql)); 
 assert(x.log.some(l=>l.sql==='COMMIT'));
 // invitación ya usada (el UPDATE no devuelve fila) => 403 y no se crea el usuario
 globalThis.__q = (sql) => {
-  if (/FROM usuarios WHERE usuario = \$1/.test(sql)) return { rows:[] };
+  if (/FROM usuarios WHERE (?:lower\(usuario\) = lower\(\$1\)|usuario = \$1)/.test(sql)) return { rows:[] };
   if (/COUNT\(\*\)::int AS n FROM usuarios/.test(sql)) return { rows:[{n:3}] };
 };
 x = await callA(A.iniciarRegistro, { body:{usuario:'operario5', invitacion:'TRAMA-XXXX'} });
