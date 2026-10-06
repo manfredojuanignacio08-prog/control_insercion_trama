@@ -10,11 +10,11 @@
 --   - Una FILA es una combinación de bobinas: sus columnas se activan de forma
 --     simultánea (cada celda vale 0 o 1). Cuántas pasadas seguidas se teje cada
 --     fila lo dice repeticiones_por_fila (migración 014); sin ese dato, una.
---   - fila_actual / columna_actual / pasada_actual en historial_produccion:
---     posición exacta de la producción en curso (mismo significado que
---     curRow/curCol/curPass del frontend), para soportar "retroceder un
---     paso" sin reconstruir nada.
---   - El tejido no tiene "final": al llegar a la última celda vuelve a la
+--   - fila_actual + repeticion_en_fila en historial_produccion: posición exacta de la
+--     producción en curso (la fila y cuántas pasadas de esa fila ya se tejieron), para
+--     soportar "retroceder una pasada" sin reconstruir nada. columna_actual y
+--     pasada_actual se conservan por compatibilidad y quedan siempre en 0.
+--   - El tejido no tiene "final": después de la última fila vuelve a la
 --     fila 0 y sigue en bucle infinito (así es un telar real), por eso
 --     vueltas_completadas cuenta cuántas veces se repitió el patrón entero.
 --
@@ -28,8 +28,8 @@ CREATE TABLE IF NOT EXISTS patrones (
   nombre            TEXT NOT NULL UNIQUE,
   filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 300),
   columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 1 AND 8),
-  matriz_pasadas    JSONB NOT NULL,   -- array de arrays de enteros: pasadas por celda (lo que programa el editor hoy)
-  matriz_ligamento  JSONB,            -- array de arrays binarios (0/1): lizo arriba/abajo, estructura textil (opcional)
+  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por pasada-combinación): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
+  matriz_ligamento  JSONB,            -- array de arrays binarios (0/1), derivado de matriz_pasadas si no se manda
   colores_filas     JSONB,            -- array de colores hex, uno por fila
   metadata          JSONB,            -- ej: {"tipo": "Tafetán"}
   creado_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -70,11 +70,11 @@ CREATE TABLE IF NOT EXISTS historial_produccion (
   pasadas_totales      INTEGER DEFAULT 0,
   alertas_disparadas   INTEGER DEFAULT 0,
   fila_actual          INTEGER DEFAULT 0,           -- índice (0-based) de la fila que se está tejiendo ahora
-  columna_actual       INTEGER DEFAULT 0,           -- índice (0-based) de la columna dentro de esa fila
+  columna_actual       INTEGER DEFAULT 0,           -- vestigial: siempre 0 (las columnas de una fila son simultáneas)
   -- migración 015: cuántas pasadas de la fila actual ya se tejieron. Con las
   -- repeticiones del dibujo define la posición exacta dentro de la producción.
   repeticion_en_fila   INTEGER NOT NULL DEFAULT 0 CHECK (repeticion_en_fila >= 0),
-  pasada_actual        INTEGER DEFAULT 0,           -- cuántas pasadas ya se hicieron en esa celda exacta
+  pasada_actual        INTEGER DEFAULT 0,           -- vestigial: siempre 0 (la pasada dentro de la fila es repeticion_en_fila)
   vueltas_completadas  INTEGER DEFAULT 0,           -- cuántas veces se tejió el patrón entero de punta a punta
   estado               TEXT NOT NULL DEFAULT 'en_curso'
                           CHECK (estado IN ('en_curso', 'finalizado', 'detenido_manual'))
@@ -161,9 +161,8 @@ CREATE INDEX IF NOT EXISTS idx_desafio_challenge ON desafios_webauthn(challenge)
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_hash TEXT;
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_usado BOOLEAN NOT NULL DEFAULT false;
 
--- migración 005: código de recuperación fijo (en texto plano, ver esa
--- migración para la nota de seguridad). Faltaba en este archivo aunque
--- ya estaba en la base real y en database/01_base_de_datos_completa.sql.
+-- migración 005: código de recuperación fijo. Desde la migración 016 se guarda CIFRADO
+-- con RECOVERY_SECRET (AES-256-GCM), no en texto plano.
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_code TEXT;
 
 CREATE TABLE IF NOT EXISTS invitaciones (

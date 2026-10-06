@@ -446,7 +446,7 @@ function setLoginMsg(txt, tipo) {
   const el = loginMsg();
   el.textContent = txt || '';
   el.style.color = tipo === 'error' ? 'var(--red, #c0392b)'
-                 : tipo === 'ok' ? '#2E9E5B'
+                 : tipo === 'ok' ? 'var(--green)'
                  : 'var(--tx3)';
 }
 
@@ -786,7 +786,7 @@ function volverAlLogin() {
 function setRecMsg(txt, tipo) {
   const el = document.getElementById('rec-msg');
   el.textContent = txt || '';
-  el.style.color = tipo === 'error' ? 'var(--red, #c0392b)' : tipo === 'ok' ? '#2E9E5B' : 'var(--tx3)';
+  el.style.color = tipo === 'error' ? 'var(--red, #c0392b)' : tipo === 'ok' ? 'var(--green)' : 'var(--tx3)';
 }
 
 async function hacerRecupero() {

@@ -55,6 +55,9 @@
      oscuro, y el verde y el ámbar del tema claro quedaban en 2,4:1 y 2,8:1 sobre estos fondos. */
   --green: #74C69D;
   --amber: #E9B15A;
+  /* El rojo tampoco se redefinía: "Sin conexión", ⏪, "Eliminar" y los mensajes de error
+     quedaban en 1,3:1 a 1,9:1 sobre los fondos oscuros, casi invisibles. */
+  --red:   #F28B82;
   --sh-sm: 0 1px 4px rgba(0,0,0,.35);
   --sh-md: 0 3px 14px rgba(0,0,0,.45);
 }
@@ -203,7 +206,7 @@ font-family:var(--font-mono);}
   font-size:30px;font-weight:700;color:var(--acc);line-height:1
 }
 .stat-l{font-size:10px;color:var(--tx3);margin-top:5px;
-  letter-spacing:.08em;text-transform:uppercase;font-weight:600font-family:var(--font-mono);}
+  letter-spacing:.08em;text-transform:uppercase;font-weight:600;font-family:var(--font-mono);}
 
 .card-list{padding:4px 14px 14px;display:flex;flex-direction:column;gap:10px}
 .action-card{
@@ -338,7 +341,7 @@ font-family:var(--font-mono);}
 }
 .cfg-grp{display:flex;align-items:center;gap:5px;flex:1}
 .cfg-lbl{font-size:10px;color:var(--tx3);font-weight:700;
-  letter-spacing:.08em;text-transform:uppercase;white-space:nowrapfont-family:var(--font-mono);}
+  letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;font-family:var(--font-mono);}
 .cfg-in{
   width:48px;background:var(--srf2);border:1px solid var(--bd);
   border-radius:var(--r-sm);padding:5px 4px;font-size:14px;
@@ -574,12 +577,15 @@ font-family:var(--font-mono);}
   position:fixed;bottom:88px;left:50%;
   transform:translateX(-50%) translateY(14px);
   background:var(--gray-dk);color:var(--srf);
-  padding:9px 18px;border-radius:99px;
+  padding:9px 18px;
   font-size:13px;font-weight:600;
   opacity:0;transition:opacity .22s,transform .22s;
   pointer-events:none;z-index:9999;
-  white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.3);
-  max-width:90vw;
+  /* Varios avisos son largos (los del invitado pasan los 90 caracteres): con nowrap el texto se
+     salía de la burbuja y quedaba cortado en los dos bordes de la pantalla del celular. */
+  width:max-content;max-width:90vw;white-space:normal;text-align:center;line-height:1.4;
+  box-shadow:0 4px 18px rgba(0,0,0,.3);
+  border-radius:18px;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 

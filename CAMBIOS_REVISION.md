@@ -954,3 +954,42 @@ Pruebas: `npm test` (6 pruebas), integración contra PostgreSQL real, firmware e
 | `_referencia_app_android` (no se usa): no decía por qué hoy no funcionaría (la API exige sesión) y afirmaba que el ESP32 llamaría a `/avanzar`. | `AVISO.md` lista lo que cambió y se corrigieron esos comentarios. |
 
 Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (ficha al cambiar de dibujo, ⊕ Nuevo, origen de la sesión al recargar): todo bien.
+
+### Undécima revisión de cierre (todo el proyecto de nuevo: código, base, planillas, Word y diagramas)
+
+**Web**
+
+| Problema | Corrección |
+|---|---|
+| Modo oscuro: los textos en rojo (errores, "Sin conexión") usaban el mismo rojo que el modo claro y sobre el fondo oscuro quedaban con un contraste de 1,3 a 1,9 a 1, casi ilegibles. | `--red` propio del modo oscuro (`#F28B82`). |
+| `styles.css`: a `.stat-l` y `.cfg-lbl` les faltaba un punto y coma, así que el navegador descartaba la declaración siguiente (las etiquetas de configuración salían sin la tipografía monoespaciada y podían partirse en dos líneas). | Corregido; el validador de CSS ya no marca errores. |
+| Los avisos largos (toast) no se cortaban en líneas: en un celular de 390 px el texto se salía de la pantalla. | El aviso se ajusta al ancho (máximo 90 % de la pantalla) y parte el texto. Probado en Chromium a 390 px. |
+| Los mensajes de éxito del ingreso y del código de recuperación usaban un verde fijo que no cambia con el tema. | Usan `var(--green)`. |
+
+**Base de datos**
+
+| Problema | Corrección |
+|---|---|
+| `schema.sql` no aclaraba que `columna_actual` y `pasada_actual` ya no se usan (la posición es `fila_actual` + `repeticion_en_fila`), ni que en `matriz_pasadas` cualquier valor mayor que 0 activa la bobina; el comentario de la migración 005 decía que el código se guarda en texto plano (se cifra desde la 016). | Comentarios corregidos y `database/01_base_de_datos_completa.sql` regenerado (19 migraciones; corre limpio en una base nueva). |
+| Los diagramas `ERD` y `DER_Negocio` (y sus copias dentro de la Documentación de Proyecto) no tenían la columna `patrones.creado_por_invitado` de la migración 019, y el ERD decía "migraciones 001 a 016". Se compararon por programa todas las columnas de los tres diagramas contra la base real: era la única diferencia. | Columna agregada, título a "001 a 019" y PNG regenerados. |
+
+**Planillas**
+
+| Problema | Corrección |
+|---|---|
+| `Componentes_en_placa.xlsx`: faltaba el capacitor de 470 µF del bus de 5 V y no figuraban los componentes del Nivel 2 que se suman a la placa. | 24 componentes numerados, con la sección "Etapa 4 · Nivel 2" (PC817 y resistencias del sensor; LCA110 ×4 con sus 330 Ω y 10 kΩ), patas y pines como en el firmware y los diagramas. |
+| `Checklist_verificaciones.xlsx`, fila 18: el resultado esperado y la corrección no decían qué significa cada error del monitor serie. | 401 = clave distinta, 404 = `TELAR_ID`, error de conexión = esperar a que despierte Render. |
+| `Lista_de_componentes`: el título del Bloque A no decía que incluye Retroceder. | Corregido. Subtotales (73.653 + 13.950 + 34.536 = 122.139) y presupuesto (29.642.903, con el 25 % 37.053.629) verificados contra los Word. |
+
+**Documentos**
+
+| Problema | Corrección |
+|---|---|
+| `LEEME.md` y `Estado_Completo_del_Proyecto.docx`: cantidades viejas (verificaciones, secciones, reuniones, tareas del cronograma, componentes de la placa) y las bobinas sin la confirmación del 19/09. | 25 verificaciones, 85 secciones, seis reuniones (la última el 19/09/2026), 160 tareas en 8 etapas, 24 componentes; cuatro bobinas confirmadas el 19/09. |
+| Bitácora, "Cómo funciona" del Nivel 2: seguía diciendo seis bobinas y que el editor admite de 2 a 32 columnas (son cuatro bobinas y de 1 a 8 columnas). | Corregido; también "los seis bobinas" → "las seis". |
+| Documentación de Proyecto: "antes de comprar las bobinas de selección" (ya están instaladas: lo que se compra son los LCA110); la medición "dimensiona la etapa de potencia que comandará las bobinas" (no hay etapa de potencia: se conmuta la señal del lector); citaba una "Guía de Medición del Telar" que no existe; a los fabricantes les faltaba IXYS (LCA110). | Corregidos. |
+| Documentación de Proyecto: dos marcas de comentario rotas (un rango con el id 10 repetido y un cierre del 12 sin apertura) que el validador de Word rechazaba. | Quitadas; el documento pasa la validación. |
+
+Se revisaron además, sin encontrar errores: el resto del backend, las 19 migraciones, Docker, el firmware y su configuración, los demás Word y Markdown, los textos de los 15 diagramas SVG y los valores de hardware (resistencias, pines, patas del LCA110 y del PC817) en todas las guías.
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (avisos largos a 390 px, etiquetas de configuración): todo bien.

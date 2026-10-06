@@ -2,7 +2,7 @@
 <defs><marker id="punta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#3D6B96"/></marker></defs>
 <rect width="1100" height="1398" fill="#F6F8FA"/>
 <text x="40" y="44" font-size="20" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Modelo de datos del sistema</text>
-<text x="40" y="68" font-size="11" fill="#5F6976" font-family="IBM Plex Mono, ui-monospace, monospace">POSTGRESQL · 9 TABLAS · GENERADO A PARTIR DEL ESQUEMA REAL (SCHEMA.SQL Y MIGRACIONES 001 A 016)</text>
+<text x="40" y="68" font-size="11" fill="#5F6976" font-family="IBM Plex Mono, ui-monospace, monospace">POSTGRESQL · 9 TABLAS · GENERADO A PARTIR DEL ESQUEMA REAL (SCHEMA.SQL Y MIGRACIONES 001 A 019)</text>
 <text x="40" y="96" font-size="12" font-weight="600" fill="#3D6B96" font-family="IBM Plex Mono, ui-monospace, monospace">PRODUCCIÓN</text>
 <text x="40" y="846" font-size="12" font-weight="600" fill="#3D6B96" font-family="IBM Plex Mono, ui-monospace, monospace">ACCESO Y SEGURIDAD</text>
 <line x1="40" y1="820" x2="1060" y2="820" stroke="#CDD8E0" stroke-dasharray="4 4"/>
@@ -14,7 +14,7 @@
 <path d="M400,1251.0 C370.0,1251.0 370.0,905.0 340,905.0" fill="none" stroke="#3D6B96" stroke-width="1.5" stroke-linejoin="round" marker-end="url(#punta)"/>
 <path d="M40,1229.0 C14,1229.0 14,905.0 40,905.0" fill="none" stroke="#3D6B96" stroke-width="1.5" stroke-linejoin="round" marker-end="url(#punta)"/>
 <path d="M40,1273.0 C14,1273.0 14,905.0 40,905.0" fill="none" stroke="#3D6B96" stroke-width="1.5" stroke-linejoin="round" marker-end="url(#punta)"/>
-<rect x="40" y="110" width="300" height="298" rx="8" fill="#FFFFFF" stroke="#CDD8E0"/>
+<rect x="40" y="110" width="300" height="320" rx="8" fill="#FFFFFF" stroke="#CDD8E0"/>
 <path d="M40,118 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v26 h-300 z" fill="#1E3A5F"/>
 <text x="54" y="132" font-size="13" font-weight="600" fill="#FFFFFF">patrones</text>
 <text x="52" y="159" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, ui-monospace, monospace">PK</text>
@@ -48,6 +48,8 @@
 <rect x="41" y="386" width="298" height="22" fill="#EDF1F5"/>
 <text x="78" y="401" font-size="11" fill="#1F2937">modificado_at</text>
 <text x="328" y="401" font-size="9.5" fill="#5F6976" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">timestamptz</text>
+<text x="78" y="423" font-size="11" fill="#1F2937">creado_por_invitado</text>
+<text x="328" y="423" font-size="9.5" fill="#5F6976" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">boolean</text>
 <rect x="400" y="110" width="300" height="364" rx="8" fill="#FFFFFF" stroke="#CDD8E0"/>
 <path d="M400,118 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v26 h-300 z" fill="#1E3A5F"/>
 <text x="414" y="132" font-size="13" font-weight="600" fill="#FFFFFF">telares</text>
