@@ -975,7 +975,10 @@ void loop() {
         // En un retroceso la máquina deshace una pasada: no se selecciona nada (los canales quedan
         // en reposo). Antes se aplicaba la fila de la PRÓXIMA pasada mientras la máquina deshacía la
         // anterior, que es otra combinación. Así lo modela también sim_nivel2_firmware.py.
+        // También se sueltan los canales de la pasada anterior, si seguían activos, y se descarta esa
+        // pasada como referencia de duración: medida contra ella, la pasada siguiente duraría el doble.
         if (!pulsoFueRetroceso) seleccionAplicarFila(dibujo[filaAplicada], dibujoColumnas);
+        else                    seleccionApagarTodo();
 
         // Avanzar o retroceder según el sentido del movimiento. En un retroceso el telar deshace
         // la última pasada, así que la fila tiene que volver atrás: la próxima pasada hacia

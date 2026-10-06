@@ -1008,3 +1008,16 @@ Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC 
 Se volvieron a leer sin encontrar otros errores: todos los controladores, rutas, middleware y utilidades del backend, la web completa (login, editor, reproducción, biblioteca, ficha, PDF), el firmware completo, Docker y las migraciones.
 
 Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos, con el caso nuevo), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (cuadro de confirmación cerrado tocando afuera y con Escape, ▶ después de cancelar, Achicar cancelado, Guardar cerrado sin guardar): todo bien.
+
+### Decimotercera revisión de cierre (todo el proyecto otra vez)
+
+| Dónde | Problema | Corrección |
+|---|---|---|
+| Firmware (Nivel 2) | En un pulso de retroceso con el telar en marcha no se aplicaba selección (bien), pero los canales de la pasada anterior podían seguir activos hasta su tiempo, y esa pasada quedaba como referencia: la pasada siguiente medía su duración contra un período doble (400 ms) y quedaba seleccionada la pasada entera, sin el hueco que deja el papel. | En el pulso de retroceso se sueltan los canales y se descarta la referencia: la pasada siguiente usa la duración inicial. |
+
+Se revisaron además, sin encontrar otros errores:
+- **Firmware:** los módulos de selección y de posición y el sketch de prueba del relé (corrientes del LED con pila de 9 V y con dos AA, resistencia del LCA110 entre 23 y 35 Ω).
+- **Web:** las variables del CSS (todas definidas) y los dos scripts (sintaxis correcta, sin ids repetidos, y cada función llamada desde un botón existe).
+- **Documentación:** los números de la documentación coinciden con el código (consultas cada 2,5 s y 4 s, límites por usuario, filas, columnas y repeticiones).
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (invitado, dibujo nuevo, ficha, cuadro de confirmación): todo bien.
