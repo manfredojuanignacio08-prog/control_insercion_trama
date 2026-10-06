@@ -300,6 +300,28 @@ x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, f
 rp({id:5, pasadas_sensor:100, filas:4, fila_actual:3, repeticion_en_fila:0});
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:102, fila_actual:0, repeticion_en_fila:0} });
 assert.equal(x.err, null, x.err && x.err.message); assert.equal(x.r.body.aplicado, true);
+// vueltas en el cambio de vuelta: el contador sube en la interrupción y la fila se mueve un
+// instante después. Dibujo de 8 filas, guardado en la última: un reporte con el conteo ya en la
+// vuelta siguiente y la fila todavía en la última no suma la vuelta (la posición guardada no la
+// cruzó); el reporte siguiente, que sí la cruza, la suma. Una sola vuelta, no dos.
+{ const vueltasDe = () => x.log.find(l=>/SET pasadas_sensor/.test(l.sql)).params[3];
+  rp({id:5, pasadas_sensor:100, filas:8, fila_actual:7, repeticion_en_fila:0});
+  x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:7, repeticion_en_fila:0} });
+  assert.equal(x.err, null, x.err && x.err.message); assert.equal(vueltasDe(), 0);
+  rp({id:5, pasadas_sensor:101, filas:8, fila_actual:7, repeticion_en_fila:0});
+  x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:102, fila_actual:1, repeticion_en_fila:0} });
+  assert.equal(vueltasDe(), 1);
+  // al revés: la fila ya dio la vuelta y el conteo todavía no. Se suma ahora, y no después.
+  rp({id:5, pasadas_sensor:100, filas:8, fila_actual:6, repeticion_en_fila:0});
+  x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:0, repeticion_en_fila:0} });
+  assert.equal(vueltasDe(), 1);
+  rp({id:5, pasadas_sensor:101, filas:8, fila_actual:0, repeticion_en_fila:0});
+  x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:102, fila_actual:0, repeticion_en_fila:0} });
+  assert.equal(vueltasDe(), 0);
+  // hacia atrás: guardado en la fila 0, retrocede uno y la fila todavía no volvió a la última
+  rp({id:5, pasadas_sensor:100, filas:8, fila_actual:0, repeticion_en_fila:0});
+  x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:99, fila_actual:0, repeticion_en_fila:0} });
+  assert.equal(vueltasDe(), 0); }
 // una fila de verdad incoherente con el conteo se sigue rechazando
 rp({id:5, pasadas_sensor:100, filas:8, fila_actual:0, repeticion_en_fila:0});
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:5, repeticion_en_fila:0} });

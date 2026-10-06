@@ -471,9 +471,12 @@ bool descargarDibujo() {
     const int cols = min((int)fila.size(), N_CANALES);
     if (cols > columnas) columnas = cols;
     for (int c = 0; c < N_CANALES; c++) {
-      // Cualquier valor distinto de cero se toma como activo. El editor solo
-      // genera ceros y unos, pero puede haber dibujos viejos con otros valores.
-      nuevo[f][c] = (c < cols) ? (fila[c].as<int>() != 0) : false;
+      // Cualquier valor mayor que cero se toma como activo, el mismo criterio que el backend
+      // (matriz_ligamento) y la web. El editor solo genera ceros y unos, pero puede haber dibujos
+      // viejos con otros valores. Se lee como número con decimales: con as<int>() un 0,5 se
+      // truncaba a 0 y un número que no entra en un int daba 0, y esa bobina no se accionaba
+      // aunque la web la mostrara marcada.
+      nuevo[f][c] = (c < cols) ? (fila[c].as<float>() > 0.0f) : false;
     }
   }
 
@@ -503,11 +506,10 @@ bool descargarDibujo() {
   dibujoFilas    = filas;
   dibujoColumnas = columnas;
   filaActual     = filaInicial;
-  // Al retomar se empieza la fila desde su primera pasada. Perder unas pocas
-  // repeticiones tras un reinicio es preferible a saltearlas: el operario ve el
-  // dibujo correcto y, si hace falta, ajusta con Retroceder.
   {
-    // Se retoma la pasada exacta dentro de la fila, no el principio de la fila.
+    // Se retoma la pasada exacta dentro de la fila (repeticion_en_fila), no el principio de la
+    // fila. Solo si ese dato falta o no cuadra con las repeticiones de la fila se empieza por su
+    // primera pasada: perder unas pocas repeticiones es preferible a saltearlas.
     const long hechas = doc["repeticion_en_fila"] | 0L;
     const int  restan = nuevoRep[filaInicial] - (int)hechas;
     repeticionesRestantes = (hechas >= 0 && restan >= 1 && restan <= nuevoRep[filaInicial])

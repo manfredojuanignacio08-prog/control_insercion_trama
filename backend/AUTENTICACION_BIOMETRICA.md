@@ -139,7 +139,7 @@ falta un código de invitación. No hay roles: todos los usuarios son iguales.
 ### Código de recuperación (por si la huella falla)
 
 Al registrar su huella, cada usuario recibe un código de recuperación (tipo
-`TRAMA-ABC123`). Debe anotarlo. Si algún día no puede entrar con la huella
+`TRAMA-K7QX4A`). Debe anotarlo. Si algún día no puede entrar con la huella
 (cambió de celular, se le rompió el lector, etc.), escribe su usuario y ese
 código en "No puedo entrar con mi huella" y entra directo a la aplicación.
 

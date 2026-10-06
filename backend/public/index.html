@@ -104,7 +104,7 @@
 
     <input id="rec-usuario" type="text" placeholder="Usuario" aria-label="Usuario" autocapitalize="none" spellcheck="false"
       style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:12px;box-sizing:border-box;" maxlength="40">
-    <input id="rec-codigo" type="text" placeholder="Código (ej: TRAMA-ABC123)" aria-label="Código de recuperación" autocapitalize="characters" spellcheck="false"
+    <input id="rec-codigo" type="text" placeholder="Código (ej: TRAMA-K7QX4A)" aria-label="Código de recuperación" autocapitalize="characters" spellcheck="false"
       style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;text-align:center;">
 
     <button type="button" onclick="hacerRecupero()" id="btn-recupero"
@@ -400,7 +400,7 @@
     <div class="lib-toprow">
       <span class="lib-title">Mis dibujos</span>
       <span class="lib-badge" id="lib-count">0</span>
-      <button type="button" class="lib-new-btn" onclick="editId=null;goTo('sc-editor')">⊕ Nuevo</button>
+      <button type="button" class="lib-new-btn" onclick="goTo('sc-editor');newDraw()">⊕ Nuevo</button>
     </div>
 
     <div style="padding:0 14px 12px;display:flex;gap:8px;flex-wrap:wrap;">
@@ -1573,7 +1573,8 @@ function edicionBloqueada({ nuevo = false } = {}) {
   }
   // Pausado pero con el trabajo abierto: la posición guardada se refiere a ESTA matriz, así que
   // cambiarla la invalidaría (y el backend lo rechaza). Se ofrece el camino: terminar el trabajo.
-  if (editId && trabajoEnCursoPatronId && String(editId) === trabajoEnCursoPatronId) {
+  // Un dibujo nuevo no toca la matriz del trabajo: crear uno no se bloquea por esto.
+  if (!nuevo && editId && trabajoEnCursoPatronId && String(editId) === trabajoEnCursoPatronId) {
     toast('Este dibujo tiene un trabajo en curso: usá ⏹ para terminarlo si querés modificarlo');
     return true;
   }

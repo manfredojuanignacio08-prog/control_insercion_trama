@@ -189,7 +189,8 @@ async function guardarCodigoCifrado(userId, codigo) {
   );
 }
 
-// Genera un código legible tipo "TRAMA-4K7Q" (fácil de anotar, difícil de adivinar)
+// Genera un código legible tipo "TRAMA-K7QX4A": 6 caracteres sin I, O, 0 ni 1 (fácil de anotar,
+// difícil de adivinar)
 function generarCodigo(prefijo) {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin I,O,0,1 para no confundir
   let s = '';

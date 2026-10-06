@@ -22,6 +22,10 @@ assert.equal(f.run('trabajoEnCursoPatronId'), '3');
 assert.equal(f.run('nR'), 4);
 // editar la matriz está bloqueado mientras el trabajo esté abierto
 assert.equal(f.run('edicionBloqueada()'), true);
+// pero crear un dibujo NUEVO no toca ese trabajo: no se bloquea (antes avisaba "usá ⏹")
+assert.equal(f.run('edicionBloqueada({ nuevo: true })'), false);
+// con el tejido en marcha, sí: un dibujo nuevo frenaría la cuenta de esta pantalla
+f.run('isPlaying=true'); assert.equal(f.run('edicionBloqueada({ nuevo: true })'), true); f.run('isPlaying=false');
 
 // ── T2: ▶ reanuda (no asigna de nuevo, no reinicia) y conserva la fila
 posts.length = 0;

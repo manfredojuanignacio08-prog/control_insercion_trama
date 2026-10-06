@@ -31,7 +31,8 @@ const playbackLimiter = rateLimit({
 
 // Quién puede llamar cada ruta (server.js ya exige sesión o clave de dispositivo en todas):
 //   - lecturas (GET): operario con sesión o dispositivo. El ESP32 sondea GET /:id.
-//   - acciones que dispara una persona desde la web: solo con sesión (requerirSesion).
+//   - acciones que dispara una persona desde la web: solo un operario con sesión (requerirOperario:
+//     un invitado recibe 403 SOLO_OPERARIO).
 //   - avisos que solo manda el hardware (evento-fisico): solo con clave de dispositivo.
 router.get('/', telaresController.listarTelares);
 router.get('/:id', telaresController.obtenerTelar);
