@@ -217,6 +217,10 @@ void sensorPasadaFijarTotal(unsigned long total) {
   portENTER_CRITICAL(&muxSensor);
   pasadasContadas = total;
   hayPulsoNuevo   = false;
+  // Conteo y posición se readoptan juntos (del backend): un pulso anterior ya no se puede
+  // reclasificar, y una reclasificación pendiente movería dos pasadas atrás la posición nueva.
+  ultimoAdelanteReclasificable = false;
+  reclasificadosPendientes = 0;
   portEXIT_CRITICAL(&muxSensor);
 }
 

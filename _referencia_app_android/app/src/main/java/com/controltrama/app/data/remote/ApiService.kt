@@ -66,9 +66,10 @@ interface ApiService {
         @Body body: DetenerTelarRequest
     ): HistorialProduccion
 
-    // Este es el endpoint que en el futuro va a llamar el ESP32 cada vez
-    // que el sensor óptico detecte una pasada física real. Hoy lo llama la
-    // app / la web para simular el avance.
+    // Avance estimado por reloj (lo usa la web mientras no hay sensor). El sensor del
+    // Nivel 2 NO usa este endpoint: informa con POST api/telares/{id}/pasadas, con la clave
+    // del dispositivo. Con el sensor activo, este responde 409 SENSOR_ACTIVO.
+    // OJO: esta app está desactualizada (ver AVISO.md): hoy la API exige sesión.
     @POST("api/telares/{id}/avanzar")
     suspend fun avanzarTelar(
         @Path("id") id: Int,

@@ -45,7 +45,7 @@ services:
       WEBAUTHN_ORIGIN: ${WEBAUTHN_ORIGIN:-}
     ports:
       - "3000:3000"
-    # Crea/actualiza el esquema, aplica la migración y recién ahí levanta el server
+    # Crea/actualiza el esquema, aplica las migraciones pendientes y recién ahí levanta el server
     command: sh -c "node src/db/init.js && node src/db/migrate.js && node src/server.js"
 
 volumes:

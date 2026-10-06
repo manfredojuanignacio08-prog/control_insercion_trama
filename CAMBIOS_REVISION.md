@@ -918,3 +918,39 @@ Pruebas: `npm test` (6 pruebas) y la integración contra PostgreSQL real, bien. 
 Sin errores nuevos en: servidor, sesiones y límites de pedidos, autenticación (registro, ingreso, recuperación, invitaciones), dibujos, telares (asignar, pausar, reanudar, detener, avanzar, retroceder, eventos físicos, confirmar posición, validar conteo), historial, errores, validación, esquema (el índice de una sola producción en curso queda único), la página (sin ids ni variables de estilo sin definir) y el firmware (botonera, red, descarga del dibujo, reportes, arranque).
 
 Pruebas: `npm test` (6 pruebas), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18 y Chromium: todo bien.
+
+### Décima revisión de cierre (todo el proyecto, sin excepciones: web línea por línea, firmware archivo por archivo y todos los documentos)
+
+**Web**
+
+| Problema | Corrección |
+|---|---|
+| ▶ con el telar sin responder (falla de red o del servidor al asignar el dibujo): la pantalla arrancaba igual, mostraba "Tejiendo..." y el telar nunca recibía la orden. Y dos toques seguidos en ▶ arrancaban dos veces. | Si el telar no quedó en marcha, avisa y no anima; un solo arranque a la vez. Con test (falla con el código anterior). |
+| Con el servidor fallando y el telar tejiendo, cada pasada (5 por segundo) mandaba un aviso al registro de errores: en unos minutos se agotaba el límite de pedidos del usuario y después no podía ni tocar Pausa. | Cada tipo de error se manda como mucho una vez cada 30 s (en pantalla se sigue guardando). Con test. |
+| La ficha del dibujo abierta, y se cargaba otro dibujo: seguía mostrando los metros por pasada del anterior, y Guardar los grababa en el nuevo. Una respuesta lenta del dibujo anterior también podía pisar la ficha del nuevo. | La ficha se recarga al cambiar de dibujo y descarta respuestas de otro dibujo. Probado en Chromium. |
+| Al recargar la página, quien había entrado con el código de recuperación pasaba a figurar como "con huella" y desaparecía el botón para activar la huella en ese equipo. | La pestaña recuerda cómo se entró. Probado en Chromium. |
+| Invitado: Guardar con un dibujo de los operarios abría el diálogo y el servidor lo rechazaba; Confirmar posición y Validar conteo mostraban dos avisos. | Se avisa antes, una sola vez. |
+| `esc()` no escapaba comillas, y el color de una fila entraba sin comprobar en un atributo `style`. Hoy no se explotaba (los textos van como contenido y el servidor valida los colores), pero un color viejo de la base con otro formato rompía la grilla. | `esc()` escapa comillas y solo un `#RRGGBB` entra al atributo. |
+| La ficha en PDF con un nombre en blanco salía con el título vacío. | Usa "Dibujo". |
+
+**Firmware**
+
+| Problema | Corrección |
+|---|---|
+| En un pulso de retroceso con el telar tejiendo, se aplicaba la selección de la PRÓXIMA pasada mientras la máquina deshacía la anterior (otra combinación). La simulación del Nivel 2 ya no seleccionaba nada en ese caso. | En el retroceso los canales quedan en reposo; solo se mueve la posición. |
+| Al readoptar conteo y posición del backend (dibujo nuevo, o reporte descartado), un pulso anterior todavía se podía "reclasificar" como retroceso y mover dos pasadas atrás la posición recién adoptada. | `sensorPasadaFijarTotal` limpia esa marca. Con test en la PC (falla con el código anterior). |
+
+**Documentos**
+
+| Problema | Corrección |
+|---|---|
+| `.env.example` daba el comando de rotación sin los dos guiones (`npm run codigo <usuario> --rotar`), que no rota nada. | Corregido. |
+| Manual de instalación: la sección de Render no pedía `SESSION_SECRET`, `RECOVERY_SECRET` ni `ESP32_DEVICE_KEY` (siguiéndolo, el servidor no arranca); Docker "solo necesita Docker", pero el compose exige cuatro claves; `CORS_ORIGIN` vacío "= cualquiera" (en producción es ninguno); el árbol de carpetas, el lugar del modo oscuro y "la web de demo" estaban desactualizados; decía que `/api/health` comprueba la base (no la toca). | Corregido, con la tabla completa de variables. |
+| Guía de la base: "doce columnas" (son trece) y le faltaban las claves obligatorias en Render. Se verificó además que el SQL completo se puede correr dos veces sobre una base con datos sin errores ni pérdidas. | Corregido. |
+| `DESPLIEGUE_RENDER.md`: "dieciocho migraciones" (son diecinueve). | Corregido. |
+| README del backend: decía "sin autenticación", que las repeticiones salían de los números de la matriz, que el ESP32 llamaría a `/avanzar`, mencionaba "los dos config" y le faltaban los endpoints del Nivel 2 y los permisos del invitado. `AUTENTICACION_BIOMETRICA.md`: decía que la sesión era "un paso adicional" (ya existe). README principal: "siguiente fase: armar la etapa eléctrica" (el Bloque A está instalado desde el 19/09). | Corregidos. |
+| Documentos del hardware: el README de diagramas describía el sensor con "rectificación de 24 V alterna" (los diagramas dicen bien: 12 a 14 V continuos, sin puente ni regulador); dos documentos daban el relevamiento anterior como "3" y "hasta 8" bobinas (la Bitácora dice seis); el checklist decía que el pin de 3,3 V alimenta los relés (van a 5 V) y prometía "Posición incierta" con cualquier botón; a las recomendaciones eléctricas les faltaban los capacitores de 100 nF en la lista de compras. | Corregidos, coherentes con la Bitácora, las planillas y los diagramas. |
+| Manual de la página web (Word): no explicaba el modo invitado ni sus límites, describía mal la biblioteca y el botón Nuevo, y el indicador "Sin conexión" figuraba ámbar (es rojo). Árbol de problemas (Word y Markdown): "relés de Marcha/Pausa" sin Retroceder y "4 tablas" sin las del ingreso. | Corregidos (validados con el esquema de Word). |
+| `_referencia_app_android` (no se usa): no decía por qué hoy no funcionaría (la API exige sesión) y afirmaba que el ESP32 llamaría a `/avanzar`. | `AVISO.md` lista lo que cambió y se corrigieron esos comentarios. |
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (ficha al cambiar de dibujo, ⊕ Nuevo, origen de la sesión al recargar): todo bien.

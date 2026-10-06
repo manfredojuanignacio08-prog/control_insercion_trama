@@ -36,10 +36,13 @@ El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
 3. Al detectar un **cambio** de estado deseado:
    - pasó a `tejiendo` → pulso de 300 ms en el relé de **Marcha**
    - dejó de `tejiendo` → pulso de 300 ms en el relé de **Pausa**
-4. Si se cae el Wi-Fi o el backend no responde: **no hace nada**
+   - cada ⏪ pedido desde la web (sube `retroceder_seq`) → pulso de 300 ms en el relé de
+     **Retroceder**, siempre después del de Pausa
+4. Si alguien usa la botonera a mano, lo sensa y se lo avisa al backend (`POST /evento-fisico`).
+5. Si se cae el Wi-Fi o el backend no responde: **no hace nada**
    (fail-safe). El telar queda gobernado por su botonera física, que
    nunca deja de funcionar porque la conexión es en paralelo.
-5. Deja registro de sus fallas en `POST /api/errores`.
+6. Deja registro de sus fallas en `POST /api/errores`.
 
 ## 2. Protecciones incluidas en el código
 
@@ -72,6 +75,7 @@ El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
 | Lógica | GPIO 25 → IN1; GPIO 26 → IN2; GPIO 27 → IN3. IN1 e IN2 con pull-up de 10 kΩ a 3.3V (módulo de 2 canales, activo-bajo); IN3 con pull-down de 10 kΩ a GND (el módulo de Retroceder es activo-alto: con pull-up arrancaría pegado). Todo por el conector de las señales (GND · IN · VCC): el VCC de ese conector va a **5V**, nunca a los 3.3V del ESP32 (con el jumper puesto, unirían 5V y 3.3V). El conector del jumper (JD-VCC · VCC · GND) no se usa |
 | Telar | NO1+COM1 en paralelo al botón de Marcha; NO2+COM2 al de Pausa; NO3+COM3 al de Retroceder |
 | Sensado | Los mismos 3 botones (Marcha/Pausa/Retroceder) → puente rectificador DB157 → capacitor 22–47 µF → R 2,2 kΩ → PC817 → GPIO 32 / 33 / 34 (pull-up 10 kΩ a 3.3V) |
+| Filtrado | Capacitores de 100 nF de desacople junto al ESP32 y junto a cada módulo de relé |
 
 ### Sensado de los botones del telar (solo lectura)
 
@@ -82,8 +86,6 @@ lo que pasa en la máquina: arrancada, pausada o una pasada atrás. El firmware 
 sus propios pulsos (el relé cierra el mismo circuito que el botón). Si alguien arranca o retrocede
 a mano sin un trabajo abierto, la web marca la posición como incierta hasta que se confirme
 (`POST /confirmar-posicion`).
-
-| Filtrado | Capacitores de 100 nF de desacople junto al ESP32 y al módulo de relés |
 
 ## 4. Cómo compilar y subir
 

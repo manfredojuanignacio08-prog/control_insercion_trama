@@ -58,12 +58,11 @@ class TelarViewModel(
      * devuelve el backend, nunca la calcula sola en el cliente), para que
      * la app y la base nunca queden desincronizadas.
      *
-     * NOTA PARA LA INTEGRACIÓN CON EL ESP32: cuando el microcontrolador esté
-     * conectado, va a ser ÉL quien llame a avanzar() automáticamente cada
-     * vez que el sensor óptico detecte una pasada — en ese momento, esta
-     * pantalla pasa de ser un control manual a ser un MONITOR en tiempo
-     * real. Alcanza con refrescar cargarTelar() con un timer o con
-     * WebSocket en vez de hacerlo solo después de un botón.
+     * NOTA PARA LA INTEGRACIÓN CON EL ESP32: con el Nivel 2 instalado, la
+     * posición la informa el microcontrolador (sensor inductivo, endpoint
+     * /pasadas), no avanzar(). En ese momento esta pantalla pasa de ser un
+     * control manual a ser un MONITOR en tiempo real: alcanza con refrescar
+     * cargarTelar() con un timer. Ver AVISO.md: la app está desactualizada.
      */
     private fun enviarComando(accion: suspend () -> ApiResult<HistorialProduccion>) {
         viewModelScope.launch {

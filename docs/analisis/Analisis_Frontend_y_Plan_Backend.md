@@ -17,7 +17,7 @@
 |---|---|
 | ¿Qué representa la matriz? | **Las dos cosas, en campos separados**: `matriz_pasadas` (enteros) y `matriz_ligamento` (binario, derivado automáticamente). El backend la mantiene; la base de Neon se actualiza con la migración para tenerla también. |
 | Alcance de telares para el MVP | **Esquema multi-telar desde ahora**, pero el piloto funcional arranca probando con **1 solo telar** conectado. |
-| Login de operarios | **No por ahora.** Sistema abierto en planta, sin tabla de usuarios ni auth en esta versión. |
+| Login de operarios | **No por ahora** (decisión de ese momento). *Después se sumó el ingreso con huella (WebAuthn), el código de recuperación y el modo invitado: ver `backend/AUTENTICACION_BIOMETRICA.md`.* |
 | ¿Dónde vive la base de datos? | **Neon** (PostgreSQL administrado en la nube), no una base local. Credenciales compartidas por el equipo. |
 | Tipografía del frontend | **IBM Plex Sans** para el texto, **Questrial** para los títulos e **IBM Plex Mono** para etiquetas y números, desde Google Fonts. |
 
@@ -73,7 +73,7 @@ Control_Insercion_Trama_V14_Final/
 
 | # | Hallazgo | Estado |
 |---|---|---|
-| 1 | Logo embebido en base64 **3 veces** dentro del HTML (~240KB extra). | Sin cambios (cosmético, no afecta el funcionamiento). |
+| 1 | Logo embebido en base64 **3 veces** dentro del HTML (~240KB extra). | ✅ Resuelto: la imagen está una sola vez, en la portada, y los logos de las barras la copian al cargar. |
 | 2 | `save_fix.js` no está enlazado a ningún HTML, código muerto. | ✅ No se incluyó en el paquete final (solo van `index.html` y `styles.css` limpios). |
 | 3 | "Exportar PDF" no exportaba PDF real. | ✅ Resuelto: genera un PDF real con jsPDF local. |
 | 4 | No existía noción de "telar" en el frontend. | ✅ Resuelto: telar único automático + endpoints de telar (ver sección 11). |
@@ -85,7 +85,8 @@ Control_Insercion_Trama_V14_Final/
 desconectado" hoy es un sistema conectado de punta a punta: el frontend habla
 con el backend en cada acción (no solo al guardar) y todo persiste en
 PostgreSQL. Lo único que queda a nivel de interfaz es la pantalla de historial
-de producción; lo único a nivel de hardware es el ESP32 (próxima etapa).
+de producción. En hardware, el Bloque A del ESP32 (Marcha, Pausa, Retroceder y sensado)
+está instalado y probado en el telar desde el 19/09/2026; falta el Nivel 2.
 
 ---
 
@@ -99,7 +100,12 @@ de producción; lo único a nivel de hardware es el ESP32 (próxima etapa).
 
 ---
 
-## 5. Esquema PostgreSQL final (coincide con `backend/src/db/schema.sql`)
+## 5. Esquema PostgreSQL de ese momento
+
+> El esquema **vigente** es `backend/src/db/schema.sql` más las migraciones
+> (`backend/src/db/migracion_*.sql`), que agregaron, entre otras cosas, las repeticiones por
+> fila, los metros por pasada, el conteo del sensor, los límites de filas y columnas y las
+> tablas del ingreso de usuarios. Lo de abajo es el punto de partida del análisis.
 
 ```sql
 CREATE TABLE patrones (
@@ -149,8 +155,7 @@ CREATE TABLE errores_log (   -- reemplaza el localStorage 'telar_errors'
 );
 ```
 
-> Esta es la versión final, idéntica a `backend/src/db/schema.sql`. Las
-> secciones 9 a 11 más abajo explican cómo se llegó hasta acá (incluida una
+> Las secciones 9 a 11 más abajo explican cómo se llegó hasta acá (incluida una
 > corrección de diseño sobre la marcha).
 
 ---
@@ -291,8 +296,8 @@ if (pasada >= repeticiones) {
 `columna_actual` se conserva en la base y en las firmas por compatibilidad,
 pero **ya no marca posición** (siempre vale 0): dentro de una pasada todas
 las columnas son simultáneas. Para saber qué bobinas se activan en la fila
-actual está `marcosActivosDeFila()`, que es lo que va a usar el ESP32 cuando
-controle el Nivel 2.
+actual está `marcosActivosDeFila()`. El ESP32 del Nivel 2 no la usa: baja la matriz
+entera (`GET /api/telares/:id/patron-actual`) y toma como activa cada celda mayor que cero.
 
 La cantidad de filas y columnas **no está fija en ningún lado**: el editor admite de 1 a 300 (filas) y 1 a 8 (columnas) en cada dimensión, y el backend guarda la matriz con las
 dimensiones que reciba. Si el telar suma bobinas, alcanza con cambiar las
@@ -435,13 +440,14 @@ límite y consistencia. Lo que se verificó y/o corrigió:
 - **Validaciones de datos:** se probó que el backend rechaza con mensaje claro
   matrices con dimensiones que no coinciden, pasadas negativas y nombres vacíos.
 - **Robustez de bodies:** body vacío usa los valores por defecto, un `pasos`
-  no numérico se trata como 1, y un JSON roto devuelve 400 (no tira el
-  servidor con un 500).
+  que no es un entero entre 1 y 10.000 se rechaza con 400 (antes se trataba como 1), y un
+  JSON roto devuelve 400 (no tira el servidor con un 500).
 
 ### Endurecimiento para producción (esta revisión)
 
-- **Variables de entorno:** se verificó que las 14 variables que el código
-  lee están todas documentadas en `.env.example`, ni una de más ni de menos.
+- **Variables de entorno:** se verificó que las 24 variables que el código
+  lee están todas documentadas en `.env.example` (además de `RENDER`, que la define
+  Render solo), ni una de más ni de menos.
 - **Mensajes de error 500 en producción:** con `NODE_ENV=production`, un error
   interno inesperado ya no devuelve el mensaje técnico al cliente (que podría
   filtrar nombres de tablas o rutas), se loguea completo del lado del
@@ -455,12 +461,11 @@ límite y consistencia. Lo que se verificó y/o corrigió:
 - **Cierre prolijo:** ante SIGTERM/SIGINT (lo que manda Render al reiniciar),
   el servidor cierra el pool de PostgreSQL antes de salir.
 
-### Limitación conocida (no corregida a propósito)
+### Limitación que se resolvió después
 
-Si dos ediciones de un patrón **ya guardado** llegan desordenadas por la red
-(poco probable en uso normal, algo más probable con la latencia real de
-Neon), gana la última que llega al servidor. Resolverlo del todo requeriría
-una cola de escritura por patrón, se evaluó que el costo no justifica el
-beneficio para este caso de uso (un solo operario editando un patrón a la vez).
-Conviene tenerlo presente si en el futuro varios usuarios editan el mismo
-patrón en simultáneo.
+Si dos ediciones de un patrón **ya guardado** llegaban desordenadas por la red, ganaba
+la última que llegaba al servidor. Ya no pasa: la web manda los guardados de a uno (si
+hay uno en curso, espera y manda uno solo con el estado más reciente), y cada guardado
+lleva la versión del dibujo que conocía (`version_esperada`). Si otra persona lo cambió
+mientras tanto, el servidor responde 409 `DIBUJO_MODIFICADO` y la web recarga la versión
+nueva y avisa, en vez de pisar el cambio.

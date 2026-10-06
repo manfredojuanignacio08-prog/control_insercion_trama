@@ -46,5 +46,11 @@ int main(){
   sensorPasadaAvisarRetroceso(2, true); sensorPasadaMarcarArranque(); pulso(); sensorPasadaHuboPulso(&r); assert(!r && sensorPasadaTotal()==22);
   // --- un aviso vigente (menos de 30 s) si se consume
   sensorPasadaAvisarRetroceso(1, true); g_ms+=5000; sensorPasadaActualizar(); pulso(); sensorPasadaHuboPulso(&r); assert(r && sensorPasadaTotal()==21);
+  // --- al readoptar conteo y posicion del backend (FijarTotal), un pulso anterior ya no se reclasifica
+  g_ms=900000; sensorPasadaFijarTotal(30); pulso(); sensorPasadaHuboPulso(&r);      // +1 en pausa: 31
+  sensorPasadaFijarTotal(40);                                                        // se baja el dibujo de nuevo
+  g_ms+=1000; sensorPasadaAvisarRetroceso(1, false);                                 // el aviso queda pendiente
+  assert(sensorPasadaTotal()==40 && sensorPasadaTomarReclasificados()==0);
+  pulso(); sensorPasadaHuboPulso(&r); assert(r && sensorPasadaTotal()==39);          // lo consume el pulso siguiente
   puts("sensor_pasada.h OK");
 }

@@ -959,7 +959,10 @@ void loop() {
         portENTER_CRITICAL(&mux);
         filasTotales = dibujoFilas;
         filaAplicada = envolverFila(filaActual + DESPLAZAMIENTO_FILAS, filasTotales);
-        seleccionAplicarFila(dibujo[filaAplicada], dibujoColumnas);
+        // En un retroceso la máquina deshace una pasada: no se selecciona nada (los canales quedan
+        // en reposo). Antes se aplicaba la fila de la PRÓXIMA pasada mientras la máquina deshacía la
+        // anterior, que es otra combinación. Así lo modela también sim_nivel2_firmware.py.
+        if (!pulsoFueRetroceso) seleccionAplicarFila(dibujo[filaAplicada], dibujoColumnas);
 
         // Avanzar o retroceder según el sentido del movimiento. En un retroceso el telar deshace
         // la última pasada, así que la fila tiene que volver atrás: la próxima pasada hacia
@@ -973,11 +976,15 @@ void loop() {
         restantes = repeticionesRestantes;
         portEXIT_CRITICAL(&mux);
 
-        log("Pasada " + String(sensorPasadaTotal()) +
-            " · fila " + String(filaAplicada + 1) + "/" + String(filasTotales) +
-            " (quedan " + String(restantes) + " de " + String(repeticiones[filaAplicada]) + ")" +
-            " · " + seleccionEstadoTexto() +
-            (pulsoFueRetroceso ? String(" · retroceso, la fila vuelve a ") + String(cambioA + 1) : String("")));
+        if (pulsoFueRetroceso) {
+          log("Pasada " + String(sensorPasadaTotal()) + " · retroceso: sin selección, la fila vuelve a " +
+              String(cambioA + 1) + "/" + String(filasTotales));
+        } else {
+          log("Pasada " + String(sensorPasadaTotal()) +
+              " · fila " + String(filaAplicada + 1) + "/" + String(filasTotales) +
+              " (quedan " + String(restantes) + " de " + String(repeticiones[filaAplicada]) + ")" +
+              " · " + seleccionEstadoTexto());
+        }
       } else {
         // La máquina se movió sin que el sistema esté "tejiendo": un retroceso con el telar en
         // pausa (lo normal: el operario pausa y retrocede), o pasadas en los segundos que tarda

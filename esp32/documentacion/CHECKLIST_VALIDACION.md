@@ -29,8 +29,8 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 - [ ] Confirmá que **conecta al WiFi** y que **sondea el backend** (se ve en
       el log). Todavía no hay relé, así que no pasa nada físico: solo se
       valida que la lógica corre.
-- [ ] Medí el pin **3.3V** del ESP32: debe leer ~3,3 V (es el que alimenta la
-      lógica del relé).
+- [ ] Medí el pin **3.3V** del ESP32: debe leer ~3,3 V (es la referencia de las
+      resistencias de 10 kΩ de IN1/IN2 y del sensado; el módulo de relés se alimenta con 5 V).
 
 ## Etapa 3, El relé, pero con un LED o zumbador (NO el telar)
 
@@ -43,7 +43,7 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       cada uno de los tres relés.
 - [ ] Desde la web, asigná un patrón (estado "tejiendo"): debe sonar/encender
       el relé de **Marcha** una vez (un pulso, no quedar pegado).
-- [ ] Detené desde la web: debe activarse el relé de **Pausa** una vez.
+- [ ] Tocá ⏸ en la web: debe activarse el relé de **Pausa** una vez.
 - [ ] Apretá el botón ⏪ de la web (con confirmación): debe activarse el
       relé de **Retroceder** una vez.
 - [ ] **Prueba del arranque seguro:** reiniciá el ESP32 con todo conectado.
@@ -66,8 +66,10 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 - [ ] Simulá el botón: aplicá una fuente de 24V AC (o el propio telar, más
       adelante) a la entrada del puente. El GPIO debe caer a **0V** (bajo)
       mientras dure la pulsación.
-- [ ] En el monitor de serie debe aparecer el mensaje de sensado, y en la
-      web la barra de estado debe mostrar **"Posición incierta"**.
+- [ ] En el monitor de serie debe aparecer el mensaje de sensado ("Botonera: alguien apretó ...").
+      Simulando **Marcha** o **Retroceder** sin un trabajo abierto en la web, la barra de estado
+      del editor muestra **"Posición incierta"** (con un trabajo abierto, Marcha pasa la web a
+      "Tejiendo" y Pausa a "Pausado").
 - [ ] Apretá **Confirmar** en la web: el aviso debe desaparecer.
 - [ ] **Anti-rebote:** una pulsación sola no debe generar más de un aviso
       (el firmware filtra con 400 ms de debounce).
@@ -119,6 +121,11 @@ no arranca solo), el arranque con "tejiendo", la ausencia de doble-pulso
 **Simulación del flujo lógico Nivel 2 (6/6):** la traducción de la matriz de
 pasadas a la secuencia de marcos, la repetición idéntica del patrón en bucle,
 y que nunca se activan más marcos que los físicos.
+
+**Simulación del firmware del Nivel 2 (29/29):** conteo, vueltas, repeticiones por fila,
+retrocesos, retomar tras un reinicio y la selección de las bobinas en cada pasada. Además,
+`verificacion/host/correr.sh` prueba en la PC el código real del firmware (sensor, selección,
+posición y Bloque A) y que compile en sus dos modos.
 
 Estas verificaciones aseguran que el **diseño es coherente y la lógica es
 correcta**. Lo que confirma la checklist de arriba es que la **implementación

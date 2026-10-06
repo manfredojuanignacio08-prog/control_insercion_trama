@@ -53,16 +53,19 @@ control_insercion_trama_completo/
 │   ├── .env.example
 │   └── README.md                  Guía técnica detallada del backend
 ├── esp32/                         Firmware del microcontrolador + eléctrica
-│   ├── control_trama_esp32/       Sketch (.ino) y config.h
-│   ├── RECOMENDACIONES_ELECTRICAS.md
-│   ├── diagrama_conexion_electrica.svg / .png
+│   ├── control_trama_esp32/       El único firmware de la placa (.ino, config.h y sus .h)
+│   ├── pruebas/                   Prueba de mesa de un relé LCA110
+│   ├── documentacion/             Recomendaciones eléctricas, checklist y niveles de control
+│   ├── verificacion/              Pruebas de la lógica del firmware en la PC
 │   └── README.md
-├── database/                      Script SQL de referencia del esquema
-├── diagramas/                     Diagramas lógico, eléctrico y árbol de problemas
+├── database/                      Script SQL completo de la base
+├── diagramas/
+│   ├── hardware/                  Conexionado (diagrama_conexion_electrica, bloques, canales)
+│   └── sistema/                   Arquitectura, base de datos y árbol de problemas
 ├── docs/
-│   ├── Manual_Instalacion_y_Funcionamiento.md   ← este documento
-│   ├── Como_Crear_La_Base_De_Datos.md
-│   └── Analisis_Frontend_y_Plan_Backend.md
+│   ├── guias/                     Este manual y Como_Crear_La_Base_De_Datos.md
+│   └── analisis/                  Análisis técnico y árbol de problemas
+├── documentacion_proyecto/        Documentos de la Carpeta del Proyecto (Word y Excel)
 └── _referencia_app_android/       ⚠️ Base de app Android, NO funcional, solo referencia
 ```
 
@@ -81,7 +84,19 @@ control_insercion_trama_completo/
 
 ### 3.1 Opción rápida: Docker (recomendada, todo incluido)
 
-Solo necesitás tener Docker instalado.
+Solo necesitás tener Docker instalado. Antes del primer arranque, crear el archivo
+`backend/.env` con estas cuatro claves (Docker las lee de ahí; si falta alguna, se niega a
+arrancar y dice cuál):
+
+```
+POSTGRES_PASSWORD=una-clave-para-la-base-local
+SESSION_SECRET=una-clave-larga-de-al-menos-32-caracteres
+RECOVERY_SECRET=otra-clave-de-al-menos-16-caracteres
+ESP32_DEVICE_KEY=la-clave-que-va-tambien-en-config.h
+```
+
+(cada una generada con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`).
+Después:
 
 ```bash
 cd backend
@@ -90,7 +105,7 @@ docker compose up -d --build
 
 Esto:
 1. Levanta un PostgreSQL con los datos configurados
-2. Crea las tablas automáticamente y aplica la migración (`matriz_ligamento`, índices, trigger)
+2. Crea las tablas automáticamente y aplica todas las migraciones pendientes
 3. Levanta el servidor Node.js
 4. Expone la API en **http://localhost:3000** (`/api/...`)
 
@@ -268,10 +283,10 @@ crear una base nueva en Render (solo conectar el backend a esa).
    - **Build Command**: `npm install`
    - **Start Command**: `node src/db/init.js && node src/db/migrate.js && node src/server.js`
      *(Este comando es seguro de correr contra la base compartida del equipo:
-     `init.js` usa `CREATE TABLE IF NOT EXISTS` y `migrate.js` agrega solo lo
-     que falte (`matriz_ligamento`, índices, trigger) sin tocar ni borrar
-     ningún dato existente. Es justamente lo que hace que la base de Neon
-     quede igual de completa que la que usa el backend en desarrollo.)*
+     `init.js` usa `CREATE TABLE IF NOT EXISTS` y `migrate.js` aplica solo las
+     migraciones que falten, una vez cada una, sin borrar ningún dato existente.
+     El servidor además aplica las pendientes al arrancar. Así la base de Neon
+     queda igual de completa que la que usa el backend en desarrollo.)*
    - **Plan**: el que diga **Free**
 
 5. Antes de crear el servicio, bajá hasta **Environment Variables** y agregá estas:
@@ -282,7 +297,15 @@ crear una base nueva en Render (solo conectar el backend a esa).
    | `PGSSL` | `true` *(obligatorio, Neon exige SSL, sin esto la conexión falla)* |
    | `NODE_ENV` | `production` |
    | `TRUST_PROXY` | `true` |
-   | `CORS_ORIGIN` | (dejarlo vacío por ahora) |
+   | `SESSION_SECRET` | una clave larga al azar *(sin ella el servidor no arranca)* |
+   | `RECOVERY_SECRET` | otra clave larga al azar, distinta *(sin ella el servidor no arranca)* |
+   | `ESP32_DEVICE_KEY` | otra clave larga al azar, distinta (la misma va en `DEVICE_KEY` del firmware) |
+   | `WEBAUTHN_RP_ID` | el dominio de Render, sin `https://` (ej. `control-trama.onrender.com`) |
+   | `WEBAUTHN_ORIGIN` | el mismo, con `https://` |
+   | `CORS_ORIGIN` | (dejarlo vacío: la web se sirve desde el mismo servidor) |
+
+   Cada clave se genera con `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+   El detalle de cada variable está en `DESPLIEGUE_RENDER.md`, en la raíz del proyecto.
 
    No hace falta agregar `PORT`, Render lo asigna automáticamente y el servidor ya está hecho para usarlo.
 
@@ -294,6 +317,8 @@ En los **Logs** deberían aparecer, en este orden:
 ```
 Ejecutando schema.sql contra la base de datos...
 ✅ Esquema creado/actualizado correctamente.
+✅ migracion_0NN_... aplicada.        (una línea por cada migración pendiente)
+Migraciones al día (N nueva/s).
 Servidor escuchando en http://localhost:10000 (NODE_ENV=production)
 ```
 
@@ -340,10 +365,17 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 | `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Datos de conexión sueltos, **solo para una base local de desarrollo** (se ignoran si `DATABASE_URL` tiene un valor) | `localhost` / `5432` / `postgres` /, / `control_trama` |
 | `PORT` | Puerto del servidor web | `3000` |
 | `NODE_ENV` | Modo de ejecución (`development` o `production`) | `production` |
-| `CORS_ORIGIN` | Dominios que pueden llamar a la API. Vacío = cualquiera. | `https://miapp.com` |
+| `CORS_ORIGIN` | Dominios de OTRO origen que pueden llamar a la API, separados por coma. Vacío: en producción ninguno (la web se sirve desde el mismo servidor y no lo necesita); en desarrollo, cualquiera. | `https://miapp.com` |
 | `TRUST_PROXY` | Poner en `true` si hay Nginx u otro proxy delante (incluido Render) | `false` |
 | `RATE_LIMIT_MAX` | Máximo de solicitudes por usuario (por IP antes de iniciar sesión) por ventana de tiempo. **Ojo:** la web refresca el estado del telar cada 4s (≈225 pedidos por pestaña cada 15 min), así que con 2 pestañas abiertas un valor de `300` se agota solo y la app empieza a dar errores sin que nadie haga nada. Si venís de una versión anterior, revisá que tu `.env` no tenga `RATE_LIMIT_MAX=300`. | `900` |
 | `RATE_LIMIT_WINDOW_MS` | Ventana de tiempo del rate limit en milisegundos | `900000` (15 min) |
+| `SESSION_SECRET` | Firma las cookies de sesión. **Obligatoria en producción** (mínimo 32 caracteres) | *(clave al azar)* |
+| `SESSION_HORAS` | Duración de la sesión en horas | `12` |
+| `RECOVERY_SECRET` | Cifra los códigos de recuperación en la base. **Obligatoria en producción** (mínimo 16 caracteres). Si cambia, rotar los códigos con `npm run codigo -- <usuario> --rotar` | *(clave al azar)* |
+| `ESP32_DEVICE_KEY` | Clave del dispositivo: igual a `DEVICE_KEY` del firmware. Sin ella ningún ESP32 se conecta | *(clave al azar)* |
+| `REGISTRO_LIBRE_MAX` | Cuántos usuarios se registran sin invitación | `3` |
+| `AUTH_INTENTOS_MAX` / `AUTH_HUELLA_MAX` | Intentos por IP cada 15 minutos con el código de recuperación / con la huella | `20` / `300` |
+| `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | Dominio real del sitio para el ingreso con huella (en producción) | `control-trama.onrender.com` / `https://control-trama.onrender.com` |
 
 ---
 
@@ -360,7 +392,8 @@ Respuesta esperada:
 {"ok":true,"timestamp":"2026-06-18T..."}
 ```
 
-Si eso responde, el servidor y la base de datos están bien. Después,
+Si eso responde, el servidor está andando (esta consulta no toca la base: que la base
+responda se ve al arrancar, en las líneas de las migraciones, y al abrir la biblioteca). Después,
 abrir **http://localhost:3000** en el navegador (idealmente el del celular
 o el modo responsive del navegador de escritorio): la página web debe
 cargar completa.
@@ -371,8 +404,8 @@ cargar completa.
 
 La interfaz de uso real es la **página web** que sirve el backend, diseñada
 para verse en el celular. Se abre en `http://localhost:3000` y tiene tres
-pantallas (barra inferior): Inicio, Editor y Biblioteca. Arriba a la derecha
-hay un botón para alternar **modo claro / oscuro**.
+pantallas (barra inferior): Inicio, Editor y Biblioteca. En Inicio, el
+interruptor **Modo oscuro** alterna entre el modo claro y el oscuro.
 
 ### Editor
 Donde se diseña un patrón de tejido. Cada acción se guarda sola en la base
@@ -468,9 +501,9 @@ las protecciones eléctricas recomendadas y el diagrama del circuito están en
 | `npm run init-db` falla con "password authentication" | Revisar `PGPASSWORD` (o `DATABASE_URL`) en el `.env`. |
 | `npm run migrate` falla con "SSL required" o similar | Falta `PGSSL=true` en el `.env`, Neon exige SSL. |
 | `npm run migrate` no agrega `matriz_ligamento` a patrones viejos | Revisar que el patrón tenga `matriz_pasadas` válida; el backfill solo corre sobre filas con `matriz_ligamento IS NULL`. |
-| La biblioteca aparece vacía | Es normal si es la primera vez. Crear un patrón (desde la app o la web de demo). |
+| La biblioteca aparece vacía | Es normal si es la primera vez. Crear un dibujo desde el Editor. |
 | Error al guardar: "Ya existe un dibujo con ese nombre" | Los nombres son únicos en la base. Cambiar el nombre o borrar el anterior. |
 | Error al eliminar: "No se puede completar la operación" | El patrón tiene historial de producción. No se puede borrar para preservar el historial. |
 | `docker compose up` falla con "port already in use" | El puerto 3000 o 5432 está ocupado. Cambiarlo en `docker-compose.yml` o liberar el puerto. |
-| La app no trae datos | Verificar que el backend esté corriendo, que `http://localhost:3000/api/health` responda, y que la `BASE_URL` de la app apunte al backend. |
+| La web no trae datos | Verificar que el backend esté corriendo, que `http://localhost:3000/api/health` responda y que se haya iniciado sesión (sin sesión la API responde 401 y la web vuelve al ingreso). |
 | No se ven las tipografías de la app (IBM Plex Sans, Questrial) | Se cargan desde Google Fonts. Sin internet, la app usa las fuentes del sistema del dispositivo y funciona igual. |

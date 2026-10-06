@@ -8,7 +8,7 @@ servicios).
 
 ## El punto de seguridad más importante
 
-**La huella dactilar NUNCA se guardan en la base de datos ni viajan al
+**La huella dactilar NUNCA se guarda en la base de datos ni viaja al
 servidor.** Esto suele sorprender, así que vale explicarlo bien:
 
 - El sensor biométrico (el lector de huella dactilar) lo tiene
@@ -18,8 +18,7 @@ servidor.** Esto suele sorprender, así que vale explicarlo bien:
   queda encerrada en el hardware del teléfono y nunca sale) y una **pública**
   (que se manda al servidor).
 - Para entrar, el dispositivo **firma** un desafío aleatorio con su llave
-  privada, y para desbloquear esa llave, el usuario pone su huella o su
-  huella. El servidor verifica la firma con la llave pública que ya tenía.
+  privada, y para desbloquear esa llave, el usuario pone su huella. El servidor verifica la firma con la llave pública que ya tenía.
 - Resultado: el servidor confirma que es el usuario correcto **sin ver jamás
   su huella**. Lo único que guarda son llaves públicas, que no
   sirven para reconstruir ningún dato biométrico.
@@ -42,25 +41,27 @@ solo usuarios y las llaves públicas de sus dispositivos.
 Ver `src/db/migracion_003_login_biometrico.sql` (y las mismas tablas están en
 `backend/src/db/schema.sql`, así que `npm run init-db` ya las crea).
 
-### Backend (4 endpoints)
-Bajo `/api/auth`, en dos pasos cada operación (así funciona WebAuthn):
+### Backend (registro e ingreso con huella)
+Bajo `/api/auth`, en dos pasos cada operación (así funciona WebAuthn). Los demás endpoints
+(recuperación, invitaciones, sesión, invitado) están más abajo.
 
 | Endpoint | Para qué |
 |---|---|
 | `POST /api/auth/registro/iniciar` | Empieza el registro de una huella dactilar; crea el usuario si no existe y devuelve las "opciones" para el navegador. |
 | `POST /api/auth/registro/verificar` | Recibe la respuesta firmada del dispositivo y guarda su llave pública. |
 | `POST /api/auth/login/iniciar` | Empieza el login; devuelve el desafío para que el navegador pida la huella dactilar. |
-| `POST /api/auth/login/verificar` | Verifica la firma. Si es válida, el login es correcto. |
+| `POST /api/auth/login/verificar` | Verifica la firma. Si es válida, entrega la cookie de sesión. |
 
 Código en `src/controllers/auth.controller.js` y `src/routes/auth.routes.js`.
 
 ## Configuración
 
-En el `.env` del backend (ver `.env.example`) hay dos variables nuevas:
+En el `.env` del backend (ver `.env.example`) hay dos variables, que en desarrollo se pueden
+dejar sin definir y en producción conviene fijar con el dominio real:
 
 ```
-WEBAUTHN_RP_ID=localhost
-WEBAUTHN_ORIGIN=http://localhost:3000
+WEBAUTHN_RP_ID=control-trama-backend.onrender.com
+WEBAUTHN_ORIGIN=https://control-trama-backend.onrender.com
 ```
 
 - `WEBAUTHN_RP_ID`: el dominio del sitio, **sin** protocolo ni puerto. En
@@ -84,10 +85,11 @@ la biometría y aparece un error tipo *"The RP ID is invalid for this domain"*
 o *"insecure context"*. No es un bug del sistema: es una regla de seguridad
 del estándar WebAuthn.
 
-**El RP ID se detecta solo:** el backend ya no usa un valor fijo, lo deriva
-del dominio desde el que se abre la página, así funciona igual en localhost,
-por IP o por dominio real, sin configurar nada. El único requisito que queda
-es el del contexto seguro (HTTPS o localhost).
+**Sin esas variables, el RP ID se detecta solo:** el backend lo deriva del dominio desde el
+que se abre la página, así funciona igual en localhost, por IP o por dominio real, sin
+configurar nada. El único requisito que queda es el del contexto seguro (HTTPS o localhost).
+En producción conviene fijarlas igual (ver más abajo): derivarlo del pedido debilita la
+protección anti-phishing.
 
 ### Cómo probarlo / usarlo entonces
 
@@ -107,23 +109,20 @@ certificado, etc.) resuelve esto de forma definitiva.
 
 ## Cómo lo usa la web (flujo)
 
-1. **Registrarse una vez:** el usuario pone su nombre y toca "Registrar
-   huella dactilar". El navegador le pide la biometría; si acepta, su
-   dispositivo queda registrado.
-2. **Entrar después:** toca "Entrar con huella dactilar", pone su huella o mira
-   la cámara, y entra.
+1. **Registrarse una vez:** el usuario escribe su usuario y toca "Registrar mi
+   huella dactilar". El navegador le pide la huella; si acepta, su dispositivo queda
+   registrado, entra y ve su código de recuperación.
+2. **Entrar después:** escribe su usuario, toca "Entrar con huella dactilar", pone su
+   huella y entra.
 
 El navegador se encarga de hablar con el sensor mediante la API estándar
 `navigator.credentials`; el backend solo emite desafíos y verifica firmas.
 
-## Aclaración de alcance
+## Alcance
 
-Esta implementación cubre el **registro y la verificación biométrica** de
-punta a punta (backend + base de datos + los endpoints que la web consume).
-La gestión de sesión posterior al login (por ejemplo, emitir un token para
-mantener la sesión abierta, o proteger cada endpoint exigiendo estar logueado)
-es un paso adicional que se puede sumar según cómo el equipo quiera manejar
-los permisos (la base para hacerlo ya está puesta).
+Esta implementación cubre el **registro y la verificación biométrica** de punta a punta, y
+además la **sesión**: al entrar, el servidor entrega una cookie firmada y toda la API exige
+estar logueado (ver "Sesión (cookie) y protección de la API", más abajo).
 
 ---
 

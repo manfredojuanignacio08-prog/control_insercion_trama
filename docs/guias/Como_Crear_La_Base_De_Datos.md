@@ -77,8 +77,8 @@ que elegir nada, simplemente correrlo.
    `invitaciones`) y `migraciones_aplicadas`, que registra qué actualizaciones se aplicaron.
 3. Click en `patrones` y fijate que tenga estas columnas: `id`, `nombre`,
    `filas`, `columnas`, `matriz_pasadas`, `matriz_ligamento`, `colores_filas`,
-   `metadata`, `creado_at`, `modificado_at`, `repeticiones_por_fila` y
-   `metros_por_pasada` (doce en total).
+   `metadata`, `creado_at`, `modificado_at`, `repeticiones_por_fila`,
+   `metros_por_pasada` y `creado_por_invitado` (trece en total).
 
 ---
 
@@ -113,10 +113,17 @@ puntualmente el **Paso 3**, y completá estas variables de entorno en Render:
 | `PGSSL` | `true` |
 | `NODE_ENV` | `production` |
 | `TRUST_PROXY` | `true` |
+| `SESSION_SECRET` | una clave larga al azar (64 caracteres) |
+| `RECOVERY_SECRET` | otra clave larga al azar, **distinta** |
+| `ESP32_DEVICE_KEY` | otra clave larga al azar, **distinta** (la misma va en el firmware) |
+| `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | el dominio de Render (ver `DESPLIEGUE_RENDER.md`) |
+
+Sin `SESSION_SECRET` ni `RECOVERY_SECRET` el servidor **no arranca** en producción. Cómo
+generar las claves y el detalle de cada variable está en `DESPLIEGUE_RENDER.md`, en la raíz
+del proyecto.
 
 Con eso, el backend en Render ya queda conectado a esta base de datos que
-acabás de crear, todo hecho desde el navegador, sin usar la terminal en
-ningún momento.
+acabás de crear, todo hecho desde el navegador.
 
 ---
 

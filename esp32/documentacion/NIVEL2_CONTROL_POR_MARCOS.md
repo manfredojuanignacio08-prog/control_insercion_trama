@@ -31,7 +31,7 @@ bucle" es exactamente lo que el sistema ya hace hoy con la matriz de pasadas.
 En cada pasada del telar, algunos marcos suben y otros bajan; esa combinación
 forma el cruce de los hilos que da el dibujo. Cada pasada se reduce entonces a indicar **cuáles se activan**. En este
 telar son 4 bobinas de selección, confirmado por el dueño el 19/09/26 (el relevamiento del
-28/08/26 había contado 3). El patrón repetitivo es una lista corta
+28/08/26 había estimado seis). El patrón repetitivo es una lista corta
 de esas combinaciones, que se repite.
 
 ```

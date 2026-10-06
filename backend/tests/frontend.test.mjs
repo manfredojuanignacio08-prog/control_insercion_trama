@@ -274,4 +274,25 @@ posts.length = 0; f.run("showConfirm = function(t,m,yes){ yes(); };");
 await f.run('pausePlay(true)'); f.run('retrocederFisico()'); f.run('terminarTrabajo()'); await settle();
 assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('|'));
 
+// ── ▶ con el telar sin responder (asignar-patron falla): la pantalla NO arranca "Tejiendo..."
+{ const rFalla = (m,u,b) => (m==='POST' && u.includes('asignar-patron')) ? { status:500, body:{ error:'Error interno del servidor' } } : routes(m,u,b);
+  telar = { id:8, estado:'apagado', patron_actual_id:null, historial_actual_id:null, fila_actual:null };
+  f = boot(rFalla); await f.run('iniciarApp()');
+  f.run("loadDrawInEditor('4')");
+  await f.run('startPlay()');
+  assert.equal(f.run('isPlaying'), false, 'sin el telar en marcha no se anima');
+  // dos toques seguidos en ▶: un solo arranque
+  telar = { id:8, estado:'apagado', patron_actual_id:null, historial_actual_id:null, fila_actual:null };
+  f = boot(routes); await f.run('iniciarApp()'); f.run("loadDrawInEditor('4')");
+  posts.length = 0;
+  await Promise.all([f.run('startPlay()'), f.run('startPlay()')]);
+  assert.equal(posts.filter(p=>p.includes('asignar-patron')).length, 1, posts.join('|'));
+  f.run('isPlaying=false'); }
+
+// ── el registro de errores no se inunda: el mismo error, como mucho una vez cada 30 s
+{ f = boot(routes); f.run("origenSesion='huella'"); posts.length = 0;
+  for (let i = 0; i < 20; i++) f.run("logError('Error al avanzar', 'falla', 'AVANZAR')");
+  await settle();
+  assert.equal(posts.filter(p=>p.includes('/api/errores')).length, 1, posts.join('|')); }
+
 console.log('frontend OK');
