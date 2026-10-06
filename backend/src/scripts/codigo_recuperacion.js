@@ -69,7 +69,9 @@ function generarCodigo(prefijo) {
 }
 
 async function main() {
-  const usuario = (process.argv[2] || '').trim();
+  // El usuario es el primer argumento que no es una opción: "--rotar juan" y "juan --rotar" valen
+  // igual. Antes se tomaba siempre el primero, y con --rotar adelante se buscaba un usuario "--rotar".
+  const usuario = (process.argv.slice(2).find((a) => !a.startsWith('--')) || '').trim();
   if (!usuario) {
     console.error('\n  Falta el usuario.');
     console.error('  Uso:  node src/scripts/codigo_recuperacion.js <usuario>\n');

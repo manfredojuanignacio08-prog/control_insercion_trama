@@ -160,6 +160,10 @@ static const unsigned long DEBOUNCE_BOTON_MS     = 400;   // rebotes del pulsado
 static const unsigned long IGNORAR_ECO_MS        = 800;   // el sensado ve el pulso del propio relé
 static const unsigned long REINTENTO_AVISO_MS    = 3000;  // entre reintentos si el backend no responde
 static const int           FALLOS_PARA_AVISAR    = 5;     // consultas fallidas seguidas = caída
+// Retrocesos pedidos desde la web que todavía no se pulsaron. Cada uno es un pedido con su propia
+// confirmación, así que entre dos consultas puede haber dos o tres; un salto mayor no es un pedido
+// sino el contador que cambió por otro motivo (la base se restauró, otro telar): no se pulsa nada.
+static const long          MAX_RETROCESOS_PENDIENTES = 3;
 
 int estadoDeseado = -1;           // -1 desconocido | 0 detenido | 1 tejiendo (lo último que ordenó el backend)
 int retrocederSeqConocido = -1;   // -1 desconocido: no se pulsa hasta la primera lectura
@@ -338,10 +342,19 @@ void botoneraAplicarEstado(const char* estado, long retrocederSeqAhora, bool lis
   if (retrocederSeqAhora < 0) return;
   if (retrocederSeqConocido < 0) { retrocederSeqConocido = retrocederSeqAhora; return; }
   if (retrocederSeqAhora != retrocederSeqConocido) {
+    const long pendientes = retrocederSeqAhora - retrocederSeqConocido;
+    if (pendientes < 0 || pendientes > MAX_RETROCESOS_PENDIENTES) {
+      log("El contador de retrocesos cambió de forma inesperada: se toma como referencia, sin pulsar");
+      retrocederSeqConocido = retrocederSeqAhora;
+      return;
+    }
     if (millis() - ultimoComando < MIN_ENTRE_COMANDOS_MS) return;   // primero Pausa, después Retroceder
     log("El backend pide RETROCEDER: pulso en el relé de RETROCEDER");
     pulsarRele(PIN_RELE_RETROCEDER);
-    retrocederSeqConocido = retrocederSeqAhora;
+    // De a uno: si se pidieron dos antes de esta consulta, el segundo pulso sale en la siguiente
+    // (respetando los 2 s entre órdenes). Antes se daba un solo pulso para los dos: el backend
+    // descontaba dos pasadas y la máquina retrocedía una.
+    retrocederSeqConocido += 1;
     ultimoComando = millis();
   }
 }

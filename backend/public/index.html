@@ -1882,6 +1882,9 @@ async function intentarConducir() {
     }
     // OTRO_CONDUCTOR (o la red): se sigue mirando
   }
+  // Si mientras viajaba el pedido se tocó ⏸ y otra vez ▶, esa nueva reproducción ya tiene su propio
+  // reloj: seguir desde acá armaba un segundo reloj y la pantalla avanzaba al doble.
+  if (gen !== generacionPlay) return;
   doTick();
 }
 
@@ -2130,6 +2133,7 @@ function saveDraw() {
   const btnYes = document.getElementById('confirm-yes');
   const btnNo = document.querySelector('.confirm-no');
   
+  alCancelarConfirm = null;   // tocar afuera solo cierra: no guarda de ninguna de las dos formas
   btnYes.textContent = 'Guardar y crear uno nuevo';
   btnNo.textContent = 'Guardar y Reemplazar';
   // Ninguna de las dos opciones borra nada: el botón va en el color de acento, no en el
@@ -2397,9 +2401,22 @@ function showConfirm(title, msg, cbYes, labelYes = 'Confirmar', cbNo = null, lab
   // asusta sin motivo, así que en ese caso el botón va en el color de acento.
   btnYes.classList.toggle('confirm-aviso', !labelNo);
   document.getElementById('confirm-p').classList.remove('con-codigo');
-  btnYes.onclick = () => { closeConfirm(); cbYes(); };
-  btnNo.onclick = () => { closeConfirm(); if (cbNo) cbNo(); };
+  btnYes.onclick = () => { alCancelarConfirm = null; closeConfirm(); cbYes(); };
+  btnNo.onclick = () => { alCancelarConfirm = null; closeConfirm(); if (cbNo) cbNo(); };
+  alCancelarConfirm = cbNo;
   document.getElementById('confirm').classList.add('open');
+}
+
+// Qué hacer si el cuadro se cierra tocando afuera: lo mismo que Cancelar. Antes solo se cerraba, y
+// quien esperaba la respuesta no se enteraba nunca: en "Hay un trabajo en curso" el ▶ quedaba
+// trabado hasta recargar la página, y al cancelar "Achicar" las casillas quedaban con el tamaño nuevo.
+let alCancelarConfirm = null;
+function cancelarConfirm() {
+  if (!document.getElementById('confirm').classList.contains('open')) return;
+  const cb = alCancelarConfirm;
+  alCancelarConfirm = null;
+  closeConfirm();
+  if (cb) cb();
 }
 
 function closeConfirm() {
@@ -2411,7 +2428,7 @@ function showAlert(title, msg) {
 }
 
 document.getElementById('confirm').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeConfirm();
+  if (e.target === e.currentTarget) cancelarConfirm();
 });
 
 function esc(s) {
@@ -3170,7 +3187,9 @@ document.addEventListener('click', (e) => {
   if (e.target && e.target.id === 'modal-color') cerrarSimuladorColor();
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') cerrarSimuladorColor();
+  if (e.key !== 'Escape') return;
+  cerrarSimuladorColor();
+  cancelarConfirm();   // Escape en el cuadro de confirmación es Cancelar
 });
 
 
@@ -3225,7 +3244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
     <div style="background:#1E3A5F;width:100%;height:100px;border-radius:var(--r-md);margin-bottom:16px;border:1px solid var(--bd);" id="color-sample"></div>
     <label for="thread-color" style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Color del Hilo:</label>
-    <input type="color" id="thread-color" class="color-hilo" value="#1E3A5F" onchange="updateColorPreview()">
+    <input type="color" id="thread-color" class="color-hilo" value="#1E3A5F" oninput="updateColorPreview()" onchange="updateColorPreview()">
     
     <label for="row-select" style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Aplicar a:</label>
     <select id="row-select" style="width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--bd);background:var(--srf);color:var(--tx);margin-bottom:16px;font-family:inherit;">

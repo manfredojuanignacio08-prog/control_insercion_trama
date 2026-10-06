@@ -37,7 +37,8 @@ El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
    - pasó a `tejiendo` → pulso de 300 ms en el relé de **Marcha**
    - dejó de `tejiendo` → pulso de 300 ms en el relé de **Pausa**
    - cada ⏪ pedido desde la web (sube `retroceder_seq`) → pulso de 300 ms en el relé de
-     **Retroceder**, siempre después del de Pausa
+     **Retroceder**, siempre después del de Pausa. Si se pidieron dos o tres entre dos consultas,
+     da un pulso por cada uno, con 2 s entre pulsos
 4. Si alguien usa la botonera a mano, lo sensa y se lo avisa al backend (`POST /evento-fisico`).
 5. Si se cae el Wi-Fi o el backend no responde: **no hace nada**
    (fail-safe). El telar queda gobernado por su botonera física, que

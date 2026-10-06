@@ -993,3 +993,18 @@ Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC 
 Se revisaron además, sin encontrar errores: el resto del backend, las 19 migraciones, Docker, el firmware y su configuración, los demás Word y Markdown, los textos de los 15 diagramas SVG y los valores de hardware (resistencias, pines, patas del LCA110 y del PC817) en todas las guías.
 
 Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (avisos largos a 390 px, etiquetas de configuración): todo bien.
+
+### Duodécima revisión de cierre (todo el proyecto otra vez: backend, web, firmware, base y documentos)
+
+| Dónde | Problema | Corrección |
+|---|---|---|
+| Firmware (Bloque A) | Si se pedían dos retrocesos desde la web antes de que la placa consultara (cada 2,5 s), daba **un solo pulso**: el backend descontaba dos pasadas y la máquina retrocedía una, y la posición quedaba corrida. Con el Nivel 2, el segundo aviso quedaba esperando un pulso que no llegaba. | Un pulso por cada pedido, de a uno por consulta y con 2 s entre pulsos. Un salto grande o hacia atrás del contador (base restaurada) se toma como referencia sin pulsar. Caso nuevo en `test_botonera.cpp`, que falla con el firmware anterior. |
+| Web | Tocar fuera del cuadro de confirmación lo cerraba sin avisar a quien esperaba la respuesta. En «Hay un trabajo en curso», el ▶ quedaba **trabado hasta recargar la página**; al cancelar «Achicar» así, las casillas quedaban con el tamaño nuevo aunque la grilla no cambiaba. | Tocar afuera, o la tecla Escape, equivale a Cancelar. En el cuadro de Guardar, tocar afuera solo lo cierra (no guarda). Probado en Chromium: con la versión anterior el ▶ queda trabado, con la nueva no. |
+| Web | Con otra pantalla llevando el tejido, tocar ⏸ y ▶ enseguida podía armar un segundo reloj: la pantalla avanzaba al doble. | La consulta que vuelve tarde ya no arranca otro reloj. |
+| Web | El selector de color mostraba la muestra recién al cerrar la paleta. | Se actualiza mientras se elige. |
+| Script de códigos | `npm run codigo -- --rotar juan` buscaba un usuario llamado "--rotar". | El usuario es el primer argumento que no es una opción. |
+| `esp32/README.md` | No decía qué pasa con varios retrocesos seguidos. | Agregado. |
+
+Se volvieron a leer sin encontrar otros errores: todos los controladores, rutas, middleware y utilidades del backend, la web completa (login, editor, reproducción, biblioteca, ficha, PDF), el firmware completo, Docker y las migraciones.
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos, con el caso nuevo), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (cuadro de confirmación cerrado tocando afuera y con Escape, ▶ después de cancelar, Achicar cancelado, Guardar cerrado sin guardar): todo bien.
