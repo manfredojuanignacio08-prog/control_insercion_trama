@@ -4,7 +4,7 @@ Estos scripts verifican el diseño del sistema por software (sin hardware):
 
 - **`verif_coherencia.py`**, compara el firmware (.ino), el diagrama eléctrico
   (SVG) y el documento de conexiones, y confirma que los pines, voltajes y
-  conexiones coincidan entre los tres (18 chequeos).
+  conexiones coincidan entre los tres (19 chequeos).
 - **`sim_flujo.py`**, simula el flujo lógico del Nivel 1 (Marcha/Pausa):
   arranque seguro, arranque/detención, sin doble-pulso (6 verificaciones).
 - **`sim_nivel2.py`**, simula el flujo lógico del Nivel 2 (marcos/dobby):
@@ -20,7 +20,10 @@ archivos, `verif_coherencia.py`, los busca a partir de su propia ubicación).
 - **`host/correr.sh`**, prueba la lógica REAL de `../control_trama_esp32/sensor_pasada.h` (retrocesos
   acumulados, reclasificación del pulso de retroceso, período de gracia del sensor)
   con un reloj simulado, la de `../control_trama_esp32/posicion_dibujo.h` (1,2 millones de pasadas
-  al azar adelante y atrás contra el mismo modelo del backend), el patrón del sketch de prueba de
+  al azar adelante y atrás contra el mismo modelo del backend), la de
+  `../control_trama_esp32/seleccion_dibujo.h` (un agujero por pasada, cuánto dura y cuándo se
+  suelta), el Bloque A del firmware (arranque seguro, orden de Pausa y Retroceder, un pulso por
+  cada retroceso pedido, eco del propio relé), el patrón del sketch de prueba de
   mesa de un relé (`../pruebas/prueba_rele_lca110`), y comprueba que el firmware compila en sus dos modos (`NIVEL2_INSTALADO` en `false` y en `true`) contra stubs
   mínimos de Arduino. Es un chequeo de lógica y de sintaxis: no reemplaza compilar
   con el core ESP32 real.

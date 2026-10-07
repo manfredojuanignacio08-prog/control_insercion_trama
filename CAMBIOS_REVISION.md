@@ -1032,3 +1032,36 @@ Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC 
 Prueba de fuerza del backend: 23.134 pedidos a todas las rutas, con datos de tipos equivocados, números enormes, textos de 5.000 caracteres, caracteres nulos, JSON roto, ids inválidos y filtros mal formados, como operario y como dispositivo, sin límites de pedidos: **ninguna respuesta 500** y ningún error en el registro del servidor.
 
 Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (por localhost y por la IP de la red): todo bien.
+
+### Decimoquinta revisión de cierre (la última: todo el proyecto, archivo por archivo)
+
+**Web**
+
+| Problema | Corrección |
+|---|---|
+| Con un color de hilo en la fila, el «1» de las celdas marcadas iba siempre en el color de texto del tema: en modo oscuro, azul oscuro sobre bordó (1,6 a 1); en modo claro, claro sobre crudo. El número de la fila activa tomaba el color del hilo y casi no se veía. | El texto de la celda se elige según la luminancia del hilo (el de más contraste: 3,7 a 1 o más con cualquiera de los 4.096 colores probados), y el número de la fila activa va en el color del texto. |
+
+**Verificación**
+
+| Problema | Corrección |
+|---|---|
+| Nada comprobaba que la cantidad de bobinas fuera la misma en la web (el aviso de columnas de más), el firmware (`N_CANALES`) y la base (`elementos_seleccion`). | Chequeo nuevo en `verif_coherencia.py`: 19/19. |
+| El `LEEME.md` de verificación no mencionaba las pruebas de la selección ni del Bloque A que corre `correr.sh`. | Agregadas. |
+
+**Documentos**
+
+| Dónde | Problema | Corrección |
+|---|---|---|
+| Documentación de Proyecto, 3.2.3 | El «esquema real» en SQL era el de julio: `filas > 0`, `matriz_pasadas` como «repeticiones de fila (enteros 0,1,2,3...)» y sin las columnas de las migraciones 004 a 019. | Esquema actual (resumido, con referencia al SQL completo), en formato de código uniforme. |
+| Documentación de Proyecto, 3.2.4 | Describía el modelo viejo: celdas con enteros y «un valor mayor a 1 repite la fila». | Celdas de 0 o 1 y pasadas por fila en `repeticiones_por_fila`; el ejemplo JSON las incluye. |
+| Documentación de Proyecto, Tabla 3 | Columnas incompletas. | Completas. |
+| Documentación de Proyecto, 2.2, 2.4 y 3.2 | Alcance «Play/Pausa» sin Retroceder y con una «persistencia local» que no existe; «una fila equivale a una pasada»; «en escritorio la navegación pasa a una barra lateral» (es la misma columna de 430 px, como dice 3.2.1). | Corregidos. |
+| Documentación de Proyecto, 3.4.5 y Tabla 5 | «Cola acotada a 500 registros» (el firmware manda el conteo acumulado cada segundo); `/avanzar` lo usaría el ESP32 (no lo usa); `al_inicio` «si no se puede retroceder más» (indica que cruzó el principio); faltaba el pulso de Retroceder. | Corregidos. |
+| Documentación de Proyecto, 4.1, 4.5, 4.6 y 4.7 | RF04 prometía «invertir valores y repetir bloques» (no existen); RF08 y SB-07 «una fila atrás» (es una pasada); RF10 y SB-08 «en curso» (validado el 19/09); faltaba `evento-fisico`; RHW08 «pin a definir» (es el GPIO 35); LIM01 «falta localizar el punto de intervención» (es el lector óptico). | Corregidos. |
+| Documentación de Proyecto, 5 y 6–9 | «Pistas de la PCB», «plano de masa en la PCB» y «filtros LC» (es placa perforada, con 470 µF y 100 nF); Paso 6 sin Retroceder; archivos KiCad que no existen; «ESP32-WROOM-32U»; la ficha «desde la biblioteca» (se descarga desde el editor). | Corregidos. Validado con el esquema de Word; imágenes, cuadros de texto y tablas intactos. |
+| Manual Telar Fábrica | El retroceso «vuelve una fila atrás en el dibujo». | Una pasada atrás. |
+| `docs/analisis/Analisis_Frontend_y_Plan_Backend.md` | Análisis de junio que describe el modelo viejo como si fuera el actual («el código quedó así»). | Aviso de documento histórico al principio y en esa sección. |
+
+Se leyeron completos, además: el esquema y las 19 migraciones (también su efecto sobre una base nueva), las 8 pruebas del backend, `styles.css`, los scripts de verificación y las pruebas en la PC del firmware, la documentación del firmware y la Documentación de Proyecto entera. El SQL completo coincide con el generador.
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, `npm audit` (0 vulnerabilidades), firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, y Chromium (recorrido completo con ficha en PDF, modo oscuro, cuadro de confirmación, y por la IP de la red): todo bien.

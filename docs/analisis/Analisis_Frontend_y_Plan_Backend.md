@@ -3,6 +3,12 @@
 
 ---
 
+> **Documento histórico (junio de 2026).** Describe el frontend y el plan de backend de ese
+> momento. Desde entonces cambiaron cosas que este análisis no refleja; las principales: cada celda
+> del dibujo vale 0 o 1 y las pasadas de cada fila van aparte, en `repeticiones_por_fila` (migración
+> 014); la API exige sesión o clave de dispositivo; los límites son de 1 a 300 filas y de 1 a 8
+> columnas. El estado actual está en `backend/README.md` y en `database/01_base_de_datos_completa.sql`.
+
 ## 0. Decisiones confirmadas
 
 > ⚠️ **Actualización (20/06/2026):** se definió que **el backend no se modifica** -
@@ -273,6 +279,10 @@ fila [0, 1, 0]  ->  sube solo el del medio
 Las columnas **no se recorren una por una**: se envían juntas, simultáneas,
 porque son los marcos de esa misma pasada. Lo que avanza pasada a pasada es
 la FILA.
+
+> **Ya no es así:** desde la migración 014 las celdas valen 0 o 1 y cuántas pasadas se teje cada
+> fila va en `repeticiones_por_fila` (ver `backend/src/utils/posicion.js`). Lo que sigue es el
+> diseño de junio de 2026.
 
 Las repeticiones, entonces, son de fila entera, no de celda: si una fila
 tiene números mayores a 1, esa pasada se repite esa cantidad de veces antes

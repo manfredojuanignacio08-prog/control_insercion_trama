@@ -177,6 +177,19 @@ chk("Un solo firmware, pines sin choques y NIVEL2_INSTALADO en false (origen=esp
     sin_choques and apagado and origen and uno,
     f"pines={usados} sin_choques={sin_choques} NIVEL2_INSTALADO_false={apagado} origen={origen} sketches={sketches}")
 
+# ── 16. Cantidad de bobinas: la misma en la web, el firmware y la base ──
+# La web avisa cuando un dibujo tiene más columnas que bobinas, el firmware tiene un canal por bobina
+# y la base guarda elementos_seleccion por telar. Si una quedara distinta, el aviso de la web no
+# coincidiría con lo que de verdad acciona la placa.
+esquema = _leer('backend/src/db/schema.sql')
+bob = {
+    'web':      _num(r'const ELEMENTOS_TELAR = (\d+);', web),
+    'firmware': _num(r'static const int\s+N_CANALES = (\d+);', cfg),
+    'base':     _num(r'elementos_seleccion INTEGER NOT NULL DEFAULT (\d+)', esquema),
+}
+chk("Cantidad de bobinas igual en web, firmware y base", len(set(bob.values())) == 1 and None not in bob.values(),
+    ", ".join(f"{k}={v}" for k, v in bob.items()))
+
 # ── RESULTADO ──
 ok = sum(1 for c,_,_ in checks if c)
 print(f"{'='*66}")
