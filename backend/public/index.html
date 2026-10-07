@@ -104,7 +104,7 @@
 
     <input id="rec-usuario" type="text" placeholder="Usuario" aria-label="Usuario" autocapitalize="none" spellcheck="false"
       style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:12px;box-sizing:border-box;" maxlength="40">
-    <input id="rec-codigo" type="text" placeholder="Código (ej: TRAMA-ABC123)" aria-label="Código de recuperación" autocapitalize="characters" spellcheck="false"
+    <input id="rec-codigo" type="text" placeholder="Código (ej: TRAMA-K7QX4A)" aria-label="Código de recuperación" autocapitalize="characters" spellcheck="false"
       style="width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-size:15px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;text-align:center;">
 
     <button type="button" onclick="hacerRecupero()" id="btn-recupero"
@@ -400,7 +400,7 @@
     <div class="lib-toprow">
       <span class="lib-title">Mis dibujos</span>
       <span class="lib-badge" id="lib-count">0</span>
-      <button type="button" class="lib-new-btn" onclick="editId=null;goTo('sc-editor')">⊕ Nuevo</button>
+      <button type="button" class="lib-new-btn" onclick="goTo('sc-editor');newDraw()">⊕ Nuevo</button>
     </div>
 
     <div style="padding:0 14px 12px;display:flex;gap:8px;flex-wrap:wrap;">
@@ -446,7 +446,7 @@ function setLoginMsg(txt, tipo) {
   const el = loginMsg();
   el.textContent = txt || '';
   el.style.color = tipo === 'error' ? 'var(--red, #c0392b)'
-                 : tipo === 'ok' ? '#2E9E5B'
+                 : tipo === 'ok' ? 'var(--green)'
                  : 'var(--tx3)';
 }
 
@@ -508,7 +508,7 @@ async function hacerRegistro() {
     const opciones = await apiAuth('/registro/iniciar', { usuario, invitacion });
     const respuesta = await SimpleWebAuthnBrowser.startRegistration({ optionsJSON: opciones });
     const r = await apiAuth('/registro/verificar', { usuario, respuesta });
-    setUsuarioActual(usuario, r.nombre, 'huella');
+    setUsuarioActual(r.usuario || usuario, r.nombre, 'huella');
     // Si vino un código de recuperación (primer registro), mostrarlo bien visible para que el
     // usuario lo anote. Después se puede volver a ver desde el perfil, verificando la huella.
     if (r.recovery_code) {
@@ -697,7 +697,13 @@ let origenSesion = null; // 'huella' | 'codigo' | 'invitado'
 function setUsuarioActual(usuario, nombre, origen) {
   usuarioActual = usuario ? { usuario, nombre: nombre || usuario } : null;
   origenSesion = usuario ? (origen || origenSesion || 'huella') : 'invitado';
+  // Se recuerda en esta pestaña cómo se entró: al recargar la página, quien entró con el código
+  // seguía viendo la sesión como "con huella" y desaparecía el botón para activarla en el equipo.
+  try { sessionStorage.setItem('trama_origen', origenSesion); } catch (e) { /* sin almacenamiento */ }
   renderUsuarioActual();
+}
+function origenGuardado() {
+  try { return sessionStorage.getItem('trama_origen') === 'codigo' ? 'codigo' : 'huella'; } catch (e) { return 'huella'; }
 }
 
 // Dibuja la tarjeta de usuario en la pantalla de Inicio
@@ -780,7 +786,7 @@ function volverAlLogin() {
 function setRecMsg(txt, tipo) {
   const el = document.getElementById('rec-msg');
   el.textContent = txt || '';
-  el.style.color = tipo === 'error' ? 'var(--red, #c0392b)' : tipo === 'ok' ? '#2E9E5B' : 'var(--tx3)';
+  el.style.color = tipo === 'error' ? 'var(--red, #c0392b)' : tipo === 'ok' ? 'var(--green)' : 'var(--tx3)';
 }
 
 async function hacerRecupero() {
@@ -898,6 +904,8 @@ function apiToLocal(p) {
     metrosPorPasada: p.metros_por_pasada != null ? Number(p.metros_por_pasada) : null,
     creadoAt: p.creado_at,
     modificadoAt: p.modificado_at,
+    // Lo creó un invitado: un invitado solo puede modificar estos (el servidor también lo exige).
+    creadoPorInvitado: p.creado_por_invitado === true,
   };
 }
 
@@ -1046,6 +1054,9 @@ async function sincronizarPatronAhora() {
       await recargarDibujoPorConflicto();
     } else if (e.codigo === 'PATRON_EN_PRODUCCION') {
       toast('Este dibujo se está tejiendo: detené el trabajo para modificar la matriz');
+    } else if (e.codigo === 'SOLO_OPERARIO') {
+      // Invitado editando un dibujo de los operarios: apiFetch ya mostró el aviso del servidor.
+      setStatus('Sin guardar', false);
     } else if (e.status === 409) {
       toast('No se pudo sincronizar: ya existe un dibujo con ese nombre');
     } else {
@@ -1294,6 +1305,7 @@ async function confirmarPosicionTelar() {
       actualizarEstadoTelar();
       return;
     }
+    if (e.codigo === 'SOLO_OPERARIO') return;   // apiFetch ya mostró el aviso del invitado
     logError('Error al confirmar la posición', e.message, 'CONFIRMAR_POSICION');
     toast('No se pudo confirmar la posición');
   }
@@ -1343,6 +1355,7 @@ function resetEditorForNew() {
   
   // 6. REFRESCO TOTAL DE UI
   setStatus('Nuevo', false);
+  fichaAlCambiarDibujo();
   renderGrid();
   updateStats();
   if (window.renderLib) renderLib();
@@ -1403,7 +1416,10 @@ function renderGrid() {
 	  for (let r = 0; r < nR; r++) {
 	    let cls = 'grid-row';
 	    if (curRow === r) cls += ' active-row';
-	    const rowStyle = rowColors[r] ? `style="--acc: ${rowColors[r]}; --rose: ${rowColors[r]};"` : '';
+	    // Solo un color #RRGGBB entra en el atributo: un valor viejo de la base con otro formato
+	    // (o con comillas) rompería el HTML de la grilla.
+	    const colorOk = typeof rowColors[r] === 'string' && /^#[0-9a-fA-F]{6}$/.test(rowColors[r]);
+	    const rowStyle = colorOk ? `style="--acc: ${rowColors[r]}; --rose: ${rowColors[r]};"` : '';
 	    h += `<div class="${cls}" id="gr${r}" ${rowStyle}>`;
 	    h += `<div class="g-row-n">${r+1}</div>`;
 	    for (let c = 0; c < nC; c++) {
@@ -1511,17 +1527,17 @@ function clearGrid() {
 }
 
 function newDraw() {
-		  if (edicionBloqueada()) return;
-		  // Usa la misma rutina que al entrar al editor: nombre "Nuevo Dibujo N" que no exista
-		  // todavía. Antes tenía su propia versión ("Nueva Inserción N") sin esa verificación,
-		  // y el nombre podía repetirse y la base rechazarlo.
-		  const empezarNuevo = () => { resetEditorForNew(); toast('Dibujo nuevo listo'); };
-		  // Cada cambio se guarda solo. Solo hay algo que perder si el indicador quedó en
-		  // "Modificado", es decir, si un guardado no llegó al servidor (por ejemplo, sin conexión).
-		  const pendiente = document.getElementById('ed-status').textContent.trim() === 'Modificado';
-		  if (!pendiente) { empezarNuevo(); return; }
-		  showConfirm('¿Crear un dibujo nuevo?', 'Hay cambios de este dibujo que todavía no se guardaron (por ejemplo, por un problema de conexión). Si seguís, se pierden.', empezarNuevo);
-		}
+  if (edicionBloqueada({ nuevo: true })) return;
+  // Usa la misma rutina que al entrar al editor: nombre "Nuevo Dibujo N" que no exista
+  // todavía. Antes tenía su propia versión ("Nueva Inserción N") sin esa verificación,
+  // y el nombre podía repetirse y la base rechazarlo.
+  const empezarNuevo = () => { resetEditorForNew(); toast('Dibujo nuevo listo'); };
+  // Cada cambio se guarda solo. Solo hay algo que perder si el indicador quedó en
+  // "Modificado", es decir, si un guardado no llegó al servidor (por ejemplo, sin conexión).
+  const pendiente = document.getElementById('ed-status').textContent.trim() === 'Modificado';
+  if (!pendiente) { empezarNuevo(); return; }
+  showConfirm('¿Crear un dibujo nuevo?', 'Hay cambios de este dibujo que todavía no se guardaron (por ejemplo, por un problema de conexión). Si seguís, se pierden.', empezarNuevo);
+}
 
 function setPlayBar(state) {
   const bar = document.getElementById('play-bar');
@@ -1552,14 +1568,21 @@ function updPlayUI() {
 // editarla: ni agregar/quitar pasadas, ni cambiar color, ni tamaño, etc.
 // Solo se puede editar cuando está EN PAUSA o DETENIDA.
 // Devuelve true (y avisa) si la edición está bloqueada ahora mismo.
-function edicionBloqueada() {
+function edicionBloqueada({ nuevo = false } = {}) {
   if (isPlaying) {
     toast('Pausá o detené la ejecución para poder editar la matriz');
     return true;
   }
+  // Un invitado no puede modificar los dibujos de los operarios (el servidor lo rechaza). Se avisa
+  // antes de tocar nada: si no, los cambios se veían en pantalla pero no se guardaban.
+  if (!nuevo && dibujoAjenoParaInvitado()) {
+    toast('Estás como invitado: este dibujo es de los operarios. Podés mirarlo; para diseñar, creá uno nuevo.');
+    return true;
+  }
   // Pausado pero con el trabajo abierto: la posición guardada se refiere a ESTA matriz, así que
   // cambiarla la invalidaría (y el backend lo rechaza). Se ofrece el camino: terminar el trabajo.
-  if (editId && trabajoEnCursoPatronId && String(editId) === trabajoEnCursoPatronId) {
+  // Un dibujo nuevo no toca la matriz del trabajo: crear uno no se bloquea por esto.
+  if (!nuevo && editId && trabajoEnCursoPatronId && String(editId) === trabajoEnCursoPatronId) {
     toast('Este dibujo tiene un trabajo en curso: usá ⏹ para terminarlo si querés modificarlo');
     return true;
   }
@@ -1585,6 +1608,7 @@ function validarConteoTelar() {
         toast('Conteo validado');
         actualizarEstadoTelar();
       } catch (e) {
+        if (e.codigo === 'SOLO_OPERARIO') return;   // apiFetch ya mostró el aviso del invitado
         toast('No se pudo validar el conteo: ' + e.message);
       }
     },
@@ -1669,7 +1693,15 @@ function terminarTrabajo() {
   );
 }
 
+// Dos toques seguidos en ▶ arrancaban dos veces (dos pedidos al telar y dos relojes).
+let arrancandoPlay = false;
 async function startPlay() {
+  if (isPlaying || arrancandoPlay) return;
+  arrancandoPlay = true;
+  try { await arrancarPlay(); } finally { arrancandoPlay = false; }
+}
+
+async function arrancarPlay() {
   // Reproducir pone en marcha el telar real: un invitado recibe siempre el mismo aviso,
   // haya o no un telar cargado en la base, y no se dispara ninguna llamada.
   if (origenSesion === 'invitado') {
@@ -1740,6 +1772,9 @@ async function startPlay() {
       // rechazado y a mostrar el aviso de nuevo, dos veces por segundo.
       if (e.codigo === 'SOLO_OPERARIO') return;
       logError('Error al asignar patrón al telar', e.message, 'ASIGNAR_TELAR');
+      // El telar no quedó en marcha: la pantalla no puede mostrar "Tejiendo..." como si lo estuviera.
+      toast('No se pudo poner en marcha el telar: ' + e.message);
+      return;
     }
   }
 
@@ -1847,6 +1882,9 @@ async function intentarConducir() {
     }
     // OTRO_CONDUCTOR (o la red): se sigue mirando
   }
+  // Si mientras viajaba el pedido se tocó ⏸ y otra vez ▶, esa nueva reproducción ya tiene su propio
+  // reloj: seguir desde acá armaba un segundo reloj y la pantalla avanzaba al doble.
+  if (gen !== generacionPlay) return;
   doTick();
 }
 
@@ -1993,7 +2031,10 @@ async function ejecutarRetroceso() {
       method: 'POST',
       body: JSON.stringify({ pasos: 1 }),
     });
-    if (r && r.fila_actual !== undefined && r.fila_actual !== null) {
+    // La posición es la del trabajo del telar: solo se aplica si el dibujo abierto es ese (si no,
+    // se marcaría una fila de otro dibujo, o una fuera de rango).
+    if (r && Number.isInteger(r.fila_actual) && r.fila_actual < nR &&
+        (!trabajoEnCursoPatronId || String(editId) === trabajoEnCursoPatronId)) {
       curRow = r.fila_actual;
       curCol = 0;
       curPass = 0;
@@ -2060,7 +2101,19 @@ function setStatus(text, saved) {
   el.className = 'status-badge' + (saved ? ' saved' : '');
 }
 
+// Un invitado con un dibujo de los operarios abierto: puede mirarlo, no guardarlo (el servidor
+// lo rechaza). Se avisa antes de abrir el diálogo de guardado.
+function dibujoAjenoParaInvitado() {
+  if (origenSesion !== 'invitado' || !editId) return false;
+  const d = draws.find((x) => String(x.id) === String(editId));
+  return Boolean(d && !d.creadoPorInvitado);
+}
+
 function saveDraw() {
+  if (dibujoAjenoParaInvitado()) {
+    toast('Estás como invitado: este dibujo es de los operarios. Podés mirarlo; para diseñar, creá uno nuevo.');
+    return;
+  }
   const nameInput = document.getElementById('insercion-name');
   const name = nameInput.value.trim() || 'Sin nombre';
   const now = new Date().toISOString();
@@ -2080,6 +2133,7 @@ function saveDraw() {
   const btnYes = document.getElementById('confirm-yes');
   const btnNo = document.querySelector('.confirm-no');
   
+  alCancelarConfirm = null;   // tocar afuera solo cierra: no guarda de ninguna de las dos formas
   btnYes.textContent = 'Guardar y crear uno nuevo';
   btnNo.textContent = 'Guardar y Reemplazar';
   // Ninguna de las dos opciones borra nada: el botón va en el color de acento, no en el
@@ -2110,6 +2164,7 @@ function saveDraw() {
     } catch(e) {
       // Un 409 no siempre es nombre repetido: también puede ser un dibujo que se está
       // tejiendo o que otra persona modificó. Antes todos decían "ya existe ese nombre".
+      if (e.codigo === 'SOLO_OPERARIO') return;   // apiFetch ya mostró el aviso del invitado
       if (e.codigo === 'DIBUJO_MODIFICADO') await recargarDibujoPorConflicto();
       else if (e.codigo === 'PATRON_EN_PRODUCCION') toast('Este dibujo se está tejiendo: detené el trabajo para modificar la matriz');
       else if (e.status === 409) toast('Ya existe un dibujo con ese nombre');
@@ -2146,6 +2201,7 @@ function saveDraw() {
       toast('Dibujo guardado. Podés seguir editándolo.');
       updateStats();
     } catch(e) {
+      if (e.codigo === 'SOLO_OPERARIO') return;   // apiFetch ya mostró el aviso del invitado
       if (e.codigo === 'DIBUJO_MODIFICADO') await recargarDibujoPorConflicto();
       else if (e.codigo === 'PATRON_EN_PRODUCCION') toast('Este dibujo se está tejiendo: detené el trabajo para modificar la matriz');
       else if (e.status === 409) toast('Ya existe un dibujo con ese nombre');
@@ -2191,6 +2247,7 @@ function loadDrawInEditor(id, restaurando = false) {
 	  if (!restaurando) pausePlay();
 	  renderGrid();
 	  goTo('sc-editor');
+	  fichaAlCambiarDibujo();
 	  if (!restaurando) toast(`Dibujo cargado: ${d.nombre}`);
 	}
 
@@ -2207,13 +2264,15 @@ function deleteDraw(id) {
       // ya no existe (y que se "revíviría" al tocar una celda).
       if (editId === id) {
         editId = null;
-  versionDibujo = null;
+        versionDibujo = null;
         resetEditorForNew();
       }
       renderLib();
       updateStats();
       toast('Dibujo eliminado');
     } catch(e) {
+      // Invitado con un dibujo de los operarios: apiFetch ya mostró el aviso del servidor.
+      if (e.codigo === 'SOLO_OPERARIO') return;
       if (e.status === 409) showAlert('No se puede eliminar',
         'Este dibujo ya se usó para tejer y quedó registrado en el historial de producción de la máquina. '
         + 'Ese registro documenta lo que el telar tejió, así que el dibujo se conserva para que el historial siga teniendo sentido. '
@@ -2342,9 +2401,22 @@ function showConfirm(title, msg, cbYes, labelYes = 'Confirmar', cbNo = null, lab
   // asusta sin motivo, así que en ese caso el botón va en el color de acento.
   btnYes.classList.toggle('confirm-aviso', !labelNo);
   document.getElementById('confirm-p').classList.remove('con-codigo');
-  btnYes.onclick = () => { closeConfirm(); cbYes(); };
-  btnNo.onclick = () => { closeConfirm(); if (cbNo) cbNo(); };
+  btnYes.onclick = () => { alCancelarConfirm = null; closeConfirm(); cbYes(); };
+  btnNo.onclick = () => { alCancelarConfirm = null; closeConfirm(); if (cbNo) cbNo(); };
+  alCancelarConfirm = cbNo;
   document.getElementById('confirm').classList.add('open');
+}
+
+// Qué hacer si el cuadro se cierra tocando afuera: lo mismo que Cancelar. Antes solo se cerraba, y
+// quien esperaba la respuesta no se enteraba nunca: en "Hay un trabajo en curso" el ▶ quedaba
+// trabado hasta recargar la página, y al cancelar "Achicar" las casillas quedaban con el tamaño nuevo.
+let alCancelarConfirm = null;
+function cancelarConfirm() {
+  if (!document.getElementById('confirm').classList.contains('open')) return;
+  const cb = alCancelarConfirm;
+  alCancelarConfirm = null;
+  closeConfirm();
+  if (cb) cb();
 }
 
 function closeConfirm() {
@@ -2356,11 +2428,13 @@ function showAlert(title, msg) {
 }
 
 document.getElementById('confirm').addEventListener('click', e => {
-  if (e.target === e.currentTarget) closeConfirm();
+  if (e.target === e.currentTarget) cancelarConfirm();
 });
 
 function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // También las comillas: así sirve igual dentro de un atributo.
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 // Inicialización: cargar patrones desde la API antes de renderizar.
@@ -2400,7 +2474,7 @@ async function reingresar() {
     const est = await res.json();
     if (est.autenticado) {
       if (est.invitado) setUsuarioActual(null, null);
-      else setUsuarioActual(est.usuario, est.nombre, 'huella');
+      else setUsuarioActual(est.usuario, est.nombre, origenGuardado());
       entrarAlSistema();
     }
   } catch (e) { /* sin red: queda el login */ }
@@ -2774,7 +2848,7 @@ async function exportDrawToPDF() {
     return doc;
   }
 
-  const name = document.getElementById('insercion-name')?.value || 'Dibujo';
+  const name = (document.getElementById('insercion-name')?.value || '').trim() || 'Dibujo';
   const date = new Date().toLocaleDateString('es-AR');
   const filasPdf = nR || 1, colsPdf = nC || 1;
   const actual = draws.find((x) => String(x.id) === String(editId));
@@ -2844,6 +2918,7 @@ function clearFilters() {
 
 // ========== HISTORIAL DE ERRORES ==========
 let errorHistory = [];
+const ultimoEnvioError = {};   // código -> último envío al servidor (ms)
 
 function logError(title, msg, code) {
   const error = { timestamp: new Date().toLocaleTimeString('es-AR'), title, message: msg, code };
@@ -2854,6 +2929,13 @@ function logError(title, msg, code) {
   // Un invitado no escribe en el registro de errores: es un registro de la máquina
   // y del sistema, no de las pruebas de alguien que está mirando la aplicación.
   if (origenSesion === 'invitado') return;
+  // Como mucho un envío por tipo de error cada 30 s. Con el servidor fallando y el telar
+  // tejiendo, cada pasada (5 por segundo) mandaba un aviso: en pocos minutos se agotaba el
+  // límite de pedidos del usuario y después no podía ni tocar Pausa.
+  const clave = String(code || title);
+  const ahora = Date.now();
+  if (ahora - (ultimoEnvioError[clave] || 0) < 30000) return;
+  ultimoEnvioError[clave] = ahora;
   apiFetch('/errores', {
     method: 'POST',
     // Recortados a lo que acepta el servidor (200 / 2000 / 64 caracteres).
@@ -2911,6 +2993,8 @@ async function fichaCargar() {
   try {
     const d = await apiFetch(`/patrones/${idActual}/estadisticas`);
     produccionCache[idActual] = { s: d, cuando: new Date() };   // para la ficha en PDF
+    // Mientras viajaba la respuesta se abrió otro dibujo: esa ficha ya se pidió aparte.
+    if (String(idActual) !== String(editId)) return;
     document.getElementById('mpp-in').value = mostrarDecimal(d.metros_por_pasada);
     fichaMostrarEquivalencia();
 
@@ -2944,8 +3028,16 @@ async function fichaCargar() {
     if (d.aviso) html += `<div class="ficha-aviso">${esc(d.aviso)}</div>`;
     cont.innerHTML = html;
   } catch (e) {
+    if (String(idActual) !== String(editId)) return;
     cont.innerHTML = `<div class="ficha-aviso">No se pudieron cargar las estadísticas: ${esc(e.message)}</div>`;
   }
+}
+
+// Al abrir otro dibujo (o uno nuevo) con la ficha abierta, la ficha pasa a ser la de ese dibujo.
+// Antes seguía mostrando los metros por pasada del anterior, y Guardar los grababa en el nuevo.
+function fichaAlCambiarDibujo() {
+  const panel = document.getElementById('ficha');
+  if (panel && !panel.hidden) fichaCargar();
 }
 
 function fichaInicializar() {
@@ -2987,6 +3079,7 @@ function fichaInicializar() {
       toast(v === null ? 'Se quitó el dato de metros por pasada.' : 'Metros por pasada guardados.');
       fichaCargar();
     } catch (e) {
+      if (e.codigo === 'SOLO_OPERARIO') return;   // apiFetch ya mostró el aviso del invitado
       toast(e.message);
     }
   });
@@ -3094,7 +3187,9 @@ document.addEventListener('click', (e) => {
   if (e.target && e.target.id === 'modal-color') cerrarSimuladorColor();
 });
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') cerrarSimuladorColor();
+  if (e.key !== 'Escape') return;
+  cerrarSimuladorColor();
+  cancelarConfirm();   // Escape en el cuadro de confirmación es Cancelar
 });
 
 
@@ -3149,7 +3244,7 @@ document.addEventListener('DOMContentLoaded', () => {
     </div>
     <div style="background:#1E3A5F;width:100%;height:100px;border-radius:var(--r-md);margin-bottom:16px;border:1px solid var(--bd);" id="color-sample"></div>
     <label for="thread-color" style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Color del Hilo:</label>
-    <input type="color" id="thread-color" class="color-hilo" value="#1E3A5F" onchange="updateColorPreview()">
+    <input type="color" id="thread-color" class="color-hilo" value="#1E3A5F" oninput="updateColorPreview()" onchange="updateColorPreview()">
     
     <label for="row-select" style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Aplicar a:</label>
     <select id="row-select" style="width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--bd);background:var(--srf);color:var(--tx);margin-bottom:16px;font-family:inherit;">

@@ -1,7 +1,8 @@
 // ============================================================================
 //  Nivel 2, controlador
 //  Endpoints que consume el firmware de selección del dibujo (ESP32 del Nivel 2).
-//  Están montados en server.js bajo /api/telares y exigen la clave de dispositivo.
+//  Están montados en server.js bajo /api/telares. Reportar pasadas exige la clave de dispositivo;
+//  patron-actual también se puede leer con una sesión de la web.
 // ============================================================================
 
 import { pool } from '../db.js';
@@ -145,21 +146,23 @@ export async function reportarPasadas(req, res, next) {
     // rango se ignora (no se rechaza). Sin posición guardada previa no hay contra
     // qué cotejar: coherente queda en null.
     const delta = pasadasSensor - actual.pasadas_sensor;
+    const repsDeFila = (i) => {
+      const r = Array.isArray(actual.repeticiones_por_fila) ? Number(actual.repeticiones_por_fila[i]) : NaN;
+      return Number.isInteger(r) && r >= 1 ? r : 1;
+    };
+    // Posición como cantidad de pasadas desde el principio del dibujo.
+    const aPasadas = (fila, rep) => {
+      let acc = 0;
+      for (let i = 0; i < fila; i++) acc += repsDeFila(i);
+      return acc + Math.max(0, Math.trunc(Number(rep) || 0));
+    };
     let coherente = null;
     let esperada = null;
+    let porVuelta = 0;
     if (
       Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas &&
       Number.isInteger(actual.fila_actual) && Number.isInteger(actual.filas) && actual.filas > 0
     ) {
-      const repsDeFila = (i) => {
-        const r = Array.isArray(actual.repeticiones_por_fila) ? Number(actual.repeticiones_por_fila[i]) : NaN;
-        return Number.isInteger(r) && r >= 1 ? r : 1;
-      };
-      const aPasadas = (fila, rep) => {
-        let acc = 0;
-        for (let i = 0; i < fila; i++) acc += repsDeFila(i);
-        return acc + Math.max(0, Math.trunc(Number(rep) || 0));
-      };
       esperada = delta >= 0
         ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0)
         : retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0);
@@ -167,7 +170,7 @@ export async function reportarPasadas(req, res, next) {
       // siguiente están a una pasada, no a una vuelta entera. Antes, si el reporte caía justo en
       // el cambio de vuelta (el conteo y la fila se leen con un instante de diferencia), se
       // rechazaba un reporte correcto.
-      const porVuelta = aPasadas(actual.filas, 0);
+      porVuelta = aPasadas(actual.filas, 0);
       const lineal = Math.abs(aPasadas(fila_actual, repeticion_en_fila) - aPasadas(esperada.fila_actual, esperada.repeticion_en_fila)) % porVuelta;
       coherente = Math.min(lineal, porVuelta - lineal) <= TOLERANCIA_POSICION_PASADAS;
     }
@@ -212,12 +215,30 @@ export async function reportarPasadas(req, res, next) {
         ? repeticion_en_fila
         : (filaValida === actual.fila_actual ? null : 0);
 
-    // Una vuelta completa del dibujo son la SUMA de las repeticiones, no la
-    // cantidad de filas: una fila con 100 repeticiones son 100 pasadas.
-    const reps = Array.isArray(actual.repeticiones_por_fila) ? actual.repeticiones_por_fila : null;
-    const pasadasPorVuelta = reps && reps.length
-      ? reps.reduce((a, r) => a + (Number(r) || 1), 0)
-      : actual.filas;
+    // Vueltas del dibujo: se suman (o descuentan) las que cruza el delta del conteo desde la
+    // posición guardada, la misma cuenta que /avanzar y /retroceder. Antes se recalculaban como
+    // pasadas_sensor / pasadas por vuelta, como si el sensor hubiera contado desde el principio:
+    // si la producción ya había avanzado por reloj (el nodo arrancó sin red), al tomar el control
+    // el sensor (que cuenta desde 0) borraba del historial las vueltas ya tejidas.
+    let cruce = delta >= 0
+      ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0).vueltas_completadas
+      : -retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0).vueltas_deshechas;
+    // La posición que se guarda es la que informa el nodo, que puede estar hasta
+    // TOLERANCIA_POSICION_PASADAS pasadas antes o después de la que da el conteo (el contador sube
+    // en la interrupción y la fila se mueve un instante después). Si esa diferencia cae justo en
+    // el cambio de vuelta, las vueltas tienen que acompañar a la posición guardada: si no, el
+    // reporte siguiente (que parte de esa posición) cruzaba el cambio de vuelta otra vez y la
+    // vuelta se contaba dos veces, o no se contaba nunca. Con un dibujo de muy pocas pasadas por
+    // vuelta la diferencia no dice de qué lado del cambio está, y no se ajusta.
+    if (coherente === true && filaValida !== null && porVuelta > 2 * TOLERANCIA_POSICION_PASADAS) {
+      const e = aPasadas(esperada.fila_actual, esperada.repeticion_en_fila);
+      const guardada = aPasadas(filaValida, repValida ?? actual.repeticion_en_fila ?? 0);
+      let d = (guardada - e) % porVuelta;          // diferencia sobre el lazo, entre -mitad y +mitad
+      if (d > porVuelta / 2) d -= porVuelta;
+      if (d <= -porVuelta / 2) d += porVuelta;
+      if (e + d >= porVuelta) cruce += 1;          // el nodo ya pasó el cambio de vuelta, el conteo no
+      else if (e + d < 0) cruce -= 1;              // el conteo pasó el cambio de vuelta, el nodo todavía no
+    }
 
     await cliente.query(
       `UPDATE historial_produccion
@@ -226,9 +247,9 @@ export async function reportarPasadas(req, res, next) {
               columna_actual = 0,
               pasada_actual = 0,
               repeticion_en_fila = COALESCE($5, repeticion_en_fila),
-              vueltas_completadas = $4
+              vueltas_completadas = GREATEST(COALESCE(vueltas_completadas, 0) + $4, 0)
         WHERE id = $3`,
-      [pasadasSensor, filaValida, actual.id, Math.floor(pasadasSensor / Math.max(1, pasadasPorVuelta)), repValida]
+      [pasadasSensor, filaValida, actual.id, cruce, repValida]
     );
 
     // Heartbeat del sensor: mientras sea reciente, la web deja de avanzar por reloj.

@@ -15,8 +15,9 @@ El Bloque A completo: desde la entrada de red hasta la botonera, con la fuente, 
 capacitor de 5 V, los dos módulos de relé y la etapa de sensado de los tres canales.
 
 ### `diagrama_bloque_C.svg`
-El Bloque C completo: la rectificación de los 24 V alterna del telar, el regulador,
-el sensor inductivo y el canal de aislamiento hasta el pin del microcontrolador.
+El Bloque C completo: el sensor inductivo alimentado con los 12 a 14 V de continua que
+entrega el telar (ya vienen rectificados: sin puente ni regulador) y el canal de
+aislamiento hasta el pin del microcontrolador.
 
 ### `diagrama_bloques_A_y_C.svg`
 Los dos bloques juntos, para ver cómo comparten el gabinete y el microcontrolador
@@ -24,13 +25,13 @@ manteniendo sus alimentaciones separadas.
 
 ### `canal_sensor.svg`
 Un canal del sensor de pasada del Bloque C, de punta a punta: el sensor
-inductivo, la rectificación de los 24 V de alterna del telar, el optoacoplador
-y el pin del microcontrolador. Incluye la tabla para calcular la resistencia
-según la tensión que se mida.
+inductivo con los 12 a 14 V continuos del telar, la resistencia de 1,2 kΩ, el
+optoacoplador PC817 y el pin del microcontrolador. Incluye la fórmula para
+recalcular la resistencia según la tensión que se mida.
 
 ### `canal_rele.svg`
 Un canal de la selección del dibujo del Bloque D: el relé LCA110 (OptoMOS, salida MOSFET) con
-sus cuatro patas, las dos resistencias y las dos formas posibles de conectarlo
+las cuatro patas que se usan (1 y 2 del lado del ESP32, 4 y 6 de la salida), las dos resistencias y las dos formas posibles de conectarlo
 al lector óptico, en serie o en paralelo.
 
 ### `diagrama_nivel2_marcos.svg`

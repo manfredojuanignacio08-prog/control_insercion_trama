@@ -99,3 +99,10 @@ export function conflict(mensaje = 'Conflicto con el estado actual', codigo = nu
   if (codigo) err.codigo = codigo;
   return err;
 }
+
+export function prohibido(mensaje = 'No tenés permiso para esta acción', codigo = null) {
+  const err = new Error(mensaje);
+  err.status = 403;
+  if (codigo) err.codigo = codigo;
+  return err;
+}

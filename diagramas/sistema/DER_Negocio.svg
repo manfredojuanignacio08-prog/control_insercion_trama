@@ -7,7 +7,7 @@
 <path d="M760,167.0 C730.0,167.0 730.0,145.0 700,145.0" fill="none" stroke="#3D6B96" stroke-width="1.5" stroke-linejoin="round" marker-end="url(#punta)"/>
 <path d="M760,189.0 H748 V92 H352 V145.0 H340" fill="none" stroke="#3D6B96" stroke-width="1.5" stroke-linejoin="round" marker-end="url(#punta)"/>
 <path d="M400,577.0 C374,577.0 374,145.0 400,145.0" fill="none" stroke="#3D6B96" stroke-width="1.5" stroke-linejoin="round" marker-end="url(#punta)"/>
-<rect x="40" y="100" width="300" height="298" rx="8" fill="#FFFFFF" stroke="#CDD8E0"/>
+<rect x="40" y="100" width="300" height="320" rx="8" fill="#FFFFFF" stroke="#CDD8E0"/>
 <path d="M40,108 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v26 h-300 z" fill="#1E3A5F"/>
 <text x="54" y="122" font-size="13" font-weight="600" fill="#FFFFFF">patrones</text>
 <text x="52" y="149" font-size="9" font-weight="700" fill="#1E3A5F" font-family="IBM Plex Mono, ui-monospace, monospace">PK</text>
@@ -41,6 +41,8 @@
 <rect x="41" y="376" width="298" height="22" fill="#EDF1F5"/>
 <text x="78" y="391" font-size="11" fill="#1F2937">modificado_at</text>
 <text x="328" y="391" font-size="9.5" fill="#5F6976" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">timestamptz</text>
+<text x="78" y="413" font-size="11" fill="#1F2937">creado_por_invitado</text>
+<text x="328" y="413" font-size="9.5" fill="#5F6976" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">boolean</text>
 <rect x="400" y="100" width="300" height="364" rx="8" fill="#FFFFFF" stroke="#CDD8E0"/>
 <path d="M400,108 a8,8 0 0 1 8,-8 h284 a8,8 0 0 1 8,8 v26 h-300 z" fill="#1E3A5F"/>
 <text x="414" y="122" font-size="13" font-weight="600" fill="#FFFFFF">telares</text>

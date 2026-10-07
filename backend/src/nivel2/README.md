@@ -1,16 +1,16 @@
 # Backend del Nivel 2
 
 Endpoints que usa el firmware con el Nivel 2 instalado (conteo real de pasadas y selección del
-dibujo). Ya están **montados** en `server.js` bajo `/api/telares` y, como todo lo
-que toca el hardware, exigen la clave de dispositivo (header `X-Device-Key`, valor
-de `ESP32_DEVICE_KEY` en el `.env`).
+dibujo). Ya están **montados** en `server.js` bajo `/api/telares`. Los que escriben
+exigen la clave de dispositivo (header `X-Device-Key`, valor de `ESP32_DEVICE_KEY` en
+el `.env`); `patron-actual` también se puede leer con una sesión de la web.
 
 | Endpoint | Quién | Para qué |
 |---|---|---|
 | `GET /api/telares/:id/patron-actual` | dispositivo o sesión | El firmware descarga la matriz del dibujo asignado y la posición donde quedó. Incluye `historial_id` (la producción en curso): el nodo lo compara con `historial_actual_id` de su consulta periódica y, si cambió (⏹ y ▶ seguidos con el mismo dibujo), lo vuelve a bajar desde el principio |
-| `POST /api/telares/:id/pasadas` | solo dispositivo | El firmware reporta el conteo real del sensor (`pasadas_sensor`, `fila_actual`) |
+| `POST /api/telares/:id/pasadas` | solo dispositivo | El firmware reporta el conteo real del sensor (`pasadas_sensor`, el acumulado, y su posición: `fila_actual` y `repeticion_en_fila`). La posición tiene que coincidir con el conteo, con hasta 2 pasadas de diferencia (si no, 400). Las vueltas se suman según el cambio de vuelta que cruza cada reporte, acompañando a la posición que se guarda. Una bajada de más de 25 pasadas con una fila que no la acompaña se toma como un nodo reiniciado: no se aplica y se devuelve `{aplicado:false, pasadas_sensor}` con el valor guardado, para que el nodo lo vuelva a bajar |
 | `POST /api/telares/:id/evento-fisico` con `{tipo:"sin_senal"}` | solo dispositivo | El sensor dejó de recibir pulsos con el telar en marcha: la web pasa a "pausado" y queda un registro en el log de errores |
-| `POST /api/telares/:id/validar-conteo` con `{confirmo:true}` | sesión | El operario da por bueno el conteo del sensor tras compararlo con el contador mecánico |
+| `POST /api/telares/:id/validar-conteo` con `{confirmo:true}` | operario con sesión (un invitado no) | El operario da por bueno el conteo del sensor tras compararlo con el contador mecánico |
 
 ## Conteo estimado vs. medido
 

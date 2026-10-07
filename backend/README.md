@@ -24,9 +24,11 @@ Con la base ya creada en Postgres (`CREATE DATABASE control_trama;`) y el `.env`
 npm run init-db
 ```
 
-Esto ejecuta `backend/src/db/schema.sql` (crea las tablas `patrones`, `telares`,
-`historial_produccion`, `errores_log`, índices y el trigger de `modificado_at`).
-Es seguro correrlo de nuevo: usa `CREATE TABLE IF NOT EXISTS`.
+Esto ejecuta `backend/src/db/schema.sql`: crea las tablas del telar (`patrones`, `telares`,
+`historial_produccion`, `errores_log`), las del ingreso (`usuarios`, `credenciales_biometricas`,
+`desafios_webauthn`, `invitaciones`), los índices y el trigger de `modificado_at`. Es seguro
+correrlo de nuevo: usa `CREATE TABLE IF NOT EXISTS`. Las migraciones (`npm run migrate`) las
+aplica además el servidor solo al arrancar.
 
 ## 3. Levantar el servidor
 
@@ -45,7 +47,8 @@ completa.
 
 El backend ya incluye lo necesario para correr en producción: cabeceras de
 seguridad (`helmet`, con CSP ajustado para no romper el `<script>` inline
-de la página web), compresión `gzip`, *rate limiting* por usuario (por IP antes de iniciar sesión), CORS configurable,
+de la página web; HSTS solo cuando la conexión es HTTPS, así la web también funciona por
+`http://` en la red local), compresión `gzip`, *rate limiting* por usuario (por IP antes de iniciar sesión), CORS configurable,
 logs en formato `combined` cuando `NODE_ENV=production`, validación estricta
 de los datos que llegan, y apagado prolijo (cierra el pool de Postgres antes
 de salir cuando el proceso recibe `SIGTERM`/`SIGINT`).
@@ -56,10 +59,10 @@ de salir cuando el proceso recibe `SIGTERM`/`SIGINT`).
 docker compose up -d --build
 ```
 
-Esto levanta PostgreSQL y la API juntos, corre `init-db` automáticamente y
-deja todo escuchando en `http://localhost:3000`. Para producción real, antes
-de este paso cambiá las credenciales de `docker-compose.yml` (o llevalas a
-variables de entorno del host) y no las dejes en `postgres/postgres`.
+Esto levanta PostgreSQL y la API juntos, corre `init-db` y las migraciones automáticamente y
+deja todo escuchando en `http://localhost:3000`. Antes, crear `backend/.env` con
+`POSTGRES_PASSWORD`, `SESSION_SECRET`, `RECOVERY_SECRET` y `ESP32_DEVICE_KEY`: el
+`docker-compose.yml` no trae claves por defecto y, si falta alguna, se niega a arrancar y dice cuál.
 
 ### Opción B, PM2 en un servidor propio (VPS, on-premise en planta)
 
@@ -104,7 +107,7 @@ en vez de la del proxy.
 | `PGSSL_VERIFICAR=false` | Solo como salida de emergencia, para una base con certificado propio que no se pueda verificar: cifra sin comprobar con quién habla. Con Neon no hace falta |
 | `SESSION_SECRET` | **Obligatoria.** Firma las cookies de sesión (mínimo 32 caracteres). En producción sin ella el servidor no arranca; en desarrollo se usa clave temporal y las sesiones se pierden en cada reinicio |
 | `RECOVERY_SECRET` | **Obligatoria en producción.** Cifra los códigos de recuperación en la base (mínimo 16 caracteres). Si cambia, los códigos viejos dejan de leerse: rotarlos con `npm run codigo -- <usuario> --rotar` (los dos guiones hacen falta: sin ellos npm se queda con `--rotar` y el código no se rota) |
-| `ESP32_DEVICE_KEY` | **Obligatoria.** Clave que mandan los ESP32 en `X-Device-Key` (la misma en `DEVICE_KEY` de los dos `config`). Sin ella los ESP32 reciben 401 |
+| `ESP32_DEVICE_KEY` | **Obligatoria.** Clave que manda el ESP32 en `X-Device-Key` (la misma que `DEVICE_KEY` en `esp32/control_trama_esp32/config.h`). Sin ella el ESP32 recibe 401 |
 | `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | Dominio real para el login por huella (requiere HTTPS) |
 | `REGISTRO_LIBRE_MAX` | Usuarios que se registran libres (defecto 3); después hace falta invitación |
 | `CORS_ORIGIN` | Dominios que pueden llamar a la API desde otro origen. Vacío en producción = ninguno (la web se sirve desde el mismo servidor y no lo necesita) |
@@ -123,6 +126,8 @@ en vez de la del proxy.
 | DELETE | `/api/patrones/:id` |, | Borra (falla con 409 si tiene historial asociado) |
 | PUT | `/api/patrones/:id/metros-por-pasada` | `{metros_por_pasada}` (número mayor que 0 y hasta 1, o `null`) | Cuánto avanza la tela por pasada: con este dato las estadísticas pasan pasadas a metros. `null` lo deja sin definir |
 | GET | `/api/patrones/:id/estadisticas` |, | Producción acumulada del dibujo: veces tejido, pasadas, vueltas, horas de máquina, primera y última vez, y metros si tiene `metros_por_pasada`. Indica si el conteo es estimado o del sensor (`precision_conteo`) |
+
+Una sesión de **invitado** puede crear dibujos y cambiar o borrar solo los que creó como invitado; en los de los operarios, `PUT`, `DELETE` y `metros-por-pasada` responden **403** `SOLO_OPERARIO`. Cuando un operario guarda un dibujo hecho por un invitado, pasa a ser de los operarios.
 
 `GET /api/patrones` y `GET /api/historial` aceptan `limit` (defecto 500 / 100) y `offset`. `PUT /api/patrones/:id` responde **409** (`codigo: PATRON_EN_PRODUCCION`) si se intenta cambiar la matriz o las dimensiones de un dibujo que se está tejiendo (producción abierta): hay que detener el trabajo primero. Nombre, colores y metadatos sí se pueden editar.
 
@@ -144,6 +149,12 @@ en vez de la del proxy.
 | POST | `/api/telares/:id/validar-conteo` | `{confirmo: true}` | El operario da por bueno el conteo del sensor tras compararlo con el contador mecánico del telar |
 | GET | `/api/telares/:id/historial` |, | Historial de ese telar (`limit`, `offset`) |
 
+### Nivel 2 (los usa el firmware con el sensor)
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/telares/:id/patron-actual` | El dibujo asignado (matriz y repeticiones) y la posición de la producción en curso, para que el nodo retome donde quedó |
+| POST | `/api/telares/:id/pasadas` | **Solo con clave de dispositivo.** `{pasadas_sensor, fila_actual, repeticion_en_fila}`: el conteo acumulado del sensor y la posición del nodo. Detalle en `src/nivel2/README.md` |
+
 ### Historial global y errores
 | Método | Ruta | Descripción |
 |---|---|---|
@@ -152,7 +163,7 @@ en vez de la del proxy.
 | POST | `/api/errores` | `{telar_id?, titulo, mensaje?, codigo?}` |
 | GET | `/api/health` | Chequeo de salud |
 
-## 5. Estructura
+## 6. Estructura
 
 ```
 src/
@@ -169,53 +180,58 @@ src/
 │   ├── migracion_006_ping_esp32.sql             Migración: ultimo_ping_esp32 (heartbeat del ESP32)
 │   ├── migracion_007_retroceder_fisico.sql      Migración: retroceder_seq (botón físico Retroceder)
 │   ├── migracion_008_evento_fisico.sql          Migración: posicion_incierta + ultimo_evento_manual (sensado de los botones)
-- `migracion_009_rango_dimensiones.sql`: acotó filas y columnas al rango de 2 a 32 (la 014 lo reemplazó, y la 017 amplió las filas).
-- `migracion_010_elementos_seleccion.sql`: guarda cuántos elementos de selección (bobinas) tiene cada telar, para avisar cuando un dibujo tiene más columnas de las que la máquina puede accionar. Documenta además que `columna_actual` es vestigial y queda siempre en cero.
-- `migracion_011_metros_por_pasada.sql`: guarda cuántos metros avanza la tela en una pasada, para convertir el conteo en metros reales y calcular estadísticas de producción.
-- `migracion_012_conteo_sensor_y_retrocesos.sql`: separa el conteo estimado del medido por el sensor (`pasadas_sensor`, `conteo_validado`), agrega `retrocesos_contados`, `ultimo_reporte_sensor` y `motivo_pausa`.
-- `migracion_013_indice_unico_en_curso.sql`: una sola producción `en_curso` por telar (índice único).
-- `migracion_014_repeticiones_por_fila.sql`: agrega las repeticiones de cada fila y fija los rangos de 1 a 100 filas y de 1 a 8 columnas.
-- `migracion_015_repeticion_en_fila.sql`: guarda cuántas pasadas de la fila actual ya se tejieron.
-- `migracion_016_recovery_cifrado.sql`: documenta el cifrado del código de recuperación (sin cambios de esquema).
-- `migracion_017_filas_hasta_300.sql`: el máximo de filas de un dibujo pasa de 100 a 300.
-- `migracion_018_senal_nivel2.sql`: solo actualiza la descripción de `ultimo_reporte_sensor`, que ahora también renueva la consulta periódica del nodo del Nivel 2.
+│   ├── migracion_009_rango_dimensiones.sql  Migración: acotó filas y columnas al rango de 2 a 32 (la 014 lo reemplazó, y la 017 amplió las filas).
+│   ├── migracion_010_elementos_seleccion.sql  Migración: guarda cuántos elementos de selección (bobinas) tiene cada telar, para avisar cuando un dibujo tiene más columnas de las que la máquina puede accionar. Documenta además que `columna_actual` es vestigial y queda siempre en cero.
+│   ├── migracion_011_metros_por_pasada.sql  Migración: guarda cuántos metros avanza la tela en una pasada, para convertir el conteo en metros reales y calcular estadísticas de producción.
+│   ├── migracion_012_conteo_sensor_y_retrocesos.sql  Migración: separa el conteo estimado del medido por el sensor (`pasadas_sensor`, `conteo_validado`), agrega `retrocesos_contados`, `ultimo_reporte_sensor` y `motivo_pausa`.
+│   ├── migracion_013_indice_unico_en_curso.sql  Migración: una sola producción `en_curso` por telar (índice único).
+│   ├── migracion_014_repeticiones_por_fila.sql  Migración: agrega las repeticiones de cada fila y fija los rangos de 1 a 100 filas y de 1 a 8 columnas.
+│   ├── migracion_015_repeticion_en_fila.sql  Migración: guarda cuántas pasadas de la fila actual ya se tejieron.
+│   ├── migracion_016_recovery_cifrado.sql  Migración: documenta el cifrado del código de recuperación (sin cambios de esquema).
+│   ├── migracion_017_filas_hasta_300.sql  Migración: el máximo de filas de un dibujo pasa de 100 a 300.
+│   ├── migracion_018_senal_nivel2.sql  Migración: solo actualiza la descripción de `ultimo_reporte_sensor`, que ahora también renueva la consulta periódica del nodo del Nivel 2.
+│   ├── migracion_019_dibujos_de_invitado.sql  Migración: marca los dibujos creados por un invitado (`creado_por_invitado`): el invitado solo puede cambiar o borrar esos. Índice para buscar el usuario sin distinguir mayúsculas.
 │   ├── migrator.js                               Aplica cada migración UNA vez (tabla migraciones_aplicadas)
 │   └── migrate.js                                Corre las migraciones pendientes (npm run migrate)
+├── scripts/
+│   ├── codigo_recuperacion.js   Muestra o rota el código de recuperación de un usuario (npm run codigo)
+│   └── generar_base_completa.js Regenera database/01_base_de_datos_completa.sql (npm run generar-sql)
 ├── utils/
 │   ├── ligamento.js        Deriva matriz_ligamento desde matriz_pasadas
-│   ├── posicion.js         Lógica pura de avanzar/retroceder (espejo 1):1 de doTick()/rollback() del frontend
+│   ├── posicion.js         Lógica pura de avanzar/retroceder (espejo 1:1 de doTick()/rollback() del frontend)
 │   └── validacion.js       Validación de patrones
 ├── middleware/errorHandler.js  Manejo centralizado de errores (404/400/409/500)
 ├── controllers/             Lógica de negocio por entidad
 └── routes/                  Definición de rutas Express
 ```
 
-## 6. Decisiones de diseño aplicadas (ver documento de análisis)
+## 7. Decisiones de diseño aplicadas (ver documento de análisis)
 
 - `matriz_pasadas` (enteros) y `matriz_ligamento` (binario) son **campos separados**.
 - **Una FILA es una COMBINACIÓN de bobinas**, que se teje tantas pasadas seguidas como indiquen sus repeticiones. En cada pasada, la fila del patrón define qué
   marcos suben: cada columna es una bobina/electroimán del dobby. Las
   columnas NO se recorren una por una, son simultáneas dentro de la misma
   pasada. Lo que avanza es la fila.
-- La repetición es **de fila entera**: si una fila tiene números mayores a 1,
-  esa pasada se repite esa cantidad de veces antes de pasar a la siguiente
-  (se toma el mayor valor de la fila). No se agregó ningún campo nuevo:
-  `matriz_pasadas` ya guardaba esos números.
-- `historial_produccion.fila_actual` / `pasada_actual` guardan la posición de
-  la producción en curso (mismo significado que `curRow`/`curPass` del
-  frontend) (soportan "retroceder una pasada" sin reconstruir nada).
+- La repetición es **de fila entera** y va en `repeticiones_por_fila` (migración 014): un
+  número por fila, cuántas pasadas seguidas se teje esa combinación antes de pasar a la
+  siguiente. Las celdas de `matriz_pasadas` dicen si la bobina se activa (mayor que cero) o
+  no; la web guarda solo ceros y unos.
+- `historial_produccion.fila_actual` y `repeticion_en_fila` guardan la posición de la
+  producción en curso (la fila y cuántas pasadas de esa fila ya se tejieron), y soportan
+  "retroceder una pasada" sin reconstruir nada. `pasada_actual` queda siempre en 0.
   `columna_actual` se conserva por compatibilidad pero ya no marca posición:
   siempre vale 0. `vueltas_completadas` cuenta cuántas veces se
   tejió el patrón entero (no hay "final": es un bucle infinito, igual que
   un telar real, hasta que se detiene manualmente).
 - Esquema **multi-telar desde el día 1**; el piloto puede arrancar con un solo
   registro en `telares` sin que eso implique ninguna migración después.
-- **Sin autenticación** en esta versión (no hay tabla de usuarios).
+- **Autenticación**: ingreso con huella (WebAuthn), código de recuperación, invitaciones y
+  modo invitado (ver "Seguridad de la API" más abajo y `AUTENTICACION_BIOMETRICA.md`).
 - `asignar-patron`, `detener`, `avanzar` y `retroceder` corren dentro de una
   **transacción** con `FOR UPDATE` para evitar condiciones de carrera si dos
   requests llegan casi al mismo tiempo.
 
-## 7. Pendientes / próximos pasos sugeridos
+## 8. Pendientes / próximos pasos sugeridos
 
 1. **Selector visual de telar/máquina**: hoy se usa automáticamente el único
    telar que existe (creado solo si no hay ninguno). El día que haya más de
@@ -225,11 +241,10 @@ src/
 2. **Pantalla de historial de producción**: la base ya tiene los datos
    (`historial_produccion` con posición, vueltas completadas, etc.) pero no
    hay ninguna pantalla en la web que los muestre todavía.
-3. A futuro, cuando se integre el ESP32 real: que sea el propio
-   microcontrolador el que llame a `/avanzar` reportando pasadas físicas
-   reales (en vez de que lo haga la animación del editor en el navegador), y
-   que `pasadas_totales`/`alertas_disparadas` lleguen del sensor óptico en
-   vez de simularse.
+3. Instalar el Nivel 2: el firmware ya reporta las pasadas medidas por el sensor inductivo
+   (`POST /pasadas`, que se guardan en `pasadas_sensor`, aparte de la estimación por reloj) y
+   la web deja de estimar mientras el sensor esté conectado. Falta el hardware y validar el
+   conteo contra el contador mecánico (`PUESTA_EN_MARCHA.md`).
 
 ## Seguridad de la API
 
@@ -238,6 +253,7 @@ src/
 | Quién | Cómo | Qué puede |
 |---|---|---|
 | Operario (web) | Cookie de sesión firmada (`HttpOnly`, `SameSite=Lax`, `Secure` con HTTPS), que el servidor entrega tras el login por huella o con el código de recuperación | Todo lo de la web: dibujos, asignar/pausar/reanudar, avanzar, retroceder, historial |
+| Invitado (web) | La misma cookie, marcada como invitado ("Continuar sin iniciar sesión") | Mirar todo y diseñar dibujos nuevos (cambiar o borrar solo los suyos). Comandar el telar, validar el conteo o invitar responde **403** `SOLO_OPERARIO` |
 | Dispositivo (ESP32) | Header `X-Device-Key` con el valor de `ESP32_DEVICE_KEY` | Sondear `GET /telares/:id`, avisar `evento-fisico`, reportar `pasadas`, `POST /errores`, descargar `patron-actual` |
 
 Sin ninguna de las dos, la API responde **401**. Las acciones de la web (asignar dibujo, pausar, etc.) las rechaza si vienen con clave de dispositivo, y los avisos del hardware (`evento-fisico`, `pasadas`) los rechaza si vienen de una sesión: una persona no puede falsear lo que "sensó" el telar.
@@ -254,7 +270,7 @@ Cada `db/migracion_NNN_*.sql` se aplica **una sola vez**, dentro de una transacc
 
 `npm test` corre seis pruebas: la lógica de posición (avanzar/retroceder son espejos, y el cálculo directo coincide con el paso a paso en 400.000 casos al azar), la autenticación (cookie firmada, clave de dispositivo), el modo invitado, los **controladores con una base simulada** (retomar/reanudar, `reinicio`, `sin_senal`, retrocesos, bloqueo de edición, estadísticas, registro e invitaciones, conductor único, límite de `pasos`), la **lógica de la web ejecutada sin navegador** (recuperar el trabajo al abrir, reanudar sin reiniciar, 401, terminar trabajo, etiquetas de "estimado", pausa, retroceso, segunda pestaña) y los códigos de recuperación. No necesita base de datos.
 
-`tests/integracion.pg.mjs` es una prueba aparte, **contra el servidor real y un PostgreSQL real**: telar, dibujos, conductor del reloj, eventos de los ESP32, reportes del sensor, retrocesos con sensor, estadísticas, invitaciones, dos registros simultáneos con la misma invitación, ocho guardados simultáneos del mismo dibujo (se guarda uno solo) y la pausa sin trabajo abierto. Crea y borra datos, así que se corre **solo contra una base de prueba vacía**; los pasos están al principio del archivo. Ninguna de las dos reemplaza probar en un navegador real.
+`tests/integracion.pg.mjs` es una prueba aparte, **contra el servidor real y un PostgreSQL real**: telar, dibujos, conductor del reloj, eventos de los ESP32, reportes del sensor, retrocesos con sensor, estadísticas, invitaciones, dos registros simultáneos con la misma invitación, ocho guardados simultáneos del mismo dibujo (se guarda uno solo), la pausa sin trabajo abierto, los permisos del invitado sobre los dibujos, el usuario sin distinguir mayúsculas y las vueltas que cuenta el sensor del Nivel 2. Crea y borra datos, así que se corre **solo contra una base de prueba vacía**; los pasos están al principio del archivo. Ninguna de las dos reemplaza probar en un navegador real.
 
 ## Retomar un trabajo (pausa, cierre de la página, corte de luz, traslado)
 
@@ -264,10 +280,10 @@ Todo lo que define un trabajo vive en la base, no en la pantalla ni en el ESP32:
 
 - **Pausar** deja la producción abierta. **Cerrar la página** o apagar la PC no toca nada: al volver
   a entrar, la web recupera sola el trabajo (mismo dibujo, misma fila) y ▶ lo retoma.
-- **Un corte de luz o llevar el telar a la fábrica** reinicia los ESP32. El Nivel 1, al arrancar en
-  frío, avisa `evento-fisico: reinicio`: el estado pasa a `pausado` (no a "tejiendo" con la máquina
-  apagada) y se marca la posición como incierta, para que el operario la verifique. El Nivel 2 retoma
-  la fila y el conteo desde el backend (`patron-actual`).
+- **Un corte de luz o llevar el telar a la fábrica** reinicia el ESP32. Al arrancar en frío avisa
+  `evento-fisico: reinicio`: el estado pasa a `pausado` (no a "tejiendo" con la máquina apagada) y se
+  marca la posición como incierta, para que el operario la verifique. Con el Nivel 2 instalado,
+  además retoma la fila y el conteo desde el backend (`patron-actual`).
 - Asignar de nuevo el mismo dibujo **no reinicia** el trabajo (ver `asignar-patron`).
 - La única forma de empezar de cero un dibujo con trabajo abierto es **terminarlo** (`⏹` en la web,
   `POST /detener`) o `asignar-patron` con `reiniciar: true`. Mientras esté abierto, su matriz no se

@@ -69,7 +69,9 @@ function generarCodigo(prefijo) {
 }
 
 async function main() {
-  const usuario = (process.argv[2] || '').trim();
+  // El usuario es el primer argumento que no es una opción: "--rotar juan" y "juan --rotar" valen
+  // igual. Antes se tomaba siempre el primero, y con --rotar adelante se buscaba un usuario "--rotar".
+  const usuario = (process.argv.slice(2).find((a) => !a.startsWith('--')) || '').trim();
   if (!usuario) {
     console.error('\n  Falta el usuario.');
     console.error('  Uso:  node src/scripts/codigo_recuperacion.js <usuario>\n');
@@ -77,13 +79,14 @@ async function main() {
   }
 
   const { rows } = await pool.query(
-    'SELECT id, usuario, nombre, recovery_code FROM usuarios WHERE usuario = $1',
+    // Sin distinguir mayúsculas, igual que el ingreso (si hubiera dos que solo difieren en eso, gana el exacto)
+    'SELECT id, usuario, nombre, recovery_code FROM usuarios WHERE lower(usuario) = lower($1) ORDER BY (usuario = $1) DESC, id LIMIT 1',
     [usuario]
   );
   const user = rows[0];
   if (!user) {
     console.error(`\n  No existe ningún usuario llamado "${usuario}".`);
-    console.error('  Revisá cómo está escrito (respeta mayúsculas/minúsculas).\n');
+    console.error('  Revisá cómo está escrito.\n');
     process.exit(1);
   }
 

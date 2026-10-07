@@ -10,7 +10,8 @@
 --      npm run migrate     aplica las migraciones pendientes
 --  El servidor además aplica solo las pendientes en cada arranque.
 --
---  IMPORTANTE: si se agrega una migración nueva, hay que regenerar este archivo.
+--  IMPORTANTE: si se agrega una migración nueva, hay que regenerar este archivo
+--  (desde backend/: npm run generar-sql). No editarlo a mano.
 -- ============================================================================
 
 -- ============================================================
@@ -25,11 +26,11 @@
 --   - Una FILA es una combinación de bobinas: sus columnas se activan de forma
 --     simultánea (cada celda vale 0 o 1). Cuántas pasadas seguidas se teje cada
 --     fila lo dice repeticiones_por_fila (migración 014); sin ese dato, una.
---   - fila_actual / columna_actual / pasada_actual en historial_produccion:
---     posición exacta de la producción en curso (mismo significado que
---     curRow/curCol/curPass del frontend), para soportar "retroceder un
---     paso" sin reconstruir nada.
---   - El tejido no tiene "final": al llegar a la última celda vuelve a la
+--   - fila_actual + repeticion_en_fila en historial_produccion: posición exacta de la
+--     producción en curso (la fila y cuántas pasadas de esa fila ya se tejieron), para
+--     soportar "retroceder una pasada" sin reconstruir nada. columna_actual y
+--     pasada_actual se conservan por compatibilidad y quedan siempre en 0.
+--   - El tejido no tiene "final": después de la última fila vuelve a la
 --     fila 0 y sigue en bucle infinito (así es un telar real), por eso
 --     vueltas_completadas cuenta cuántas veces se repitió el patrón entero.
 --
@@ -43,8 +44,8 @@ CREATE TABLE IF NOT EXISTS patrones (
   nombre            TEXT NOT NULL UNIQUE,
   filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 300),
   columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 1 AND 8),
-  matriz_pasadas    JSONB NOT NULL,   -- array de arrays de enteros: pasadas por celda (lo que programa el editor hoy)
-  matriz_ligamento  JSONB,            -- array de arrays binarios (0/1): lizo arriba/abajo, estructura textil (opcional)
+  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por pasada-combinación): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
+  matriz_ligamento  JSONB,            -- array de arrays binarios (0/1), derivado de matriz_pasadas si no se manda
   colores_filas     JSONB,            -- array de colores hex, uno por fila
   metadata          JSONB,            -- ej: {"tipo": "Tafetán"}
   creado_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -54,6 +55,7 @@ CREATE TABLE IF NOT EXISTS patrones (
   -- migración 011: metros de tela que avanza el telar en una pasada, para este
   -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
   metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),
+  creado_por_invitado BOOLEAN NOT NULL DEFAULT false,  -- migración 019: lo creó un invitado (un invitado solo puede cambiar o borrar esos)
   modificado_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -84,11 +86,11 @@ CREATE TABLE IF NOT EXISTS historial_produccion (
   pasadas_totales      INTEGER DEFAULT 0,
   alertas_disparadas   INTEGER DEFAULT 0,
   fila_actual          INTEGER DEFAULT 0,           -- índice (0-based) de la fila que se está tejiendo ahora
-  columna_actual       INTEGER DEFAULT 0,           -- índice (0-based) de la columna dentro de esa fila
+  columna_actual       INTEGER DEFAULT 0,           -- vestigial: siempre 0 (las columnas de una fila son simultáneas)
   -- migración 015: cuántas pasadas de la fila actual ya se tejieron. Con las
   -- repeticiones del dibujo define la posición exacta dentro de la producción.
   repeticion_en_fila   INTEGER NOT NULL DEFAULT 0 CHECK (repeticion_en_fila >= 0),
-  pasada_actual        INTEGER DEFAULT 0,           -- cuántas pasadas ya se hicieron en esa celda exacta
+  pasada_actual        INTEGER DEFAULT 0,           -- vestigial: siempre 0 (la pasada dentro de la fila es repeticion_en_fila)
   vueltas_completadas  INTEGER DEFAULT 0,           -- cuántas veces se tejió el patrón entero de punta a punta
   estado               TEXT NOT NULL DEFAULT 'en_curso'
                           CHECK (estado IN ('en_curso', 'finalizado', 'detenido_manual'))
@@ -139,6 +141,8 @@ CREATE TABLE IF NOT EXISTS usuarios (
   creado_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   ultimo_acceso TIMESTAMPTZ
 );
+-- migración 019: el usuario se busca sin distinguir mayúsculas
+CREATE INDEX IF NOT EXISTS idx_usuarios_usuario_lower ON usuarios (lower(usuario));
 
 CREATE TABLE IF NOT EXISTS credenciales_biometricas (
   id               SERIAL PRIMARY KEY,
@@ -173,9 +177,8 @@ CREATE INDEX IF NOT EXISTS idx_desafio_challenge ON desafios_webauthn(challenge)
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_hash TEXT;
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_usado BOOLEAN NOT NULL DEFAULT false;
 
--- migración 005: código de recuperación fijo (en texto plano, ver esa
--- migración para la nota de seguridad). Faltaba en este archivo aunque
--- ya estaba en la base real y en database/01_base_de_datos_completa.sql.
+-- migración 005: código de recuperación fijo. Desde la migración 016 se guarda CIFRADO
+-- con RECOVERY_SECRET (AES-256-GCM), no en texto plano.
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_code TEXT;
 
 CREATE TABLE IF NOT EXISTS invitaciones (
@@ -311,6 +314,7 @@ END $$;
 -- SELECT count(*) AS total, count(matriz_ligamento) AS con_ligamento FROM patrones;
 -- ============================================================
 
+
 -- ============================================================
 -- migracion_002_repeticiones_y_posicion.sql
 -- ============================================================
@@ -353,6 +357,7 @@ ALTER TABLE historial_produccion ADD COLUMN IF NOT EXISTS vueltas_completadas IN
 
 -- Verificación rápida (opcional, solo lectura):
 -- SELECT id, telar_id, fila_actual, columna_actual, pasada_actual, vueltas_completadas FROM historial_produccion;
+
 
 -- ============================================================
 -- migracion_003_login_biometrico.sql
@@ -424,6 +429,7 @@ CREATE TABLE IF NOT EXISTS desafios_webauthn (
 
 CREATE INDEX IF NOT EXISTS idx_desafio_challenge ON desafios_webauthn(challenge);
 
+
 -- ============================================================
 -- migracion_004_recupero_usuarios.sql
 -- ============================================================
@@ -461,6 +467,7 @@ CREATE TABLE IF NOT EXISTS invitaciones (
 
 CREATE INDEX IF NOT EXISTS idx_invitaciones_hash ON invitaciones(codigo_hash);
 
+
 -- ============================================================
 -- migracion_005_codigo_recuperacion_fijo.sql
 -- ============================================================
@@ -491,6 +498,7 @@ ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS recovery_code TEXT;
 -- todos queden como "no usado" para que ningún código fijo quede invalidado.
 UPDATE usuarios SET recovery_usado = false WHERE recovery_usado = true;
 
+
 -- ============================================================
 -- migracion_006_ping_esp32.sql
 -- ============================================================
@@ -510,6 +518,7 @@ UPDATE usuarios SET recovery_usado = false WHERE recovery_usado = true;
 -- ============================================================
 
 ALTER TABLE telares ADD COLUMN IF NOT EXISTS ultimo_ping_esp32 TIMESTAMPTZ;
+
 
 -- ============================================================
 -- migracion_007_retroceder_fisico.sql
@@ -533,6 +542,7 @@ ALTER TABLE telares ADD COLUMN IF NOT EXISTS ultimo_ping_esp32 TIMESTAMPTZ;
 
 ALTER TABLE telares ADD COLUMN IF NOT EXISTS retroceder_seq INTEGER NOT NULL DEFAULT 0;
 
+
 -- ============================================================
 -- migracion_008_evento_fisico.sql
 -- ============================================================
@@ -555,6 +565,7 @@ ALTER TABLE telares ADD COLUMN IF NOT EXISTS retroceder_seq INTEGER NOT NULL DEF
 ALTER TABLE telares ADD COLUMN IF NOT EXISTS posicion_incierta BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE telares ADD COLUMN IF NOT EXISTS ultimo_evento_manual TIMESTAMPTZ;
 ALTER TABLE telares ADD COLUMN IF NOT EXISTS ultimo_evento_manual_tipo TEXT;
+
 
 -- ============================================================
 -- migracion_009_rango_dimensiones.sql
@@ -586,6 +597,7 @@ ALTER TABLE patrones ADD CONSTRAINT patrones_columnas_check CHECK (columnas BETW
 -- Para revisar si quedó algún dibujo fuera de rango (no se ejecuta solo):
 --   SELECT id, nombre, filas, columnas FROM patrones
 --    WHERE filas NOT BETWEEN 2 AND 32 OR columnas NOT BETWEEN 2 AND 32;
+
 
 -- ============================================================
 -- migracion_010_elementos_seleccion.sql
@@ -620,6 +632,7 @@ COMMENT ON COLUMN telares.elementos_seleccion IS
 COMMENT ON COLUMN historial_produccion.columna_actual IS
   'Vestigial: permanece siempre en 0. Una fila del dibujo es una pasada completa y sus columnas se activan simultáneamente, por lo que no existe avance por columna. Se conserva por compatibilidad con el historial ya registrado.';
 
+
 -- ============================================================
 -- migracion_011_metros_por_pasada.sql
 -- ============================================================
@@ -644,6 +657,7 @@ ALTER TABLE patrones
 
 COMMENT ON COLUMN patrones.metros_por_pasada IS
   'Metros de tela que avanza el telar en una pasada, para este dibujo. Lo carga el operario desde el editor. En NULL mientras no se conozca.';
+
 
 -- ============================================================
 -- migracion_012_conteo_sensor_y_retrocesos.sql
@@ -704,6 +718,7 @@ COMMENT ON COLUMN telares.retrocesos_contados IS
 COMMENT ON COLUMN telares.motivo_pausa IS
   'Por qué quedó pausado el telar cuando no fue una decisión del operario. ''sin_senal'': el sensor de pasada dejó de recibir pulsos (la máquina se frenó o el sensor falló). ''reinicio'': el ESP32 arrancó en frío (corte de luz o traslado) y el tejido quedó en pausa conservando la posición. NULL en cualquier otro caso.';
 
+
 -- ============================================================
 -- migracion_013_indice_unico_en_curso.sql
 -- ============================================================
@@ -730,6 +745,7 @@ UPDATE historial_produccion h
 
 DROP INDEX IF EXISTS idx_historial_en_curso;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_historial_en_curso ON historial_produccion (telar_id) WHERE estado = 'en_curso';
+
 
 -- ============================================================
 -- migracion_014_repeticiones_por_fila.sql
@@ -788,6 +804,7 @@ ALTER TABLE telares DROP CONSTRAINT IF EXISTS telares_elementos_rango;
 ALTER TABLE telares
   ADD CONSTRAINT telares_elementos_rango CHECK (elementos_seleccion BETWEEN 1 AND 8) NOT VALID;
 
+
 -- ============================================================
 -- migracion_015_repeticion_en_fila.sql
 -- ============================================================
@@ -811,6 +828,7 @@ ALTER TABLE historial_produccion
 COMMENT ON COLUMN historial_produccion.repeticion_en_fila IS
   'Cuántas pasadas de la fila actual ya se tejieron. Con repeticiones_por_fila del dibujo define la posición exacta dentro de la producción.';
 
+
 -- ============================================================
 -- migracion_016_recovery_cifrado.sql
 -- ============================================================
@@ -821,6 +839,7 @@ COMMENT ON COLUMN historial_produccion.repeticion_en_fila IS
 DO $$ BEGIN
   RAISE NOTICE '016: recovery_code en reposo cifrado (ver auth.controller.js). Requiere RECOVERY_SECRET en el .env.';
 END $$;
+
 
 -- ============================================================
 -- migracion_017_filas_hasta_300.sql
@@ -833,7 +852,10 @@ ALTER TABLE patrones DROP CONSTRAINT IF EXISTS patrones_filas_rango;
 ALTER TABLE patrones
   ADD CONSTRAINT patrones_filas_rango CHECK (filas BETWEEN 1 AND 300);
 
+
+-- ============================================================
 -- migracion_018_senal_nivel2.sql
+-- ============================================================
 -- ============================================================
 -- 018 · La consulta periódica del nodo del Nivel 2 también es señal de vida del sensor.
 -- Antes solo la renovaban los reportes de pasadas, que el nodo no manda con el telar quieto:
@@ -842,6 +864,30 @@ ALTER TABLE patrones
 -- Solo cambia la descripción de la columna: el dato es el mismo.
 COMMENT ON COLUMN telares.ultimo_reporte_sensor IS
   'Última señal del nodo del Nivel 2: un reporte de pasadas o su consulta periódica (cada 2,5 s). Si es reciente (30 s), la posición y el conteo los lleva el sensor y la web no avanza por reloj. En NULL o viejo (sin nodo): el conteo es una estimación por reloj.';
+
+
+-- ============================================================
+-- migracion_019_dibujos_de_invitado.sql
+-- ============================================================
+-- ============================================================
+-- 019 · Dibujos creados como invitado, y usuarios sin distinguir mayúsculas.
+--
+-- Entrar como invitado está abierto a cualquiera que abra la página. Con esa sesión se
+-- podía modificar y BORRAR cualquier dibujo de la biblioteca, también los de los operarios.
+-- Ahora cada dibujo recuerda si lo creó un invitado: el invitado puede cambiar o borrar esos,
+-- y los de los operarios solo mirarlos. Cuando un operario guarda un dibujo hecho por un
+-- invitado, pasa a ser de los operarios (la marca vuelve a false).
+ALTER TABLE patrones
+  ADD COLUMN IF NOT EXISTS creado_por_invitado BOOLEAN NOT NULL DEFAULT false;
+
+COMMENT ON COLUMN patrones.creado_por_invitado IS
+  'true si lo creó una sesión de invitado y ningún operario lo guardó después: un invitado solo puede modificar o borrar estos dibujos.';
+
+-- El usuario se busca sin distinguir mayúsculas ("Juan" y "juan" son la misma cuenta): en el
+-- celular el teclado suele poner la primera letra en mayúscula sola. Índice para esa búsqueda
+-- (no único, para no fallar si una base vieja ya tuviera dos nombres que solo difieren en eso).
+CREATE INDEX IF NOT EXISTS idx_usuarios_usuario_lower ON usuarios (lower(usuario));
+
 
 -- ============================================================
 -- Registro de migraciones
@@ -869,7 +915,8 @@ INSERT INTO migraciones_aplicadas (archivo) VALUES
   ('migracion_015_repeticion_en_fila.sql'),
   ('migracion_016_recovery_cifrado.sql'),
   ('migracion_017_filas_hasta_300.sql'),
-  ('migracion_018_senal_nivel2.sql')
+  ('migracion_018_senal_nivel2.sql'),
+  ('migracion_019_dibujos_de_invitado.sql')
 ON CONFLICT (archivo) DO NOTHING;
 
 -- ============================================================
