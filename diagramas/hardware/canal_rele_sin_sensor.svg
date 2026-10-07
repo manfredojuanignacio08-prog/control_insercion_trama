@@ -1,0 +1,252 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1510" font-family="IBM Plex Sans, system-ui, sans-serif">
+<rect width="1200" height="1510" fill="#F6F8FA"/>
+<text x="600.0" y="32" font-size="18" font-weight="bold" fill="#1E3A5F" text-anchor="middle" font-family="Questrial, IBM Plex Sans, sans-serif">Bloque D · El relé LCA110 en lugar del lector óptico</text>
+<text x="600.0" y="52" font-size="10.5" font-weight="normal" fill="#6B7684" text-anchor="middle">Se saca el lector y el relé se conecta a la plaqueta. Un canal; los otros tres son iguales (pines 19, 21 y 22). Cuál de los tres casos va lo decide la medición.</text>
+<rect x="16" y="76" width="1168" height="196" rx="10" fill="#FFFFFF" stroke="#3D6B96" stroke-width="1.6"/>
+<text x="36" y="98" font-size="11.5" font-weight="bold" fill="#1E3A5F" text-anchor="start">CÓMO SABER CUÁL CORRESPONDE</text>
+<rect x="36" y="112" width="250" height="96" rx="8" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.6"/>
+<text x="161.0" y="132" font-size="10.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">Paso 1</text>
+<text x="161.0" y="149" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">Con el lector conectado y el telar</text>
+<text x="161.0" y="163" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">encendido, sin tejer: medir entre sus</text>
+<text x="161.0" y="177" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">2 cables de señal con papel y con luz.</text>
+<text x="161.0" y="191" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">Dice qué estado es el agujero.</text>
+<line x1="286" y1="160" x2="316" y2="160" stroke="#1E3A5F" stroke-width="1.8"/>
+<polygon points="316,160 308.8,163.5 308.8,156.5" fill="#1E3A5F"/>
+<rect x="316" y="112" width="250" height="96" rx="8" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.6"/>
+<text x="441.0" y="132" font-size="10.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">Paso 2</text>
+<text x="441.0" y="149" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">Telar apagado: desconectar el lector</text>
+<text x="441.0" y="163" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">(marcar los 4 cables). Encender y medir</text>
+<text x="441.0" y="177" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">entre los 2 bornes de señal que</text>
+<text x="441.0" y="191" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">quedaron libres en la plaqueta.</text>
+<line x1="566" y1="142" x2="640" y2="132" stroke="#1E3A5F" stroke-width="1.8"/>
+<polygon points="640,132 633.3,136.4 632.4,129.5" fill="#1E3A5F"/>
+<text x="600" y="124" font-size="9" font-weight="bold" fill="#2E6E4A" text-anchor="middle">hay tensión</text>
+<line x1="566" y1="180" x2="640" y2="210" stroke="#1E3A5F" stroke-width="1.8"/>
+<polygon points="640,210 632.0,210.5 634.6,204.1" fill="#1E3A5F"/>
+<text x="598" y="212" font-size="9" font-weight="bold" fill="#8B1F1F" text-anchor="middle">0 V</text>
+<rect x="640" y="106" width="170" height="50" rx="8" fill="#EEF6F1" stroke="#2E6E4A" stroke-width="1.6"/>
+<text x="725.0" y="126" font-size="10.5" font-weight="bold" fill="#2E6E4A" text-anchor="middle">→ CASO 1</text>
+<text x="725.0" y="143" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">la plaqueta pone la tensión</text>
+<rect x="640" y="184" width="250" height="80" rx="8" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.6"/>
+<text x="765.0" y="204" font-size="10.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">Paso 3: la tensión la pone el lector</text>
+<text x="765.0" y="221" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">Identificar la salida y la referencia</text>
+<text x="765.0" y="235" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">(continuidad contra el −) y medir la</text>
+<text x="765.0" y="249" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">salida contra el −, con papel y con luz.</text>
+<line x1="890" y1="206" x2="940" y2="160" stroke="#1E3A5F" stroke-width="1.8"/>
+<polygon points="940,160 937.1,167.4 932.3,162.3" fill="#1E3A5F"/>
+<line x1="890" y1="242" x2="940" y2="242" stroke="#1E3A5F" stroke-width="1.8"/>
+<polygon points="940,242 932.8,245.5 932.8,238.5" fill="#1E3A5F"/>
+<rect x="940" y="116" width="224" height="64" rx="8" fill="#EEF6F1" stroke="#2E6E4A" stroke-width="1.6"/>
+<text x="1052.0" y="136" font-size="10.5" font-weight="bold" fill="#2E6E4A" text-anchor="middle">→ CASO 2A</text>
+<text x="1052.0" y="153" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">si con agujero la salida va a +V:</text>
+<text x="1052.0" y="167" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">relé entre + y la señal</text>
+<rect x="940" y="200" width="224" height="64" rx="8" fill="#EEF6F1" stroke="#2E6E4A" stroke-width="1.6"/>
+<text x="1052.0" y="220" font-size="10.5" font-weight="bold" fill="#2E6E4A" text-anchor="middle">→ CASO 2B</text>
+<text x="1052.0" y="237" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">si con agujero la salida va a 0 V:</text>
+<text x="1052.0" y="251" font-size="9.5" font-weight="normal" fill="#1F2937" text-anchor="middle">relé entre la señal y −</text>
+<rect x="16" y="288" width="1168" height="384" rx="10" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="36" y="316" font-size="14" font-weight="bold" fill="#1E3A5F" text-anchor="start" font-family="Questrial, IBM Plex Sans, sans-serif">CASO 1 · La plaqueta pone la tensión: el relé va directo en los 2 bornes de señal</text>
+<text x="36" y="334" font-size="10" font-weight="normal" fill="#6B7684" text-anchor="start">El lector era un interruptor. El relé lo reemplaza tal cual.</text>
+<rect x="30" y="350" width="506" height="250" rx="8" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="283" y="368" font-size="10" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LADO ESP32 (igual en los tres casos)</text>
+<rect x="48" y="398" width="86" height="92" rx="6" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1"/>
+<text x="91" y="438" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">ESP32</text>
+<text x="91" y="454" font-size="9" font-weight="normal" fill="#7FA8C9" text-anchor="middle">GPIO 18</text>
+<line x1="134" y1="428" x2="186" y2="428" stroke="#1F2937" stroke-width="2"/>
+<rect x="186" y="417" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="216" y="432" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="middle">330 Ω</text>
+<line x1="246" y1="428" x2="380" y2="428" stroke="#1F2937" stroke-width="2"/>
+<circle cx="160" cy="428" r="3.8" fill="#1F2937"/>
+<line x1="160" y1="428" x2="160" y2="502" stroke="#1F2937" stroke-width="2"/>
+<rect x="149" y="502" width="22" height="40" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="178" y="526" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ</text>
+<line x1="160" y1="542" x2="160" y2="560" stroke="#1F2937" stroke-width="2"/>
+<line x1="148" y1="560" x2="172" y2="560" stroke="#1F2937" stroke-width="2.4"/>
+<line x1="152" y1="566" x2="168" y2="566" stroke="#1F2937" stroke-width="2"/>
+<line x1="156" y1="572" x2="164" y2="572" stroke="#1F2937" stroke-width="1.6"/>
+<line x1="380" y1="468" x2="330" y2="468" stroke="#1F2937" stroke-width="2"/>
+<line x1="330" y1="468" x2="330" y2="560" stroke="#1F2937" stroke-width="2"/>
+<line x1="318" y1="560" x2="342" y2="560" stroke="#1F2937" stroke-width="2.4"/>
+<line x1="322" y1="566" x2="338" y2="566" stroke="#1F2937" stroke-width="2"/>
+<line x1="326" y1="572" x2="334" y2="572" stroke="#1F2937" stroke-width="1.6"/>
+<text x="330" y="588" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="middle">GND del ESP32</text>
+<rect x="380" y="400" width="140" height="96" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="450" y="420" font-size="11" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LCA110</text>
+<line x1="450" y1="428" x2="450" y2="490" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="3 3"/>
+<text x="386" y="432" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">1</text>
+<text x="386" y="472" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">2</text>
+<text x="514" y="432" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">4</text>
+<text x="514" y="472" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">6</text>
+<text x="450" y="510" font-size="8" font-weight="normal" fill="#6B7684" text-anchor="middle">patas 3 y 5 sin conectar</text>
+<line x1="552" y1="346" x2="552" y2="606" stroke="#6B7684" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="566" y="350" width="604" height="250" rx="8" fill="#FBF1E3" stroke="#9C5C0A" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="760" y="368" font-size="10" font-weight="bold" fill="#9C5C0A" text-anchor="middle">LADO TELAR (nada se une con el GND del ESP32)</text>
+<rect x="1010" y="374" width="146" height="210" rx="6" fill="#FFFFFF" stroke="#9C5C0A" stroke-width="1.8"/>
+<text x="1083" y="396" font-size="11" font-weight="bold" fill="#9C5C0A" text-anchor="middle">PLAQUETA</text>
+<circle cx="1010" cy="418" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="422" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">+ (alim. del lector)</text>
+<circle cx="1010" cy="468" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="472" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">señal</text>
+<circle cx="1010" cy="508" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="512" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">referencia</text>
+<circle cx="1010" cy="558" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="562" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">− (alim. del lector)</text>
+<rect x="860" y="376" width="120" height="26" rx="5" fill="#FFFFFF" stroke="#6B7684" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="920" y="393" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">lector: desconectado</text>
+<polyline points="520,428 600,428 600,468 1010,468" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="520,468 580,468 580,508 1010,508" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="800" y="462" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 → borne de señal</text>
+<text x="800" y="502" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 6 → el otro borne</text>
+<line x1="1010" y1="418" x2="930" y2="418" stroke="#B4423C" stroke-width="2"/>
+<rect x="904" y="410" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="898" y="422" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable + del lector: AISLADO</text>
+<line x1="1010" y1="558" x2="930" y2="558" stroke="#B4423C" stroke-width="2"/>
+<rect x="904" y="550" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="898" y="562" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable − del lector: AISLADO</text>
+<text x="36" y="622" font-size="10.5" fill="#1F2937"><tspan font-weight="bold">Cuándo:</tspan> con el lector desconectado HAY tensión entre los 2 bornes de señal (la plaqueta la pone).</text>
+<text x="36" y="639" font-size="10.5" fill="#1F2937">El relé hace lo mismo que el lector: une o separa los 2 bornes. Las patas 4 y 6 no tienen polaridad.</text>
+<text x="36" y="656" font-size="10.5" fill="#1F2937">Los 2 cables de alimentación del lector quedan sin usar: se aíslan (termocontraíble o bornera vacía).</text>
+<text x="1164" y="630" font-size="12" font-weight="bold" fill="#2E6E4A" text-anchor="end">agujero = bornes unidos → true · agujero = bornes separados → false</text>
+<rect x="16" y="686" width="1168" height="384" rx="10" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="36" y="714" font-size="14" font-weight="bold" fill="#1E3A5F" text-anchor="start" font-family="Questrial, IBM Plex Sans, sans-serif">CASO 2A · El lector pone la tensión y el agujero es +V: el relé va entre + y la señal</text>
+<text x="36" y="732" font-size="10" font-weight="normal" fill="#6B7684" text-anchor="start">Se usa la alimentación del lector. Una resistencia de 10 kΩ deja la señal en 0 V (papel) cuando el relé está abierto.</text>
+<rect x="30" y="748" width="506" height="250" rx="8" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="283" y="766" font-size="10" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LADO ESP32 (igual en los tres casos)</text>
+<rect x="48" y="796" width="86" height="92" rx="6" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1"/>
+<text x="91" y="836" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">ESP32</text>
+<text x="91" y="852" font-size="9" font-weight="normal" fill="#7FA8C9" text-anchor="middle">GPIO 18</text>
+<line x1="134" y1="826" x2="186" y2="826" stroke="#1F2937" stroke-width="2"/>
+<rect x="186" y="815" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="216" y="830" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="middle">330 Ω</text>
+<line x1="246" y1="826" x2="380" y2="826" stroke="#1F2937" stroke-width="2"/>
+<circle cx="160" cy="826" r="3.8" fill="#1F2937"/>
+<line x1="160" y1="826" x2="160" y2="900" stroke="#1F2937" stroke-width="2"/>
+<rect x="149" y="900" width="22" height="40" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="178" y="924" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ</text>
+<line x1="160" y1="940" x2="160" y2="958" stroke="#1F2937" stroke-width="2"/>
+<line x1="148" y1="958" x2="172" y2="958" stroke="#1F2937" stroke-width="2.4"/>
+<line x1="152" y1="964" x2="168" y2="964" stroke="#1F2937" stroke-width="2"/>
+<line x1="156" y1="970" x2="164" y2="970" stroke="#1F2937" stroke-width="1.6"/>
+<line x1="380" y1="866" x2="330" y2="866" stroke="#1F2937" stroke-width="2"/>
+<line x1="330" y1="866" x2="330" y2="958" stroke="#1F2937" stroke-width="2"/>
+<line x1="318" y1="958" x2="342" y2="958" stroke="#1F2937" stroke-width="2.4"/>
+<line x1="322" y1="964" x2="338" y2="964" stroke="#1F2937" stroke-width="2"/>
+<line x1="326" y1="970" x2="334" y2="970" stroke="#1F2937" stroke-width="1.6"/>
+<text x="330" y="986" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="middle">GND del ESP32</text>
+<rect x="380" y="798" width="140" height="96" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="450" y="818" font-size="11" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LCA110</text>
+<line x1="450" y1="826" x2="450" y2="888" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="3 3"/>
+<text x="386" y="830" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">1</text>
+<text x="386" y="870" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">2</text>
+<text x="514" y="830" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">4</text>
+<text x="514" y="870" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">6</text>
+<text x="450" y="908" font-size="8" font-weight="normal" fill="#6B7684" text-anchor="middle">patas 3 y 5 sin conectar</text>
+<line x1="552" y1="744" x2="552" y2="1004" stroke="#6B7684" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="566" y="748" width="604" height="250" rx="8" fill="#FBF1E3" stroke="#9C5C0A" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="760" y="766" font-size="10" font-weight="bold" fill="#9C5C0A" text-anchor="middle">LADO TELAR (nada se une con el GND del ESP32)</text>
+<rect x="1010" y="772" width="146" height="210" rx="6" fill="#FFFFFF" stroke="#9C5C0A" stroke-width="1.8"/>
+<text x="1083" y="794" font-size="11" font-weight="bold" fill="#9C5C0A" text-anchor="middle">PLAQUETA</text>
+<circle cx="1010" cy="816" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="820" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">+ (alim. del lector)</text>
+<circle cx="1010" cy="866" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="870" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">señal</text>
+<circle cx="1010" cy="906" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="910" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">referencia</text>
+<circle cx="1010" cy="956" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="960" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">− (alim. del lector)</text>
+<rect x="860" y="774" width="120" height="26" rx="5" fill="#FFFFFF" stroke="#6B7684" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="920" y="791" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">lector: desconectado</text>
+<polyline points="1010,816 620,816 620,826 520,826" fill="none" stroke="#B4423C" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="740" y="810" font-size="9" font-weight="bold" fill="#B4423C" text-anchor="middle">+ alimentación → pata 4</text>
+<polyline points="520,866 700,866 1010,866" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="640" y="860" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 6 → señal</text>
+<circle cx="840" cy="866" r="3.8" fill="#1F2937"/>
+<line x1="840" y1="866" x2="840" y2="874" stroke="#1F2937" stroke-width="2"/>
+<rect x="829" y="874" width="22" height="74" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<line x1="840" y1="948" x2="840" y2="956" stroke="#1F2937" stroke-width="2"/>
+<text x="856" y="915.0" font-size="9" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ ½ W</text>
+<circle cx="840" cy="956" r="3.8" fill="#1F2937"/>
+<polyline points="1010,956 800,956" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="760" y="960" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="end">− alim.</text>
+<polyline points="980,906 980,956" fill="none" stroke="#1F2937" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="980" cy="906" r="3.8" fill="#1F2937"/>
+<circle cx="980" cy="956" r="3.8" fill="#1F2937"/>
+<line x1="980" y1="906" x2="1010" y2="906" stroke="#1F2937" stroke-width="2"/>
+<text x="972" y="932" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="end">ref. al −</text>
+<text x="36" y="1020" font-size="10.5" fill="#1F2937"><tspan font-weight="bold">Cuándo:</tspan> el lector pone la tensión y, con agujero, su salida va a +V.</text>
+<text x="36" y="1037" font-size="10.5" fill="#1F2937">Relé cerrado: la señal queda en +V = agujero. Relé abierto: la resistencia la baja a 0 V = papel.</text>
+<text x="36" y="1054" font-size="10.5" fill="#1F2937">ESP32 apagado: relé abierto = papel en los 4 canales (ninguna bobina salta). Es lo seguro.</text>
+<text x="1164" y="1028" font-size="12" font-weight="bold" fill="#2E6E4A" text-anchor="end">relé cerrado = agujero → CANAL_ACTIVO_EN_ALTO true</text>
+<rect x="16" y="1084" width="1168" height="384" rx="10" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="36" y="1112" font-size="14" font-weight="bold" fill="#1E3A5F" text-anchor="start" font-family="Questrial, IBM Plex Sans, sans-serif">CASO 2B · El lector pone la tensión y el agujero es 0 V: el relé va entre la señal y −</text>
+<text x="36" y="1130" font-size="10" font-weight="normal" fill="#6B7684" text-anchor="start">Se usa la alimentación del lector. Una resistencia de 10 kΩ deja la señal en +V (papel) cuando el relé está abierto.</text>
+<rect x="30" y="1146" width="506" height="250" rx="8" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="283" y="1164" font-size="10" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LADO ESP32 (igual en los tres casos)</text>
+<rect x="48" y="1194" width="86" height="92" rx="6" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1"/>
+<text x="91" y="1234" font-size="11" font-weight="bold" fill="#FFFFFF" text-anchor="middle">ESP32</text>
+<text x="91" y="1250" font-size="9" font-weight="normal" fill="#7FA8C9" text-anchor="middle">GPIO 18</text>
+<line x1="134" y1="1224" x2="186" y2="1224" stroke="#1F2937" stroke-width="2"/>
+<rect x="186" y="1213" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="216" y="1228" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="middle">330 Ω</text>
+<line x1="246" y1="1224" x2="380" y2="1224" stroke="#1F2937" stroke-width="2"/>
+<circle cx="160" cy="1224" r="3.8" fill="#1F2937"/>
+<line x1="160" y1="1224" x2="160" y2="1298" stroke="#1F2937" stroke-width="2"/>
+<rect x="149" y="1298" width="22" height="40" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="178" y="1322" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ</text>
+<line x1="160" y1="1338" x2="160" y2="1356" stroke="#1F2937" stroke-width="2"/>
+<line x1="148" y1="1356" x2="172" y2="1356" stroke="#1F2937" stroke-width="2.4"/>
+<line x1="152" y1="1362" x2="168" y2="1362" stroke="#1F2937" stroke-width="2"/>
+<line x1="156" y1="1368" x2="164" y2="1368" stroke="#1F2937" stroke-width="1.6"/>
+<line x1="380" y1="1264" x2="330" y2="1264" stroke="#1F2937" stroke-width="2"/>
+<line x1="330" y1="1264" x2="330" y2="1356" stroke="#1F2937" stroke-width="2"/>
+<line x1="318" y1="1356" x2="342" y2="1356" stroke="#1F2937" stroke-width="2.4"/>
+<line x1="322" y1="1362" x2="338" y2="1362" stroke="#1F2937" stroke-width="2"/>
+<line x1="326" y1="1368" x2="334" y2="1368" stroke="#1F2937" stroke-width="1.6"/>
+<text x="330" y="1384" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="middle">GND del ESP32</text>
+<rect x="380" y="1196" width="140" height="96" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="450" y="1216" font-size="11" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LCA110</text>
+<line x1="450" y1="1224" x2="450" y2="1286" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="3 3"/>
+<text x="386" y="1228" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">1</text>
+<text x="386" y="1268" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">2</text>
+<text x="514" y="1228" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">4</text>
+<text x="514" y="1268" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">6</text>
+<text x="450" y="1306" font-size="8" font-weight="normal" fill="#6B7684" text-anchor="middle">patas 3 y 5 sin conectar</text>
+<line x1="552" y1="1142" x2="552" y2="1402" stroke="#6B7684" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="566" y="1146" width="604" height="250" rx="8" fill="#FBF1E3" stroke="#9C5C0A" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="760" y="1164" font-size="10" font-weight="bold" fill="#9C5C0A" text-anchor="middle">LADO TELAR (nada se une con el GND del ESP32)</text>
+<rect x="1010" y="1170" width="146" height="210" rx="6" fill="#FFFFFF" stroke="#9C5C0A" stroke-width="1.8"/>
+<text x="1083" y="1192" font-size="11" font-weight="bold" fill="#9C5C0A" text-anchor="middle">PLAQUETA</text>
+<circle cx="1010" cy="1214" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="1218" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">+ (alim. del lector)</text>
+<circle cx="1010" cy="1264" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="1268" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">señal</text>
+<circle cx="1010" cy="1304" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="1308" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">referencia</text>
+<circle cx="1010" cy="1354" r="3.8" fill="#9C5C0A"/>
+<text x="1018" y="1358" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">− (alim. del lector)</text>
+<rect x="860" y="1172" width="120" height="26" rx="5" fill="#FFFFFF" stroke="#6B7684" stroke-width="1.2" stroke-dasharray="4 3"/>
+<text x="920" y="1189" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">lector: desconectado</text>
+<polyline points="1010,1214 840,1214" fill="none" stroke="#B4423C" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="940" y="1208" font-size="9" font-weight="bold" fill="#B4423C" text-anchor="middle">+ alimentación</text>
+<line x1="840" y1="1214" x2="840" y2="1222" stroke="#1F2937" stroke-width="2"/>
+<rect x="829" y="1222" width="22" height="34" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<line x1="840" y1="1256" x2="840" y2="1264" stroke="#1F2937" stroke-width="2"/>
+<text x="856" y="1243.0" font-size="9" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ ½ W</text>
+<circle cx="840" cy="1214" r="3.8" fill="#1F2937"/>
+<circle cx="840" cy="1264" r="3.8" fill="#1F2937"/>
+<polyline points="840,1264 1010,1264" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="840,1264 620,1264 620,1224 520,1224" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="720" y="1258" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 → señal</text>
+<polyline points="520,1264 580,1264 580,1354 1010,1354" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="760" y="1348" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → − alimentación</text>
+<polyline points="980,1304 980,1354" fill="none" stroke="#1F2937" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="980" cy="1304" r="3.8" fill="#1F2937"/>
+<circle cx="980" cy="1354" r="3.8" fill="#1F2937"/>
+<line x1="980" y1="1304" x2="1010" y2="1304" stroke="#1F2937" stroke-width="2"/>
+<text x="972" y="1330" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="end">ref. al −</text>
+<text x="36" y="1418" font-size="10.5" fill="#1F2937"><tspan font-weight="bold">Cuándo:</tspan> el lector pone la tensión y, con agujero, su salida va a 0 V.</text>
+<text x="36" y="1435" font-size="10.5" fill="#1F2937">Relé cerrado: la señal baja a 0 V = agujero. Relé abierto: la resistencia la sube a +V = papel.</text>
+<text x="36" y="1452" font-size="10.5" fill="#1F2937">ESP32 apagado: relé abierto = papel en los 4 canales (ninguna bobina salta). Es lo seguro.</text>
+<text x="1164" y="1426" font-size="12" font-weight="bold" fill="#2E6E4A" text-anchor="end">relé cerrado = agujero → CANAL_ACTIVO_EN_ALTO true</text>
+<text x="600.0" y="1494" font-size="10" font-weight="bold" fill="#1F2937" text-anchor="middle">En los tres: probar primero un solo canal, medir que la corriente por el relé cerrado sea de pocos mA (nunca más de 100) y hacerlo con bornera para poder volver a conectar el lector.</text>
+</svg>

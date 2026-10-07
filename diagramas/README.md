@@ -42,6 +42,15 @@ Abajo compara las dos conexiones posibles: en paralelo (puente entre A y B, sin 
 `CANAL_ACTIVO_EN_ALTO` en `true`) y en serie (se corta el cable A y el relé se intercala,
 `CANAL_ACTIVO_EN_ALTO` en `false`), con la medición que decide cuál corresponde.
 
+### `canal_rele_sin_sensor.svg`
+El relé LCA110 en lugar del lector óptico, que se saca: un canal conectado directo a los bornes de
+la plaqueta. Arriba, las mediciones que deciden cuál de los tres casos corresponde. Caso 1, la
+plaqueta pone la tensión: el relé va directo en los 2 bornes de señal y los cables de alimentación
+del lector quedan aislados. Caso 2A, la tensión la ponía el lector y con agujero la salida va a +V:
+el relé va entre + y la señal, con 10 kΩ ½ W de la señal a −. Caso 2B, con agujero la salida va a
+0 V: 10 kΩ ½ W de + a la señal y el relé entre la señal y −. Cada caso indica cómo queda
+`CANAL_ACTIVO_EN_ALTO`.
+
 ### `diagrama_nivel2_marcos.svg`
 Vista de conjunto del Nivel 2: cómo el microcontrolador comanda los cuatro
 lectores ópticos que hoy lee la cinta de papel.
