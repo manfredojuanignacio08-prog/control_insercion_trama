@@ -1419,7 +1419,10 @@ function renderGrid() {
 	    // Solo un color #RRGGBB entra en el atributo: un valor viejo de la base con otro formato
 	    // (o con comillas) rompería el HTML de la grilla.
 	    const colorOk = typeof rowColors[r] === 'string' && /^#[0-9a-fA-F]{6}$/.test(rowColors[r]);
-	    const rowStyle = colorOk ? `style="--acc: ${rowColors[r]}; --rose: ${rowColors[r]};"` : '';
+	    // El texto encima del color del hilo ("1" de la celda) tiene que leerse: oscuro sobre un hilo
+	    // claro (crudo) y claro sobre uno oscuro (bordó). Antes iba siempre el del tema, y en modo
+	    // oscuro quedaba azul oscuro sobre bordó.
+	    const rowStyle = colorOk ? `style="--acc: ${rowColors[r]}; --rose: ${rowColors[r]}; --on-rose: ${textoSobre(rowColors[r])};"` : '';
 	    h += `<div class="${cls}" id="gr${r}" ${rowStyle}>`;
 	    h += `<div class="g-row-n">${r+1}</div>`;
 	    for (let c = 0; c < nC; c++) {
@@ -1444,6 +1447,15 @@ function renderGrid() {
 	  }
 	  actualizarTotalPasadas();
 	}
+
+// Color de texto legible sobre un color de hilo (#RRGGBB), según su luminancia.
+function textoSobre(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const lin = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+  // Se elige el de más contraste: texto oscuro (#1F2937, luminancia 0,021) o claro (#F6F8FA, 0,93).
+  return (L + 0.05) / (0.021 + 0.05) >= (0.93 + 0.05) / (L + 0.05) ? '#1F2937' : '#F6F8FA';
+}
 
 function tapCell(r, c) {
   if (edicionBloqueada()) return;
