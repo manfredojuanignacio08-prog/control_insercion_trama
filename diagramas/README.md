@@ -51,6 +51,12 @@ el relé va entre + y la señal, con 10 kΩ ½ W de la señal a −. Caso 2B, co
 0 V: 10 kΩ ½ W de + a la señal y el relé entre la señal y −. Cada caso indica cómo queda
 `CANAL_ACTIVO_EN_ALTO`.
 
+### `diagrama_bloque_D_caso1.svg`, `diagrama_bloque_D_caso2A.svg` y `diagrama_bloque_D_caso2B.svg`
+Los mismos tres casos de `canal_rele_sin_sensor.svg`, pero con los cuatro relés (GPIO 18, 19, 21 y 22)
+conectados cada uno al conector de su lector en la plaqueta. Del lado del ESP32 son iguales; cambia
+solo el lado del telar. En los casos 2A y 2B cada canal usa el + y el − de su propio conector, con su
+propia resistencia de 10 kΩ ½ W.
+
 ### `diagrama_nivel2_marcos.svg`
 Vista de conjunto del Nivel 2: cómo el microcontrolador comanda los cuatro
 lectores ópticos que hoy lee la cinta de papel.
