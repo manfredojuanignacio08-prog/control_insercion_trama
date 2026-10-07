@@ -193,4 +193,11 @@ r = await api('POST',`/telares/${T3}/pasadas`,{pasadas_sensor:1,fila_actual:1,re
 assert.equal(psql(`select vueltas_completadas from historial_produccion where telar_id=${T3} and estado='en_curso'`), '2', 'el sensor no borra las vueltas ya tejidas');
 r = await api('POST',`/telares/${T3}/pasadas`,{pasadas_sensor:6,fila_actual:0,repeticion_en_fila:1},{ck:null,dev:true}); assert.equal(r.b.aplicado,true, JSON.stringify(r));
 assert.equal(psql(`select vueltas_completadas from historial_produccion where telar_id=${T3} and estado='en_curso'`), '3', 'cruzar el inicio suma una vuelta');
+// Por http:// (red local, Docker) la página no puede pedir que se suba a https: el navegador pedía
+// styles.css, los scripts y la API por https a un servidor que no lo tiene.
+{
+  const h = (await fetch(B.replace(/\/api$/, '') + '/')).headers;
+  assert.ok(!/upgrade-insecure-requests/.test(h.get('content-security-policy') || ''), 'sin upgrade-insecure-requests por http');
+  assert.equal(h.get('strict-transport-security'), null, 'sin HSTS por http');
+}
 console.log('integración contra PostgreSQL real: OK');

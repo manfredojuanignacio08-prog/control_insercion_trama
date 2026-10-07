@@ -55,10 +55,23 @@ app.use(
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         imgSrc: ["'self'", 'data:'],
         connectSrc: ["'self'"],
+        // Sin "upgrade-insecure-requests" (helmet lo agrega por defecto): con la web abierta por
+        // http:// en la red local (http://192.168.1.50:3000, la PC de la fábrica o Docker), el
+        // navegador pedía styles.css, los scripts y la API por https:// a un servidor que no lo
+        // tiene, y la página quedaba sin estilos, sin PDF y sin login. En HTTPS no hace falta:
+        // todo se pide al mismo origen.
+        upgradeInsecureRequests: null,
       },
     },
+    // HSTS ("usá siempre HTTPS") solo tiene sentido si la conexión ES segura: se agrega abajo.
+    strictTransportSecurity: false,
   })
 );
+// Detrás de Render (trust proxy) req.secure es true; por http:// en la red local, no.
+app.use((req, res, next) => {
+  if (req.secure) res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  next();
+});
 
 app.use(compression());
 

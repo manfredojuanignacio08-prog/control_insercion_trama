@@ -1021,3 +1021,14 @@ Se revisaron además, sin encontrar otros errores:
 - **Documentación:** los números de la documentación coinciden con el código (consultas cada 2,5 s y 4 s, límites por usuario, filas, columnas y repeticiones).
 
 Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (invitado, dibujo nuevo, ficha, cuadro de confirmación): todo bien.
+
+### Decimocuarta revisión de cierre (foco en el backend)
+
+| Dónde | Problema | Corrección |
+|---|---|---|
+| `server.js` (cabeceras) | helmet manda por defecto `upgrade-insecure-requests` y HSTS. Con la web abierta por `http://` en la red local (la PC de la fábrica, Docker: `http://192.168.1.50:3000`), el navegador pedía `styles.css`, los scripts y la API por `https://` a un servidor que no lo tiene: **la página quedaba sin estilos, sin PDF y sin login**. Por `localhost` y en Render no se notaba. | Sin `upgrade-insecure-requests`, y HSTS solo cuando la conexión es HTTPS (detrás de Render se sigue mandando). Probado en Chromium por la IP de la red: antes fallaban los tres archivos, ahora carga todo. Control agregado a la prueba de integración. |
+| Dependencias | `npm audit`: `proxy-addr` 2.0.7 (crítica: suplantación de IP con IPv6 mapeado, afecta a `trust proxy`) y `compression` 1.8.1 (alta: pérdida de memoria si el cliente corta la respuesta). | Actualizadas a 2.0.8 y 1.8.2 (parches, sin cambios de API). `npm audit`: 0 vulnerabilidades. |
+
+Prueba de fuerza del backend: 23.134 pedidos a todas las rutas, con datos de tipos equivocados, números enormes, textos de 5.000 caracteres, caracteres nulos, JSON roto, ids inválidos y filtros mal formados, como operario y como dispositivo, sin límites de pedidos: **ninguna respuesta 500** y ningún error en el registro del servidor.
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (por localhost y por la IP de la red): todo bien.

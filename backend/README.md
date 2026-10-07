@@ -47,7 +47,8 @@ completa.
 
 El backend ya incluye lo necesario para correr en producción: cabeceras de
 seguridad (`helmet`, con CSP ajustado para no romper el `<script>` inline
-de la página web), compresión `gzip`, *rate limiting* por usuario (por IP antes de iniciar sesión), CORS configurable,
+de la página web; HSTS solo cuando la conexión es HTTPS, así la web también funciona por
+`http://` en la red local), compresión `gzip`, *rate limiting* por usuario (por IP antes de iniciar sesión), CORS configurable,
 logs en formato `combined` cuando `NODE_ENV=production`, validación estricta
 de los datos que llegan, y apagado prolijo (cierra el pool de Postgres antes
 de salir cuando el proceso recibe `SIGTERM`/`SIGINT`).
