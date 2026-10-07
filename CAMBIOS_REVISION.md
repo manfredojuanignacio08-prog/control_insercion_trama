@@ -890,3 +890,145 @@ Pruebas nuevas en Chromium contra el servidor real y PostgreSQL, todas bien:
 - Nivel 2 simulado: con el nodo conectado la pantalla deja de contar por reloj y sigue la fila que informa el sensor.
 - Dibujo de 300 × 8 (el máximo): la grilla se dibuja en ~10 ms y la ficha PDF sale en 8 hojas con su encabezado de continuación.
 - Pantallas de ingreso y recuperación a ancho de celular, sin desplazamiento horizontal.
+
+### Octava revisión de cierre (todo el proyecto, archivo por archivo)
+
+| Problema | Corrección |
+|---|---|
+| Entrar como invitado está abierto a cualquiera que abra la página, y con esa sesión se podía **modificar y borrar cualquier dibujo** de la biblioteca, también los de los operarios. | Migración 019: cada dibujo recuerda si lo creó un invitado (`creado_por_invitado`). El invitado puede crear dibujos y cambiar o borrar los suyos; los de los operarios solo mirarlos (403 `SOLO_OPERARIO` en guardar, metros por pasada y borrar). Cuando un operario guarda un dibujo hecho por un invitado, pasa a ser de los operarios. La web avisa antes de tocar nada ("Podés mirarlo; para diseñar, creá uno nuevo") en vez de mostrar cambios que no se guardaban. |
+| Nivel 2: las vueltas se calculaban dividiendo el conteo del sensor por las pasadas de una vuelta. El sensor cuenta desde que se instaló el nodo, no desde el principio del trabajo: si el trabajo ya tenía vueltas hechas a mano o por reloj, el primer reporte las **borraba** (por ejemplo, de 2 vueltas a 0). | Las vueltas se suman o restan según la posición que cruza cada reporte (con las mismas funciones de posición del resto del backend), sin perder lo anterior y sin bajar de cero. Con test (falla con el código anterior). |
+| El usuario distinguía mayúsculas: en el celular el teclado pone la primera letra en mayúscula, y "Juan" no encontraba la cuenta "juan" (o se creaba una segunda cuenta de la misma persona). | El usuario se busca sin distinguir mayúsculas (prefiriendo la coincidencia exacta) en registro, ingreso, recuperación y en el script `npm run codigo`; dentro del registro se vuelve a comprobar con el bloqueo tomado, así dos registros simultáneos no crean "Juan" y "juan". La web usa el nombre que devuelve el servidor. |
+| ⏪ aplicaba la fila que devolvía el servidor aunque el dibujo abierto en el editor fuera otro (se marcaba una fila de otro dibujo, o una fuera de rango). | Solo se aplica si el dibujo abierto es el del trabajo y la fila existe. |
+| `database/01_base_de_datos_completa.sql` se armaba a mano y no tenía las últimas migraciones. | Script `npm run generar-sql` que lo arma con el esquema y todas las migraciones. Verificado: la base que crea es idéntica (`pg_dump -s`) a la de `init-db` + `migrate`. |
+| Documentación: `AUTENTICACION_BIOMETRICA.md` decía que el invitado podía "diseñar dibujos" sin más; `esp32/verificacion/LEEME.md` decía 12 chequeos (son 18) y no mencionaba `sim_nivel2_firmware.py`; en el README del backend la lista de migraciones 009–018 estaba metida como viñetas dentro del árbol de carpetas, faltaban la 019 y la carpeta `scripts/`. | Corregido y actualizado. |
+
+Sin errores nuevos en: servidor, sesiones, middleware, controladores de telares, historial y errores, validación, migrador, la web completa (incluidos PDF, ficha, estadísticas y repeticiones), el firmware en sus dos modos (pruebas de host, 1,2 millones de pasos iguales al backend, simulaciones 6/6, 6/6 y 29/29, coherencia firmware–diagrama–documentos 18/18), la correspondencia entre lo que manda el firmware y lo que espera el backend, y los documentos del proyecto.
+
+Pruebas: `npm test` (6 pruebas) y la integración contra PostgreSQL real, bien. En Chromium: el invitado abre un dibujo de un operario, toca una celda y recibe el aviso sin cambios; crea uno nuevo, lo edita y se guarda como suyo.
+
+### Novena revisión de cierre (todo el proyecto otra vez, desde cero)
+
+| Problema | Corrección |
+|---|---|
+| Nivel 2: el contador del sensor sube en la interrupción y la fila se mueve un instante después, así que un reporte puede traer la fila una pasada antes o después del conteo (se acepta, con 2 de tolerancia). Si eso caía justo en el cambio de vuelta, las vueltas se calculaban desde el conteo y la posición guardada era la del nodo: el reporte siguiente volvía a cruzar el cambio de vuelta y la vuelta **se contaba dos veces** (o nunca). | Las vueltas acompañan a la posición que se guarda. Con test de los dos sentidos y hacia atrás (falla con el código anterior). |
+| Firmware: las celdas del dibujo se leían como entero (`as<int>()`): un valor como 0,5, o uno que no entra en un int, quedaba en 0 y esa bobina **no se accionaba**, mientras la web y el backend la mostraban activa (para ellos vale todo lo mayor que cero). | El firmware usa el mismo criterio: mayor que cero es activo. |
+| Web: con un trabajo pausado, **Nuevo** en el editor no dejaba crear un dibujo ("usá ⏹ para terminarlo"), aunque un dibujo nuevo no toca la matriz del trabajo. Y **⊕ Nuevo** de la biblioteca se salteaba todos los controles: con el telar tejiendo frenaba la cuenta de pasadas de esa pantalla, y no avisaba si había cambios sin guardar. | Crear un dibujo nuevo solo se frena con el tejido en marcha (como cargar otro dibujo), y el botón de la biblioteca pasa por los mismos controles que el del editor. Con test (falla con el código anterior) y probado en Chromium. |
+| Comentarios y documentos desactualizados: el firmware decía que al retomar se empezaba la fila desde su primera pasada (retoma la pasada exacta); el README del Nivel 2 no mencionaba `repeticion_en_fila`, las vueltas ni el caso del nodo reiniciado, y decía que todo exige la clave de dispositivo (`patron-actual` también se lee con sesión); las rutas decían "solo con sesión" donde es "solo operario"; el ejemplo de código de recuperación (`TRAMA-ABC123`) tenía un 1, que el generador nunca usa. | Corregidos. |
+
+Sin errores nuevos en: servidor, sesiones y límites de pedidos, autenticación (registro, ingreso, recuperación, invitaciones), dibujos, telares (asignar, pausar, reanudar, detener, avanzar, retroceder, eventos físicos, confirmar posición, validar conteo), historial, errores, validación, esquema (el índice de una sola producción en curso queda único), la página (sin ids ni variables de estilo sin definir) y el firmware (botonera, red, descarga del dibujo, reportes, arranque).
+
+Pruebas: `npm test` (6 pruebas), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18 y Chromium: todo bien.
+
+### Décima revisión de cierre (todo el proyecto, sin excepciones: web línea por línea, firmware archivo por archivo y todos los documentos)
+
+**Web**
+
+| Problema | Corrección |
+|---|---|
+| ▶ con el telar sin responder (falla de red o del servidor al asignar el dibujo): la pantalla arrancaba igual, mostraba "Tejiendo..." y el telar nunca recibía la orden. Y dos toques seguidos en ▶ arrancaban dos veces. | Si el telar no quedó en marcha, avisa y no anima; un solo arranque a la vez. Con test (falla con el código anterior). |
+| Con el servidor fallando y el telar tejiendo, cada pasada (5 por segundo) mandaba un aviso al registro de errores: en unos minutos se agotaba el límite de pedidos del usuario y después no podía ni tocar Pausa. | Cada tipo de error se manda como mucho una vez cada 30 s (en pantalla se sigue guardando). Con test. |
+| La ficha del dibujo abierta, y se cargaba otro dibujo: seguía mostrando los metros por pasada del anterior, y Guardar los grababa en el nuevo. Una respuesta lenta del dibujo anterior también podía pisar la ficha del nuevo. | La ficha se recarga al cambiar de dibujo y descarta respuestas de otro dibujo. Probado en Chromium. |
+| Al recargar la página, quien había entrado con el código de recuperación pasaba a figurar como "con huella" y desaparecía el botón para activar la huella en ese equipo. | La pestaña recuerda cómo se entró. Probado en Chromium. |
+| Invitado: Guardar con un dibujo de los operarios abría el diálogo y el servidor lo rechazaba; Confirmar posición y Validar conteo mostraban dos avisos. | Se avisa antes, una sola vez. |
+| `esc()` no escapaba comillas, y el color de una fila entraba sin comprobar en un atributo `style`. Hoy no se explotaba (los textos van como contenido y el servidor valida los colores), pero un color viejo de la base con otro formato rompía la grilla. | `esc()` escapa comillas y solo un `#RRGGBB` entra al atributo. |
+| La ficha en PDF con un nombre en blanco salía con el título vacío. | Usa "Dibujo". |
+
+**Firmware**
+
+| Problema | Corrección |
+|---|---|
+| En un pulso de retroceso con el telar tejiendo, se aplicaba la selección de la PRÓXIMA pasada mientras la máquina deshacía la anterior (otra combinación). La simulación del Nivel 2 ya no seleccionaba nada en ese caso. | En el retroceso los canales quedan en reposo; solo se mueve la posición. |
+| Al readoptar conteo y posición del backend (dibujo nuevo, o reporte descartado), un pulso anterior todavía se podía "reclasificar" como retroceso y mover dos pasadas atrás la posición recién adoptada. | `sensorPasadaFijarTotal` limpia esa marca. Con test en la PC (falla con el código anterior). |
+
+**Documentos**
+
+| Problema | Corrección |
+|---|---|
+| `.env.example` daba el comando de rotación sin los dos guiones (`npm run codigo <usuario> --rotar`), que no rota nada. | Corregido. |
+| Manual de instalación: la sección de Render no pedía `SESSION_SECRET`, `RECOVERY_SECRET` ni `ESP32_DEVICE_KEY` (siguiéndolo, el servidor no arranca); Docker "solo necesita Docker", pero el compose exige cuatro claves; `CORS_ORIGIN` vacío "= cualquiera" (en producción es ninguno); el árbol de carpetas, el lugar del modo oscuro y "la web de demo" estaban desactualizados; decía que `/api/health` comprueba la base (no la toca). | Corregido, con la tabla completa de variables. |
+| Guía de la base: "doce columnas" (son trece) y le faltaban las claves obligatorias en Render. Se verificó además que el SQL completo se puede correr dos veces sobre una base con datos sin errores ni pérdidas. | Corregido. |
+| `DESPLIEGUE_RENDER.md`: "dieciocho migraciones" (son diecinueve). | Corregido. |
+| README del backend: decía "sin autenticación", que las repeticiones salían de los números de la matriz, que el ESP32 llamaría a `/avanzar`, mencionaba "los dos config" y le faltaban los endpoints del Nivel 2 y los permisos del invitado. `AUTENTICACION_BIOMETRICA.md`: decía que la sesión era "un paso adicional" (ya existe). README principal: "siguiente fase: armar la etapa eléctrica" (el Bloque A está instalado desde el 19/09). | Corregidos. |
+| Documentos del hardware: el README de diagramas describía el sensor con "rectificación de 24 V alterna" (los diagramas dicen bien: 12 a 14 V continuos, sin puente ni regulador); dos documentos daban el relevamiento anterior como "3" y "hasta 8" bobinas (la Bitácora dice seis); el checklist decía que el pin de 3,3 V alimenta los relés (van a 5 V) y prometía "Posición incierta" con cualquier botón; a las recomendaciones eléctricas les faltaban los capacitores de 100 nF en la lista de compras. | Corregidos, coherentes con la Bitácora, las planillas y los diagramas. |
+| Manual de la página web (Word): no explicaba el modo invitado ni sus límites, describía mal la biblioteca y el botón Nuevo, y el indicador "Sin conexión" figuraba ámbar (es rojo). Árbol de problemas (Word y Markdown): "relés de Marcha/Pausa" sin Retroceder y "4 tablas" sin las del ingreso. | Corregidos (validados con el esquema de Word). |
+| `_referencia_app_android` (no se usa): no decía por qué hoy no funcionaría (la API exige sesión) y afirmaba que el ESP32 llamaría a `/avanzar`. | `AVISO.md` lista lo que cambió y se corrigieron esos comentarios. |
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (ficha al cambiar de dibujo, ⊕ Nuevo, origen de la sesión al recargar): todo bien.
+
+### Undécima revisión de cierre (todo el proyecto de nuevo: código, base, planillas, Word y diagramas)
+
+**Web**
+
+| Problema | Corrección |
+|---|---|
+| Modo oscuro: los textos en rojo (errores, "Sin conexión") usaban el mismo rojo que el modo claro y sobre el fondo oscuro quedaban con un contraste de 1,3 a 1,9 a 1, casi ilegibles. | `--red` propio del modo oscuro (`#F28B82`). |
+| `styles.css`: a `.stat-l` y `.cfg-lbl` les faltaba un punto y coma, así que el navegador descartaba la declaración siguiente (las etiquetas de configuración salían sin la tipografía monoespaciada y podían partirse en dos líneas). | Corregido; el validador de CSS ya no marca errores. |
+| Los avisos largos (toast) no se cortaban en líneas: en un celular de 390 px el texto se salía de la pantalla. | El aviso se ajusta al ancho (máximo 90 % de la pantalla) y parte el texto. Probado en Chromium a 390 px. |
+| Los mensajes de éxito del ingreso y del código de recuperación usaban un verde fijo que no cambia con el tema. | Usan `var(--green)`. |
+
+**Base de datos**
+
+| Problema | Corrección |
+|---|---|
+| `schema.sql` no aclaraba que `columna_actual` y `pasada_actual` ya no se usan (la posición es `fila_actual` + `repeticion_en_fila`), ni que en `matriz_pasadas` cualquier valor mayor que 0 activa la bobina; el comentario de la migración 005 decía que el código se guarda en texto plano (se cifra desde la 016). | Comentarios corregidos y `database/01_base_de_datos_completa.sql` regenerado (19 migraciones; corre limpio en una base nueva). |
+| Los diagramas `ERD` y `DER_Negocio` (y sus copias dentro de la Documentación de Proyecto) no tenían la columna `patrones.creado_por_invitado` de la migración 019, y el ERD decía "migraciones 001 a 016". Se compararon por programa todas las columnas de los tres diagramas contra la base real: era la única diferencia. | Columna agregada, título a "001 a 019" y PNG regenerados. |
+
+**Planillas**
+
+| Problema | Corrección |
+|---|---|
+| `Componentes_en_placa.xlsx`: faltaba el capacitor de 470 µF del bus de 5 V y no figuraban los componentes del Nivel 2 que se suman a la placa. | 24 componentes numerados, con la sección "Etapa 4 · Nivel 2" (PC817 y resistencias del sensor; LCA110 ×4 con sus 330 Ω y 10 kΩ), patas y pines como en el firmware y los diagramas. |
+| `Checklist_verificaciones.xlsx`, fila 18: el resultado esperado y la corrección no decían qué significa cada error del monitor serie. | 401 = clave distinta, 404 = `TELAR_ID`, error de conexión = esperar a que despierte Render. |
+| `Lista_de_componentes`: el título del Bloque A no decía que incluye Retroceder. | Corregido. Subtotales (73.653 + 13.950 + 34.536 = 122.139) y presupuesto (29.642.903, con el 25 % 37.053.629) verificados contra los Word. |
+
+**Documentos**
+
+| Problema | Corrección |
+|---|---|
+| `LEEME.md` y `Estado_Completo_del_Proyecto.docx`: cantidades viejas (verificaciones, secciones, reuniones, tareas del cronograma, componentes de la placa) y las bobinas sin la confirmación del 19/09. | 25 verificaciones, 85 secciones, seis reuniones (la última el 19/09/2026), 160 tareas en 8 etapas, 24 componentes; cuatro bobinas confirmadas el 19/09. |
+| Bitácora, "Cómo funciona" del Nivel 2: seguía diciendo seis bobinas y que el editor admite de 2 a 32 columnas (son cuatro bobinas y de 1 a 8 columnas). | Corregido; también "los seis bobinas" → "las seis". |
+| Documentación de Proyecto: "antes de comprar las bobinas de selección" (ya están instaladas: lo que se compra son los LCA110); la medición "dimensiona la etapa de potencia que comandará las bobinas" (no hay etapa de potencia: se conmuta la señal del lector); citaba una "Guía de Medición del Telar" que no existe; a los fabricantes les faltaba IXYS (LCA110). | Corregidos. |
+| Documentación de Proyecto: dos marcas de comentario rotas (un rango con el id 10 repetido y un cierre del 12 sin apertura) que el validador de Word rechazaba. | Quitadas; el documento pasa la validación. |
+
+Se revisaron además, sin encontrar errores: el resto del backend, las 19 migraciones, Docker, el firmware y su configuración, los demás Word y Markdown, los textos de los 15 diagramas SVG y los valores de hardware (resistencias, pines, patas del LCA110 y del PC817) en todas las guías.
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (avisos largos a 390 px, etiquetas de configuración): todo bien.
+
+### Duodécima revisión de cierre (todo el proyecto otra vez: backend, web, firmware, base y documentos)
+
+| Dónde | Problema | Corrección |
+|---|---|---|
+| Firmware (Bloque A) | Si se pedían dos retrocesos desde la web antes de que la placa consultara (cada 2,5 s), daba **un solo pulso**: el backend descontaba dos pasadas y la máquina retrocedía una, y la posición quedaba corrida. Con el Nivel 2, el segundo aviso quedaba esperando un pulso que no llegaba. | Un pulso por cada pedido, de a uno por consulta y con 2 s entre pulsos. Un salto grande o hacia atrás del contador (base restaurada) se toma como referencia sin pulsar. Caso nuevo en `test_botonera.cpp`, que falla con el firmware anterior. |
+| Web | Tocar fuera del cuadro de confirmación lo cerraba sin avisar a quien esperaba la respuesta. En «Hay un trabajo en curso», el ▶ quedaba **trabado hasta recargar la página**; al cancelar «Achicar» así, las casillas quedaban con el tamaño nuevo aunque la grilla no cambiaba. | Tocar afuera, o la tecla Escape, equivale a Cancelar. En el cuadro de Guardar, tocar afuera solo lo cierra (no guarda). Probado en Chromium: con la versión anterior el ▶ queda trabado, con la nueva no. |
+| Web | Con otra pantalla llevando el tejido, tocar ⏸ y ▶ enseguida podía armar un segundo reloj: la pantalla avanzaba al doble. | La consulta que vuelve tarde ya no arranca otro reloj. |
+| Web | El selector de color mostraba la muestra recién al cerrar la paleta. | Se actualiza mientras se elige. |
+| Script de códigos | `npm run codigo -- --rotar juan` buscaba un usuario llamado "--rotar". | El usuario es el primer argumento que no es una opción. |
+| `esp32/README.md` | No decía qué pasa con varios retrocesos seguidos. | Agregado. |
+
+Se volvieron a leer sin encontrar otros errores: todos los controladores, rutas, middleware y utilidades del backend, la web completa (login, editor, reproducción, biblioteca, ficha, PDF), el firmware completo, Docker y las migraciones.
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos, con el caso nuevo), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (cuadro de confirmación cerrado tocando afuera y con Escape, ▶ después de cancelar, Achicar cancelado, Guardar cerrado sin guardar): todo bien.
+
+### Decimotercera revisión de cierre (todo el proyecto otra vez)
+
+| Dónde | Problema | Corrección |
+|---|---|---|
+| Firmware (Nivel 2) | En un pulso de retroceso con el telar en marcha no se aplicaba selección (bien), pero los canales de la pasada anterior podían seguir activos hasta su tiempo, y esa pasada quedaba como referencia: la pasada siguiente medía su duración contra un período doble (400 ms) y quedaba seleccionada la pasada entera, sin el hueco que deja el papel. | En el pulso de retroceso se sueltan los canales y se descarta la referencia: la pasada siguiente usa la duración inicial. |
+
+Se revisaron además, sin encontrar otros errores:
+- **Firmware:** los módulos de selección y de posición y el sketch de prueba del relé (corrientes del LED con pila de 9 V y con dos AA, resistencia del LCA110 entre 23 y 35 Ω).
+- **Web:** las variables del CSS (todas definidas) y los dos scripts (sintaxis correcta, sin ids repetidos, y cada función llamada desde un botón existe).
+- **Documentación:** los números de la documentación coinciden con el código (consultas cada 2,5 s y 4 s, límites por usuario, filas, columnas y repeticiones).
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (invitado, dibujo nuevo, ficha, cuadro de confirmación): todo bien.
+
+### Decimocuarta revisión de cierre (foco en el backend)
+
+| Dónde | Problema | Corrección |
+|---|---|---|
+| `server.js` (cabeceras) | helmet manda por defecto `upgrade-insecure-requests` y HSTS. Con la web abierta por `http://` en la red local (la PC de la fábrica, Docker: `http://192.168.1.50:3000`), el navegador pedía `styles.css`, los scripts y la API por `https://` a un servidor que no lo tiene: **la página quedaba sin estilos, sin PDF y sin login**. Por `localhost` y en Render no se notaba. | Sin `upgrade-insecure-requests`, y HSTS solo cuando la conexión es HTTPS (detrás de Render se sigue mandando). Probado en Chromium por la IP de la red: antes fallaban los tres archivos, ahora carga todo. Control agregado a la prueba de integración. |
+| Dependencias | `npm audit`: `proxy-addr` 2.0.7 (crítica: suplantación de IP con IPv6 mapeado, afecta a `trust proxy`) y `compression` 1.8.1 (alta: pérdida de memoria si el cliente corta la respuesta). | Actualizadas a 2.0.8 y 1.8.2 (parches, sin cambios de API). `npm audit`: 0 vulnerabilidades. |
+
+Prueba de fuerza del backend: 23.134 pedidos a todas las rutas, con datos de tipos equivocados, números enormes, textos de 5.000 caracteres, caracteres nulos, JSON roto, ids inválidos y filtros mal formados, como operario y como dispositivo, sin límites de pedidos: **ninguna respuesta 500** y ningún error en el registro del servidor.
+
+Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 18/18, y Chromium (por localhost y por la IP de la red): todo bien.

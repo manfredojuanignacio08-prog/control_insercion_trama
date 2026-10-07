@@ -54,16 +54,24 @@ Sin corregirlo pasarían dos cosas a la vez: el contador subiría cuando en
 realidad bajó, y la fila del dibujo avanzaría cuando tenía que volver atrás. El
 error acumulado sería de dos pasadas y dos filas por cada retroceso.
 
-La corrección aprovecha que el Bloque A sensa el botón Retroceder. Al detectarlo
-se marca el pulso siguiente como retroceso: el contador descuenta y la fila
-retrocede, de modo que la próxima pasada hacia adelante repite exactamente la
-fila que se acaba de deshacer. Que la señal se repita es lo correcto: esa pasada
-se va a volver a tejer.
+La corrección aprovecha que el Bloque A sensa el botón Retroceder (y que el backend cuenta
+cada retroceso, venga de la web o de la botonera). Al enterarse, el nodo marca el pulso
+siguiente como retroceso: el contador descuenta y la fila retrocede, de modo que la próxima
+pasada hacia adelante repite exactamente la fila que se acaba de deshacer. Que la señal se
+repita es lo correcto: esa pasada se va a volver a tejer. En el pulso del retroceso no se
+selecciona nada (los canales quedan en reposo): la máquina está deshaciendo una pasada, no
+tejiendo una.
+
+El aviso puede llegar DESPUÉS del pulso (la consulta al backend es cada 2,5 s). Si el telar
+está en pausa y el último pulso se contó hacia adelante hace menos de 5 s, ese pulso se
+reclasifica: el contador baja dos (se quita el +1 y se resta 1) y la fila vuelve dos pasadas.
 
 ## Cambio de dibujo en caliente
 
-El nodo compara en cada consulta el dibujo asignado al telar contra el que tiene
-cargado. Si difieren, descarga el nuevo y vuelve a su primera fila.
+El nodo compara en cada consulta el dibujo asignado al telar (y la producción en curso)
+contra lo que tiene cargado. Si cambió el dibujo, o empezó una producción nueva del mismo
+dibujo (⏹ y ▶ seguidos), lo vuelve a bajar y adopta la posición del backend, que en una
+producción nueva es la primera fila con el conteo en cero.
 
 Sin eso el nodo seguiría tejiendo el dibujo anterior después de que alguien
 asignara otro desde la aplicación, y nadie lo notaría hasta ver la pieza.
@@ -81,10 +89,11 @@ Por eso el nodo reporta su posición al backend en cada ciclo, y al arrancar la
 lee de vuelta desde el mismo endpoint que le entrega el dibujo. Si hay una
 producción en curso, retoma la fila y el conteo donde quedaron.
 
-El conteo importa tanto como la fila: el backend descarta los reportes menores
-que el valor guardado (esa es la protección contra reinicios), así que un nodo
-que empezara de cero vería sus reportes ignorados hasta alcanzar el número
-anterior.
+El conteo importa tanto como la fila: el backend descarta un reporte que baja más
+de 25 pasadas respecto del valor guardado con una fila que no acompaña esa bajada (esa
+es la protección contra reinicios) y le devuelve al nodo el valor guardado, para que
+vuelva a bajar posición y conteo. Un nodo que empezara de cero no podría reportar nada
+hasta readoptarlos.
 
 Cuando lo que cambia es el dibujo asignado, en cambio, se arranca desde la
 primera fila: ahí empezar de cero es lo correcto.

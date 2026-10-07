@@ -31,6 +31,7 @@ docs/             Documentación de apoyo
   guias/          Instalación, funcionamiento y base de datos
 database/         El esquema completo, para levantar la base desde cero
 documentacion_proyecto/   Los documentos de la Carpeta del Proyecto
+_referencia_app_android/  ⚠️ Base de una eventual app Android: solo referencia, NO funcional
 ```
 
 ## Las piezas del producto
@@ -75,26 +76,6 @@ backend** por la **misma API**. Nadie toca la base de datos directo.
 
 ---
 
-## Estructura del paquete
-
-```
-proyecto_completo/
-├── backend/                 → Servidor Node.js + Express + PostgreSQL.
-│   ├── src/                    La API REST y la lógica de negocio.
-│   └── public/                 La PÁGINA WEB (el producto), servida por el backend.
-├── esp32/                   → Firmware del microcontrolador (gateway con
-│                              relés Marcha/Pausa/Retroceder) + documentación eléctrica.
-├── database/                → Script SQL de referencia del esquema.
-├── docs/                    → Documentación de análisis, instalación y uso.
-├── diagramas/               → Diagramas del sistema (arquitectura, base de datos)
-│                              y del hardware (conexión eléctrica, bloques).
-└── _referencia_app_android/ → ⚠️ Base de una eventual app Android, guardada
-                               SOLO como referencia. NO funcional, NO en uso,
-                               NO es parte del producto. Se puede ignorar.
-```
-
----
-
 ## Puesta en marcha, en orden
 
 ### 1. Backend + web (primero: todo depende de esto)
@@ -136,11 +117,11 @@ mejoras eléctricas en `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md`.
 - `src/utils/`, lógica pura sin base de datos: derivación de ligamento,
   cálculo de posición de tejido, validaciones.
 - `backend/src/db/schema.sql` + `migracion_*.sql`, esquema de 9 tablas y
-  migraciones idempotentes.
+  migraciones que se aplican una sola vez cada una (el servidor aplica las pendientes al arrancar).
 - `public/`, la página web (HTML/CSS/JS + jsPDF), diseñada para el celular,
   con modo claro y oscuro.
 - `backend/src/controllers/auth.controller.js` + `backend/src/routes/auth.routes.js` -
-  login biométrico (huella/rostro) con WebAuthn. Ver
+  ingreso con huella (WebAuthn), código de recuperación, invitaciones y modo invitado. Ver
   `AUTENTICACION_BIOMETRICA.md`.
 - `Dockerfile`, `docker-compose.yml`, `ecosystem.config.cjs`, despliegue.
 
@@ -181,13 +162,16 @@ el `AVISO.md` dentro de la carpeta. Se puede ignorar por completo.
 
 **Hecho y probado:** backend completo con PostgreSQL/Neon (probado de
 punta a punta), página web conectada a la API y diseñada para el celular
-(con modo claro/oscuro), login biométrico (huella/rostro) con WebAuthn,
+(con modo claro/oscuro), ingreso con huella (WebAuthn) y código de recuperación,
 esquema multi-telar, historial y log de errores, firmware ESP32 gateway
 (relés Marcha/Pausa/Retroceder) acorde al diseño eléctrico del equipo.
 
-**Siguiente fase:** armar la etapa eléctrica según la documentación (con las
-mejoras de `RECOMENDACIONES_ELECTRICAS.md`) y conectar los relés del ESP32 a
-la botonera del telar.
+**Instalado en el telar:** el Bloque A (relés de Marcha, Pausa y Retroceder y sensado de
+la botonera), probado en la máquina el 19/09/2026.
+
+**Siguiente fase:** el Nivel 2 (sensor de pasada y relés LCA110 sobre los lectores
+ópticos), con las mediciones que faltan listadas en `esp32/control_trama_esp32/README.md` y
+`PUESTA_EN_MARCHA.md`.
 
 
 ## Nivel 2, en desarrollo

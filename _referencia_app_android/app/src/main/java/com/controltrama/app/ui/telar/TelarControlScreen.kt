@@ -77,11 +77,10 @@ fun TelarControlScreen(telarId: Int) {
                 }
 
                 // "Avanzar" acá es un botón manual, pensado para probar la
-                // conexión sin hardware. Cuando el ESP32 esté conectado, va
-                // a ser el microcontrolador el que llame a este mismo
-                // endpoint automáticamente ante cada pasada real detectada
-                // por el sensor óptico — no hace falta cambiar el backend
-                // ni este modelo de datos para eso, solo quién lo llama.
+                // conexión sin hardware. El ESP32 del Nivel 2 NO llama a este
+                // endpoint: informa el conteo del sensor inductivo con
+                // POST api/telares/{id}/pasadas, y con el sensor activo
+                // /avanzar responde 409 SENSOR_ACTIVO (ver AVISO.md).
             }
         }
 

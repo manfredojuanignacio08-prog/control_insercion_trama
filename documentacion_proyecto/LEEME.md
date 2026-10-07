@@ -8,9 +8,9 @@ el repositorio para que el código y la documentación viajen juntos.
 | Archivo | Qué contiene |
 |---|---|
 | `Estado_Completo_del_Proyecto.docx` | **Empezar por acá.** Resume todo: qué es el proyecto, qué se construyó, las decisiones técnicas y su fundamento, y lo que falta. |
-| `Documentación_de_Proyecto.docx` | El documento formal completo, con 66 secciones. |
+| `Documentación_de_Proyecto.docx` | El documento formal completo, con 85 secciones (contando los subtítulos). |
 | `Bitácora.docx` | Registro cronológico de avances y decisiones. |
-| `Registro de Entrevistas.docx` | Las cuatro minutas de reuniones con el cliente. |
+| `Registro de Entrevistas.docx` | Las minutas de las seis reuniones con el cliente (la última, del 19/09/2026) y la séptima, pendiente. |
 
 ## Guías de trabajo
 
@@ -18,7 +18,7 @@ el repositorio para que el código y la documentación viajen juntos.
 |---|---|
 | `Conexionado_Nivel2.docx` | El paso a paso del sensor de pasada y los relés, con sus diagramas. |
 | `Guia_Bloques_C_y_D.docx` | Qué falta hacer en esos dos bloques y en qué orden. |
-| `Checklist_verificaciones.xlsx` | Las 24 verificaciones antes y durante la instalación. |
+| `Checklist_verificaciones.xlsx` | Las 25 verificaciones antes y durante la instalación. |
 | `Componentes_en_placa.xlsx` | Los componentes de la placa, con su ubicación. |
 
 ## Economía y planificación
@@ -27,7 +27,7 @@ el repositorio para que el código y la documentación viajen juntos.
 |---|---|
 | `Lista_de_componentes_Control_Trama.xlsx` | Todos los componentes por bloque, con precios y notas. |
 | `Estimacion_Costos_Ganancia_Contrato_v4.docx` | Costos, márgenes y condiciones del servicio. |
-| `Gantt_2026 - ...xlsx` | El cronograma, con 162 tareas en 8 etapas. |
+| `Gantt_2026 - ...xlsx` | El cronograma, con 160 tareas en 8 etapas. |
 
 ## Inversión y armado
 

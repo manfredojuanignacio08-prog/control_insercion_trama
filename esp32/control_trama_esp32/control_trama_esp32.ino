@@ -160,6 +160,10 @@ static const unsigned long DEBOUNCE_BOTON_MS     = 400;   // rebotes del pulsado
 static const unsigned long IGNORAR_ECO_MS        = 800;   // el sensado ve el pulso del propio relé
 static const unsigned long REINTENTO_AVISO_MS    = 3000;  // entre reintentos si el backend no responde
 static const int           FALLOS_PARA_AVISAR    = 5;     // consultas fallidas seguidas = caída
+// Retrocesos pedidos desde la web que todavía no se pulsaron. Cada uno es un pedido con su propia
+// confirmación, así que entre dos consultas puede haber dos o tres; un salto mayor no es un pedido
+// sino el contador que cambió por otro motivo (la base se restauró, otro telar): no se pulsa nada.
+static const long          MAX_RETROCESOS_PENDIENTES = 3;
 
 int estadoDeseado = -1;           // -1 desconocido | 0 detenido | 1 tejiendo (lo último que ordenó el backend)
 int retrocederSeqConocido = -1;   // -1 desconocido: no se pulsa hasta la primera lectura
@@ -338,10 +342,19 @@ void botoneraAplicarEstado(const char* estado, long retrocederSeqAhora, bool lis
   if (retrocederSeqAhora < 0) return;
   if (retrocederSeqConocido < 0) { retrocederSeqConocido = retrocederSeqAhora; return; }
   if (retrocederSeqAhora != retrocederSeqConocido) {
+    const long pendientes = retrocederSeqAhora - retrocederSeqConocido;
+    if (pendientes < 0 || pendientes > MAX_RETROCESOS_PENDIENTES) {
+      log("El contador de retrocesos cambió de forma inesperada: se toma como referencia, sin pulsar");
+      retrocederSeqConocido = retrocederSeqAhora;
+      return;
+    }
     if (millis() - ultimoComando < MIN_ENTRE_COMANDOS_MS) return;   // primero Pausa, después Retroceder
     log("El backend pide RETROCEDER: pulso en el relé de RETROCEDER");
     pulsarRele(PIN_RELE_RETROCEDER);
-    retrocederSeqConocido = retrocederSeqAhora;
+    // De a uno: si se pidieron dos antes de esta consulta, el segundo pulso sale en la siguiente
+    // (respetando los 2 s entre órdenes). Antes se daba un solo pulso para los dos: el backend
+    // descontaba dos pasadas y la máquina retrocedía una.
+    retrocederSeqConocido += 1;
     ultimoComando = millis();
   }
 }
@@ -471,9 +484,12 @@ bool descargarDibujo() {
     const int cols = min((int)fila.size(), N_CANALES);
     if (cols > columnas) columnas = cols;
     for (int c = 0; c < N_CANALES; c++) {
-      // Cualquier valor distinto de cero se toma como activo. El editor solo
-      // genera ceros y unos, pero puede haber dibujos viejos con otros valores.
-      nuevo[f][c] = (c < cols) ? (fila[c].as<int>() != 0) : false;
+      // Cualquier valor mayor que cero se toma como activo, el mismo criterio que el backend
+      // (matriz_ligamento) y la web. El editor solo genera ceros y unos, pero puede haber dibujos
+      // viejos con otros valores. Se lee como número con decimales: con as<int>() un 0,5 se
+      // truncaba a 0 y un número que no entra en un int daba 0, y esa bobina no se accionaba
+      // aunque la web la mostrara marcada.
+      nuevo[f][c] = (c < cols) ? (fila[c].as<float>() > 0.0f) : false;
     }
   }
 
@@ -503,11 +519,10 @@ bool descargarDibujo() {
   dibujoFilas    = filas;
   dibujoColumnas = columnas;
   filaActual     = filaInicial;
-  // Al retomar se empieza la fila desde su primera pasada. Perder unas pocas
-  // repeticiones tras un reinicio es preferible a saltearlas: el operario ve el
-  // dibujo correcto y, si hace falta, ajusta con Retroceder.
   {
-    // Se retoma la pasada exacta dentro de la fila, no el principio de la fila.
+    // Se retoma la pasada exacta dentro de la fila (repeticion_en_fila), no el principio de la
+    // fila. Solo si ese dato falta o no cuadra con las repeticiones de la fila se empieza por su
+    // primera pasada: perder unas pocas repeticiones es preferible a saltearlas.
     const long hechas = doc["repeticion_en_fila"] | 0L;
     const int  restan = nuevoRep[filaInicial] - (int)hechas;
     repeticionesRestantes = (hechas >= 0 && restan >= 1 && restan <= nuevoRep[filaInicial])
@@ -957,7 +972,13 @@ void loop() {
         portENTER_CRITICAL(&mux);
         filasTotales = dibujoFilas;
         filaAplicada = envolverFila(filaActual + DESPLAZAMIENTO_FILAS, filasTotales);
-        seleccionAplicarFila(dibujo[filaAplicada], dibujoColumnas);
+        // En un retroceso la máquina deshace una pasada: no se selecciona nada (los canales quedan
+        // en reposo). Antes se aplicaba la fila de la PRÓXIMA pasada mientras la máquina deshacía la
+        // anterior, que es otra combinación. Así lo modela también sim_nivel2_firmware.py.
+        // También se sueltan los canales de la pasada anterior, si seguían activos, y se descarta esa
+        // pasada como referencia de duración: medida contra ella, la pasada siguiente duraría el doble.
+        if (!pulsoFueRetroceso) seleccionAplicarFila(dibujo[filaAplicada], dibujoColumnas);
+        else                    seleccionApagarTodo();
 
         // Avanzar o retroceder según el sentido del movimiento. En un retroceso el telar deshace
         // la última pasada, así que la fila tiene que volver atrás: la próxima pasada hacia
@@ -971,11 +992,15 @@ void loop() {
         restantes = repeticionesRestantes;
         portEXIT_CRITICAL(&mux);
 
-        log("Pasada " + String(sensorPasadaTotal()) +
-            " · fila " + String(filaAplicada + 1) + "/" + String(filasTotales) +
-            " (quedan " + String(restantes) + " de " + String(repeticiones[filaAplicada]) + ")" +
-            " · " + seleccionEstadoTexto() +
-            (pulsoFueRetroceso ? String(" · retroceso, la fila vuelve a ") + String(cambioA + 1) : String("")));
+        if (pulsoFueRetroceso) {
+          log("Pasada " + String(sensorPasadaTotal()) + " · retroceso: sin selección, la fila vuelve a " +
+              String(cambioA + 1) + "/" + String(filasTotales));
+        } else {
+          log("Pasada " + String(sensorPasadaTotal()) +
+              " · fila " + String(filaAplicada + 1) + "/" + String(filasTotales) +
+              " (quedan " + String(restantes) + " de " + String(repeticiones[filaAplicada]) + ")" +
+              " · " + seleccionEstadoTexto());
+        }
       } else {
         // La máquina se movió sin que el sistema esté "tejiendo": un retroceso con el telar en
         // pausa (lo normal: el operario pausa y retrocede), o pasadas en los segundos que tarda

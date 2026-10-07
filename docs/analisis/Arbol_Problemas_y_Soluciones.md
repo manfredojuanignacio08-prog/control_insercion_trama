@@ -62,7 +62,8 @@ efecto negativo se convierte en un **fin** (un beneficio logrado).
 1. **Se creó un editor visual de patrones** (la página web): una cuadrícula
    donde cada fila representa una combinación de bobinas y cada columna un elemento del telar, con colores por fila. → ataca la causa 1.
 2. **Se diseñó una base de datos central (PostgreSQL en Neon)** con 4
-   tablas: patrones, telares, historial y errores. → ataca las causas 2 y 5.
+   tablas: patrones, telares, historial y errores (después se sumaron las del ingreso
+   de usuarios). → ataca las causas 2 y 5.
 3. **Se construyó un backend (Node.js + Express)** que expone una API REST:
    es el intermediario único entre la interfaz, la base de datos y el telar.
    → ataca la causa 2 y habilita la 3.
@@ -70,8 +71,8 @@ efecto negativo se convierte en un **fin** (un beneficio logrado).
    acción se guarda en el servidor al instante, no en el navegador. → ataca
    la causa 4.
 5. **Se desarrolló el firmware del ESP32** que conecta el telar físico al
-   sistema, accionando los relés de Marcha/Pausa según lo que indica el
-   backend. → ataca la causa 3.
+   sistema, accionando los relés de Marcha, Pausa y Retroceder según lo que indica el
+   backend, y avisando cuando alguien usa la botonera a mano. → ataca la causa 3.
 6. **Se registró el historial de producción y un log de errores** en la base
    de datos. → ataca la causa 5.
 
@@ -115,7 +116,7 @@ medida que aparecían. Este es el camino real que siguió el proyecto:
 5. **Cuarto problema, "esto sigue siendo software; el telar real no está
    conectado".**
    → Solución: se diseñó el **ESP32 como gateway**, que consulta el estado al
-   backend y acciona los botones de Marcha/Pausa del telar mediante relés en
+   backend y acciona los botones de Marcha, Pausa y Retroceder del telar mediante relés en
    paralelo, sin invadir la electrónica de la máquina y con comportamiento
    seguro ante fallas (fail-safe).
 

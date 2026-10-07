@@ -96,8 +96,8 @@ Dado que los tejidos de esta planta son **mayormente patrones repetitivos**
 (tipo cortina), el Nivel 2 es alcanzable como prototipo real mediante
 **control por marcos (dobby)** en lugar de control hilo por hilo. Esto reduce
 el hardware de "cientos de electroimanes" a las **cuatro bobinas de selección** que el
-telar ya tiene (confirmado por el dueño el 19/09/26; un relevamiento anterior había estimado
-hasta 8), algo que el mismo ESP32 del Nivel 1 maneja sin problema.
+telar ya tiene (confirmado por el dueño el 19/09/26; el relevamiento del 28/08/26 había estimado
+seis), algo que el mismo ESP32 del Nivel 1 maneja sin problema.
 
 El desarrollo completo de esta solución -cómo funciona, el hardware, y cómo se
 conecta con lo que ya está hecho- está en:
