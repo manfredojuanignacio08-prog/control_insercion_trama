@@ -34,6 +34,14 @@ Un canal de la selección del dibujo del Bloque D: el relé LCA110 (OptoMOS, sal
 las cuatro patas que se usan (1 y 2 del lado del ESP32, 4 y 6 de la salida), las dos resistencias y las dos formas posibles de conectarlo
 al lector óptico, en serie o en paralelo.
 
+### `diagrama_bloque_D.svg`
+El Bloque D completo: los cuatro relés LCA110 con sus pines (18, 19, 21 y 22), las resistencias de
+330 Ω y 10 kΩ y el GND común del lado del ESP32; del lado del telar, cada relé conectado solo al par de
+señal (A y B) de su lector, y los dos cables de alimentación de los lectores, que no van a ningún relé.
+Abajo compara las dos conexiones posibles: en paralelo (puente entre A y B, sin cortar nada,
+`CANAL_ACTIVO_EN_ALTO` en `true`) y en serie (se corta el cable A y el relé se intercala,
+`CANAL_ACTIVO_EN_ALTO` en `false`), con la medición que decide cuál corresponde.
+
 ### `diagrama_nivel2_marcos.svg`
 Vista de conjunto del Nivel 2: cómo el microcontrolador comanda los cuatro
 lectores ópticos que hoy lee la cinta de papel.
