@@ -56,7 +56,7 @@
 
 // Clave del dispositivo: va en el header X-Device-Key de cada pedido. Tiene que ser IGUAL a
 // ESP32_DEVICE_KEY del backend. Si no coincide, el monitor serie muestra "401".
-#define DEVICE_KEY         "cc1ce04d-f582-4150-be55-dc06a0d1faf33e97df76-6c70-407d-963b-518b3a931f7c"
+#define DEVICE_KEY         "cc1ce04d-f582-4150-be55-dc06a0d1faf33e97df76-6c70-407d-963b-518b3a931f7cY"
 
 // Verificación del certificado HTTPS (opcional). Sin esto el nodo cifra el tráfico pero no
 // comprueba con quién habla. Para verificarlo, pegar el certificado raíz (PEM) y descomentar:
