@@ -121,13 +121,14 @@ en vez de la del proxy.
 |---|---|---|---|
 | GET | `/api/patrones?buscar=texto` |, | Lista (filtra por nombre, ILIKE) |
 | GET | `/api/patrones/:id` |, | Detalle |
-| POST | `/api/patrones` | `{nombre, filas, columnas, matriz_pasadas, repeticiones_por_fila?, matriz_ligamento?, colores_filas?, metadata?}` | Crea. Si no mandás `matriz_ligamento`, se deriva automáticamente (`pasadas>0 → 1`) |
+| POST | `/api/patrones` | `{nombre, filas, columnas, matriz_pasadas, repeticiones_por_fila?, matriz_ligamento?, colores_filas?, metadata?}` | Crea. Si no mandás `matriz_ligamento`, se deriva automáticamente (`pasadas>0 → 1`). Cada fila de `matriz_pasadas` puede tener **una sola** bobina activa (una trama por pasada): con dos responde **400** |
 | PUT | `/api/patrones/:id` | igual que POST, más `version_esperada?` | Reemplaza el patrón. Si se manda `version_esperada` (el `modificado_at` que tenía la pantalla) y otra persona lo guardó después, responde **409** `DIBUJO_MODIFICADO` en vez de pisar sus cambios |
 | DELETE | `/api/patrones/:id` |, | Borra (falla con 409 si tiene historial asociado) |
 | PUT | `/api/patrones/:id/metros-por-pasada` | `{metros_por_pasada}` (número mayor que 0 y hasta 1, o `null`) | Cuánto avanza la tela por pasada: con este dato las estadísticas pasan pasadas a metros. `null` lo deja sin definir |
+| PUT | `/api/patrones/:id/hilado` | `{peso_kg, metros_max, reiniciar}` (números mayores que 0 o `null`; `reiniciar` true/false) | Hilado disponible: peso en kg y metros de tela que alcanza a tejer. Las estadísticas devuelven `hilado` con lo usado, lo restante y los metros que faltan, contados desde que se cargó (`reiniciar: true` = hilado nuevo, vuelve a contar desde cero). Los dos en `null` borran el dato |
 | GET | `/api/patrones/:id/estadisticas` |, | Producción acumulada del dibujo: veces tejido, pasadas, vueltas, horas de máquina, primera y última vez, y metros si tiene `metros_por_pasada`. Indica si el conteo es estimado o del sensor (`precision_conteo`) |
 
-Una sesión de **invitado** puede crear dibujos y cambiar o borrar solo los que creó como invitado; en los de los operarios, `PUT`, `DELETE` y `metros-por-pasada` responden **403** `SOLO_OPERARIO`. Cuando un operario guarda un dibujo hecho por un invitado, pasa a ser de los operarios.
+Una sesión de **invitado** puede crear dibujos y cambiar o borrar solo los que creó como invitado; en los de los operarios, `PUT`, `DELETE`, `metros-por-pasada` e `hilado` responden **403** `SOLO_OPERARIO`. Cuando un operario guarda un dibujo hecho por un invitado, pasa a ser de los operarios.
 
 `GET /api/patrones` y `GET /api/historial` aceptan `limit` (defecto 500 / 100) y `offset`. `PUT /api/patrones/:id` responde **409** (`codigo: PATRON_EN_PRODUCCION`) si se intenta cambiar la matriz o las dimensiones de un dibujo que se está tejiendo (producción abierta): hay que detener el trabajo primero. Nombre, colores y metadatos sí se pueden editar.
 
@@ -191,6 +192,7 @@ src/
 │   ├── migracion_017_filas_hasta_300.sql  Migración: el máximo de filas de un dibujo pasa de 100 a 300.
 │   ├── migracion_018_senal_nivel2.sql  Migración: solo actualiza la descripción de `ultimo_reporte_sensor`, que ahora también renueva la consulta periódica del nodo del Nivel 2.
 │   ├── migracion_019_dibujos_de_invitado.sql  Migración: marca los dibujos creados por un invitado (`creado_por_invitado`): el invitado solo puede cambiar o borrar esos. Índice para buscar el usuario sin distinguir mayúsculas.
+│   ├── migracion_020_hilado.sql  Migración: hilado del dibujo (`hilado_peso_kg`, `hilado_metros_max`, `hilado_pasadas_base`) para la ficha y el PDF.
 │   ├── migrator.js                               Aplica cada migración UNA vez (tabla migraciones_aplicadas)
 │   └── migrate.js                                Corre las migraciones pendientes (npm run migrate)
 ├── scripts/
@@ -213,7 +215,7 @@ src/
   columnas NO se recorren una por una, son simultáneas dentro de la misma
   pasada. Lo que avanza es la fila.
 - La repetición es **de fila entera** y va en `repeticiones_por_fila` (migración 014): un
-  número por fila, cuántas pasadas seguidas se teje esa combinación antes de pasar a la
+  número por fila, cuántas pasadas seguidas se teje esa fila antes de pasar a la
   siguiente. Las celdas de `matriz_pasadas` dicen si la bobina se activa (mayor que cero) o
   no; la web guarda solo ceros y unos.
 - `historial_produccion.fila_actual` y `repeticion_en_fila` guardan la posición de la

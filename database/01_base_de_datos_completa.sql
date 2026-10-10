@@ -23,9 +23,10 @@
 --   - Esquema multi-telar desde el día 1 (el piloto arranca con 1).
 --   - Usuarios con login por huella (WebAuthn): tablas usuarios,
 --     credenciales_biometricas, desafios_webauthn e invitaciones (más abajo).
---   - Una FILA es una combinación de bobinas: sus columnas se activan de forma
---     simultánea (cada celda vale 0 o 1). Cuántas pasadas seguidas se teje cada
---     fila lo dice repeticiones_por_fila (migración 014); sin ese dato, una.
+--   - Una FILA es una pasada: lleva como máximo una bobina activa, porque en cada
+--     pasada entra una sola trama (cada celda vale 0 o 1; el servidor rechaza una
+--     fila con dos). Cuántas pasadas seguidas se teje cada fila lo dice
+--     repeticiones_por_fila (migración 014); sin ese dato, una.
 --   - fila_actual + repeticion_en_fila en historial_produccion: posición exacta de la
 --     producción en curso (la fila y cuántas pasadas de esa fila ya se tejieron), para
 --     soportar "retroceder una pasada" sin reconstruir nada. columna_actual y
@@ -44,7 +45,7 @@ CREATE TABLE IF NOT EXISTS patrones (
   nombre            TEXT NOT NULL UNIQUE,
   filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 300),
   columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 1 AND 8),
-  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por pasada-combinación): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
+  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por pasada, con una bobina como máximo): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
   matriz_ligamento  JSONB,            -- array de arrays binarios (0/1), derivado de matriz_pasadas si no se manda
   colores_filas     JSONB,            -- array de colores hex, uno por fila
   metadata          JSONB,            -- ej: {"tipo": "Tafetán"}

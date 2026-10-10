@@ -415,7 +415,15 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
   cuadrícula. Si el nombre ya existe, el sistema lo avisa.
 - **Cuadrícula**: cada fila es una pasada y tocar una celda marca la bobina
   que se activa en ella; el número a la derecha de la fila (columna ×) dice
-  cuántas pasadas seguidas se teje esa fila.
+  cuántas pasadas seguidas se teje esa fila. Cada fila lleva una sola bobina
+  (una trama por pasada): al marcar otra, la anterior se desmarca. En el
+  celular, «Siguiente» en el teclado pasa a la casilla de la fila de abajo.
+- **Intercalar**: arma una secuencia que alterna bobinas pasada por pasada
+  (por ejemplo 1, 3, 2), repetida las veces que se indique, al final del
+  dibujo o en lugar de todo el dibujo.
+- **Ficha del dibujo (engranaje)**: metros de tela por pasada y hilado
+  (peso y metros de tela que alcanza a tejer). Muestra el hilado usado y el
+  restante y los metros que faltan, contados desde que se cargó el hilado.
 - **Color por fila**: a cada fila se le puede asignar un color de hilo.
 - **Controles (⏸ ▶ ⏪ ⏹)**: mueven la grilla y al mismo tiempo dan la orden al
   telar (por ahora hay un solo telar, se usa automáticamente). ▶ asigna el
@@ -423,8 +431,9 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
   sin cerrar el trabajo; ⏪ pausa y retrocede una pasada la máquina real (pide
   confirmación); ⏹ termina el trabajo (cierra esa producción en el historial).
 - **Exportar ficha técnica**: descarga un **PDF real** con el nombre, las
-  dimensiones y la grilla coloreada, generado en el navegador con `jsPDF`
-  (no depende de internet).
+  dimensiones, la producción (metros tejidos, pasadas, metros que faltan y
+  horas de máquina), el hilado y la grilla coloreada, generado en el
+  navegador con `jsPDF` (no depende de internet).
 
 ### Biblioteca
 Lista todos los patrones guardados, con buscador por nombre. Permite cargar

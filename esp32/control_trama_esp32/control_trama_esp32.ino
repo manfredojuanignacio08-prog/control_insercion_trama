@@ -44,15 +44,16 @@
 #include "posicion_dibujo.h"
 
 // ---------------------------------------------------------------- El dibujo
-// La matriz que se está tejiendo. Cada fila es una combinación que se teje tantas pasadas como indique repeticiones[]; sus columnas son
-// los canales que se activan al mismo tiempo.
+// La matriz que se está tejiendo. Cada fila se teje tantas pasadas como indique repeticiones[]; sus columnas son
+// los canales de selección. La web y el backend dejan una sola bobina por fila (una trama por pasada), pero el
+// firmware aplica la fila tal como llega.
 //
 // dibujo, dibujoFilas, dibujoColumnas y filaActual los tocan los dos núcleos: siempre
 // dentro de una sección crítica (mux).
 static const int MAX_FILAS = 300;   // igual que el máximo de la web y la base
 bool  dibujo[MAX_FILAS][N_CANALES];
 // Cuántas pasadas seguidas se teje cada fila. En un tejido real es habitual que la
-// misma combinación de bobinas se repita cien o mil veces antes de cambiar, y
+// misma bobina se repita cien o mil veces antes de cambiar, y
 // dibujar cien filas idénticas era impracticable.
 int   repeticiones[MAX_FILAS];
 // Cuántas pasadas faltan de la fila que se está tejiendo.
@@ -985,7 +986,7 @@ void loop() {
         // adelante debe repetir la misma fila que se acaba de deshacer.
         // Cada fila se teje tantas pasadas como diga repeticiones[]. Solo cuando se
         // agotan se pasa a la fila siguiente: una fila con 100 repeticiones son 100
-        // pasadas de la misma combinación de bobinas.
+        // pasadas de la misma fila.
         if (pulsoFueRetroceso) posicionAtras(filaActual, repeticionesRestantes, repeticiones, filasTotales);
         else                   posicionAdelante(filaActual, repeticionesRestantes, repeticiones, filasTotales);
         cambioA = filaActual;

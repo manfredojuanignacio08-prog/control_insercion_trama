@@ -60,7 +60,7 @@ efecto negativo se convierte en un **fin** (un beneficio logrado).
 ### 🌱 Medios (lo que se hizo para atacar cada causa)
 
 1. **Se creó un editor visual de patrones** (la página web): una cuadrícula
-   donde cada fila representa una combinación de bobinas y cada columna un elemento del telar, con colores por fila. → ataca la causa 1.
+   donde cada fila representa una pasada con una sola bobina (una trama por pasada) y cada columna una bobina, con colores por fila. → ataca la causa 1.
 2. **Se diseñó una base de datos central (PostgreSQL en Neon)** con 4
    tablas: patrones, telares, historial y errores (después se sumaron las del ingreso
    de usuarios). → ataca las causas 2 y 5.

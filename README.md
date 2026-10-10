@@ -170,8 +170,9 @@ esquema multi-telar, historial y log de errores, firmware ESP32 gateway
 la botonera), probado en la máquina el 19/09/2026.
 
 **Siguiente fase:** el Nivel 2 (sensor de pasada y relés LCA110 sobre los lectores
-ópticos), con las mediciones que faltan listadas en `esp32/control_trama_esp32/README.md` y
-`PUESTA_EN_MARCHA.md`.
+ópticos). El 10/10/2026 se probó todo en protoboard y funcionó; se está haciendo la plaqueta
+para probarlo en la máquina. Las mediciones que faltan están en
+`esp32/control_trama_esp32/README.md` y `PUESTA_EN_MARCHA.md`.
 
 
 ## Nivel 2, en desarrollo

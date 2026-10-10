@@ -101,7 +101,7 @@ primera fila: ahí empezar de cero es lo correcto.
 ## Repeticiones por fila
 
 Sin repeticiones, una fila del dibujo sería una pasada. Pero en un tejido real es habitual que la misma
-combinación de bobinas se repita cien o mil veces seguidas antes de cambiar, y
+bobina se repita cien o mil veces seguidas antes de cambiar, y
 dibujar cien filas idénticas era impracticable.
 
 Por eso cada fila lleva un número de repeticiones: cuántas pasadas seguidas se teje
@@ -127,9 +127,10 @@ aunque en la documentación aparezcan como bloques separados.
 
 ## Estado del Nivel 2
 
-**El Nivel 2 no está instalado en la máquina.** Su parte del código está escrita para poder
-revisarla y probarla en banco antes de que existan las mediciones que faltan. Hasta entonces la
-placa corre este mismo programa con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
+**El Nivel 2 no está instalado en la máquina.** El 10/10/2026 se probó todo en protoboard (el
+sensor de pasada y el relé LCA110 con el ESP32) y funcionó; ahora se está haciendo la plaqueta
+para probarlo de manera correcta en el telar. Hasta entonces la placa corre este mismo programa
+con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
 
 ## Qué falta antes de poder usarlo
 
