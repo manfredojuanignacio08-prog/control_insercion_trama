@@ -40,6 +40,11 @@ CREATE TABLE IF NOT EXISTS patrones (
   -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
   metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),
   creado_por_invitado BOOLEAN NOT NULL DEFAULT false,  -- migración 019: lo creó un invitado (un invitado solo puede cambiar o borrar esos)
+  -- migración 020: hilado disponible (peso en kg y metros de tela que alcanza a tejer) y las
+  -- pasadas que ya tenía el dibujo cuando se cargó, para contar el consumo desde ahí.
+  hilado_peso_kg      NUMERIC(10, 3) CHECK (hilado_peso_kg IS NULL OR (hilado_peso_kg > 0 AND hilado_peso_kg <= 100000)),
+  hilado_metros_max   NUMERIC(12, 2) CHECK (hilado_metros_max IS NULL OR (hilado_metros_max > 0 AND hilado_metros_max <= 10000000)),
+  hilado_pasadas_base INTEGER CHECK (hilado_pasadas_base IS NULL OR hilado_pasadas_base >= 0),
   modificado_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

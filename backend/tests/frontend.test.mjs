@@ -1,5 +1,5 @@
 import assert from 'assert'; import { boot } from './frontend.harness.mjs';
-const MAT = [[1,0,1,0],[0,1,0,1],[1,1,0,0],[0,0,1,1]];
+const MAT = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
 const patron = (id,n)=>({ id, nombre:n, filas:4, columnas:4, matriz_pasadas:MAT, colores_filas:[null,null,null,null], creado_at:'2026-09-01', modificado_at:'2026-09-01' });
 let telar; const posts = [];
 const routes = (m,u,b) => {

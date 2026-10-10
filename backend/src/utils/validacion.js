@@ -52,6 +52,15 @@ export function validarPatron(body) {
     );
     if (filaInvalida) {
       errores.push(`cada fila de matriz_pasadas debe tener ${columnasOk ? columnas : 'la misma cantidad de'} números >= 0.`);
+    } else {
+      // En cada pasada se inserta una sola trama: una fila lleva como máximo una bobina activa.
+      // Dos en la misma fila le pedirían al telar dos tramas a la vez.
+      const dobles = [];
+      matriz_pasadas.forEach((fila, i) => { if (fila.filter((celda) => celda > 0).length > 1) dobles.push(i + 1); });
+      if (dobles.length) {
+        const lista = dobles.slice(0, 10).join(', ') + (dobles.length > 10 ? '…' : '');
+        errores.push(`Cada fila puede tener una sola bobina (una trama por pasada). Tienen más de una: ${dobles.length === 1 ? 'la fila' : 'las filas'} ${lista}.`);
+      }
     }
   }
 

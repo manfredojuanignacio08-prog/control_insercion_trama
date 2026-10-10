@@ -33,7 +33,9 @@ r = await api('GET','/telares',null,{ck:'trama_sesion=%E0%A4%A'}); assert.equal(
 // alta de telar y dibujo
 r = await api('POST','/telares',{codigo:'TELAR-01',nombre:'Principal'}); assert.equal(r.s,201); const T = r.b.id;
 r = await api('POST','/telares',{codigo:'X'},{ck:INV}); assert.equal(r.s,403);
-const MAT = [[1,0,1,0],[0,1,0,1],[1,1,0,0]];
+const MAT = [[1,0,0,0],[0,0,1,0],[0,1,0,0]];
+// una sola bobina por fila (una trama por pasada): dos en la misma fila se rechazan
+r = await api('POST','/patrones',{nombre:'Doble',filas:2,columnas:4,matriz_pasadas:[[1,0,0,0],[1,1,0,0]]}); assert.equal(r.s,400); assert.match(r.b.error,/una sola bobina/);
 r = await api('POST','/patrones',{nombre:'Raya',filas:3,columnas:4,matriz_pasadas:MAT,repeticiones_por_fila:[2,1,3]}); assert.equal(r.s,201); const P = r.b.id;
 r = await api('POST','/patrones',{nombre:'Mala',filas:3,columnas:4,matriz_pasadas:MAT,matriz_ligamento:[[2]]}); assert.equal(r.s,400);
 // asignar → tejiendo; el ESP32 lo ve
@@ -78,6 +80,22 @@ r = await api('POST',`/telares/${T}/avanzar`,{pasos:1,cliente:'A'}); assert.equa
 // estadísticas, metros, historial, errores
 r = await api('PUT',`/patrones/${P}/metros-por-pasada`,{metros_por_pasada:0.0005}); assert.equal(r.s,200);
 r = await api('GET',`/patrones/${P}/estadisticas`); assert.equal(r.s,200); assert.equal(r.b.producciones,1);
+{ // hilado: peso y metros máximos; lo usado se cuenta desde que se cargó
+  const pasadasAntes = r.b.pasadas_totales;
+  assert.equal(r.b.hilado, undefined);
+  let h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:-1,metros_max:100}); assert.equal(h.s,400);
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:50,metros_max:1000}); assert.equal(h.s,200);
+  assert.equal(Number(h.b.hilado_peso_kg),50); assert.equal(h.b.hilado_pasadas_base,pasadasAntes);
+  h = await api('GET',`/patrones/${P}/estadisticas`);
+  assert.equal(h.b.hilado.peso_kg,50); assert.equal(h.b.hilado.metros_max,1000);
+  assert.equal(h.b.hilado.pasadas_desde_carga,0); assert.equal(h.b.hilado.metros_que_faltan,1000); assert.equal(h.b.hilado.peso_usado_kg,0);
+  // corregir el peso sin reiniciar conserva el punto de partida; null y null borra el dato
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:60,metros_max:1000}); assert.equal(h.b.hilado_pasadas_base,pasadasAntes);
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:60,metros_max:1000,reiniciar:true}); assert.equal(h.s,200);
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:null,metros_max:null}); assert.equal(h.s,200); assert.equal(h.b.hilado_pasadas_base,null);
+  h = await api('GET',`/patrones/${P}/estadisticas`); assert.equal(h.b.hilado, undefined);
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:50,metros_max:1000}); assert.equal(h.s,200);
+}
 r = await api('GET',`/historial?telar_id=${T}`); assert.equal(r.s,200); assert.equal(r.b.length,1);
 r = await api('GET',`/historial?desde=no-es-fecha`); assert.equal(r.s,400);
 r = await api('POST','/errores',{telar_id:T,titulo:'prueba',codigo:'X'},{ck:null,dev:true}); assert.equal(r.s,201);
@@ -177,10 +195,11 @@ assert.equal(r.b.creado_por_invitado, true);
 r = await api('PUT',`/patrones/${PI}`,{nombre:'Boceto',filas:1,columnas:2,matriz_pasadas:[[0,1]]},{ck:INV}); assert.equal(r.s,200);
 r = await api('PUT',`/patrones/${P}`,{nombre:'Raya azul',filas:3,columnas:4,matriz_pasadas:MAT,repeticiones_por_fila:[2,1,3]},{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
 r = await api('PUT',`/patrones/${P}/metros-por-pasada`,{metros_por_pasada:0.001},{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
+r = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:1,metros_max:1},{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
 r = await api('DELETE',`/patrones/${P}`,null,{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
 r = await api('DELETE','/patrones/987654',null,{ck:INV}); assert.equal(r.s,404);
 // si un operario lo guarda, pasa a ser de los operarios
-r = await api('PUT',`/patrones/${PI}`,{nombre:'Boceto',filas:1,columnas:2,matriz_pasadas:[[1,1]]}); assert.equal(r.s,200); assert.equal(r.b.creado_por_invitado, false);
+r = await api('PUT',`/patrones/${PI}`,{nombre:'Boceto',filas:1,columnas:2,matriz_pasadas:[[0,1]]}); assert.equal(r.s,200); assert.equal(r.b.creado_por_invitado, false);
 r = await api('DELETE',`/patrones/${PI}`,null,{ck:INV}); assert.equal(r.s,403);
 r = await api('POST','/patrones',{nombre:'Boceto 2',filas:1,columnas:2,matriz_pasadas:[[1,0]]},{ck:INV});
 r = await api('DELETE',`/patrones/${r.b.id}`,null,{ck:INV}); assert.equal(r.s,204);

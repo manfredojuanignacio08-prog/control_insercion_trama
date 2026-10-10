@@ -325,6 +325,26 @@
         <div class="ficha-eq" id="mpp-eq"></div>
       </div>
 
+      <div class="ficha-mpp ficha-hilado">
+        <label for="hil-peso">Hilado</label>
+        <p class="ficha-ayuda">Cuánto pesa el hilado disponible y cuántos metros de tela alcanza a tejer como máximo. Con los metros por pasada, se calcula cuánto se usó, cuánto queda y cuántos metros faltan.</p>
+        <div class="ficha-fila ficha-fila-2">
+          <div class="ficha-campo">
+            <span>Peso (kg)</span>
+            <input type="text" id="hil-peso" inputmode="decimal" autocomplete="off" placeholder="50" aria-label="Peso del hilado en kilos">
+          </div>
+          <div class="ficha-campo">
+            <span>Alcanza para (m de tela)</span>
+            <input type="text" id="hil-metros" inputmode="decimal" autocomplete="off" placeholder="1000" aria-label="Metros de tela que alcanza a tejer el hilado">
+          </div>
+        </div>
+        <div class="ficha-fila">
+          <button type="button" class="save-btn save-primary ficha-guardar" id="hil-guardar">Guardar</button>
+          <button type="button" class="save-btn ficha-guardar" id="hil-nuevo" title="Cargaste hilado nuevo: lo usado vuelve a contarse desde cero">Hilado nuevo</button>
+        </div>
+        <div class="ficha-eq" id="hil-res"></div>
+      </div>
+
       <div class="ficha-est" id="ficha-est">
         <div class="ficha-cargando">Cargando estadísticas...</div>
       </div>
@@ -357,6 +377,7 @@
 
     <div class="editor-tools">
       <button type="button" class="tool-btn" onclick="clearGrid()">Limpiar</button>
+      <button type="button" class="tool-btn" onclick="abrirIntercalar()" title="Alternar bobinas pasada por pasada (por ejemplo 1, 3, 2)">Intercalar</button>
       <!-- Botón cargar eliminado -->
       <button type="button" class="btn-small" onclick="openColorSimulator()" title="Cambiar color del hilo" aria-label="Cambiar color del hilo" style="padding:6px 10px;background:var(--rose-md);color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-size:11px;font-weight:600;margin-left:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg></button>
       <button type="button" class="btn-small" onclick="exportDrawToPDF()" title="Descargar ficha técnica" aria-label="Descargar ficha técnica" style="padding:6px 10px;background:var(--amber);color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-size:11px;font-weight:600;margin-left:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></button>
@@ -1431,11 +1452,23 @@ function renderGrid() {
 	      h += `<div class="g-cell${isOn ? ' on' : ''}" onclick="tapCell(${r},${c})">${isOn ? '1' : ''}</div>`;
 	    }
 	    // Repeticiones de la fila: cuántas pasadas seguidas se teje esta misma
-	    // combinación de bobinas antes de pasar a la siguiente.
-	    h += `<input class="g-rep" type="number" min="1" max="9999" inputmode="numeric" value="${repFilas[r] || 1}" onkeydown="if(['-','+','e','E','.',','].includes(event.key))event.preventDefault()" onchange="setRepeticion(${r}, this.value)" aria-label="Pasadas de la fila ${r+1}">`;
+	    // bobina antes de pasar a la siguiente.
+	    // Casilla de texto con teclado numérico (no type="number"): en el celular el teclado queda
+	    // abierto al pasar de una fila a otra y no cambia el valor al deslizar el dedo encima.
+	    h += `<input class="g-rep" type="text" data-r="${r}" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next" value="${repFilas[r] || 1}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="teclaRepeticion(event, ${r})" onchange="setRepeticion(${r}, this.value)" aria-label="Pasadas de la fila ${r+1}">`;
 	    h += '</div>';
 	  }
+	  // Si se está escribiendo en una casilla de pasadas, se la vuelve a enfocar con lo que tenía
+	  // escrito: redibujar la grilla (un avance del telar, un guardado) reemplaza la casilla y,
+	  // sin esto, en el celular el teclado se cerraba a mitad del número.
+	  const enfocada = document.activeElement;
+	  const repEnfocada = enfocada && enfocada.classList && enfocada.classList.contains('g-rep') && wrap.contains(enfocada)
+	    ? { r: Number(enfocada.dataset.r), valor: enfocada.value } : null;
 	  wrap.innerHTML = h;
+	  if (repEnfocada && repEnfocada.r < nR) {
+	    const nueva = wrap.querySelector(`.g-rep[data-r="${repEnfocada.r}"]`);
+	    if (nueva) { nueva.value = repEnfocada.valor; nueva.focus({ preventScroll: true }); }
+	  }
 	  // Si con ese tamaño la fila igual no entra (los márgenes reales dependen del navegador), se achica
 	  // lo que falte, hasta 28 px. Cambia solo la variable del CSS: no hace falta volver a dibujar.
 	  if (anchoArea > 0) {
@@ -1466,7 +1499,12 @@ function tapCell(r, c) {
   curRow = r; // fila activa, para el color
   // Una celda es binaria: el elemento del telar se activa o no se activa. Cada
   // FILA es una pasada; para repetirla se usan las repeticiones de la fila.
-  grid[r][c] = grid[r][c] ? 0 : 1;
+  // En cada pasada se inserta UNA sola trama, así que una fila lleva como máximo una bobina:
+  // al marcar otra, la anterior de esa fila se apaga sola.
+  const encender = !grid[r][c];
+  if (encender && grid[r].some((v, ci) => ci !== c && v)) toast(`Fila ${r + 1}: una sola bobina por pasada; se cambió a la bobina ${c + 1}.`);
+  for (let ci = 0; ci < nC; ci++) grid[r][ci] = 0;
+  grid[r][c] = encender ? 1 : 0;
   renderGrid();
   setStatus('Modificado', false);
   sincronizarPatron();
@@ -1721,6 +1759,10 @@ async function arrancarPlay() {
     return;
   }
   if (isPlaying) return;
+
+  // Una sola trama por pasada: un dibujo viejo con dos bobinas en la misma fila no se teje.
+  const dobles = filasConVariasBobinas();
+  if (dobles.length) { avisarFilasConVariasBobinas(dobles); return; }
 
   // Asegurar que el patrón ya esté guardado (necesita id para poder asignarse a un telar)
   if (!editId) {
@@ -2261,7 +2303,22 @@ function loadDrawInEditor(id, restaurando = false) {
 	  goTo('sc-editor');
 	  fichaAlCambiarDibujo();
 	  if (!restaurando) toast(`Dibujo cargado: ${d.nombre}`);
+	  const dobles = filasConVariasBobinas();
+	  if (dobles.length && !restaurando) avisarFilasConVariasBobinas(dobles);
 	}
+
+// Filas (índices) con más de una bobina marcada. En cada pasada se inserta una sola trama: los
+// dibujos guardados antes de esta regla pueden tener filas así, y el servidor ya no las acepta.
+function filasConVariasBobinas() {
+  const out = [];
+  for (let r = 0; r < nR; r++) if ((grid[r] || []).filter((v) => v > 0).length > 1) out.push(r);
+  return out;
+}
+
+function avisarFilasConVariasBobinas(filas) {
+  const lista = filas.slice(0, 12).map((r) => r + 1).join(', ') + (filas.length > 12 ? '…' : '');
+  showAlert('Una sola bobina por fila', `En cada pasada entra una sola trama. Este dibujo tiene más de una bobina en ${filas.length === 1 ? 'la fila' : 'las filas'} ${lista}: dejá una sola en cada una (al tocar otra, la anterior se apaga sola) para poder guardarlo y tejerlo.`);
+}
 
 function deleteDraw(id) {
   const d = draws.find(x => x.id === id);
@@ -2567,7 +2624,7 @@ async function obtenerProduccionParaFicha(id) {
   const conHora = (s, cuando) => ({
     pasadas: Number(s.pasadas_totales) || 0,
     metros: s.metros_tejidos != null ? Number(s.metros_tejidos) : null,
-    vueltas: Number(s.repeticiones_del_dibujo) || 0,
+    hilado: s.hilado || null,
     horas: Number(s.horas_de_maquina) || 0,
     ultimaVez: s.ultima_vez ? new Date(s.ultima_vez).toLocaleDateString('es-AR') : null,
     aproximado: s.precision_conteo !== 'sensor_validado',
@@ -2653,7 +2710,10 @@ async function exportDrawToPDF() {
     // Sale de las mismas estadísticas que la ventana de la biblioteca, e incluye la
     // producción en curso. Sin datos (dibujo sin guardar, sin conexión, invitado) no se muestra.
     const P = d.produccion;
-    const desp = !P ? 0 : (P.pasadas > 0 ? 34 : 14);   // cuánto baja el resto de la hoja
+    const Hil = P && P.hilado ? P.hilado : null;
+    const despProd = !P ? 0 : (P.pasadas > 0 ? 34 : 14);
+    const despHil = Hil ? 31 : 0;
+    const desp = despProd + despHil;   // cuánto baja el resto de la hoja
     if (P) {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...AZUL);
       doc.text('PRODUCCIÓN HASTA EL MOMENTO', M, 76);
@@ -2663,7 +2723,7 @@ async function exportDrawToPDF() {
         const datos = [
           ['Metros tejidos', P.metros != null ? largo(P.metros) : 'Sin dato'],
           ['Pasadas tejidas', miles(P.pasadas)],
-          ['Vueltas completas', miles(P.vueltas)],
+          ['Metros que faltan', Hil && Hil.metros_que_faltan != null ? largo(Hil.metros_que_faltan) : 'Sin dato'],
           ['Horas de máquina', P.horas.toLocaleString('es-AR', { maximumFractionDigits: 1 })],
         ];
         datos.forEach(([et, val], i) => {
@@ -2684,11 +2744,46 @@ async function exportDrawToPDF() {
         let nota = 'Incluye la producción en curso.';
         if (P.ultimaVez) nota += ` Última vez que se tejió: ${P.ultimaVez}.`;
         if (P.metros == null) nota += ' Para ver los metros, cargá los metros por pasada en la ficha del dibujo.';
+        else if (!Hil || Hil.metros_max == null) nota += ' Para ver los metros que faltan, cargá el hilado en la ficha del dibujo.';
         doc.text(nota, M, 100.5);
       } else {
         doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...TEXTO);
         doc.text('Todavía no se tejió este dibujo.', M, 82.5);
       }
+    }
+
+    // ── Hilado ─────────────────────────────────────────────────────────────
+    // Peso cargado, metros que alcanza a tejer, y lo usado y lo que queda desde que se cargó.
+    if (Hil) {
+      const yH = 76 + despProd;
+      const kg = (v) => `${Number(v).toLocaleString('es-AR', { maximumFractionDigits: 2 })} kg`;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...AZUL);
+      doc.text('HILADO', M, yH);
+      const datosH = [
+        ['Peso del hilado', Hil.peso_kg != null ? kg(Hil.peso_kg) : 'Sin dato'],
+        ['Alcanza para', Hil.metros_max != null ? largo(Hil.metros_max) : 'Sin dato'],
+        ['Hilado usado', Hil.peso_usado_kg != null ? kg(Hil.peso_usado_kg) : 'Sin dato'],
+        ['Hilado restante', Hil.peso_restante_kg != null ? kg(Hil.peso_restante_kg) : 'Sin dato'],
+      ];
+      datosH.forEach(([et, val], i) => {
+        const x = M + i * (tw + 4);
+        doc.setDrawColor(...AZUL2); doc.setLineWidth(0.35); doc.setFillColor(255, 255, 255);
+        doc.roundedRect(x, yH + 3, tw, 17, 2.5, 2.5, 'FD');
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(...GRIS);
+        doc.text(et.toUpperCase(), x + 4, yH + 8.5);
+        doc.setFontSize(13); doc.setTextColor(...(val === 'Sin dato' ? GRIS : AZUL));
+        doc.text(val, x + 4, yH + 16.2);
+        if (Hil.son_estimados && Hil.pasadas_desde_carga > 0 && i >= 2 && val !== 'Sin dato') {
+          const wv = doc.getTextWidth(val);
+          doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...GRIS);
+          doc.text('aprox.', x + 4 + wv + 1.5, yH + 16.2);
+        }
+      });
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(6.8); doc.setTextColor(...GRIS);
+      let notaH = 'Lo usado se cuenta desde que se cargó el hilado';
+      if (Hil.metros_desde_carga != null) notaH += `: ${largo(Hil.metros_desde_carga)} tejidos${Hil.porcentaje_usado != null ? ` (${Hil.porcentaje_usado.toLocaleString('es-AR')} %)` : ''}.`;
+      else notaH += '. Para calcularlo, cargá los metros por pasada.';
+      doc.text(notaH, M, yH + 24.5);
     }
 
     // ── Colores de hilo ────────────────────────────────────────────────────
@@ -2843,7 +2938,7 @@ async function exportDrawToPDF() {
     doc.text('Cómo se teje', M + 6, yIns + 6.5);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...TEXTO);
     [
-      'Cada fila es una combinación de bobinas: las marcadas se activan en cada una de sus pasadas.',
+      'Cada fila lleva una sola bobina (una trama por pasada), que se activa en cada una de sus pasadas.',
       'El número de la derecha (x30, x5...) es cuántas pasadas seguidas se teje esa fila.',
       'Se avanza fila por fila, de arriba hacia abajo; al terminar, el dibujo vuelve a empezar.',
     ].forEach((t, i) => doc.text(`•  ${t}`, M + 6, yIns + 12.5 + i * 4.6));
@@ -2992,6 +3087,54 @@ function fichaMostrarEquivalencia() {
   eq.textContent = `Equivale a ${fichaFormatearNumero(porMetro)} ${porMetro === 1 ? 'pasada' : 'pasadas'} por metro de tela.`;
 }
 
+// Resumen del hilado en la ficha: lo usado, lo que queda y los metros que faltan, desde que
+// se cargó. Sin metros por pasada no se pueden calcular (se dice qué falta).
+function fichaMostrarHilado(d) {
+  const h = d && d.hilado;
+  document.getElementById('hil-peso').value = h ? mostrarDecimal(h.peso_kg) : '';
+  document.getElementById('hil-metros').value = h ? mostrarDecimal(h.metros_max) : '';
+  const res = document.getElementById('hil-res');
+  if (!h) { res.textContent = ''; return; }
+  // "≈" solo si ya hay algo tejido con conteo estimado: "≈ 0 m" no aporta nada.
+  const aprox = h.son_estimados && h.pasadas_desde_carga > 0 ? '≈ ' : '';
+  const partes = [];
+  if (h.metros_desde_carga !== undefined) partes.push(`Tejido desde que se cargó: ${aprox}${fichaFormatearNumero(h.metros_desde_carga, 2)} m.`);
+  if (h.metros_que_faltan !== undefined) partes.push(`Faltan ${aprox}${fichaFormatearNumero(h.metros_que_faltan, 2)} m.`);
+  if (h.peso_usado_kg !== undefined) partes.push(`Hilado usado: ${aprox}${fichaFormatearNumero(h.peso_usado_kg, 2)} kg; quedan ${aprox}${fichaFormatearNumero(h.peso_restante_kg, 2)} kg.`);
+  if (h.metros_desde_carga === undefined) partes.push('Cargá los metros por pasada para calcular lo usado y lo que falta.');
+  else if (h.metros_max === null) partes.push('Cargá cuántos metros alcanza a tejer para saber cuánto falta.');
+  else if (h.peso_kg === null) partes.push('Cargá el peso para saber cuánto hilado se usó.');
+  res.textContent = partes.join(' ');
+}
+
+async function fichaGuardarHilado(reiniciar) {
+  const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
+  if (!idActual) { toast('Primero guardá el dibujo.'); return; }
+  const peso = leerDecimal(document.getElementById('hil-peso').value);
+  const metros = leerDecimal(document.getElementById('hil-metros').value);
+  if (Number.isNaN(peso) || Number.isNaN(metros)) { toast('Escribí números, con coma si hace falta (por ejemplo 52,5).'); return; }
+  if ((peso !== null && peso <= 0) || (metros !== null && metros <= 0)) { toast('El peso y los metros tienen que ser mayores que 0.'); return; }
+  if (reiniciar && peso === null && metros === null) { toast('Cargá el peso o los metros del hilado nuevo.'); return; }
+  try {
+    await esperarGuardadosPendientes();
+    const r = await apiFetch(`/patrones/${idActual}/hilado`, {
+      method: 'PUT',
+      body: JSON.stringify({ peso_kg: peso, metros_max: metros, reiniciar: !!reiniciar }),
+    });
+    if (r && r.modificado_at) {
+      if (String(idActual) === String(editId)) versionDibujo = r.modificado_at;
+      const dm = draws.find((x) => String(x.id) === String(idActual));
+      if (dm) dm.modificadoAt = r.modificado_at;
+    }
+    toast(peso === null && metros === null ? 'Se quitó el dato del hilado.'
+      : reiniciar ? 'Hilado nuevo: lo usado se cuenta desde ahora.' : 'Hilado guardado.');
+    fichaCargar();
+  } catch (e) {
+    if (e.codigo === 'SOLO_OPERARIO') return;
+    toast(e.message);
+  }
+}
+
 async function fichaCargar() {
   const cont = document.getElementById('ficha-est');
   const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
@@ -2999,6 +3142,7 @@ async function fichaCargar() {
     cont.innerHTML = '<div class="ficha-vacio">Guardá el dibujo para empezar a registrar estadísticas de producción.</div>';
     document.getElementById('mpp-in').value = '';
     fichaMostrarEquivalencia();
+    fichaMostrarHilado(null);
     return;
   }
   cont.innerHTML = '<div class="ficha-cargando">Cargando estadísticas...</div>';
@@ -3009,6 +3153,7 @@ async function fichaCargar() {
     if (String(idActual) !== String(editId)) return;
     document.getElementById('mpp-in').value = mostrarDecimal(d.metros_por_pasada);
     fichaMostrarEquivalencia();
+    fichaMostrarHilado(d);
 
     if (d.producciones === 0) {
       cont.innerHTML = '<div class="ficha-vacio">Este dibujo todavía no se tejió. Las estadísticas aparecen cuando se registre la primera producción.</div>';
@@ -3062,6 +3207,10 @@ function fichaInicializar() {
   });
   document.getElementById('ficha-x').addEventListener('click', () => { panel.hidden = true; });
   document.getElementById('mpp-in').addEventListener('input', fichaMostrarEquivalencia);
+  document.getElementById('hil-guardar').addEventListener('click', () => fichaGuardarHilado(false));
+  document.getElementById('hil-nuevo').addEventListener('click', () => {
+    showConfirm('¿Hilado nuevo?', 'Lo usado y los metros que faltan vuelven a contarse desde ahora, con el peso y los metros que cargaste.', () => fichaGuardarHilado(true), 'Empezar de cero');
+  });
   document.getElementById('mpp-guardar').addEventListener('click', async () => {
     const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
     if (!idActual) { toast('Primero guardá el dibujo.'); return; }
@@ -3143,17 +3292,23 @@ async function libToggleEstadisticas(id) {
 
 
 // Cambia las pasadas de una fila. Una fila con 100 acá son 100 pasadas seguidas de
-// la misma combinación de bobinas, sin tener que dibujar 100 filas idénticas.
+// la misma bobina, sin tener que dibujar 100 filas idénticas.
 function setRepeticion(r, valor) {
-  if (edicionBloqueada()) { renderGrid(); return; }
+  // Se corrige solo la casilla de esa fila, sin redibujar la grilla: redibujar reemplazaba la
+  // casilla en la que el operario acababa de tocar para escribir la siguiente, y en el celular
+  // el teclado se cerraba cada vez.
+  const casilla = document.querySelector(`#grid-container .g-rep[data-r="${r}"]`);
+  const mostrar = (n) => { if (casilla) casilla.value = String(n); };
+  if (!Number.isInteger(r) || r < 0 || r >= nR) return;
+  const anterior = repFilas[r] || 1;
+  if (edicionBloqueada()) { mostrar(anterior); return; }
   // Solo un entero sin separadores. Antes "1,5", "1.000" o "2e3" se convertían en silencio en
   // otro número, y un valor que no era número dejaba la fila en 1: quien tenía 100 y se
   // equivocaba al tipear perdía el dato. Ahora se avisa y se conserva el valor anterior.
   const texto = String(valor).trim();
-  const anterior = repFilas[r] || 1;
   if (!/^\d+$/.test(texto)) {
     toast('Escribí un número entero, sin puntos ni comas (por ejemplo, 1000).');
-    renderGrid();
+    mostrar(anterior);
     return;
   }
   let n = parseInt(texto, 10);
@@ -3161,12 +3316,22 @@ function setRepeticion(r, valor) {
     toast('Las pasadas de una fila deben ser un número entre 1 y 9999.');
     n = Math.min(9999, Math.max(1, n));
   }
-  if (n === anterior) { renderGrid(); return; }
+  mostrar(n);
+  if (n === anterior) return;
   repFilas[r] = n;
-  renderGrid();
   actualizarTotalPasadas();
   setStatus('Modificado', false);
   sincronizarPatron();
+}
+
+// Enter (o "Siguiente" en el teclado del celular) confirma y pasa a la casilla de la fila de
+// abajo, para cargar las pasadas de varias filas seguidas sin cerrar el teclado.
+function teclaRepeticion(ev, r) {
+  if (ev.key !== 'Enter') return;
+  ev.preventDefault();
+  setRepeticion(r, ev.target.value);
+  const sig = document.querySelector(`#grid-container .g-rep[data-r="${r + 1}"]`);
+  if (sig) { sig.focus(); sig.select(); } else ev.target.blur();
 }
 
 // Total de pasadas de una vuelta completa del dibujo: la suma de las repeticiones.
@@ -3187,6 +3352,92 @@ function actualizarTotalPasadas() {
 }
 
 
+// ========== INTERCALAR BOBINAS ==========
+// Una secuencia como "una pasada de la bobina 1, una de la 3 y una de la 2", repetida 40 veces
+// (120 pasadas), son filas de una sola bobina con sus repeticiones. Esta herramienta las arma.
+// Si la secuencia es todo el dibujo, alcanza con sus filas una sola vez: el dibujo se repite
+// solo, en bucle, como en el telar. Por eso "Reemplazar todo el dibujo" no las multiplica.
+function leerIntercalar() {
+  const ordenTxt = document.getElementById('int-orden').value;
+  const partes = ordenTxt.split(/[^0-9]+/).filter(Boolean).map((x) => parseInt(x, 10));
+  const pasadas = parseInt(document.getElementById('int-pasadas').value, 10);
+  const veces = parseInt(document.getElementById('int-veces').value, 10);
+  const donde = document.getElementById('int-donde').value;
+  if (partes.length < 2) return { error: 'Escribí al menos dos bobinas, separadas por comas (por ejemplo: 1, 3, 2).' };
+  const fuera = partes.find((b) => b < 1 || b > nC);
+  if (fuera !== undefined) return { error: `La bobina ${fuera} no existe: el dibujo tiene ${nC} columna${nC === 1 ? '' : 's'} (de la 1 a la ${nC}).` };
+  if (!Number.isInteger(pasadas) || pasadas < 1 || pasadas > 9999) return { error: 'Las pasadas seguidas de cada bobina van de 1 a 9999.' };
+  const copias = donde === 'reemplazar' ? 1 : veces;
+  if (donde !== 'reemplazar' && (!Number.isInteger(veces) || veces < 1)) return { error: 'Escribí cuántas veces se repite la secuencia (1 o más).' };
+  const filasNuevas = partes.length * copias;
+  const filasFinal = donde === 'reemplazar' ? filasNuevas : nR + filasNuevas;
+  if (filasFinal > 300) {
+    return { error: `Quedarían ${filasFinal} filas y el máximo es 300. Si la secuencia es todo el dibujo, usá "Reemplazar todo el dibujo": el dibujo se repite solo. Si no, bajá las veces.` };
+  }
+  return { partes, pasadas, veces, donde, copias, filasNuevas, filasFinal };
+}
+
+function previsualizarIntercalar() {
+  const prev = document.getElementById('int-prev');
+  const ok = document.getElementById('int-ok');
+  const d = leerIntercalar();
+  if (d.error) { prev.textContent = d.error; prev.classList.add('error'); ok.disabled = true; return; }
+  prev.classList.remove('error'); ok.disabled = false;
+  const sec = d.partes.map((b) => `B${b}`).join(' → ');
+  const pasSec = d.partes.length * d.pasadas;
+  const vecesTxt = Number.isInteger(d.veces) && d.veces > 0 ? d.veces : 1;
+  if (d.donde === 'reemplazar') {
+    prev.textContent = `Secuencia ${sec}: ${d.partes.length} filas, ${pasSec} pasadas por vuelta. El dibujo se repite solo: ${vecesTxt} veces son ${(pasSec * vecesTxt).toLocaleString('es-AR')} pasadas.`;
+  } else {
+    prev.textContent = `Secuencia ${sec}, ${d.copias} veces: se agregan ${d.filasNuevas} filas (${(pasSec * d.copias).toLocaleString('es-AR')} pasadas). El dibujo queda con ${d.filasFinal} filas.`;
+  }
+}
+
+function abrirIntercalar() {
+  if (edicionBloqueada()) return;
+  document.getElementById('modal-intercalar').style.display = 'flex';
+  previsualizarIntercalar();
+}
+
+function cerrarIntercalar() {
+  document.getElementById('modal-intercalar').style.display = 'none';
+}
+
+function aplicarIntercalar() {
+  if (edicionBloqueada()) return;
+  const d = leerIntercalar();
+  if (d.error) { toast(d.error); return; }
+  const filas = [], reps = [], colores = [];
+  for (let v = 0; v < d.copias; v++) {
+    for (const b of d.partes) {
+      filas.push(Array.from({ length: nC }, (_, ci) => (ci === b - 1 ? 1 : 0)));
+      reps.push(d.pasadas);
+      colores.push(null);
+    }
+  }
+  if (d.donde === 'reemplazar') {
+    grid = filas; repFilas = reps; rowColors = colores;
+  } else {
+    grid = grid.slice(0, nR).concat(filas);
+    repFilas = Array.from({ length: nR }, (_, ri) => repFilas[ri] || 1).concat(reps);
+    rowColors = Array.from({ length: nR }, (_, ri) => rowColors[ri] ?? null).concat(colores);
+  }
+  nR = grid.length;
+  repRestantes = repFilas[0] || 1;
+  curRow = -1;
+  const inR = document.getElementById('in-rows');
+  if (inR) inR.value = nR;
+  cerrarIntercalar();
+  renderGrid();
+  setStatus('Modificado', false);
+  sincronizarPatron();
+  toast(d.donde === 'reemplazar' ? 'Dibujo reemplazado por la secuencia intercalada.' : `Se agregaron ${d.filasNuevas} filas intercaladas.`);
+}
+
+document.addEventListener('click', (e) => {
+  if (e.target && e.target.id === 'modal-intercalar') cerrarIntercalar();
+});
+
 // El simulador de color se cierra con la cruz, con Cancelar, tocando el fondo oscuro
 // (igual que el diálogo de confirmación) o con la tecla Escape.
 function cerrarSimuladorColor() {
@@ -3201,6 +3452,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   cerrarSimuladorColor();
+  cerrarIntercalar();
   cancelarConfirm();   // Escape en el cuadro de confirmación es Cancelar
 });
 
@@ -3232,8 +3484,14 @@ async function generarInvitacionUI() {
 
 
 // Al girar el teléfono (o cambiar el ancho de la ventana) se recalcula el tamaño de las celdas.
+// Solo si cambió el ANCHO: en el celular, al abrir el teclado la ventana cambia de alto y
+// dispara este evento. Antes se redibujaba la grilla, la casilla de pasadas que se estaba
+// por escribir se reemplazaba por una nueva y el teclado se cerraba en cada toque.
 let redimTimer = null;
+let anchoRedim = window.innerWidth;
 window.addEventListener('resize', () => {
+  if (window.innerWidth === anchoRedim) return;
+  anchoRedim = window.innerWidth;
   clearTimeout(redimTimer);
   redimTimer = setTimeout(() => { if (document.getElementById('sc-editor').classList.contains('active')) renderGrid(); }, 150);
 });
@@ -3271,6 +3529,33 @@ document.addEventListener('DOMContentLoaded', () => {
     <div style="display:flex;gap:10px;">
       <button type="button" onclick="document.getElementById('modal-color').style.display='none'" style="flex:1;padding:10px;background:var(--srf2);border:1px solid var(--bd);border-radius:var(--r-md);cursor:pointer;color:var(--tx);font-weight:600;">Cancelar</button>
       <button type="button" onclick="applyThreadColor()" style="flex:1;padding:10px;background:var(--rose);border:none;border-radius:var(--r-md);cursor:pointer;color:white;font-weight:600;">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: INTERCALAR BOBINAS -->
+<div id="modal-intercalar" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div class="modal-content" style="background:var(--srf);border-radius:var(--r-lg);padding:24px;max-width:92%;width:420px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h2 style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--tx);">Intercalar bobinas</h2>
+      <button type="button" aria-label="Cerrar" onclick="cerrarIntercalar()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--tx);">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--tx2);margin-bottom:14px;line-height:1.45;">Arma las filas de una secuencia que alterna bobinas, por ejemplo una pasada de la 1, una de la 3 y una de la 2, repetida las veces que digas.</p>
+    <label for="int-orden" class="int-lbl">Orden de las bobinas</label>
+    <input id="int-orden" class="int-in" type="text" inputmode="numeric" autocomplete="off" placeholder="1, 3, 2" value="1, 3, 2" oninput="previsualizarIntercalar()">
+    <label for="int-pasadas" class="int-lbl">Pasadas seguidas de cada bobina</label>
+    <input id="int-pasadas" class="int-in" type="text" inputmode="numeric" autocomplete="off" value="1" oninput="this.value=this.value.replace(/[^0-9]/g,'');previsualizarIntercalar()">
+    <label for="int-veces" class="int-lbl">Veces que se repite la secuencia</label>
+    <input id="int-veces" class="int-in" type="text" inputmode="numeric" autocomplete="off" value="40" oninput="this.value=this.value.replace(/[^0-9]/g,'');previsualizarIntercalar()">
+    <label for="int-donde" class="int-lbl">Dónde</label>
+    <select id="int-donde" class="int-in" onchange="previsualizarIntercalar()">
+      <option value="final">Agregar al final del dibujo</option>
+      <option value="reemplazar">Reemplazar todo el dibujo</option>
+    </select>
+    <div id="int-prev" class="int-prev" aria-live="polite"></div>
+    <div style="display:flex;gap:10px;margin-top:14px;">
+      <button type="button" onclick="cerrarIntercalar()" style="flex:1;padding:10px;background:var(--srf2);border:1px solid var(--bd);border-radius:var(--r-md);cursor:pointer;color:var(--tx);font-weight:600;">Cancelar</button>
+      <button type="button" id="int-ok" onclick="aplicarIntercalar()" style="flex:1;padding:10px;background:var(--acc);border:none;border-radius:var(--r-md);cursor:pointer;color:white;font-weight:600;">Aplicar</button>
     </div>
   </div>
 </div>

@@ -251,6 +251,67 @@ export async function actualizarMetrosPorPasada(req, res, next) {
   }
 }
 
+// Pasadas acumuladas de un dibujo: de cada producción, la mejor cifra disponible (la del
+// sensor si la hay; si no, la del reloj de la web). Es la misma cuenta que las estadísticas.
+const SQL_PASADAS_ACUMULADAS = `
+  SELECT COALESCE(SUM(CASE WHEN pasadas_sensor > 0 THEN pasadas_sensor ELSE pasadas_totales END), 0)::int AS pasadas
+    FROM historial_produccion
+   WHERE patron_id = $1`;
+
+/**
+ * PUT /api/patrones/:id/hilado
+ * Guarda el hilado disponible para el dibujo: cuánto pesa (kg) y cuántos metros de tela
+ * alcanza a tejer (el máximo). Con los metros por pasada, la ficha calcula cuánto se usó,
+ * cuánto queda y cuántos metros faltan.
+ *
+ * El consumo se cuenta desde que se cargó el hilado: la primera vez (o con reiniciar: true,
+ * "hilado nuevo") se toman como punto de partida las pasadas que el dibujo ya tenía tejidas.
+ * Corregir un número sin reiniciar conserva ese punto de partida. Los dos en null borran el dato.
+ */
+export async function actualizarHilado(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { peso_kg = null, metros_max = null, reiniciar = false } = req.body ?? {};
+    const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+    const peso = num(peso_kg);
+    const metros = num(metros_max);
+    if (peso !== null && (!Number.isFinite(peso) || peso <= 0 || peso > 100000)) {
+      throw badRequest('El peso del hilado tiene que ser un número mayor que 0 (en kg, hasta 100.000).');
+    }
+    if (metros !== null && (!Number.isFinite(metros) || metros <= 0 || metros > 10000000)) {
+      throw badRequest('Los metros que alcanza a tejer el hilado tienen que ser un número mayor que 0.');
+    }
+    if (typeof reiniciar !== 'boolean') throw badRequest('reiniciar debe ser true o false.');
+
+    const sinDatos = peso === null && metros === null;
+    const actual = await pool.query(SQL_PASADAS_ACUMULADAS, [id]);
+    const pasadasAhora = actual.rows[0]?.pasadas ?? 0;
+
+    const r = await pool.query(
+      `UPDATE patrones
+          SET hilado_peso_kg = $1,
+              hilado_metros_max = $2,
+              hilado_pasadas_base = CASE
+                WHEN $5 THEN NULL
+                WHEN $6 OR hilado_pasadas_base IS NULL THEN $7
+                ELSE hilado_pasadas_base END,
+              modificado_at = now(),
+              creado_por_invitado = creado_por_invitado AND $4
+        WHERE id = $3 AND (NOT $4 OR creado_por_invitado)
+      RETURNING id, nombre, hilado_peso_kg, hilado_metros_max, hilado_pasadas_base, modificado_at`,
+      [peso, metros, id, esInvitado(req), sinDatos, reiniciar, pasadasAhora]
+    );
+    if (r.rows.length === 0) {
+      const existe = await pool.query('SELECT 1 FROM patrones WHERE id = $1', [id]);
+      if (existe.rows.length === 0) return res.status(404).json({ error: `No existe el dibujo con id ${id}.` });
+      throw prohibido(AVISO_DIBUJO_DE_OPERARIO, 'SOLO_OPERARIO');
+    }
+    res.json(r.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+}
+
 /**
  * Estadísticas de producción de un dibujo, calculadas sobre el historial.
  *
@@ -271,7 +332,10 @@ export async function actualizarMetrosPorPasada(req, res, next) {
 export async function estadisticasPatron(req, res, next) {
   try {
     const { id } = req.params;
-    const p = await pool.query('SELECT id, nombre, filas, columnas, metros_por_pasada FROM patrones WHERE id = $1', [id]);
+    const p = await pool.query(
+      'SELECT id, nombre, filas, columnas, metros_por_pasada, hilado_peso_kg, hilado_metros_max, hilado_pasadas_base FROM patrones WHERE id = $1',
+      [id]
+    );
     if (p.rows.length === 0) return res.status(404).json({ error: `No existe el dibujo con id ${id}.` });
 
     const h = await pool.query(
@@ -335,6 +399,33 @@ export async function estadisticasPatron(req, res, next) {
       out.pasadas_por_metro = Math.round(1 / mpp);
     } else {
       out.aviso = 'Este dibujo todavía no tiene cargados los metros por pasada, así que no se pueden calcular los metros tejidos. Se carga desde el ícono de engranaje en el editor.';
+    }
+
+    // Hilado: lo usado y lo que falta se cuentan desde que se cargó (hilado_pasadas_base). Lo
+    // usado es proporcional a los metros tejidos: si el hilado alcanza para 1000 m y pesa 50 kg,
+    // cada metro tejido usa 50 g. Sin metros por pasada no se pueden calcular metros ni consumo.
+    const pr = p.rows[0];
+    const pesoHilado = pr.hilado_peso_kg === null ? null : Number(pr.hilado_peso_kg);
+    const metrosMax = pr.hilado_metros_max === null ? null : Number(pr.hilado_metros_max);
+    if (pesoHilado !== null || metrosMax !== null) {
+      const base = pr.hilado_pasadas_base === null ? s.pasadas_totales : Number(pr.hilado_pasadas_base);
+      const pasadasDesde = Math.max(0, s.pasadas_totales - base);
+      const hilado = { peso_kg: pesoHilado, metros_max: metrosMax, pasadas_desde_carga: pasadasDesde };
+      if (mpp !== null) {
+        const metrosDesde = Math.round(pasadasDesde * mpp * 100) / 100;
+        hilado.metros_desde_carga = metrosDesde;
+        if (metrosMax !== null) {
+          hilado.metros_que_faltan = Math.max(0, Math.round((metrosMax - metrosDesde) * 100) / 100);
+          hilado.porcentaje_usado = Math.min(100, Math.round((metrosDesde / metrosMax) * 1000) / 10);
+          if (pesoHilado !== null) {
+            const usado = Math.min(pesoHilado, (metrosDesde / metrosMax) * pesoHilado);
+            hilado.peso_usado_kg = Math.round(usado * 1000) / 1000;
+            hilado.peso_restante_kg = Math.round((pesoHilado - usado) * 1000) / 1000;
+          }
+        }
+      }
+      hilado.son_estimados = precision !== 'sensor_validado';
+      out.hilado = hilado;
     }
 
     res.json(out);

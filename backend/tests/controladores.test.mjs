@@ -19,7 +19,7 @@ const P = await imp('src/controllers/patrones.controller.js');
 const N = await imp('src/nivel2/nivel2.controller.js');
 function res() { return { code: 200, body: null, status(c){this.code=c;return this}, json(b){this.body=b;return this} }; }
 async function call(fn, req) { globalThis.__log=[]; const r=res(); let err=null; await fn({ params:{}, body:{}, query:{}, ...req }, r, (e)=>{err=e}); return { r, err, log: globalThis.__log }; }
-const MAT = [[1,0,1,0],[0,1,0,1],[1,1,0,0],[0,0,1,1]];
+const MAT = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
 
 // 1) reinicio con producción abierta
 globalThis.__q = (sql) => {
@@ -243,7 +243,7 @@ assert.equal(x.r.code, 409); assert.equal(x.r.body.codigo, 'SENSOR_ACTIVO');
 assert.ok(!x.log.some(l=>/UPDATE historial_produccion/.test(l.sql)), 'no debe tocar la producción');
 
 // 8) actualizarPatron bloqueado con producción abierta
-const body = { nombre:'Raya', filas:4, columnas:4, matriz_pasadas:[[1,0,1,0],[0,1,0,1],[1,1,0,0],[1,1,1,1]] };
+const body = { nombre:'Raya', filas:4, columnas:4, matriz_pasadas:[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,1,0]] };
 globalThis.__q = (sql) => {
   if (/SELECT filas, columnas, matriz_pasadas[\s\S]*FROM patrones/.test(sql)) return { rows:[{filas:4, columnas:4, matriz_pasadas:MAT}] };
   if (/JOIN historial_produccion h ON h.telar_id = t.id/.test(sql)) return { rows:[{codigo:'TELAR-01'}] };
