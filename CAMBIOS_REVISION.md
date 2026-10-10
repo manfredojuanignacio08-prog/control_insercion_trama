@@ -1065,3 +1065,25 @@ Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC 
 Se leyeron completos, además: el esquema y las 19 migraciones (también su efecto sobre una base nueva), las 8 pruebas del backend, `styles.css`, los scripts de verificación y las pruebas en la PC del firmware, la documentación del firmware y la Documentación de Proyecto entera. El SQL completo coincide con el generador.
 
 Pruebas: `npm test` (6), integración contra PostgreSQL real, `npm audit` (0 vulnerabilidades), firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, y Chromium (recorrido completo con ficha en PDF, modo oscuro, cuadro de confirmación, y por la IP de la red): todo bien.
+
+## Decimosexta revisión: pedidos de la visita del 10/10/2026
+
+**Web y servidor**
+
+| Pedido | Qué se hizo |
+|---|---|
+| Cargar el peso del hilado y los metros de hilado (el máximo que se puede hacer), y ver en el PDF cuánto se usó y cuántos metros faltan | Ficha del dibujo: peso (kg) y metros de tela que alcanza a tejer el hilado. Se calcula lo tejido, lo usado, lo restante y los metros que faltan, contados desde que se cargó el hilado («Hilado nuevo» vuelve a empezar). Migración 020 y `PUT /api/patrones/:id/hilado`; las estadísticas devuelven `hilado`. Acepta «1.000» con punto de miles. |
+| Sacar del PDF las vueltas completas y sumar los metros que faltan | En la producción, «Metros que faltan» reemplaza a «Vueltas completas». Fila nueva de hilado: peso, alcanza para, usado y restante. |
+| En el celular, el teclado se cerraba al cargar las pasadas de cada fila | Al abrirse el teclado cambia el alto de la ventana y eso redibujaba la grilla, que reemplazaba la casilla enfocada. Ahora solo se redibuja si cambia el ancho, guardar las pasadas no redibuja, y si algo redibuja con una casilla enfocada se la vuelve a enfocar con lo escrito. «Siguiente» en el teclado pasa a la fila de abajo. |
+| No se puede poner más de una bobina por fila | En cada pasada entra una sola trama: al marcar otra bobina de la fila, la anterior se desmarca. El servidor rechaza una fila con dos (400). Un dibujo viejo con filas así muestra un aviso con esas filas al abrirlo y no se teje hasta corregirlo. |
+| Intercalar bobinas (por ejemplo 1, 3 y 2, hasta 120 pasadas) | Herramienta «Intercalar»: orden de las bobinas, pasadas de cada una y veces que se repite, al final del dibujo o en lugar de todo el dibujo (que se repite solo). Muestra filas y pasadas antes de aplicar y avisa si pasaría de 300 filas. |
+
+**Documentos**
+
+| Dónde | Qué se hizo |
+|---|---|
+| Registro de Entrevistas y Bitácora | Reunión 7 del 10/10/2026: prueba en protoboard del Nivel 2 (funcionó), plaqueta en armado y pedidos para la aplicación. La conexión final del Nivel 2 pasa a ser la reunión 8. |
+| Lista de componentes y Componentes en placa | Otra plaqueta y tiras de pines: 19 de 2, 6 de 5, 4 de 6 y 2 de 8 (precio a completar). |
+| Manual de la página web, Manual Telar Fábrica, Estado Completo, Documentación de Proyecto, Guía de los relés LCA110, README | Una bobina por fila, Intercalar, hilado en la ficha y en el PDF, estado del Nivel 2 al 10/10 y la opción de reemplazar el lector (casos 1, 2A y 2B). |
+
+Pruebas: `npm test` (6, con casos nuevos del editor), integración contra PostgreSQL real (con el hilado y la regla de una bobina por fila), `npm audit` (0), firmware en la PC, simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, y Chromium con tamaño de celular (teclado, una bobina por fila, Intercalar, ficha y PDF con hilado).

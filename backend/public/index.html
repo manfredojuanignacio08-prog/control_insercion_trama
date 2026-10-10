@@ -3072,6 +3072,14 @@ function leerDecimal(texto) {
   if (!/^\d+([.,]\d+)?$/.test(t)) return NaN;
   return parseFloat(t.replace(',', '.'));
 }
+// Para cantidades grandes (kilos, metros de hilado) se acepta también el punto de miles:
+// "1.000" son mil y "1.250,5" son mil doscientos cincuenta y medio. Un punto que no separa
+// grupos de tres cifras ("52.5") se toma como coma decimal.
+function leerCantidad(texto) {
+  const t = String(texto || '').replace(/\s/g, '');
+  if (/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(t)) return parseFloat(t.replace(/\./g, '').replace(',', '.'));
+  return leerDecimal(t);
+}
 function mostrarDecimal(v) {
   if (v === null || v === undefined || v === '') return '';
   const n = Number(v);
@@ -3110,8 +3118,8 @@ function fichaMostrarHilado(d) {
 async function fichaGuardarHilado(reiniciar) {
   const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
   if (!idActual) { toast('Primero guardá el dibujo.'); return; }
-  const peso = leerDecimal(document.getElementById('hil-peso').value);
-  const metros = leerDecimal(document.getElementById('hil-metros').value);
+  const peso = leerCantidad(document.getElementById('hil-peso').value);
+  const metros = leerCantidad(document.getElementById('hil-metros').value);
   if (Number.isNaN(peso) || Number.isNaN(metros)) { toast('Escribí números, con coma si hace falta (por ejemplo 52,5).'); return; }
   if ((peso !== null && peso <= 0) || (metros !== null && metros <= 0)) { toast('El peso y los metros tienen que ser mayores que 0.'); return; }
   if (reiniciar && peso === null && metros === null) { toast('Cargá el peso o los metros del hilado nuevo.'); return; }
@@ -3368,13 +3376,21 @@ function leerIntercalar() {
   if (fuera !== undefined) return { error: `La bobina ${fuera} no existe: el dibujo tiene ${nC} columna${nC === 1 ? '' : 's'} (de la 1 a la ${nC}).` };
   if (!Number.isInteger(pasadas) || pasadas < 1 || pasadas > 9999) return { error: 'Las pasadas seguidas de cada bobina van de 1 a 9999.' };
   const copias = donde === 'reemplazar' ? 1 : veces;
+  // Si el dibujo todavía no tiene ninguna bobina marcada (por ejemplo, uno nuevo con sus 8 filas
+  // vacías), "al final" no deja esas filas vacías adelante: la secuencia empieza en la fila 1.
+  const base = dibujoVacio() ? 0 : nR;
   if (donde !== 'reemplazar' && (!Number.isInteger(veces) || veces < 1)) return { error: 'Escribí cuántas veces se repite la secuencia (1 o más).' };
   const filasNuevas = partes.length * copias;
-  const filasFinal = donde === 'reemplazar' ? filasNuevas : nR + filasNuevas;
+  const filasFinal = donde === 'reemplazar' ? filasNuevas : base + filasNuevas;
   if (filasFinal > 300) {
     return { error: `Quedarían ${filasFinal} filas y el máximo es 300. Si la secuencia es todo el dibujo, usá "Reemplazar todo el dibujo": el dibujo se repite solo. Si no, bajá las veces.` };
   }
-  return { partes, pasadas, veces, donde, copias, filasNuevas, filasFinal };
+  return { partes, pasadas, veces, donde, copias, filasNuevas, filasFinal, base };
+}
+
+function dibujoVacio() {
+  for (let r = 0; r < nR; r++) if ((grid[r] || []).some((v) => v > 0)) return false;
+  return true;
 }
 
 function previsualizarIntercalar() {
@@ -3389,7 +3405,8 @@ function previsualizarIntercalar() {
   if (d.donde === 'reemplazar') {
     prev.textContent = `Secuencia ${sec}: ${d.partes.length} filas, ${pasSec} pasadas por vuelta. El dibujo se repite solo: ${vecesTxt} veces son ${(pasSec * vecesTxt).toLocaleString('es-AR')} pasadas.`;
   } else {
-    prev.textContent = `Secuencia ${sec}, ${d.copias} veces: se agregan ${d.filasNuevas} filas (${(pasSec * d.copias).toLocaleString('es-AR')} pasadas). El dibujo queda con ${d.filasFinal} filas.`;
+    const vacias = d.base === 0 && nR > 0 ? ` Ocupan el lugar de las ${nR} filas vacías del dibujo.` : '';
+    prev.textContent = `Secuencia ${sec}, ${d.copias} veces: se agregan ${d.filasNuevas} filas (${(pasSec * d.copias).toLocaleString('es-AR')} pasadas).${vacias} El dibujo queda con ${d.filasFinal} filas.`;
   }
 }
 
@@ -3418,9 +3435,9 @@ function aplicarIntercalar() {
   if (d.donde === 'reemplazar') {
     grid = filas; repFilas = reps; rowColors = colores;
   } else {
-    grid = grid.slice(0, nR).concat(filas);
-    repFilas = Array.from({ length: nR }, (_, ri) => repFilas[ri] || 1).concat(reps);
-    rowColors = Array.from({ length: nR }, (_, ri) => rowColors[ri] ?? null).concat(colores);
+    grid = grid.slice(0, d.base).concat(filas);
+    repFilas = Array.from({ length: d.base }, (_, ri) => repFilas[ri] || 1).concat(reps);
+    rowColors = Array.from({ length: d.base }, (_, ri) => rowColors[ri] ?? null).concat(colores);
   }
   nR = grid.length;
   repRestantes = repFilas[0] || 1;
