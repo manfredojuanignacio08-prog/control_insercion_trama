@@ -36,7 +36,7 @@
 // la copia local antes de subir el programa y NO se suben con valores reales (igual que
 // DEVICE_KEY). La clave real de la fábrica estuvo escrita acá y quedó en el historial del
 // repositorio: conviene cambiarla en el router.
-#define WIFI_SSID          "Claro3747"
+#define WIFI_SSID          "Claro4347"
 #define WIFI_PASSWORD      "11335577"
 // Red de respaldo (punto de acceso del celular). Vacía = se reintenta la principal.
 #define WIFI_SSID_ALT      ""
