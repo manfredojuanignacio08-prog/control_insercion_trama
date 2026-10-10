@@ -891,3 +891,8 @@ font-family:var(--font-mono);}
 .int-prev{margin-top:12px;padding:10px 12px;border-radius:var(--r-md);background:var(--srf2);color:var(--tx);font-size:13px;line-height:1.45}
 .int-prev.error{background:transparent;border:1px solid var(--rose-md);color:var(--tx)}
 #int-ok:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- Tramos intercalados ---------- */
+/* La fila muestra en cada bobina su lugar en la secuencia (1, 2, 3...). */
+.grid-row.intercalada .g-row-n{color:var(--acc);font-weight:900;text-decoration:underline dotted;text-underline-offset:3px}
+.g-cell.orden{font-size:11px;letter-spacing:-.02em}

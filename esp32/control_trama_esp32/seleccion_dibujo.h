@@ -14,9 +14,10 @@
 //  cortar la señal de cada lector con un relé de estado sólido LCA110, de modo que sea el
 //  microcontrolador el que decida qué "agujero" hay en cada pasada.
 //
-//  Una fila del dibujo es una combinación de canales que se activan al mismo
-//  tiempo (no se recorren de a uno), y se teje durante tantas pasadas como diga
-//  su cantidad de repeticiones. En CADA pasada los canales activos se cierran y,
+//  Una fila del dibujo lleva una bobina (una trama por pasada) y se teje durante
+//  tantas pasadas como diga su cantidad de repeticiones. Una fila intercalada alterna
+//  varias bobinas en orden, una por pasada (1, 3, 4, 2, 1, 3...): ver
+//  seleccionAplicarIntercalada. En CADA pasada los canales activos se cierran y,
 //  pasado un porcentaje de la pasada (PORCENTAJE_SELECCION), se sueltan: igual
 //  que el papel, que entre dos agujeros seguidos de la misma columna tiene papel.
 //  Así la máquina ve un agujero por pasada y no uno solo largo.
@@ -50,6 +51,25 @@ void seleccionIniciar() {
     digitalWrite(PIN_CANAL[i], nivelPara(false));
     canalActivo[i] = false;
   }
+}
+
+// Fila intercalada: en la pasada número `hechas` de la fila (0 la primera) va la bobina
+// sec[hechas % largo], numerada desde 1. Devuelve el canal, desde 0, o -1 si no hay.
+static inline int seleccionCanalIntercalado(const uint8_t sec[], int largo, long hechas) {
+  if (largo <= 0) return -1;
+  long i = hechas % largo;
+  if (i < 0) i += largo;
+  return (int)sec[i] - 1;
+}
+
+void seleccionAplicarFila(const bool fila[], int nCols);
+
+// Aplica la pasada `hechas` de una fila intercalada: solo el canal que le toca.
+void seleccionAplicarIntercalada(const uint8_t sec[], int largo, long hechas, int nCols) {
+  bool fila[N_CANALES] = { false };
+  const int c = seleccionCanalIntercalado(sec, largo, hechas);
+  if (c >= 0 && c < N_CANALES) fila[c] = true;
+  seleccionAplicarFila(fila, nCols);
 }
 
 // Aplica una fila del dibujo: todos los canales a la vez, no de a uno.

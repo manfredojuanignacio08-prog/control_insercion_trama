@@ -63,6 +63,23 @@ int main() {
   seleccionApagarTodo();
   chequear(cuantosActivos() == 0 && !seleccionPorSoltar, "apagar todo deja los canales en reposo");
 
+  // fila intercalada 1, 3, 4, 2: en cada pasada se activa solo la bobina que le toca, en orden
+  {
+    const uint8_t sec[4] = { 1, 3, 4, 2 };
+    const int esperado[10] = { 0, 2, 3, 1, 0, 2, 3, 1, 0, 2 };
+    bool ok = true;
+    for (long h = 0; h < 10; h++) {
+      seleccionAplicarIntercalada(sec, 4, h, 4);
+      if (cuantosActivos() != 1 || !activo(esperado[h])) ok = false;
+      g_ms += 200; seleccionSoltarSiCorresponde();
+    }
+    chequear(ok, "fila intercalada 1, 3, 4, 2: una sola bobina por pasada, en orden y volviendo a empezar");
+    chequear(seleccionCanalIntercalado(sec, 4, 119) == 1, "la pasada 120 de un tramo de 120 es la bobina 2");
+    const uint8_t sec2[2] = { 2, 1 };
+    chequear(seleccionCanalIntercalado(sec2, 2, 139) == 0, "la pasada 140 de un tramo 2, 1 es la bobina 1");
+    seleccionApagarTodo();
+  }
+
   printf("  selección por pasada: %d/%d verificaciones OK\n", total - fallas, total);
   return fallas ? 1 : 0;
 }

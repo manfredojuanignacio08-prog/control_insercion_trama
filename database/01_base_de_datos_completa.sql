@@ -23,10 +23,11 @@
 --   - Esquema multi-telar desde el día 1 (el piloto arranca con 1).
 --   - Usuarios con login por huella (WebAuthn): tablas usuarios,
 --     credenciales_biometricas, desafios_webauthn e invitaciones (más abajo).
---   - Una FILA es una pasada: lleva como máximo una bobina activa, porque en cada
---     pasada entra una sola trama (cada celda vale 0 o 1; el servidor rechaza una
---     fila con dos). Cuántas pasadas seguidas se teje cada fila lo dice
---     repeticiones_por_fila (migración 014); sin ese dato, una.
+--   - Una FILA es un tramo de pasadas: lleva una bobina, porque en cada pasada entra una
+--     sola trama (cada celda vale 0 o 1; el servidor rechaza una fila con dos). Cuántas
+--     pasadas seguidas se teje cada fila lo dice repeticiones_por_fila (migración 014);
+--     sin ese dato, una. Una fila intercalada (secuencias_por_fila, migración 021) alterna
+--     varias bobinas en orden, una por pasada.
 --   - fila_actual + repeticion_en_fila en historial_produccion: posición exacta de la
 --     producción en curso (la fila y cuántas pasadas de esa fila ya se tejieron), para
 --     soportar "retroceder una pasada" sin reconstruir nada. columna_actual y
@@ -53,6 +54,9 @@ CREATE TABLE IF NOT EXISTS patrones (
   -- migración 014: cuántas pasadas seguidas se teje cada fila. Un elemento por
   -- fila; en NULL, una pasada por fila.
   repeticiones_por_fila INTEGER[],
+  -- migración 021: filas intercaladas. Por fila, NULL o el orden de las bobinas (desde 1) que
+  -- se alternan pasada por pasada, por ejemplo [1, 3, 4, 2]; las repeticiones son el total.
+  secuencias_por_fila JSONB,
   -- migración 011: metros de tela que avanza el telar en una pasada, para este
   -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
   metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),
@@ -925,6 +929,26 @@ COMMENT ON COLUMN patrones.hilado_pasadas_base IS
 
 
 -- ============================================================
+-- migracion_021_secuencias_por_fila.sql
+-- ============================================================
+-- ============================================================
+-- 021 · Filas intercaladas: una secuencia de bobinas por fila.
+--
+-- Un tramo como "una pasada de la bobina 1, una de la 3, una de la 4 y una de la 2, hasta
+-- completar 120 pasadas" es UNA fila: sus repeticiones son las 120 pasadas del tramo y la
+-- secuencia dice qué bobina va en cada una, en orden y volviendo a empezar (1, 3, 4, 2, 1, 3...).
+-- Antes había que dibujar 120 filas de una bobina cada una, con el límite de 300 filas.
+--
+-- Un elemento por fila: NULL (fila común, una sola bobina) o un array de 2 a 16 bobinas
+-- numeradas desde 1, por ejemplo [1, 3, 4, 2]. En matriz_pasadas esa fila marca las bobinas
+-- que aparecen en la secuencia. NULL en la columna entera = ninguna fila intercalada.
+ALTER TABLE patrones ADD COLUMN IF NOT EXISTS secuencias_por_fila JSONB;
+
+COMMENT ON COLUMN patrones.secuencias_por_fila IS
+  'Por fila: NULL o el orden de las bobinas (desde 1) que se alternan pasada por pasada en esa fila. Las repeticiones de la fila son el total de pasadas del tramo.';
+
+
+-- ============================================================
 -- Registro de migraciones
 -- ============================================================
 CREATE TABLE IF NOT EXISTS migraciones_aplicadas (
@@ -952,7 +976,8 @@ INSERT INTO migraciones_aplicadas (archivo) VALUES
   ('migracion_017_filas_hasta_300.sql'),
   ('migracion_018_senal_nivel2.sql'),
   ('migracion_019_dibujos_de_invitado.sql'),
-  ('migracion_020_hilado.sql')
+  ('migracion_020_hilado.sql'),
+  ('migracion_021_secuencias_por_fila.sql')
 ON CONFLICT (archivo) DO NOTHING;
 
 -- ============================================================

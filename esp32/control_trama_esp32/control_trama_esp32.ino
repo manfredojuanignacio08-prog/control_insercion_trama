@@ -56,6 +56,11 @@ bool  dibujo[MAX_FILAS][N_CANALES];
 // misma bobina se repita cien o mil veces antes de cambiar, y
 // dibujar cien filas idénticas era impracticable.
 int   repeticiones[MAX_FILAS];
+// Filas intercaladas: el orden de las bobinas (desde 1) que se alternan pasada por pasada, y
+// cuántas son. Largo 0 = fila común. Ver secuencias_por_fila en el backend (migración 021).
+static const int MAX_SECUENCIA = 16;
+uint8_t secuencia[MAX_FILAS][MAX_SECUENCIA];
+uint8_t secuenciaLargo[MAX_FILAS];
 // Cuántas pasadas faltan de la fila que se está tejiendo.
 int   repeticionesRestantes = 0;
 int   dibujoFilas    = 0;
@@ -453,6 +458,7 @@ bool descargarDibujo() {
   JsonDocument filtroDibujo;
   filtroDibujo["matriz_pasadas"] = true;
   filtroDibujo["repeticiones_por_fila"] = true;
+  filtroDibujo["secuencias_por_fila"] = true;
   filtroDibujo["fila_actual"] = true;
   filtroDibujo["pasadas_sensor"] = true;
   filtroDibujo["repeticion_en_fila"] = true;
@@ -477,6 +483,8 @@ bool descargarDibujo() {
 
   static bool nuevo[MAX_FILAS][N_CANALES];
   static int  nuevoRep[MAX_FILAS];
+  static uint8_t nuevoSec[MAX_FILAS][MAX_SECUENCIA];
+  static uint8_t nuevoSecLargo[MAX_FILAS];
   const int filas = min((int)matriz.size(), MAX_FILAS);
   int columnas = 0;
 
@@ -502,6 +510,23 @@ bool descargarDibujo() {
     nuevoRep[f] = (r >= 1) ? r : 1;
   }
 
+  // Filas intercaladas. Una secuencia con una bobina que no existe en este nodo, o de más de
+  // MAX_SECUENCIA, no se adopta: la fila se teje como fila común (sus celdas marcadas).
+  JsonArray secs = doc["secuencias_por_fila"].as<JsonArray>();
+  for (int f = 0; f < filas; f++) {
+    nuevoSecLargo[f] = 0;
+    JsonArray sec = (f < (int)secs.size()) ? secs[f].as<JsonArray>() : JsonArray();
+    const int largo = sec.isNull() ? 0 : (int)sec.size();
+    if (largo < 2 || largo > MAX_SECUENCIA) continue;
+    bool ok = true;
+    for (int i = 0; i < largo; i++) {
+      const int b = sec[i].as<int>();
+      if (b < 1 || b > N_CANALES) { ok = false; break; }
+      nuevoSec[f][i] = (uint8_t)b;
+    }
+    if (ok) nuevoSecLargo[f] = (uint8_t)largo;
+  }
+
   // Se adopta la posición guardada en el backend. Sin esto, un reinicio del nodo (corte de
   // luz, watchdog) haría empezar el dibujo desde la primera fila con la pieza a medio tejer,
   // dejando un salto visible. Si el dibujo es nuevo, el backend ya tiene la producción en la
@@ -517,6 +542,8 @@ bool descargarDibujo() {
   portENTER_CRITICAL(&mux);
   memcpy(dibujo, nuevo, sizeof(dibujo));
   memcpy(repeticiones, nuevoRep, sizeof(repeticiones));
+  memcpy(secuencia, nuevoSec, sizeof(secuencia));
+  memcpy(secuenciaLargo, nuevoSecLargo, sizeof(secuenciaLargo));
   dibujoFilas    = filas;
   dibujoColumnas = columnas;
   filaActual     = filaInicial;
@@ -962,8 +989,8 @@ void loop() {
     // cuenta igual (el contador vive en la interrupción), pero no se comanda nada.
     if (dib && dibujoFilas > 0) {
       if (tej) {
-        // Se aplica la fila que corresponde a esta pasada. Todos los canales a la vez: las
-        // columnas de una fila son simultáneas, no se recorren.
+        // Se aplica la fila que corresponde a esta pasada: su bobina, o en una fila intercalada
+        // la que le toca a esta pasada según su orden.
         //
         // DESPLAZAMIENTO_FILAS compensa filas enteras; RETARDO_APLICACION_US compensa un desfase
         // dentro de la pasada. Los dos quedan en cero hasta medir sobre la máquina.
@@ -978,8 +1005,12 @@ void loop() {
         // anterior, que es otra combinación. Así lo modela también sim_nivel2_firmware.py.
         // También se sueltan los canales de la pasada anterior, si seguían activos, y se descarta esa
         // pasada como referencia de duración: medida contra ella, la pasada siguiente duraría el doble.
-        if (!pulsoFueRetroceso) seleccionAplicarFila(dibujo[filaAplicada], dibujoColumnas);
-        else                    seleccionApagarTodo();
+        // En una fila intercalada va solo la bobina que le toca a esta pasada: la que sigue en su
+        // orden según cuántas pasadas de la fila ya se tejieron.
+        const long hechasFila = (long)repeticiones[filaActual] - repeticionesRestantes;
+        if (pulsoFueRetroceso)                  seleccionApagarTodo();
+        else if (secuenciaLargo[filaAplicada])  seleccionAplicarIntercalada(secuencia[filaAplicada], secuenciaLargo[filaAplicada], hechasFila, dibujoColumnas);
+        else                                    seleccionAplicarFila(dibujo[filaAplicada], dibujoColumnas);
 
         // Avanzar o retroceder según el sentido del movimiento. En un retroceso el telar deshace
         // la última pasada, así que la fila tiene que volver atrás: la próxima pasada hacia

@@ -306,20 +306,35 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   f.run("setRepeticion(2, '25')"); assert.equal(f.run('repFilas[2]'), 25);
   f.run("setRepeticion(2, '1.000')"); assert.equal(f.run('repFilas[2]'), 25);
   f.run("setRepeticion(2, '99999')"); assert.equal(f.run('repFilas[2]'), 9999);
-  // intercalar 1, 3, 2: reemplazar deja una vez la secuencia (el dibujo se repite solo)
-  f.run("document.getElementById('int-orden').value='1, 3, 2'"); f.run("document.getElementById('int-pasadas').value='1'"); f.run("document.getElementById('int-veces').value='40'"); f.run("document.getElementById('int-donde').value='reemplazar'");
-  f.run('aplicarIntercalar()');
-  assert.equal(f.run('nR'), 3); assert.deepEqual(f.run('grid'), [[1,0,0,0],[0,0,1,0],[0,1,0,0]]);
-  // al final, 40 veces: 120 filas más
-  f.run("document.getElementById('int-donde').value='final'"); f.run('aplicarIntercalar()');
-  assert.equal(f.run('nR'), 123); assert.deepEqual(f.run('grid[122]'), [0,1,0,0]);
-  // sobre un dibujo sin ninguna bobina, "al final" no deja las filas vacías adelante
-  f.run('nR=8; grid=Array.from({length:8},()=>[0,0,0,0]); repFilas=Array(8).fill(1); rowColors=Array(8).fill(null)');
-  f.run("document.getElementById('int-veces').value='2'"); f.run('aplicarIntercalar()');
-  assert.equal(f.run('nR'), 6); assert.deepEqual(f.run('grid[0]'), [1,0,0,0]);
-  // fuera de rango: más de 300 filas o una bobina que no existe
-  f.run("document.getElementById('int-veces').value='200'"); assert.match(f.run('leerIntercalar().error'), /300/);
-  f.run("document.getElementById('int-orden').value='1, 9'"); assert.match(f.run('leerIntercalar().error'), /bobina 9/);
+  // tramos: 120 pasadas intercalando 1, 3, 4, 2; después 140 de la 4; después 140 intercalando 2 y 1
+  const val = (id, v) => f.run(`document.getElementById('${id}').value=${JSON.stringify(v)}`);
+  f.run('nR=8; grid=Array.from({length:8},()=>[0,0,0,0]); repFilas=Array(8).fill(1); rowColors=Array(8).fill(null); secFilas=Array(8).fill(null)');
+  f.run('abrirIntercalar()');
+  val('int-orden','1, 3, 4, 2'); val('int-total','120'); val('int-donde','final'); f.run('aplicarIntercalar()');
+  val('int-orden','4'); val('int-total','140'); f.run('aplicarIntercalar()');
+  val('int-orden','2, 1'); val('int-total','140'); f.run('aplicarIntercalar()');
+  assert.equal(f.run('nR'), 3, 'tres tramos son tres filas (las 8 filas vacías no quedan adelante)');
+  assert.deepEqual(f.run('repFilas'), [120, 140, 140]);
+  assert.deepEqual(f.run('secFilas'), [[1,3,4,2], null, [2,1]]);
+  assert.deepEqual(f.run('grid'), [[1,1,1,1],[0,0,0,1],[1,1,0,0]]);
+  assert.deepEqual(f.run('filasConVariasBobinas()'), [], 'un tramo intercalado no cuenta como dos bobinas en la misma pasada');
+  // lo que se guarda: la secuencia y las bobinas marcadas de cada tramo
+  const api = f.run("localToApi('Tramos', grid, rowColors)");
+  assert.deepEqual(api.secuencias_por_fila, [[1,3,4,2], null, [2,1]]);
+  assert.deepEqual(api.repeticiones_por_fila, [120, 140, 140]);
+  // tocar una fila intercalada abre su ventana para cambiarla
+  f.run('tapCell(0,0)');
+  assert.equal(f.run('intercalarFila'), 0); assert.equal(f.run("document.getElementById('int-total').value"), '120');
+  val('int-donde','fila'); val('int-orden','1, 2'); val('int-total','60'); f.run('aplicarIntercalar()');
+  assert.deepEqual(f.run('secFilas[0]'), [1,2]); assert.equal(f.run('repFilas[0]'), 60); assert.equal(f.run('nR'), 3);
+  // reemplazar todo: el tramo solo, que se repite en bucle
+  f.run('abrirIntercalar()'); val('int-donde','reemplazar'); val('int-orden','1, 3, 4, 2'); val('int-total','120'); f.run('aplicarIntercalar()');
+  assert.equal(f.run('nR'), 1); assert.deepEqual(f.run('secFilas'), [[1,3,4,2]]);
+  // al sacar una columna que usa un tramo, queda con una bobina
+  f.run('mkGrid(1, 3, true)'); assert.equal(f.run('secFilas[0]'), null); assert.deepEqual(f.run('grid[0]'), [1,0,0]);
+  // errores: una bobina que no existe, demasiadas pasadas
+  f.run('nC=4'); val('int-orden','1, 9'); assert.match(f.run('leerIntercalar().error'), /bobina 9/);
+  val('int-orden','1, 2'); val('int-total','10000'); assert.match(f.run('leerIntercalar().error'), /9999/);
   // cantidades con punto de miles
   assert.equal(f.run("leerCantidad('1.000')"), 1000); assert.equal(f.run("leerCantidad('52,5')"), 52.5);
   assert.equal(f.run("leerCantidad('1.250,5')"), 1250.5); assert.equal(f.run("leerCantidad('52.5')"), 52.5); }

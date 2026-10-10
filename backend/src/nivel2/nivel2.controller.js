@@ -43,7 +43,7 @@ export async function obtenerPatronActual(req, res, next) {
     // memoria volvió a cero y sin este dato retomaría el dibujo desde la primera
     // fila, dejando un salto visible en la tela a mitad de una pieza.
     const { rows } = await pool.query(
-      `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas, p.repeticiones_por_fila,
+      `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas, p.repeticiones_por_fila, p.secuencias_por_fila,
               h.id AS historial_id, h.fila_actual, h.repeticion_en_fila, h.pasadas_sensor
          FROM telares t
          JOIN patrones p ON p.id = t.patron_actual_id
@@ -70,6 +70,11 @@ export async function obtenerPatronActual(req, res, next) {
       // Cuántas pasadas seguidas se teje cada fila. Si el dibujo no lo define, se
       // manda un 1 por fila: el nodo no tiene que interpretar ausencias.
       repeticiones_por_fila: p.repeticiones_por_fila ?? Array.from({ length: p.filas }, () => 1),
+      // Filas intercaladas: por fila, null o el orden de las bobinas (desde 1) que se alternan
+      // pasada por pasada. Siempre un elemento por fila, como las repeticiones.
+      secuencias_por_fila: Array.isArray(p.secuencias_por_fila)
+        ? Array.from({ length: p.filas }, (_, i) => (Array.isArray(p.secuencias_por_fila[i]) ? p.secuencias_por_fila[i] : null))
+        : Array.from({ length: p.filas }, () => null),
       // Posición de la producción en curso, para que el nodo retome donde quedó.
       // En null si no hay producción abierta: ahí el nodo arranca desde el principio.
       fila_actual: p.fila_actual ?? null,

@@ -36,6 +36,18 @@ r = await api('POST','/telares',{codigo:'X'},{ck:INV}); assert.equal(r.s,403);
 const MAT = [[1,0,0,0],[0,0,1,0],[0,1,0,0]];
 // una sola bobina por fila (una trama por pasada): dos en la misma fila se rechazan
 r = await api('POST','/patrones',{nombre:'Doble',filas:2,columnas:4,matriz_pasadas:[[1,0,0,0],[1,1,0,0]]}); assert.equal(r.s,400); assert.match(r.b.error,/una sola bobina/);
+// tramos intercalados: una fila con su secuencia (1, 3, 4, 2 durante 120 pasadas), otra de 140 de la 4
+{ const tramos = {nombre:'Tramos',filas:3,columnas:4,matriz_pasadas:[[1,1,1,1],[0,0,0,1],[1,1,0,0]],repeticiones_por_fila:[120,140,140],secuencias_por_fila:[[1,3,4,2],null,[2,1]]};
+  let t = await api('POST','/patrones',tramos); assert.equal(t.s,201); assert.deepEqual(t.b.secuencias_por_fila,[[1,3,4,2],null,[2,1]]);
+  const PT = t.b.id;
+  // las bobinas marcadas tienen que ser las de la secuencia; una bobina que no existe se rechaza
+  t = await api('POST','/patrones',{...tramos,nombre:'Tramos mal',matriz_pasadas:[[1,1,1,0],[0,0,0,1],[1,1,0,0]]}); assert.equal(t.s,400); assert.match(t.b.error,/intercalada/);
+  t = await api('POST','/patrones',{...tramos,nombre:'Tramos mal 2',secuencias_por_fila:[[1,3,4,9],null,[2,1]]}); assert.equal(t.s,400);
+  t = await api('POST','/patrones',{...tramos,nombre:'Tramos mal 3',secuencias_por_fila:[[1],null,null]}); assert.equal(t.s,400);
+  // sin ningún tramo intercalado se guarda NULL
+  t = await api('PUT',`/patrones/${PT}`,{...tramos,matriz_pasadas:[[1,0,0,0],[0,0,0,1],[0,1,0,0]],secuencias_por_fila:[null,null,null]}); assert.equal(t.s,200); assert.equal(t.b.secuencias_por_fila,null);
+  t = await api('PUT',`/patrones/${PT}`,tramos); assert.equal(t.s,200);
+  await api('DELETE',`/patrones/${PT}`); }
 r = await api('POST','/patrones',{nombre:'Raya',filas:3,columnas:4,matriz_pasadas:MAT,repeticiones_por_fila:[2,1,3]}); assert.equal(r.s,201); const P = r.b.id;
 r = await api('POST','/patrones',{nombre:'Mala',filas:3,columnas:4,matriz_pasadas:MAT,matriz_ligamento:[[2]]}); assert.equal(r.s,400);
 // asignar → tejiendo; el ESP32 lo ve
@@ -130,6 +142,8 @@ r = await api('POST',`/telares/${T2}/asignar-patron`,{patron_id:P}); assert.equa
 r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,200, 'sin nodo, la web estima por reloj');
 psql(`update telares set ultimo_reporte_sensor = now() - interval '5 minutes' where id=${T2}`);
 r = await api('GET',`/telares/${T2}?origen=nivel2`,null,{ck:null,dev:true}); assert.equal(r.s,200);
+{ const pa = await api('GET',`/telares/${T2}/patron-actual`,null,{ck:null,dev:true}); assert.equal(pa.s,200);
+  assert.ok(Array.isArray(pa.b.secuencias_por_fila) && pa.b.secuencias_por_fila.length === pa.b.filas, 'el firmware recibe una secuencia (o null) por fila'); }
 r = await api('GET',`/telares/${T2}`); assert.equal(r.b.sensor_activo,true, 'la consulta del nodo es su señal de vida');
 assert(r.b.segundos_desde_ping < 5, 'y también la de la placa ("ESP32 conectado"): es el único ESP32');
 r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,409); assert.equal(r.b.codigo,'SENSOR_ACTIVO');
