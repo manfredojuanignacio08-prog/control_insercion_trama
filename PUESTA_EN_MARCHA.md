@@ -45,8 +45,10 @@ tiene que imitarlo. Si la fila se aplica antes o después de tiempo, o dura poco
 
 **Sin osciloscopio** (el camino previsto; la guía de los relés LCA110 lo explica paso a paso):
 
-1. Con el multímetro, medir el nivel y la corriente de la salida del lector óptico, para decidir si los
-   relés LCA110 van en serie o en paralelo.
+1. Con el multímetro, medir el nivel y la corriente de la salida del lector óptico, para decidir cómo se
+   conectan los relés LCA110 (en serie o en paralelo con el lector, o en su lugar, en uno de los casos
+   1, 2A o 2B). El paso a paso de la medición y la conexión está en
+   `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
 2. Estimar `PORCENTAJE_SELECCION` con una regla sobre la cinta de papel: si avanza de forma pareja, la
    señal dura más o menos el diámetro del agujero dividido por la distancia entre los centros de dos
    agujeros seguidos (agujeros de 4 mm cada 8 mm dan 50 %).

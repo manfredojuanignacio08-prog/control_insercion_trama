@@ -148,14 +148,18 @@ static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 //   - Si el relé va EN PARALELO con el lector (el agujero cierra el circuito),
 //     activar el canal significa cerrar el relé.
 //   - Si va EN SERIE (el agujero abre el circuito), activarlo significa abrirlo.
-// A_CONFIRMAR: depende de la medición sobre el lector.
+//   - Si el relé reemplaza al lector: true en los casos 2A y 2B; en el caso 1, true si el
+//     agujero une los 2 bornes de señal y false si los separa.
+// A_CONFIRMAR: depende de la medición sobre el lector (documentacion/PASO_A_PASO_RELES_LCA110.md).
 #define CANAL_ACTIVO_EN_ALTO   true
 
 // Cómo se aplica la selección: en CADA pasada, los canales de la fila se activan y se
 // sueltan antes de la pasada siguiente, como el papel, que entre dos agujeros seguidos de la
 // misma columna tiene papel. Cuánto dura lo define PORCENTAJE_SELECCION (más abajo). El lector
 // tiene que ver siempre cinta sin agujero (una cinta sin perforar, o el lector tapado): el relé
-// ocupa el lugar de los agujeros. Sin cinta, el lector vería luz todo el tiempo.
+// ocupa el lugar de los agujeros. Sin cinta, el lector vería luz todo el tiempo. Si en cambio
+// se saca el lector y el relé va en su lugar (casos 1, 2A y 2B de
+// documentacion/PASO_A_PASO_RELES_LCA110.md), no hace falta cinta.
 
 // ---------------------------------------------- Sincronización con la máquina
 // El telar lee la selección en un instante concreto de su ciclo, cuando abre la
