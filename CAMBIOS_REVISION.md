@@ -1087,3 +1087,14 @@ Pruebas: `npm test` (6), integración contra PostgreSQL real, `npm audit` (0 vul
 | Manual de la página web, Manual Telar Fábrica, Estado Completo, Documentación de Proyecto, Guía de los relés LCA110, README | Una bobina por fila, Intercalar, hilado en la ficha y en el PDF, estado del Nivel 2 al 10/10 y la opción de reemplazar el lector (casos 1, 2A y 2B). |
 
 Pruebas: `npm test` (6, con casos nuevos del editor), integración contra PostgreSQL real (con el hilado y la regla de una bobina por fila), `npm audit` (0), firmware en la PC, simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, y Chromium con tamaño de celular (teclado, una bobina por fila, Intercalar, ficha y PDF con hilado).
+
+## Decimoséptima revisión: tramos intercalados y telar en la vista previa
+
+| Pedido | Qué se hizo |
+|---|---|
+| Un dibujo con tramos: 120 pasadas alternando 1, 3, 4 y 2 (cada bobina cuenta una pasada), después 140 pasadas de la 4, después 140 alternando 2 y 1 | Cada tramo es una sola fila: su número de pasadas es el total del tramo y `secuencias_por_fila` (migración 021) guarda el orden de sus bobinas. La web, el backend y el firmware tejen en cada pasada la bobina que sigue en ese orden. Antes había que dibujar una fila por pasada, con el límite de 300 filas. El ejemplo queda en 3 filas y 400 pasadas por vuelta. |
+| Editor | Intercalar arma un tramo (orden y pasadas) al final o en lugar de todo el dibujo; tocar una fila intercalada la abre para cambiarla. La grilla muestra el lugar de cada bobina en el orden. |
+| Que la vista previa del dibujo tenga arriba el telar del que sale | En la ficha en PDF, un telar dibujado (rodillo de urdimbre, lizos celestes, cuerpo gris verdoso con la placa de la marca y la barra delantera) arriba de la vista previa: la tela baja desde la barra. |
+| Documentación de la web y manual | Manual de la página web (Intercalar, pregunta frecuente con el ejemplo, PDF), Documentación de Proyecto (campo nuevo y su regla), manual de instalación, README del backend y del firmware. |
+
+Pruebas: `npm test` (casos nuevos de tramos), integración contra PostgreSQL real (tramos válidos, inválidos y lo que recibe el firmware), firmware en la PC (selección intercalada 1, 3, 4, 2: una bobina por pasada, en orden), simulaciones, coherencia 19/19 y Chromium (tramos, guardado, edición y PDF).

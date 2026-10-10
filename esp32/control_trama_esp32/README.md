@@ -114,6 +114,16 @@ las repeticiones vuelve a la fila anterior, a su última pasada.
 Los dibujos guardados antes de esto no traen el campo; el backend manda un 1 por
 fila y se tejen igual que siempre.
 
+## Tramos intercalados
+
+Una fila puede alternar varias bobinas, una por pasada y en orden: por ejemplo 1, 3, 4, 2
+durante 120 pasadas. El backend la manda en `secuencias_por_fila` (un elemento por fila: `null`
+o el orden, de 2 a 16 bobinas). En cada pulso, el nodo activa solo la bobina que sigue en ese
+orden según cuántas pasadas de la fila ya se tejieron (`seleccionAplicarIntercalada`). Como
+depende de la posición dentro de la fila, el retroceso y la recuperación tras un reinicio la
+mantienen sin hacer nada aparte. Una secuencia con una bobina que este nodo no tiene se ignora y
+la fila se teje como fila común.
+
 ## Depende del Bloque C
 
 El Nivel 2 **no puede funcionar sin el sensor de pasada instalado y validado**.
