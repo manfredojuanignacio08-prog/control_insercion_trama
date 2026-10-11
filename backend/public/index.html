@@ -1223,7 +1223,7 @@ async function actualizarEstadoTelar() {
         curRow = telar.fila_actual; curCol = 0; curPass = 0;
         repRestantes = restantesDesde(curRow, telar.repeticion_en_fila);
       } else if (curRow < 0 || curRow >= nR) {
-        curRow = 0; curCol = 0; curPass = 0; repRestantes = repFilas[0] || 1;
+        curRow = 0; curCol = 0; curPass = 0; repRestantes = largoFila(0) || 1;
       }
       isPlaying = true;
       seguidor = true;
@@ -1410,7 +1410,7 @@ function mkGrid(r, c, keep = false) {
   // Las repeticiones también van por fila: se conservan las que ya estaban y las
   // filas nuevas arrancan en 1 (una pasada), que es el comportamiento de siempre.
   repFilas = Array.from({ length: r }, (_, ri) => (keep && repFilas[ri]) ? repFilas[ri] : 1);
-  repRestantes = repFilas[0] || 1;
+  repRestantes = largoFila(0) || 1;
   // Los intercalados siguen si sus filas siguen existiendo: uno que quedó cortado por la nueva
   // cantidad de filas se achica, y si le queda una sola fila se quita (y se avisa).
   if (keep) {
@@ -1829,7 +1829,7 @@ async function arrancarPlay() {
           body: JSON.stringify({ patron_id: Number(editId) }),
         });
         curRow = 0; curCol = 0; curPass = 0; // arranca de cero, igual que en el backend
-        repRestantes = repFilas[0] || 1;      // y con las pasadas de la primera fila completas
+        repRestantes = largoFila(0) || 1;      // y con las pasadas de la primera fila completas
         trabajoEnCursoPatronId = String(editId);
       } else {
         // Mismo patrón: se está retomando algo pausado. Se reanuda sin tocar
@@ -1851,7 +1851,7 @@ async function arrancarPlay() {
             body: JSON.stringify({ patron_id: Number(editId) }),
           });
           curRow = 0; curCol = 0; curPass = 0;
-          repRestantes = repFilas[0] || 1;
+          repRestantes = largoFila(0) || 1;
         }
         trabajoEnCursoPatronId = String(editId);
       }
@@ -2335,7 +2335,7 @@ function loadDrawInEditor(id, restaurando = false) {
 		    (d.repeticiones && d.repeticiones[ri]) ? d.repeticiones[ri] : 1
 		  );
 	  grupos = (d.grupos || []).map((g) => ({ desde: g.desde, hasta: g.hasta, pasadas: g.pasadas }));
-	  repRestantes = repFilas[0] || 1;
+	  repRestantes = largoFila(0) || 1;
 	  document.getElementById('in-rows').value = nR;
 	  document.getElementById('in-cols').value = nC;
 	  document.getElementById('insercion-name').value = d.nombre;
