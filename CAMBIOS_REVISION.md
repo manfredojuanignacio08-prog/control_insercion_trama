@@ -1065,3 +1065,108 @@ Pruebas: `npm test` (6), integración contra PostgreSQL real, firmware en la PC 
 Se leyeron completos, además: el esquema y las 19 migraciones (también su efecto sobre una base nueva), las 8 pruebas del backend, `styles.css`, los scripts de verificación y las pruebas en la PC del firmware, la documentación del firmware y la Documentación de Proyecto entera. El SQL completo coincide con el generador.
 
 Pruebas: `npm test` (6), integración contra PostgreSQL real, `npm audit` (0 vulnerabilidades), firmware en la PC (en sus dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, y Chromium (recorrido completo con ficha en PDF, modo oscuro, cuadro de confirmación, y por la IP de la red): todo bien.
+
+## Decimosexta revisión: pedidos de la visita del 10/10/2026
+
+**Web y servidor**
+
+| Pedido | Qué se hizo |
+|---|---|
+| Cargar el peso del hilado y los metros de hilado (el máximo que se puede hacer), y ver en el PDF cuánto se usó y cuántos metros faltan | Ficha del dibujo: peso (kg) y metros de tela que alcanza a tejer el hilado. Se calcula lo tejido, lo usado, lo restante y los metros que faltan, contados desde que se cargó el hilado («Hilado nuevo» vuelve a empezar). Migración 020 y `PUT /api/patrones/:id/hilado`; las estadísticas devuelven `hilado`. Acepta «1.000» con punto de miles. |
+| Sacar del PDF las vueltas completas y sumar los metros que faltan | En la producción, «Metros que faltan» reemplaza a «Vueltas completas». Fila nueva de hilado: peso, alcanza para, usado y restante. |
+| En el celular, el teclado se cerraba al cargar las pasadas de cada fila | Al abrirse el teclado cambia el alto de la ventana y eso redibujaba la grilla, que reemplazaba la casilla enfocada. Ahora solo se redibuja si cambia el ancho, guardar las pasadas no redibuja, y si algo redibuja con una casilla enfocada se la vuelve a enfocar con lo escrito. «Siguiente» en el teclado pasa a la fila de abajo. |
+| No se puede poner más de una bobina por fila | En cada pasada entra una sola trama: al marcar otra bobina de la fila, la anterior se desmarca. El servidor rechaza una fila con dos (400). Un dibujo viejo con filas así muestra un aviso con esas filas al abrirlo y no se teje hasta corregirlo. |
+| Intercalar bobinas (por ejemplo 1, 3 y 2, hasta 120 pasadas) | Herramienta «Intercalar»: orden de las bobinas, pasadas de cada una y veces que se repite, al final del dibujo o en lugar de todo el dibujo (que se repite solo). Muestra filas y pasadas antes de aplicar y avisa si pasaría de 300 filas. |
+
+**Documentos**
+
+| Dónde | Qué se hizo |
+|---|---|
+| Registro de Entrevistas y Bitácora | Reunión 7 del 10/10/2026: prueba en protoboard del Nivel 2 (funcionó), plaqueta en armado y pedidos para la aplicación. La conexión final del Nivel 2 pasa a ser la reunión 8. |
+| Lista de componentes y Componentes en placa | Otra plaqueta y tiras de pines: 19 de 2, 6 de 5, 4 de 6 y 2 de 8 (precio a completar). |
+| Manual de la página web, Manual Telar Fábrica, Estado Completo, Documentación de Proyecto, Guía de los relés LCA110, README | Una bobina por fila, Intercalar, hilado en la ficha y en el PDF, estado del Nivel 2 al 10/10 y la opción de reemplazar el lector (casos 1, 2A y 2B). |
+
+Pruebas: `npm test` (6, con casos nuevos del editor), integración contra PostgreSQL real (con el hilado y la regla de una bobina por fila), `npm audit` (0), firmware en la PC, simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, y Chromium con tamaño de celular (teclado, una bobina por fila, Intercalar, ficha y PDF con hilado).
+
+## Decimoséptima revisión: tramos intercalados y telar en la vista previa
+
+| Pedido | Qué se hizo |
+|---|---|
+| Un dibujo con tramos: 120 pasadas alternando 1, 3, 4 y 2 (cada bobina cuenta una pasada), después 140 pasadas de la 4, después 140 alternando 2 y 1 | Cada tramo es una sola fila: su número de pasadas es el total del tramo y `secuencias_por_fila` (migración 021) guarda el orden de sus bobinas. La web, el backend y el firmware tejen en cada pasada la bobina que sigue en ese orden. Antes había que dibujar una fila por pasada, con el límite de 300 filas. El ejemplo queda en 3 filas y 400 pasadas por vuelta. |
+| Editor | Intercalar arma un tramo (orden y pasadas) al final o en lugar de todo el dibujo; tocar una fila intercalada la abre para cambiarla. La grilla muestra el lugar de cada bobina en el orden. |
+| Que la vista previa del dibujo tenga arriba el telar del que sale | En la ficha en PDF, un telar dibujado (rodillo de urdimbre, lizos celestes, cuerpo gris verdoso con la placa de la marca y la barra delantera) arriba de la vista previa: la tela baja desde la barra. |
+| Documentación de la web y manual | Manual de la página web (Intercalar, pregunta frecuente con el ejemplo, PDF), Documentación de Proyecto (campo nuevo y su regla), manual de instalación, README del backend y del firmware. |
+
+Pruebas: `npm test` (casos nuevos de tramos), integración contra PostgreSQL real (tramos válidos, inválidos y lo que recibe el firmware), firmware en la PC (selección intercalada 1, 3, 4, 2: una bobina por pasada, en orden), simulaciones, coherencia 19/19 y Chromium (tramos, guardado, edición y PDF).
+
+## Decimoctava revisión: intercalados por grupos de filas
+
+| Pedido | Qué se hizo |
+|---|---|
+| El intercalado tiene que respetar una bobina por fila: el número en el mismo cuadrado y un apartado al costado para agrupar filas | Cada fila lleva su bobina. Un intercalado agrupa filas seguidas (`grupos_intercalados`, migración 022, que reemplaza a la 021): se recorren en orden, cada una sus pasadas, hasta completar las del intercalado. En la grilla, una columna ⇄ al costado muestra una llave con las pasadas (tocarla lo cambia o lo quita; el «+» arma uno desde esa fila) y el cuadrado de cada bobina muestra su lugar en el orden. |
+| Posición, telar y sensor | El grupo cuenta como una sola fila larga que empieza en su primera fila (las demás miden 0): backend, firmware y web usan la misma regla. El firmware recibe el ciclo de bobinas del grupo. Pruebas de posición (web, backend y firmware: 2,4 millones de pasos iguales), selección e integración con un telar real en PostgreSQL. |
+| Telar de la vista previa | Más fiel a la máquina de la foto: bastidor, caja de mando con la placa VAMATEX, rodillo de urdimbre, dos marcos de lizos, peine, la tela que se está tejiendo con los colores del dibujo, pecho y barra delantera. |
+
+## Decimonovena revisión: relé mantenido, telar del PDF y revisión hasta salir limpia
+
+| Pedido | Qué se hizo |
+|---|---|
+| Con 120 pasadas seguidas de una bobina, el relé del telar queda activo todo el tiempo | `PORCENTAJE_SELECCION` pasa a valer 0 por defecto: el relé LCA110 queda cerrado mientras la misma bobina se repite y cambia recién cuando cambia la bobina (en un intercalado cambia en cada pasada). Con un valor de 1 a 90 se suelta en cada pasada, como el papel, por si la máquina lo necesitara. Prueba nueva en la PC (`test_seleccion_mantener.cpp`). Guías de los relés y de mediciones, paso a paso, puesta en marcha y README al día (la prueba del LED con el firmware ahora lo muestra encendido fijo 5 s y apagado 5 s). |
+| Telar de la vista previa un poco mejor | Queda dentro de su columna. Suma la fileta con las bobinas de trama numeradas en sus colores y sus hilos hasta el orillo, el travesaño, los templazos, la pinza que lleva la trama, la manija y, en la caja de mando, el visor y los botones de marcha y parada. |
+| Revisión | Firmware: si la posición guardada cae dentro de un intercalado vuelve a la primera fila del grupo, igual que el backend. Web: al cambiar el tamaño se recalcula el largo de la primera fila después de ajustar los intercalados; el diálogo abierto desde la última fila propone las dos últimas; el epígrafe dice «una vuelta completa» cuando entra entera. Backend: `npm run dev` con `node --watch` (sin nodemon, que traía avisos de seguridad sin arreglo). |
+
+Pruebas (última ronda, sin cambios): `npm test` (9 bloques), integración contra PostgreSQL real, `npm audit` (0), firmware en la PC (83/83, 6/6, 2,4 millones de pasos iguales al backend, los dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 19/19 y Chromium (editor, una bobina por fila, teclado, intercalados, hilado, tejido con intercalado y PDF).
+
+## Vigésima revisión: vista previa encuadrada, telar fiel a la foto y revisión archivo por archivo
+
+| Pedido | Qué se hizo |
+|---|---|
+| Que la vista previa encuadre bien y se vea bien | Ocupa todo el alto libre de la columna, hasta el epígrafe y «Cómo se teje» (antes, con producción e hilado cargados, quedaba en 38 mm). Las franjas se ajustan para llenar justo ese alto, aun con filas chicas agrandadas, y un dibujo muy desigual (9999 y 1 pasadas) se ve entero. La tela baja del rodillo del telar, con orillos y flecos abajo, sin el marco azul. El epígrafe dice «se ve el principio de la vuelta, hasta la fila N» cuando no entra entera. |
+| Telar lo más fiel posible, sin la marca ni el modelo | Vista de frente como en la foto: travesaño gris con la fila de piezas celestes, lizos con la urdimbre, peine, la tela sobre la máquina con templazos y la trama entrando, el pecho oscuro con la placa blanca y la marca roja, el rodillo de acero con anillos, el bastidor, la caja grande con el escudo redondo (sin texto) y los botones, y a la izquierda la fileta con las bobinas en sus colores. |
+| Revisión completa | Contraste en modo oscuro: «Aplicar» del intercalado, el avatar, el botón del PDF, los números de fila y la llave del intercalado (color propio `--int-color`, que el color del hilo de la fila ya no pisa). Portada: el degradé termina en un azul medio (el texto de abajo quedaba en 2,4:1). Los campos de texto muestran el foco. «Limpiar» avisa que también borra los intercalados. Comentario del retroceso en el backend, README del API (`grupos_intercalados` en el cuerpo, celdas vacías) y del Nivel 2 (qué manda `patron-actual` con intercalados). Capturas nuevas de la portada y del editor en los manuales. |
+
+Pruebas (ronda final, sin cambios): `npm test` (9 bloques), integración contra PostgreSQL real, `npm audit` (0), el SQL completo aplicado en una base vacía (22 migraciones), firmware en la PC (83/83, 6/6, 2,4 millones de pasos, los dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, Chromium (editor, intercalados, hilado, tejido, PDF en 7 casos y auditoría de contraste en los dos temas) y las planillas recalculadas sin errores (el Gantt usa BYROW/LAMBDA, que LibreOffice no tiene: en Excel y Google Sheets calcula bien).
+
+## Vigesimoprimera revisión: conexión final del relé (la más segura)
+
+| Pedido | Qué se hizo |
+|---|---|
+| Dato de la planta: el relé se mantiene activo y la aguja va y vuelve | Coincide con `PORCENTAJE_SELECCION` en 0, como viene: mientras la misma bobina se repite el relé queda cerrado; el movimiento de la aguja es mecánico, no lo da la señal. Quedó anotado en `config.h`, el paso a paso, el diagrama y las guías. |
+| Dato de la planta: con agujero el lector da la señal que activa la bobina | Es el caso 2A. La conexión final pone el relé en el lugar del lector: + del conector → resistencia de protección → pata 4; pata 6 → señal; 10 kΩ ½ W de la señal al −; la referencia al −. `CANAL_ACTIVO_EN_ALTO` en true, como viene. Diagrama nuevo `diagramas/hardware/conexion_final_rele.png` con qué pasa en cada situación, por qué es la más segura, los valores y las comprobaciones. Las conexiones en paralelo o en serie con el lector quedan descartadas. |
+| La versión más segura | Resistencia de protección en serie con el relé en cada canal: 220 Ω 2 W si el lector se alimenta con hasta 15 V y 470 Ω 3 W de 15 a 30 V (con un corto, a 15 V disipa 1,02 W y a 30 V 1,9 W: con 1 W y 2 W quedaba al límite). Limita la corriente a unos 50 mA aun con un error de cableado. La corriente se mide con esa resistencia en serie y el lector desconectado. El relé es normalmente abierto: sin orden, o con el ESP32 apagado, la plaqueta ve papel. |
+| Documentos | Paso a paso, `config.h` (comentarios), prueba de mesa del relé, README, Nivel 2, recomendaciones eléctricas, puesta en marcha, diagramas 2A/2B y del canal, y los Word: Guía de conexión de los relés, Guía de mediciones, Conexionado del Nivel 2 (figura 2 nueva), Guía de los Bloques C y D y Estado del proyecto. En las planillas de componentes se suman el zócalo DIP-6, la resistencia de protección, la de 10 kΩ ½ W y las borneras de 4 vías (precio a completar: los totales no cambian). |
+
+## Vigesimosegunda revisión: el telar y la vista previa del PDF, al máximo
+
+| Pedido | Qué se hizo |
+|---|---|
+| Mejorar el PDF lo máximo posible (telar y vista previa) | El telar tiene volumen: degradés de luz en el travesaño, las piezas celestes, el peine, el pecho, el rodillo y sus anillos (brillan como acero), la caja con el escudo hundido y los botones con brillo, el bastidor y los conos de la fileta, que se ven redondos. Sombra suave en el piso. jsPDF no trae degradés simples: se arman con franjas finas, recortadas a la forma de cada pieza. |
+| Vista previa | La tela sale de abajo del rodillo con su sombra, tiene una sombra suave sobre la hoja, orillos un poco más oscuros y la textura de la urdimbre (hilos claros y oscuros). Los rótulos de vuelta ya no tapan la tela: van al costado, con una llave por vuelta y cuánto mide (o hasta qué fila se ve). |
+| Que se vea la escala | Si el dibujo tiene los metros por pasada, una regla en el margen marca los centímetros de tela (en metros si es larga). Cada marca se ubica dentro de su franja, así que coincide con lo dibujado aun con filas chicas agrandadas. |
+| Dibujos sin colores | Antes todas las filas salían del mismo gris y no se distinguían; ahora cada bobina tiene su gris, en la tela y en los conos. |
+
+Pruebas: `npm test` (9 bloques), Chromium (editor, intercalados, tejido y el PDF en 8 casos, uno nuevo con una vuelta de 14 m), sin errores. Manual web y manual de instalación al día.
+
+## Vigesimotercera revisión: ficha más limpia y alimentadores de trama
+
+| Pedido | Qué se hizo |
+|---|---|
+| Sacar la descripción debajo de la vista previa | Fuera. Lo que decía ya se ve en la hoja: la llave de cada vuelta dice cuánto mide (o hasta qué fila se ve) y la regla da la escala. |
+| Sacar el modelo del telar | El encabezado dice solo «Control de Inserción de Trama»; el dato del modelo ya no se pasa a la ficha. |
+| Sacar «Cómo se teje» | Fuera. Sin ese recuadro, la tela de la vista previa (y la matriz) bajan hasta el pie de página. |
+| Mejorar el telar | Alimentadores de trama: cada hilo va del cono a su tambor (en el costado del telar, con el hilo enrollado en su color) y de ahí al orillo, como en la máquina. La fileta muestra todas las bobinas del dibujo (hasta 8, en dos estantes) y los conos tienen las vueltas del hilo. |
+| Una revisión más | `npm test` (9 bloques), integración contra PostgreSQL, `npm audit` (0), el SQL completo igual al generador y aplicado en una base vacía, firmware (83/83, 6/6, 2,4 millones de pasos, prueba del relé, los dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, Chromium (editor, intercalados, tejido, confirmaciones, avisos y el PDF en 10 casos, uno con 8 bobinas y otro con una vuelta de 14 m) y contraste en los dos temas: sin errores. Manuales al día. |
+
+## Vigesimocuarta revisión: paso a paso de conexión y puesta en marcha
+
+| Pedido | Qué se hizo |
+|---|---|
+| Un paso a paso de cómo conectar todo, teniendo en cuenta las plaquetas, y cómo levantarlo | Guía nueva, en `docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md` y en Word (`documentacion_proyecto/Guia_Conexion_y_Puesta_en_Marcha.docx`): seguridad, qué se necesita, las cuatro plaquetas (fuente, principal con el ESP32 y el sensado, módulos de relé y Nivel 2) con sus conectores J1 a J3 y las borneras B1 a B3, el armado y la prueba de cada plaqueta en el banco, el servidor en Render y Neon, la web, la carga del firmware (con la tabla de mensajes del monitor serie), la prueba en el banco, la conexión de la botonera, la del Nivel 2, el día a día y los problemas frecuentes. Diagrama nuevo `diagramas/hardware/plaquetas_y_cableado.png`. |
+| ¿Si se toca el botón del telar, se ve en la web que el dibujo se está tejiendo? | Sí, con un trabajo abierto: el sensado avisa al servidor y en pocos segundos la web pasa a «Tejiendo», avisa «El telar se puso en marcha desde la botonera» y, si el editor tiene abierto ese dibujo, la grilla avanza; Pausa la frena. Sin un trabajo abierto marca «Posición incierta». Probado en Chromium contra el servidor real, simulando el aviso del ESP32; la guía lo explica en la sección 10. |
+| Una última revisión | El índice de documentos (`documentacion_proyecto/LEEME.md`) no listaba las guías de los relés y de las mediciones: agregadas, junto con la nueva. El capacitor del sensado figura de 50 V (la botonera rectificada llega a unos 34 V de pico). |
+
+## Vigesimoquinta revisión: documentos al día
+
+| Pedido | Qué se hizo |
+|---|---|
+| ¿Están todos los documentos actualizados? | Se revisaron los Word, las planillas y los Markdown contra los últimos cambios (la conexión final del relé, la ficha en PDF y el paso a paso). Quedaban tres cosas: la Bitácora no tenía lo del 11/10 (agregado), el Estado del proyecto describía la ficha sin la vista previa nueva (al día) y el índice de documentos decía que el Registro de Entrevistas tenía seis reuniones y la séptima pendiente, cuando ya tiene siete (la última, del 10/10) y la octava pendiente (corregido). Los PDF de los 16 Word se volvieron a generar. |

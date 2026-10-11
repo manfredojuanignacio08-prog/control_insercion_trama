@@ -64,10 +64,12 @@ lugar del lector óptico de la cinta de papel.
 - **El punto de intervención es el propio lector óptico, no la bobina.** El
   dueño de la planta lo explicó así: cada lector óptico se corta con una llave,
   de modo que en lugar de que sea el papel el que interrumpe el haz, lo hace un
-  interruptor electrónico que entrega un 1 o un 0. Esto simplifica bastante la
-  etapa de potencia, porque el sistema no conmuta la corriente de la bobina
-  sino la señal del lector, que maneja mucha menos corriente. Las plaquetas del
-  telar quedan intactas y siguen haciendo su trabajo.
+  interruptor electrónico que entrega un 1 o un 0. Con agujero, el lector da la
+  señal que activa la bobina; en la conexión final (la más segura) el relé ocupa
+  el lugar del lector y da esa señal. Esto simplifica bastante la etapa de
+  potencia, porque el sistema no conmuta la corriente de la bobina sino la señal
+  del lector, que maneja mucha menos corriente. Las plaquetas del telar quedan
+  intactas y siguen haciendo su trabajo.
 - **Relés de estado sólido LCA110 (OptoMOS), uno por lector óptico, cuatro en total (uno por bobina de selección).** Es el punto donde más se
   equivoca la intuición: un relé mecánico común no sirve acá. El telar trabaja
   a 300 pasadas por minuto, o sea 5 por segundo, y cada bobina puede activarse
@@ -79,9 +81,10 @@ lugar del lector óptico de la cinta de papel.
   (unos pocos mA, menos de 24 V) y no la corriente de la bobina, alcanza con un
   relé de señal. Su salida son dos MOSFET en antiserie: conduce en los dos
   sentidos, así que sirve con continua y con alterna (hasta 350 V y 120 mA). Se
-  comanda directo desde un pin del ESP32 y aísla los dos lados. Cómo se conecta,
-  en paralelo o en serie según la medición del lector, está en
-  `Guia_Conexion_Reles_LCA110.docx`.
+  comanda directo desde un pin del ESP32 y aísla los dos lados. La conexión final,
+  la más segura, pone el relé en lugar del lector (con agujero el lector da la señal +V; ahora la
+  da el relé), con una resistencia de protección: `diagramas/hardware/conexion_final_rele.png` y
+  `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
 - El **ESP32** recibe del backend la secuencia y, en cada pasada, activa las
   bobinas que corresponden a esa fila.
 - **Los LCA110 se conectan directo a los GPIO del ESP32** (18, 19, 21 y 22, con
@@ -100,7 +103,7 @@ dos MOSFET enfrentados y además no actúa sobre la bobina sino sobre el lector.
 
 **Dato que falta medir en la máquina:** la tensión y la corriente en la salida
 de un lector óptico, que confirman que el LCA110 alcanza (hasta 350 V y 120 mA) y
-si va en paralelo o en serie. La velocidad ya está
+el caso de la conexión final (2A si con agujero la señal va a +V). La velocidad ya está
 confirmada: el telar trabaja a 300 pasadas por minuto, dato que dio el dueño de
 la planta el 06/09/26, lo que equivale a 5 conmutaciones por segundo y hasta
 180.000 por jornada de 10 horas.

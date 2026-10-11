@@ -122,14 +122,15 @@ usar para comandarlas y qué no.
 
 - **El punto de intervención es el lector óptico, no la bobina.** Según explicó
   el dueño de la planta, cada lector se corta con una llave: en lugar de que el
-  papel interrumpa el haz, lo hace un interruptor electrónico. El sistema
-  conmuta entonces la señal del lector, no la corriente de la bobina, y las
-  plaquetas del telar quedan intactas.
+  papel interrumpa el haz, lo hace un interruptor electrónico. Con agujero, el
+  lector da la señal que activa la bobina; en la conexión final el relé ocupa su
+  lugar y da esa señal. El sistema conmuta entonces la señal del lector, no la
+  corriente de la bobina, y las plaquetas del telar quedan intactas.
 - **Relé de estado sólido LCA110 (OptoMOS), uno por lector óptico: cuatro en total**, uno por
   cada bobina de selección. Un relé mecánico común no sirve: el telar hace 5 pasadas por segundo y
-  cada canal se activa y se suelta en cada pasada, hasta 180.000 conmutaciones en una jornada de 10
-  horas, y la vida típica de un relé mecánico con carga ronda las 100.000. Los relés mecánicos del
-  Bloque A quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas pocas veces
+  en un intercalado (o si se configura que la selección se suelte en cada pasada) un canal se
+  activa y se suelta en cada pasada, hasta 180.000 conmutaciones en una jornada de 10 horas, y
+  la vida típica de un relé mecánico con carga ronda las 100.000. Los relés mecánicos del Bloque A quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas pocas veces
   por día.
 - **Por qué el LCA110.** Como va sobre la señal del lector (unos pocos mA, menos de 24 V) y no sobre
   la bobina, no hace falta un SSR de potencia. Su salida son dos MOSFET en antiserie, así que
@@ -139,8 +140,9 @@ usar para comandarlas y qué no.
   diodo interno deja pasar el otro semiciclo; un optoacoplador común (PC817) también conduce en un
   solo sentido. Con una señal de alterna, cualquiera de los dos dejaría pasar medio ciclo.
 - **Antes de conectarlo hay que medir** la tensión y la corriente en la salida de un lector óptico,
-  y si el agujero abre o cierra el circuito: eso decide si el relé va en paralelo o en serie
-  (`Guia_Conexion_Reles_LCA110.docx`, sección 5).
+  y qué hace la señal con el agujero. La conexión final (la más segura) pone el relé en lugar del
+  lector, con una resistencia de protección: `diagramas/hardware/conexion_final_rele.png` y
+  `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
 
 ## 7. Protecciones que ya quedaron aplicadas en el firmware
 
@@ -162,7 +164,8 @@ relés):
 | Ítem | Cantidad | Para qué |
 |---|---|---|
 | Resistencia 10 kΩ | 6 | Polarización de IN1/IN2/IN3 (3 relés) y de los 3 canales de sensado (punto 1). La del canal de Retroceder va a GND, no a 3V3. |
-| Relé LCA110 (OptoMOS, DIP-6) + 330 Ω + 10 kΩ | 4 de cada uno (+1 LCA110 de repuesto) | Cortan la señal de cada lector óptico en el Nivel 2 (punto 6). Un relé mecánico se gastaría en una jornada por la frecuencia de conmutación. |
+| Relé LCA110 (OptoMOS, DIP-6) + 330 Ω + 10 kΩ | 4 de cada uno (+1 LCA110 de repuesto) | Dan la señal en lugar de cada lector óptico en el Nivel 2 (punto 6). Un relé mecánico se gastaría en una jornada por la frecuencia de conmutación. |
+| Resistencia de protección (220 Ω 2 W hasta 15 V; 470 Ω 3 W de 15 a 30 V) + 10 kΩ ½ W | 4 de cada una | Lado del telar de cada relé, en la conexión final (punto 6): la de protección del + del conector del lector a la pata 4, y la de 10 kΩ de la señal al −. |
 | Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
 | Capacitor cerámico 100 nF | 3 | Desacople: uno junto al ESP32 y uno junto a cada módulo de relé (punto 4) |
 | Optoacoplador PC817 + puente DB157 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |

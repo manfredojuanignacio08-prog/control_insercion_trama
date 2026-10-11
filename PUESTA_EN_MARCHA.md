@@ -1,5 +1,9 @@
 # Puesta en marcha en el telar (Vamatex C 201, cuatro bobinas)
 
+> El armado y la conexión de todo, plaqueta por plaqueta, y cómo levantar el servidor, la web y el ESP32
+> están en [`docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`](docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md).
+> Este documento cubre las claves, la sincronización y la validación del conteo.
+
 La fábrica tiene telares C 201, C 301 y C 401; el equipo investigó los tres, y el hardware se
 instala en el **C 201** (matrícula 1104, cuatro bobinas de selección), el mismo telar que se relevó y
 midió. El diseño sirve igual para los otros dos modelos, que comparten la arquitectura de selección. Este documento reúne lo que hay que hacer
@@ -40,15 +44,19 @@ así que hay que cambiar las dos antes de poner el sistema en la fábrica.
 
 **Qué se quiere saber.** Cada pasada, el telar "mira" la selección en un instante preciso (cuando abre la
 calada), y el sensor inductivo avisa el comienzo de la pasada en otro instante. Además, con el papel la
-selección se activa y se suelta en cada pasada (entre dos agujeros seguidos hay papel), y el firmware
-tiene que imitarlo. Si la fila se aplica antes o después de tiempo, o dura poco, la tela sale mal.
+selección se activa y se suelta en cada pasada (entre dos agujeros seguidos hay papel); el firmware, como
+viene, la mantiene mientras la bobina se repite, y también puede soltarla en cada pasada. Si la fila se aplica antes o después de tiempo, o dura poco, la tela sale mal.
 
 **Sin osciloscopio** (el camino previsto; la guía de los relés LCA110 lo explica paso a paso):
 
-1. Con el multímetro, medir el nivel y la corriente de la salida del lector óptico, para decidir si los
-   relés LCA110 van en serie o en paralelo.
-2. Estimar `PORCENTAJE_SELECCION` con una regla sobre la cinta de papel: si avanza de forma pareja, la
-   señal dura más o menos el diámetro del agujero dividido por la distancia entre los centros de dos
+1. Con el multímetro, medir el nivel y la corriente de la salida del lector óptico, para confirmar la
+   conexión final de los relés LCA110: el relé en lugar del lector, caso 2A (con agujero el lector da la
+   señal +V), con una resistencia de protección (`diagramas/hardware/conexion_final_rele.png`). El paso a
+   paso de la medición y la conexión está en `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
+2. `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita (por ejemplo, las 120
+   pasadas seguidas de una bobina) y cambia cuando cambia la bobina, que es lo que se ve en el telar.
+   Si en la prueba alguna pasada no toma la selección, probar con un porcentaje: se estima con una regla
+   sobre la cinta de papel, el diámetro del agujero dividido por la distancia entre los centros de dos
    agujeros seguidos (agujeros de 4 mm cada 8 mm dan 50 %).
 3. Tejer una prueba corta con un dibujo fácil de reconocer y corregir según la tabla de abajo.
 
@@ -63,7 +71,7 @@ lector cuando pasa un agujero.
 |---|---|
 | El dibujo sale corrido una pasada (la ventana de lectura llega antes de que se aplique la fila, o después) | `DESPLAZAMIENTO_FILAS` en 1 o −1, o mover el blanco metálico en el eje |
 | Hay un desfase pequeño dentro de la pasada (solo se ve con osciloscopio) | `RETARDO_APLICACION_US` (máximo 50 000 µs) |
-| Algunas pasadas no toman la selección, o la señal del lector dura otra parte de la pasada que la mitad | `PORCENTAJE_SELECCION` (hoy 50 %; hasta 90 %) |
+| Algunas pasadas no toman la selección, o la señal del lector dura otra parte de la pasada que la mitad | `PORCENTAJE_SELECCION` (hoy 0: se mantiene mientras la bobina se repita; de 1 a 90 se suelta en cada pasada) |
 | La tela sale bien | No se toca nada |
 
 **Seguridad.** Las bobinas trabajan a 24 V de alterna. Medir del lado de baja tensión (el lector); con

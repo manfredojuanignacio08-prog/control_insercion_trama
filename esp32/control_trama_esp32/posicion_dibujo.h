@@ -21,13 +21,24 @@ static inline int envolverFila(int fila, int filas) {
   return (r < 0) ? r + filas : r;   // el módulo de C conserva el signo
 }
 
+// Intercalados: el backend manda el grupo entero como largo de su primera fila y 0 en las
+// demás (ver largosDeFilas en posicion.js). Una fila de largo 0 no se teje sola: se saltea.
+// Si todas midieran 0 (no ocurre: la primera de un grupo mide sus pasadas), no se mueve.
+static inline int siguienteConLargo(int fila, int paso, const int reps[], int filas) {
+  for (int i = 0; i < filas; i++) {
+    fila = envolverFila(fila + paso, filas);
+    if (reps[fila] > 0) return fila;
+  }
+  return fila;
+}
+
 // Una pasada hacia adelante.
 static inline void posicionAdelante(int& fila, int& restantes, const int reps[], int filas) {
   if (filas <= 0) return;
   restantes--;
   if (restantes <= 0) {
-    fila = envolverFila(fila + 1, filas);
-    restantes = reps[fila];
+    fila = siguienteConLargo(fila, 1, reps, filas);
+    restantes = reps[fila] > 0 ? reps[fila] : 1;
   }
 }
 
@@ -37,7 +48,7 @@ static inline void posicionAtras(int& fila, int& restantes, const int reps[], in
   if (filas <= 0) return;
   restantes++;
   if (restantes > reps[fila]) {
-    fila = envolverFila(fila - 1, filas);
+    fila = siguienteConLargo(fila, -1, reps, filas);
     restantes = 1;   // queda una pasada por deshacer de la fila anterior
   }
 }

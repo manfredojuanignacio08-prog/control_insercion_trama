@@ -228,7 +228,7 @@ def verificar():
               s17.fila_actual == 0))
 
     # Repeticiones: una fila con 100 repeticiones son 100 pasadas de la misma
-    # combinación de bobinas antes de pasar a la siguiente.
+    # fila antes de pasar a la siguiente.
     s18 = Nivel2Simulado(dibujo, repeticiones=[100, 3, 1, 1])
     for _ in range(99):
         s18.pulso_del_sensor()
