@@ -31,6 +31,7 @@ diagramas/        Los diagramas del proyecto, en SVG y PNG
 docs/             Documentación de apoyo
   analisis/       Análisis técnico y árbol de problemas
   guias/          Instalación, funcionamiento y base de datos
+  sitios/         Versiones web de la documentación y de los manuales
 database/         El esquema completo, para levantar la base desde cero
 documentacion_proyecto/   Los documentos de la Carpeta del Proyecto
 _referencia_app_android/  ⚠️ Base de una eventual app Android: solo referencia, NO funcional
@@ -151,7 +152,9 @@ Cada diagrama en SVG (editable) y PNG. El detalle está en `diagramas/README.md`
 ### `database/` y `docs/`
 Material de referencia: el script SQL completo de la base, `docs/guias/`
 (instalación y funcionamiento, cómo crear la base) y `docs/analisis/`
-(análisis del frontend, árbol de problemas, componentes).
+(análisis del frontend, árbol de problemas, componentes). En `docs/sitios/`
+están las versiones web de la Documentación de Proyecto y de los dos manuales de
+uso, al día con los Word (ver `docs/sitios/LEEME.md`).
 
 ### `_referencia_app_android/`
 ⚠️ Base de una eventual app Android, guardada solo como referencia para el

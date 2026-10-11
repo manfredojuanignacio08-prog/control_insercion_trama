@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ERD — Sistema de Telares</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px;
+    background: #E8EDF1;
+    font-family: Segoe UI, Arial, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .toolbar {
+    width: 100%; max-width: 1620px;
+    display: flex; justify-content: flex-end; gap: 10px;
+    margin-bottom: 14px;
+  }
+  button {
+    padding: 9px 18px; background: #1E3A5F; color: #F0F4F8;
+    border: none; border-radius: 6px; font-size: 13px; font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { background: #3D6B96; }
+  .lienzo {
+    background: #F6F8FA; border: 1px solid #CDD8E0; border-radius: 6px;
+    padding: 8px; max-width: 100%; overflow-x: auto;
+  }
+  svg { display: block; max-width: 100%; height: auto; }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <button onclick="descargarSVG()">Descargar como SVG</button>
+  <button onclick="descargarPNG()">Descargar como PNG</button>
+</div>
+
+<div class="lienzo" id="contenedor">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1620 1030" width="1620" height="1030" font-family="Segoe UI, Arial, sans-serif">
+<rect x="0" y="0" width="1620" height="1030" fill="#F6F8FA"/>
+<text x="50" y="42" font-size="24" font-weight="700" fill="#1E3A5F">ERD — Sistema de Telares</text>
+<text x="50" y="62" font-size="12.5" fill="#6B7684">Modelo entidad-relación (3FN) · Bloque Negocio y Bloque Autenticación</text>
+<rect x="30" y="90" width="1520" height="360" fill="none" stroke="#CDD8E0" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="1430" y="105" font-size="10.5" fill="#7FA8C9" font-weight="700" text-anchor="end">BLOQUE NEGOCIO</text>
+<rect x="30" y="540" width="1520" height="310" fill="none" stroke="#CDD8E0" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="1430" y="555" font-size="10.5" fill="#7FA8C9" font-weight="700" text-anchor="end">BLOQUE AUTENTICACIÓN</text>
+<path d="M 350 157 L 390 157 L 390 263.0 L 430 263.0" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="359.0" y1="151.5" x2="359.0" y2="162.5" stroke="#3D6B96" stroke-width="2"/>
+<line x1="366.0" y1="151.5" x2="366.0" y2="162.5" stroke="#3D6B96" stroke-width="2"/>
+<line x1="430.0" y1="263.0" x2="417.0" y2="263.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="430.0" y1="263.0" x2="417.0" y2="270.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="430.0" y1="263.0" x2="417.0" y2="256.0" stroke="#3D6B96" stroke-width="2"/>
+<path d="M 200 110 L 200 72 L 970 72 L 970 110" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="194.5" y1="101.0" x2="205.5" y2="101.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="194.5" y1="94.0" x2="205.5" y2="94.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="970.0" y1="110.0" x2="970.0" y2="97.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="970.0" y1="110.0" x2="963.0" y2="97.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="970.0" y1="110.0" x2="977.0" y2="97.0" stroke="#3D6B96" stroke-width="2"/>
+<path d="M 730 157 L 770 157 L 770 185.0 L 810 185.0" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="739.0" y1="151.5" x2="739.0" y2="162.5" stroke="#3D6B96" stroke-width="2"/>
+<line x1="746.0" y1="151.5" x2="746.0" y2="162.5" stroke="#3D6B96" stroke-width="2"/>
+<line x1="810.0" y1="185.0" x2="797.0" y2="185.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="810.0" y1="185.0" x2="797.0" y2="192.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="810.0" y1="185.0" x2="797.0" y2="178.0" stroke="#3D6B96" stroke-width="2"/>
+<path d="M 580 300 L 580 470 L 1360 470 L 1360 300" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="585.5" y1="309.0" x2="574.5" y2="309.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="585.5" y1="316.0" x2="574.5" y2="316.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="1360.0" y1="300.0" x2="1360.0" y2="313.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="1360.0" y1="300.0" x2="1367.0" y2="313.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="1360.0" y1="300.0" x2="1353.0" y2="313.0" stroke="#3D6B96" stroke-width="2"/>
+<path d="M 350 607 L 390 607 L 390 635.0 L 430 635.0" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="359.0" y1="601.5" x2="359.0" y2="612.5" stroke="#3D6B96" stroke-width="2"/>
+<line x1="366.0" y1="601.5" x2="366.0" y2="612.5" stroke="#3D6B96" stroke-width="2"/>
+<line x1="430.0" y1="635.0" x2="417.0" y2="635.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="430.0" y1="635.0" x2="417.0" y2="642.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="430.0" y1="635.0" x2="417.0" y2="628.0" stroke="#3D6B96" stroke-width="2"/>
+<path d="M 200 724 L 200 880 L 960 880 L 960 750" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="205.5" y1="733.0" x2="194.5" y2="733.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="205.5" y1="740.0" x2="194.5" y2="740.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="960.0" y1="750.0" x2="960.0" y2="763.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="960.0" y1="750.0" x2="967.0" y2="763.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="960.0" y1="750.0" x2="953.0" y2="763.0" stroke="#3D6B96" stroke-width="2"/>
+<path d="M 260 724 L 260 910 L 1340 910 L 1340 750" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<line x1="265.5" y1="733.0" x2="254.5" y2="733.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="265.5" y1="740.0" x2="254.5" y2="740.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="1340.0" y1="750.0" x2="1340.0" y2="763.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="1340.0" y1="750.0" x2="1347.0" y2="763.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="1340.0" y1="750.0" x2="1333.0" y2="763.0" stroke="#3D6B96" stroke-width="2"/>
+<rect x="50" y="110" width="300" height="270" fill="#F6F8FA" stroke="#CDD8E0" stroke-width="1.5"/>
+<rect x="50" y="110" width="300" height="36" fill="#1E3A5F"/>
+<text x="64" y="133.0" font-family="Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#F0F4F8">patrones</text>
+<rect x="50" y="146" width="300" height="26" fill="#DCE7F0"/>
+<line x1="50" y1="172" x2="350" y2="172" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="60" y="151" width="26" height="16" rx="3" fill="#1E3A5F"/>
+<text x="73" y="162.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">PK</text>
+<text x="96" y="163" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">id</text>
+<text x="340" y="162.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">serial</text>
+<rect x="50" y="172" width="300" height="26" fill="#F6F8FA"/>
+<line x1="50" y1="198" x2="350" y2="198" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="189" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="189" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">nombre</text>
+<text x="340" y="188.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text UNIQUE</text>
+<rect x="50" y="198" width="300" height="26" fill="#FFFFFF"/>
+<line x1="50" y1="224" x2="350" y2="224" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="215" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="215" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">filas</text>
+<text x="340" y="214.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">integer</text>
+<rect x="50" y="224" width="300" height="26" fill="#F6F8FA"/>
+<line x1="50" y1="250" x2="350" y2="250" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="241" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="241" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">columnas</text>
+<text x="340" y="240.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">integer</text>
+<rect x="50" y="250" width="300" height="26" fill="#FFFFFF"/>
+<line x1="50" y1="276" x2="350" y2="276" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="267" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="267" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">matriz_pasadas</text>
+<text x="340" y="266.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">jsonb</text>
+<rect x="50" y="276" width="300" height="26" fill="#F6F8FA"/>
+<line x1="50" y1="302" x2="350" y2="302" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="293" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="293" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">colores_filas</text>
+<text x="340" y="292.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">jsonb</text>
+<rect x="50" y="302" width="300" height="26" fill="#FFFFFF"/>
+<line x1="50" y1="328" x2="350" y2="328" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="319" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="319" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">metadata</text>
+<text x="340" y="318.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">jsonb</text>
+<rect x="50" y="328" width="300" height="26" fill="#F6F8FA"/>
+<line x1="50" y1="354" x2="350" y2="354" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="345" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="345" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">creado_at</text>
+<text x="340" y="344.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="50" y="354" width="300" height="26" fill="#FFFFFF"/>
+<line x1="50" y1="380" x2="350" y2="380" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="371" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="371" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">modificado_at</text>
+<text x="340" y="370.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="50" y="110" width="300" height="270" fill="none" stroke="#7FA8C9" stroke-width="1.5"/>
+<rect x="430" y="110" width="300" height="192" fill="#F6F8FA" stroke="#CDD8E0" stroke-width="1.5"/>
+<rect x="430" y="110" width="300" height="36" fill="#1E3A5F"/>
+<text x="444" y="133.0" font-family="Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#F0F4F8">telares</text>
+<rect x="430" y="146" width="300" height="26" fill="#DCE7F0"/>
+<line x1="430" y1="172" x2="730" y2="172" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="440" y="151" width="26" height="16" rx="3" fill="#1E3A5F"/>
+<text x="453" y="162.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">PK</text>
+<text x="476" y="163" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">id</text>
+<text x="720" y="162.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">serial</text>
+<rect x="430" y="172" width="300" height="26" fill="#F6F8FA"/>
+<line x1="430" y1="198" x2="730" y2="198" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="189" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="189" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">codigo</text>
+<text x="720" y="188.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text UNIQUE</text>
+<rect x="430" y="198" width="300" height="26" fill="#FFFFFF"/>
+<line x1="430" y1="224" x2="730" y2="224" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="215" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="215" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">nombre</text>
+<text x="720" y="214.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="430" y="224" width="300" height="26" fill="#F6F8FA"/>
+<line x1="430" y1="250" x2="730" y2="250" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="241" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="241" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">estado</text>
+<text x="720" y="240.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="430" y="250" width="300" height="26" fill="#E8EDF1"/>
+<line x1="430" y1="276" x2="730" y2="276" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="440" y="255" width="26" height="16" rx="3" fill="#9C5C0A"/>
+<text x="453" y="266.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">FK</text>
+<text x="476" y="267" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">patron_actual_id</text>
+<text x="720" y="266.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">→ patrones.id</text>
+<rect x="430" y="276" width="300" height="26" fill="#F6F8FA"/>
+<line x1="430" y1="302" x2="730" y2="302" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="293" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="293" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">creado_at</text>
+<text x="720" y="292.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="430" y="110" width="300" height="192" fill="none" stroke="#7FA8C9" stroke-width="1.5"/>
+<rect x="810" y="110" width="320" height="322" fill="#F6F8FA" stroke="#CDD8E0" stroke-width="1.5"/>
+<rect x="810" y="110" width="320" height="36" fill="#1E3A5F"/>
+<text x="824" y="133.0" font-family="Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#F0F4F8">produccion_historial</text>
+<rect x="810" y="146" width="320" height="26" fill="#DCE7F0"/>
+<line x1="810" y1="172" x2="1130" y2="172" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="820" y="151" width="26" height="16" rx="3" fill="#1E3A5F"/>
+<text x="833" y="162.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">PK</text>
+<text x="856" y="163" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">id</text>
+<text x="1120" y="162.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">serial</text>
+<rect x="810" y="172" width="320" height="26" fill="#E8EDF1"/>
+<line x1="810" y1="198" x2="1130" y2="198" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="820" y="177" width="26" height="16" rx="3" fill="#9C5C0A"/>
+<text x="833" y="188.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">FK</text>
+<text x="856" y="189" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">telar_id</text>
+<text x="1120" y="188.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">→ telares.id</text>
+<rect x="810" y="198" width="320" height="26" fill="#E8EDF1"/>
+<line x1="810" y1="224" x2="1130" y2="224" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="820" y="203" width="26" height="16" rx="3" fill="#9C5C0A"/>
+<text x="833" y="214.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">FK</text>
+<text x="856" y="215" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">patron_id</text>
+<text x="1120" y="214.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">→ patrones.id</text>
+<rect x="810" y="224" width="320" height="26" fill="#F6F8FA"/>
+<line x1="810" y1="250" x2="1130" y2="250" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="241" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="241" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">fecha_inicio</text>
+<text x="1120" y="240.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="810" y="250" width="320" height="26" fill="#FFFFFF"/>
+<line x1="810" y1="276" x2="1130" y2="276" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="267" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="267" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">fecha_fin</text>
+<text x="1120" y="266.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="810" y="276" width="320" height="26" fill="#F6F8FA"/>
+<line x1="810" y1="302" x2="1130" y2="302" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="293" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="293" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">pasadas_totales</text>
+<text x="1120" y="292.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">integer</text>
+<rect x="810" y="302" width="320" height="26" fill="#FFFFFF"/>
+<line x1="810" y1="328" x2="1130" y2="328" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="319" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="319" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">fila_actual</text>
+<text x="1120" y="318.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">integer</text>
+<rect x="810" y="328" width="320" height="26" fill="#F6F8FA"/>
+<line x1="810" y1="354" x2="1130" y2="354" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="345" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="345" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">columna_actual</text>
+<text x="1120" y="344.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">integer</text>
+<rect x="810" y="354" width="320" height="26" fill="#FFFFFF"/>
+<line x1="810" y1="380" x2="1130" y2="380" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="371" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="371" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">pasada_actual</text>
+<text x="1120" y="370.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">integer</text>
+<rect x="810" y="380" width="320" height="26" fill="#F6F8FA"/>
+<line x1="810" y1="406" x2="1130" y2="406" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="397" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="397" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">vueltas_completadas</text>
+<text x="1120" y="396.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">integer</text>
+<rect x="810" y="406" width="320" height="26" fill="#FFFFFF"/>
+<line x1="810" y1="432" x2="1130" y2="432" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="423" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="423" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">estado</text>
+<text x="1120" y="422.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="810" y="110" width="320" height="322" fill="none" stroke="#7FA8C9" stroke-width="1.5"/>
+<rect x="1210" y="110" width="300" height="192" fill="#F6F8FA" stroke="#CDD8E0" stroke-width="1.5"/>
+<rect x="1210" y="110" width="300" height="36" fill="#1E3A5F"/>
+<text x="1224" y="133.0" font-family="Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#F0F4F8">registro_de_errores</text>
+<rect x="1210" y="146" width="300" height="26" fill="#DCE7F0"/>
+<line x1="1210" y1="172" x2="1510" y2="172" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="1220" y="151" width="26" height="16" rx="3" fill="#1E3A5F"/>
+<text x="1233" y="162.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">PK</text>
+<text x="1256" y="163" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">id</text>
+<text x="1500" y="162.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">serial</text>
+<rect x="1210" y="172" width="300" height="26" fill="#E8EDF1"/>
+<line x1="1210" y1="198" x2="1510" y2="198" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="1220" y="177" width="26" height="16" rx="3" fill="#9C5C0A"/>
+<text x="1233" y="188.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">FK</text>
+<text x="1256" y="189" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">telar_id</text>
+<text x="1500" y="188.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">→ telares.id</text>
+<rect x="1210" y="198" width="300" height="26" fill="#FFFFFF"/>
+<line x1="1210" y1="224" x2="1510" y2="224" stroke="#CDD8E0" stroke-width="1"/>
+<text x="1233" y="215" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="1256" y="215" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">titulo</text>
+<text x="1500" y="214.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="1210" y="224" width="300" height="26" fill="#F6F8FA"/>
+<line x1="1210" y1="250" x2="1510" y2="250" stroke="#CDD8E0" stroke-width="1"/>
+<text x="1233" y="241" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="1256" y="241" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">mensaje</text>
+<text x="1500" y="240.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="1210" y="250" width="300" height="26" fill="#FFFFFF"/>
+<line x1="1210" y1="276" x2="1510" y2="276" stroke="#CDD8E0" stroke-width="1"/>
+<text x="1233" y="267" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="1256" y="267" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">codigo</text>
+<text x="1500" y="266.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="1210" y="276" width="300" height="26" fill="#F6F8FA"/>
+<line x1="1210" y1="302" x2="1510" y2="302" stroke="#CDD8E0" stroke-width="1"/>
+<text x="1233" y="293" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="1256" y="293" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">creado_at</text>
+<text x="1500" y="292.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="1210" y="110" width="300" height="192" fill="none" stroke="#7FA8C9" stroke-width="1.5"/>
+<rect x="50" y="560" width="300" height="166" fill="#F6F8FA" stroke="#CDD8E0" stroke-width="1.5"/>
+<rect x="50" y="560" width="300" height="36" fill="#1E3A5F"/>
+<text x="64" y="583.0" font-family="Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#F0F4F8">usuarios</text>
+<rect x="50" y="596" width="300" height="26" fill="#DCE7F0"/>
+<line x1="50" y1="622" x2="350" y2="622" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="60" y="601" width="26" height="16" rx="3" fill="#1E3A5F"/>
+<text x="73" y="612.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">PK</text>
+<text x="96" y="613" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">id</text>
+<text x="340" y="612.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">serial</text>
+<rect x="50" y="622" width="300" height="26" fill="#F6F8FA"/>
+<line x1="50" y1="648" x2="350" y2="648" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="639" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="639" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">nombre</text>
+<text x="340" y="638.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="50" y="648" width="300" height="26" fill="#FFFFFF"/>
+<line x1="50" y1="674" x2="350" y2="674" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">nombre_usuario</text>
+<text x="340" y="664.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text UNIQUE</text>
+<rect x="50" y="674" width="300" height="26" fill="#F6F8FA"/>
+<line x1="50" y1="700" x2="350" y2="700" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="691" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="691" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">codigo_recuperacion</text>
+<text x="340" y="690.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="50" y="700" width="300" height="26" fill="#FFFFFF"/>
+<line x1="50" y1="726" x2="350" y2="726" stroke="#CDD8E0" stroke-width="1"/>
+<text x="73" y="717" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="96" y="717" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">creado_at</text>
+<text x="340" y="716.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="50" y="560" width="300" height="166" fill="none" stroke="#7FA8C9" stroke-width="1.5"/>
+<rect x="430" y="560" width="300" height="270" fill="#F6F8FA" stroke="#CDD8E0" stroke-width="1.5"/>
+<rect x="430" y="560" width="300" height="36" fill="#1E3A5F"/>
+<text x="444" y="583.0" font-family="Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#F0F4F8">credenciales_biometricas</text>
+<rect x="430" y="596" width="300" height="26" fill="#DCE7F0"/>
+<line x1="430" y1="622" x2="730" y2="622" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="440" y="601" width="26" height="16" rx="3" fill="#1E3A5F"/>
+<text x="453" y="612.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">PK</text>
+<text x="476" y="613" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">id</text>
+<text x="720" y="612.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">serial</text>
+<rect x="430" y="622" width="300" height="26" fill="#E8EDF1"/>
+<line x1="430" y1="648" x2="730" y2="648" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="440" y="627" width="26" height="16" rx="3" fill="#9C5C0A"/>
+<text x="453" y="638.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">FK</text>
+<text x="476" y="639" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">usuario_id</text>
+<text x="720" y="638.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">→ usuarios.id</text>
+<rect x="430" y="648" width="300" height="26" fill="#FFFFFF"/>
+<line x1="430" y1="674" x2="730" y2="674" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">credencial_id</text>
+<text x="720" y="664.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text UNIQUE</text>
+<rect x="430" y="674" width="300" height="26" fill="#F6F8FA"/>
+<line x1="430" y1="700" x2="730" y2="700" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="691" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="691" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">clave_publica</text>
+<text x="720" y="690.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="430" y="700" width="300" height="26" fill="#FFFFFF"/>
+<line x1="430" y1="726" x2="730" y2="726" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="717" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="717" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">encimera</text>
+<text x="720" y="716.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">bigint</text>
+<rect x="430" y="726" width="300" height="26" fill="#F6F8FA"/>
+<line x1="430" y1="752" x2="730" y2="752" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="743" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="743" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">tipo_dispositivo</text>
+<text x="720" y="742.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="430" y="752" width="300" height="26" fill="#FFFFFF"/>
+<line x1="430" y1="778" x2="730" y2="778" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="769" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="769" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">apodo</text>
+<text x="720" y="768.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="430" y="778" width="300" height="26" fill="#F6F8FA"/>
+<line x1="430" y1="804" x2="730" y2="804" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="795" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="795" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">creado_at</text>
+<text x="720" y="794.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="430" y="804" width="300" height="26" fill="#FFFFFF"/>
+<line x1="430" y1="830" x2="730" y2="830" stroke="#CDD8E0" stroke-width="1"/>
+<text x="453" y="821" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="476" y="821" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">ultimo_uso</text>
+<text x="720" y="820.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="430" y="560" width="300" height="270" fill="none" stroke="#7FA8C9" stroke-width="1.5"/>
+<rect x="810" y="560" width="300" height="192" fill="#F6F8FA" stroke="#CDD8E0" stroke-width="1.5"/>
+<rect x="810" y="560" width="300" height="36" fill="#1E3A5F"/>
+<text x="824" y="583.0" font-family="Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#F0F4F8">desafios_webauthn</text>
+<rect x="810" y="596" width="300" height="26" fill="#DCE7F0"/>
+<line x1="810" y1="622" x2="1110" y2="622" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="820" y="601" width="26" height="16" rx="3" fill="#1E3A5F"/>
+<text x="833" y="612.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">PK</text>
+<text x="856" y="613" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">id</text>
+<text x="1100" y="612.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">serial</text>
+<rect x="810" y="622" width="300" height="26" fill="#E8EDF1"/>
+<line x1="810" y1="648" x2="1110" y2="648" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="820" y="627" width="26" height="16" rx="3" fill="#9C5C0A"/>
+<text x="833" y="638.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">FK</text>
+<text x="856" y="639" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">usuario_id</text>
+<text x="1100" y="638.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">→ usuarios.id</text>
+<rect x="810" y="648" width="300" height="26" fill="#FFFFFF"/>
+<line x1="810" y1="674" x2="1110" y2="674" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">desafio</text>
+<text x="1100" y="664.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="810" y="674" width="300" height="26" fill="#F6F8FA"/>
+<line x1="810" y1="700" x2="1110" y2="700" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="691" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="691" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">tipo</text>
+<text x="1100" y="690.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text</text>
+<rect x="810" y="700" width="300" height="26" fill="#FFFFFF"/>
+<line x1="810" y1="726" x2="1110" y2="726" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="717" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="717" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">vence_at</text>
+<text x="1100" y="716.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="810" y="726" width="300" height="26" fill="#F6F8FA"/>
+<line x1="810" y1="752" x2="1110" y2="752" stroke="#CDD8E0" stroke-width="1"/>
+<text x="833" y="743" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="856" y="743" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">creado_at</text>
+<text x="1100" y="742.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="810" y="560" width="300" height="192" fill="none" stroke="#7FA8C9" stroke-width="1.5"/>
+<rect x="1190" y="560" width="300" height="192" fill="#F6F8FA" stroke="#CDD8E0" stroke-width="1.5"/>
+<rect x="1190" y="560" width="300" height="36" fill="#1E3A5F"/>
+<text x="1204" y="583.0" font-family="Segoe UI, Arial, sans-serif" font-size="14.5" font-weight="700" fill="#F0F4F8">invitaciones</text>
+<rect x="1190" y="596" width="300" height="26" fill="#DCE7F0"/>
+<line x1="1190" y1="622" x2="1490" y2="622" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="1200" y="601" width="26" height="16" rx="3" fill="#1E3A5F"/>
+<text x="1213" y="612.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">PK</text>
+<text x="1236" y="613" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">id</text>
+<text x="1480" y="612.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">serial</text>
+<rect x="1190" y="622" width="300" height="26" fill="#E8EDF1"/>
+<line x1="1190" y1="648" x2="1490" y2="648" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="1200" y="627" width="26" height="16" rx="3" fill="#9C5C0A"/>
+<text x="1213" y="638.5" font-family="Segoe UI, Arial, sans-serif" font-size="8.5" font-weight="700" fill="#F0F4F8" text-anchor="middle">FK</text>
+<text x="1236" y="639" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">generado_por</text>
+<text x="1480" y="638.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">→ usuarios.id</text>
+<rect x="1190" y="648" width="300" height="26" fill="#FFFFFF"/>
+<line x1="1190" y1="674" x2="1490" y2="674" stroke="#CDD8E0" stroke-width="1"/>
+<text x="1213" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="1236" y="665" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">codigo</text>
+<text x="1480" y="664.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">text UNIQUE</text>
+<rect x="1190" y="674" width="300" height="26" fill="#F6F8FA"/>
+<line x1="1190" y1="700" x2="1490" y2="700" stroke="#CDD8E0" stroke-width="1"/>
+<text x="1213" y="691" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="1236" y="691" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">usado</text>
+<text x="1480" y="690.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">boolean</text>
+<rect x="1190" y="700" width="300" height="26" fill="#FFFFFF"/>
+<line x1="1190" y1="726" x2="1490" y2="726" stroke="#CDD8E0" stroke-width="1"/>
+<text x="1213" y="717" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="1236" y="717" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">vence_at</text>
+<text x="1480" y="716.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="1190" y="726" width="300" height="26" fill="#F6F8FA"/>
+<line x1="1190" y1="752" x2="1490" y2="752" stroke="#CDD8E0" stroke-width="1"/>
+<text x="1213" y="743" font-family="Segoe UI, Arial, sans-serif" font-size="10" fill="#6B7684" text-anchor="middle">—</text>
+<text x="1236" y="743" font-family="Segoe UI, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#1F2937">creado_at</text>
+<text x="1480" y="742.5" font-family="Segoe UI, Arial, sans-serif" font-size="9.5" font-style="italic" fill="#6B7684" text-anchor="end">timestamptz</text>
+<rect x="1190" y="560" width="300" height="192" fill="none" stroke="#7FA8C9" stroke-width="1.5"/>
+<rect x="30" y="915" width="1500" height="70" fill="#E8EDF1" stroke="#CDD8E0" stroke-width="1"/>
+<rect x="50" y="931" width="22" height="16" fill="#DCE7F0" stroke="#CDD8E0"/>
+<rect x="52" y="933" width="18" height="12" rx="2" fill="#1E3A5F"/>
+<text x="61" y="942" font-size="7" font-weight="700" fill="#F0F4F8" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">PK</text>
+<text x="82" y="943" font-size="12" fill="#3F4B5C" font-family="Segoe UI, Arial, sans-serif">Clave primaria</text>
+<rect x="240" y="931" width="22" height="16" fill="#E8EDF1" stroke="#CDD8E0"/>
+<rect x="242" y="933" width="18" height="12" rx="2" fill="#9C5C0A"/>
+<text x="251" y="942" font-size="7" font-weight="700" fill="#F0F4F8" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif">FK</text>
+<text x="272" y="943" font-size="12" fill="#3F4B5C" font-family="Segoe UI, Arial, sans-serif">Clave foránea</text>
+<rect x="430" y="931" width="22" height="16" fill="#FFFFFF" stroke="#CDD8E0"/>
+<text x="462" y="943" font-size="12" fill="#3F4B5C" font-family="Segoe UI, Arial, sans-serif">Campo normal</text>
+<line x1="650" y1="939" x2="700" y2="939" stroke="#3D6B96" stroke-width="2"/>
+<line x1="659.0" y1="933.5" x2="659.0" y2="944.5" stroke="#3D6B96" stroke-width="2"/>
+<line x1="666.0" y1="933.5" x2="666.0" y2="944.5" stroke="#3D6B96" stroke-width="2"/>
+<text x="646" y="931" font-size="11" fill="#3F4B5C" text-anchor="start" font-family="Segoe UI, Arial, sans-serif">uno</text>
+<line x1="760" y1="939" x2="810" y2="939" stroke="#3D6B96" stroke-width="2"/>
+<line x1="810.0" y1="939.0" x2="797.0" y2="939.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="810.0" y1="939.0" x2="797.0" y2="946.0" stroke="#3D6B96" stroke-width="2"/>
+<line x1="810.0" y1="939.0" x2="797.0" y2="932.0" stroke="#3D6B96" stroke-width="2"/>
+<text x="760" y="931" font-size="11" fill="#3F4B5C" text-anchor="start" font-family="Segoe UI, Arial, sans-serif">muchos</text>
+</svg>
+</div>
+
+<script>
+function descargarSVG() {
+  const svgEl = document.querySelector('#contenedor svg');
+  const serializer = new XMLSerializer();
+  let source = serializer.serializeToString(svgEl);
+  source = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' + source;
+  const blob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'ERD_Sistema_Telares.svg'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function descargarPNG() {
+  const svgEl = document.querySelector('#contenedor svg');
+  const serializer = new XMLSerializer();
+  const source = serializer.serializeToString(svgEl);
+  const svgBlob = new Blob([source], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+  const img = new Image();
+  img.onload = function () {
+    const scale = 2;
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#F6F8FA';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0);
+    URL.revokeObjectURL(url);
+    canvas.toBlob(function (blob) {
+      const pngUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = pngUrl; a.download = 'ERD_Sistema_Telares.png'; a.click();
+      URL.revokeObjectURL(pngUrl);
+    });
+  };
+  img.src = url;
+}
+</script>
+</body>
+</html>

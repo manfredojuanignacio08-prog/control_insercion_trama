@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3FN — Sistema de Telares</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #ffffff; color: #2a2420; padding: 32px; }
+  h1 { font-size: 20px; font-weight: 700; color: #7C2155; margin-bottom: 4px; }
+  .subtitulo { font-size: 12px; color: #888; margin-bottom: 8px; }
+  .intro { font-size: 12px; color: #595959; margin-bottom: 28px; max-width: 700px; line-height: 1.6; }
+  .bloque-titulo {
+    font-size: 13px; font-weight: 700; color: #595959;
+    border-left: 4px solid #7C2155; padding-left: 10px;
+    margin: 28px 0 14px;
+  }
+  .tablas-grid {
+    display: flex; flex-wrap: wrap; gap: 16px;
+  }
+  .tabla-card {
+    border: 1.5px solid #D9D0C4; border-radius: 8px;
+    overflow: hidden; min-width: 260px; flex: 1 1 260px; max-width: 380px;
+    font-size: 12px;
+  }
+  .tabla-header {
+    background: #7C2155; color: white;
+    padding: 8px 14px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .tabla-header .nombre { font-weight: 700; font-size: 13px; }
+  .tabla-header .badge {
+    background: #A44F80; border-radius: 10px; padding: 2px 8px;
+    font-size: 10px; font-weight: 600;
+  }
+  .campo-fila {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 14px; border-bottom: 1px solid #F0E8DC;
+  }
+  .campo-fila:last-child { border-bottom: none; }
+  .campo-fila.pk { background: #EAD6E8; }
+  .campo-fila.fk { background: #FDF5E6; }
+  .campo-fila.normal { background: #FFFFFF; }
+  .campo-fila.normal:nth-child(even) { background: #FAF5EC; }
+  .campo-tag {
+    font-size: 9px; font-weight: 700; border-radius: 4px;
+    padding: 1px 5px; min-width: 26px; text-align: center;
+  }
+  .tag-pk { background: #7C2155; color: white; }
+  .tag-fk { background: #C87A00; color: white; }
+  .tag-n  { background: #e0dbd4; color: #595959; }
+  .campo-nombre { font-weight: 600; color: #2a2420; flex: 1; }
+  .campo-tipo { color: #888; font-size: 11px; }
+  .dep { font-size: 10px; color: #7C2155; font-style: italic; padding: 3px 14px 6px; background: #FAF5EC; }
+  .fn-check {
+    padding: 6px 14px; background: #F0FAF0; font-size: 11px;
+    color: #2a6e2a; font-weight: 600; border-top: 1px solid #D9D0C4;
+  }
+  .leyenda {
+    display: flex; gap: 16px; margin: 20px 0 4px; flex-wrap: wrap;
+  }
+  .leyenda-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #595959; }
+  .leyenda-color { width: 14px; height: 14px; border-radius: 3px; }
+  .btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+  button {
+    padding: 8px 20px; background: #7C2155; color: white;
+    border: none; border-radius: 6px; font-size: 13px; cursor: pointer;
+  }
+  button:hover { background: #a44f80; }
+  .fn-table { margin: 20px 0; border-collapse: collapse; width: 100%; max-width: 660px; font-size: 12px; }
+  .fn-table th { background: #7C2155; color: white; padding: 7px 12px; text-align: left; }
+  .fn-table td { padding: 6px 12px; border-bottom: 1px solid #F0E8DC; }
+  .fn-table tr:nth-child(even) td { background: #FAF5EC; }
+  .check { color: #2a6e2a; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<h1>Tercera Forma Normal (3FN)</h1>
+<p class="subtitulo">Sistema de Telares · Grupo 5 · InfoB · 2026</p>
+<p class="intro">
+  Para cumplir la <strong>3FN</strong> cada tabla debe cumplir:
+  <strong>1FN</strong> (sin grupos repetidos, un valor por celda) →
+  <strong>2FN</strong> (cada campo no-clave depende de toda la clave primaria) →
+  <strong>3FN</strong> (ningún campo no-clave depende de otro campo no-clave, sin dependencias transitivas).
+</p>
+
+<table class="fn-table">
+  <tr><th>Tabla</th><th>1FN</th><th>2FN</th><th>3FN</th><th>Observación</th></tr>
+  <tr><td>patrones</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td>Todos los campos dependen solo del id</td></tr>
+  <tr><td>telares</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td>patron_actual_id es FK, no genera transitividad</td></tr>
+  <tr><td>produccion_historial</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td>telar_id y patron_id son FK, no derivan otros campos</td></tr>
+  <tr><td>registro_de_errores</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td>Sin relación entre campos no-clave</td></tr>
+  <tr><td>usuarios</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td>Sin dependencias entre nombre y nombre_usuario</td></tr>
+  <tr><td>credenciales_biometricas</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td>usuario_id es FK, no genera transitividad</td></tr>
+  <tr><td>desafios_webauthn</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td>Sin dependencias transitivas</td></tr>
+  <tr><td>invitaciones</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td>generado_por es FK, no genera transitividad</td></tr>
+</table>
+
+<div class="leyenda">
+  <div class="leyenda-item"><div class="leyenda-color" style="background:#EAD6E8;border:1px solid #7C2155"></div> PK — Clave primaria</div>
+  <div class="leyenda-item"><div class="leyenda-color" style="background:#FDF5E6;border:1px solid #C87A00"></div> FK — Clave foránea</div>
+  <div class="leyenda-item"><div class="leyenda-color" style="background:#FAF5EC;border:1px solid #D9D0C4"></div> Campo normal</div>
+</div>
+
+<!-- BLOQUE NEGOCIO -->
+<div class="bloque-titulo">Bloque 1 — Negocio (telares y patrones)</div>
+<div class="tablas-grid">
+
+  <div class="tabla-card">
+    <div class="tabla-header"><span class="nombre">patrones</span><span class="badge">✅ 3FN</span></div>
+    <div class="campo-fila pk"><span class="campo-tag tag-pk">PK</span><span class="campo-nombre">id</span><span class="campo-tipo">serial</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">nombre</span><span class="campo-tipo">text UNIQUE</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">filas</span><span class="campo-tipo">integer</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">columnas</span><span class="campo-tipo">integer</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">matriz_pasadas</span><span class="campo-tipo">jsonb</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">colores_filas</span><span class="campo-tipo">jsonb</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">metadata</span><span class="campo-tipo">jsonb</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">creado_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">modificado_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="dep">Todos los campos dependen únicamente del id</div>
+    <div class="fn-check">✅ Cumple 1FN, 2FN y 3FN</div>
+  </div>
+
+  <div class="tabla-card">
+    <div class="tabla-header"><span class="nombre">telares</span><span class="badge">✅ 3FN</span></div>
+    <div class="campo-fila pk"><span class="campo-tag tag-pk">PK</span><span class="campo-nombre">id</span><span class="campo-tipo">serial</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">codigo</span><span class="campo-tipo">text UNIQUE</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">nombre</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">estado</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila fk"><span class="campo-tag tag-fk">FK</span><span class="campo-nombre">patron_actual_id</span><span class="campo-tipo">→ patrones.id</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">creado_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="dep">patron_actual_id es FK, no genera dependencia transitiva</div>
+    <div class="fn-check">✅ Cumple 1FN, 2FN y 3FN</div>
+  </div>
+
+  <div class="tabla-card">
+    <div class="tabla-header"><span class="nombre">produccion_historial</span><span class="badge">✅ 3FN</span></div>
+    <div class="campo-fila pk"><span class="campo-tag tag-pk">PK</span><span class="campo-nombre">id</span><span class="campo-tipo">serial</span></div>
+    <div class="campo-fila fk"><span class="campo-tag tag-fk">FK</span><span class="campo-nombre">telar_id</span><span class="campo-tipo">→ telares.id</span></div>
+    <div class="campo-fila fk"><span class="campo-tag tag-fk">FK</span><span class="campo-nombre">patron_id</span><span class="campo-tipo">→ patrones.id</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">fecha_inicio</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">fecha_fin</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">pasadas_totales</span><span class="campo-tipo">integer</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">fila_actual</span><span class="campo-tipo">integer</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">columna_actual</span><span class="campo-tipo">integer</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">pasada_actual</span><span class="campo-tipo">integer</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">vueltas_completadas</span><span class="campo-tipo">integer</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">estado</span><span class="campo-tipo">text</span></div>
+    <div class="dep">Las FK no derivan otros campos; todos dependen del id</div>
+    <div class="fn-check">✅ Cumple 1FN, 2FN y 3FN</div>
+  </div>
+
+  <div class="tabla-card">
+    <div class="tabla-header"><span class="nombre">registro_de_errores</span><span class="badge">✅ 3FN</span></div>
+    <div class="campo-fila pk"><span class="campo-tag tag-pk">PK</span><span class="campo-nombre">id</span><span class="campo-tipo">serial</span></div>
+    <div class="campo-fila fk"><span class="campo-tag tag-fk">FK</span><span class="campo-nombre">telar_id</span><span class="campo-tipo">→ telares.id</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">titulo</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">mensaje</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">codigo</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">creado_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="dep">Sin relación entre campos no-clave entre sí</div>
+    <div class="fn-check">✅ Cumple 1FN, 2FN y 3FN</div>
+  </div>
+
+</div>
+
+<!-- BLOQUE AUTENTICACION -->
+<div class="bloque-titulo">Bloque 2 — Autenticación</div>
+<div class="tablas-grid">
+
+  <div class="tabla-card">
+    <div class="tabla-header"><span class="nombre">usuarios</span><span class="badge">✅ 3FN</span></div>
+    <div class="campo-fila pk"><span class="campo-tag tag-pk">PK</span><span class="campo-nombre">id</span><span class="campo-tipo">serial</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">nombre</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">nombre_usuario</span><span class="campo-tipo">text UNIQUE</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">codigo_recuperacion</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">creado_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="dep">Sin dependencias entre nombre y nombre_usuario</div>
+    <div class="fn-check">✅ Cumple 1FN, 2FN y 3FN</div>
+  </div>
+
+  <div class="tabla-card">
+    <div class="tabla-header"><span class="nombre">credenciales_biometricas</span><span class="badge">✅ 3FN</span></div>
+    <div class="campo-fila pk"><span class="campo-tag tag-pk">PK</span><span class="campo-nombre">id</span><span class="campo-tipo">serial</span></div>
+    <div class="campo-fila fk"><span class="campo-tag tag-fk">FK</span><span class="campo-nombre">usuario_id</span><span class="campo-tipo">→ usuarios.id</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">credencial_id</span><span class="campo-tipo">text UNIQUE</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">clave_publica</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">encimera</span><span class="campo-tipo">bigint</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">tipo_dispositivo</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">apodo</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">creado_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">ultimo_uso</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="dep">usuario_id es FK, no genera transitividad</div>
+    <div class="fn-check">✅ Cumple 1FN, 2FN y 3FN</div>
+  </div>
+
+  <div class="tabla-card">
+    <div class="tabla-header"><span class="nombre">desafios_webauthn</span><span class="badge">✅ 3FN</span></div>
+    <div class="campo-fila pk"><span class="campo-tag tag-pk">PK</span><span class="campo-nombre">id</span><span class="campo-tipo">serial</span></div>
+    <div class="campo-fila fk"><span class="campo-tag tag-fk">FK</span><span class="campo-nombre">usuario_id</span><span class="campo-tipo">→ usuarios.id</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">desafio</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">tipo</span><span class="campo-tipo">text</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">vence_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">creado_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="dep">Sin dependencias transitivas entre campos</div>
+    <div class="fn-check">✅ Cumple 1FN, 2FN y 3FN</div>
+  </div>
+
+  <div class="tabla-card">
+    <div class="tabla-header"><span class="nombre">invitaciones</span><span class="badge">✅ 3FN</span></div>
+    <div class="campo-fila pk"><span class="campo-tag tag-pk">PK</span><span class="campo-nombre">id</span><span class="campo-tipo">serial</span></div>
+    <div class="campo-fila fk"><span class="campo-tag tag-fk">FK</span><span class="campo-nombre">generado_por</span><span class="campo-tipo">→ usuarios.id</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">codigo</span><span class="campo-tipo">text UNIQUE</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">usado</span><span class="campo-tipo">boolean</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">vence_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="campo-fila normal"><span class="campo-tag tag-n">—</span><span class="campo-nombre">creado_at</span><span class="campo-tipo">timestamptz</span></div>
+    <div class="dep">generado_por es FK, no genera transitividad</div>
+    <div class="fn-check">✅ Cumple 1FN, 2FN y 3FN</div>
+  </div>
+
+</div>
+
+<div class="btn-row">
+  <button onclick="descargarSVG()">⬇ Descargar como SVG</button>
+</div>
+
+<script>
+function descargarSVG() {
+  const w = document.body.scrollWidth + 64;
+  const h = document.body.scrollHeight + 64;
+  const html = document.documentElement.outerHTML;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+    <foreignObject width="${w}" height="${h}">
+      <div xmlns="http://www.w3.org/1999/xhtml">${html}</div>
+    </foreignObject>
+  </svg>`;
+  const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = '3FN_Sistema_Telares.svg'; a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

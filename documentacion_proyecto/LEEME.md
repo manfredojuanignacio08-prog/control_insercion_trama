@@ -42,6 +42,7 @@ el repositorio para que el código y la documentación viajen juntos.
 ## Otros
 
 `Manual Telar Fabrica.docx` y `Manual_Pagina_Web_Telar.docx` son los manuales de
-uso. `Arbol de problemas y soluciones.docx` es el análisis causa-efecto.
+uso. Sus versiones web, y la de la Documentación de Proyecto, están en
+`docs/sitios/`: cuando cambia uno de estos Word, hay que pasar el cambio al sitio. `Arbol de problemas y soluciones.docx` es el análisis causa-efecto.
 `Parado_Automatico_Ideas.docx` recoge las ideas surgidas de las conversaciones
 con el dueño, ordenadas por prioridad.
