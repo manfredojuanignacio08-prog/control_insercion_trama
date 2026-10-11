@@ -14,6 +14,10 @@
   --gray-md:  #3F4B5C;
   --gray-lt:  #5F6976;   /* 4,7:1 o más sobre todas las superficies claras (antes 4,06:1, debajo del mínimo de 4,5) */
   --on-rose:  #F0F4F8;
+  --on-amber: #FFFFFF;   /* texto sobre el ámbar (botón del PDF) */
+  /* Intercalados (llave y número de fila). Variable propia: cada fila redefine --acc y --rose
+     con el color de su hilo, y un número de fila en hilo crudo o azul oscuro no se leía. */
+  --int-color: #3D6B96;
   --green:    #2E6E4A;
   --amber:    #9C5C0A;
   --red:      #8B1F1F;
@@ -41,6 +45,8 @@
   /* En oscuro el acento es celeste: el texto encima tiene que ser oscuro. Con el claro
      de antes, "Aplicar" y "Nuevo" quedaban en 1,9:1, casi ilegibles. */
   --on-rose: #0F2440;
+  --on-amber: #2A1D08;   /* el ámbar del modo oscuro es claro: texto oscuro */
+  --int-color: #8FB8DC;
   --bg:    #131A24;
   --srf:   #1F2937;
   --srf2:  #2C3846;
@@ -141,7 +147,8 @@ font-family:var(--font-mono);}
    ██ SCREEN: INICIO, HERO
 ───────────────────────────────────────────── */
 .hero{
-  background:linear-gradient(150deg, var(--rose) 0%, #3D6B96 55%, #7FA8C9 100%);
+  /* Termina en un azul medio (antes un celeste claro): el texto blanco de abajo quedaba en 2,4:1. */
+  background:linear-gradient(150deg, var(--rose) 0%, #2E5680 55%, #3D6B96 100%);
   padding:36px 24px 32px;
   display:flex;flex-direction:column;align-items:center;gap:0;
   position:relative;overflow:hidden;
@@ -183,7 +190,7 @@ font-family:var(--font-mono);}
   margin-bottom:8px;
 }
 .hero-sub{
-  font-size:13px;color:rgba(255,255,255,.72);
+  font-size:13px;color:rgba(255,255,255,.9);
   text-align:center;line-height:1.55;font-weight:400;
 }
 
@@ -894,21 +901,20 @@ font-family:var(--font-mono);}
 
 /* ---------- Tramos intercalados ---------- */
 /* La fila muestra en cada bobina su lugar en la secuencia (1, 2, 3...). */
-.grid-row.intercalada .g-row-n{color:var(--acc);font-weight:900;text-decoration:underline dotted;text-underline-offset:3px}
+.grid-row.intercalada .g-row-n{color:var(--int-color);font-weight:900;text-decoration:underline dotted;text-underline-offset:3px}
 .g-cell.orden{font-size:11px;letter-spacing:-.02em}
 
 /* ---------- Intercalados: apartado al costado de la grilla ----------
-   Con un color fijo: la fila redefine --acc con el color de su hilo, y la llave cambiaba de color. */
+   Con --int-color: la fila redefine --acc con el color de su hilo, y la llave cambiaba de color. */
 .g-int,.g-int-h{width:28px;flex:none;position:sticky;right:0;z-index:2;background:var(--bg)}
-.g-int{height:var(--cel,42px);border:none;padding:0;cursor:pointer;position:sticky;display:flex;align-items:center;justify-content:center;color:var(--rose-md)}
+.g-int{height:var(--cel,42px);border:none;padding:0;cursor:pointer;position:sticky;display:flex;align-items:center;justify-content:center;color:var(--int-color)}
 .g-int:not(.en)::after{content:"+";opacity:.25;font-weight:700;font-size:13px}
 .g-int:not(.en):hover::after,.g-int:not(.en):focus-visible::after{opacity:.8}
 /* llave: una línea que une las filas del grupo, con remates arriba y abajo */
-.g-int.en::before{content:"";position:absolute;left:8px;top:-2px;bottom:-2px;border-right:3px solid var(--rose-md)}
-.g-int.en::before{box-sizing:content-box;width:0}
-.g-int.en.ini::before{top:6px;border-top:3px solid var(--rose-md);width:6px;left:2px;border-top-right-radius:4px}
-.g-int.en.fin::before{bottom:6px;border-bottom:3px solid var(--rose-md);width:6px;left:2px;border-bottom-right-radius:4px}
-.g-int.en span{position:relative;z-index:1;margin-left:12px;font-family:var(--font-mono);font-size:10px;font-weight:800;color:var(--rose-md);background:var(--bg);writing-mode:vertical-rl;transform:rotate(180deg);line-height:1}
+.g-int.en::before{content:"";position:absolute;left:8px;top:-2px;bottom:-2px;border-right:3px solid var(--int-color);box-sizing:content-box;width:0}
+.g-int.en.ini::before{top:6px;border-top:3px solid var(--int-color);width:6px;left:2px;border-top-right-radius:4px}
+.g-int.en.fin::before{bottom:6px;border-bottom:3px solid var(--int-color);width:6px;left:2px;border-bottom-right-radius:4px}
+.g-int.en span{position:relative;z-index:1;margin-left:12px;font-family:var(--font-mono);font-size:10px;font-weight:800;color:var(--int-color);background:var(--bg);writing-mode:vertical-rl;transform:rotate(180deg);line-height:1}
 .g-int-h{text-align:center}
 /* la casilla de pasadas queda al lado del apartado */
 .g-rep,.g-rep-h{right:28px}

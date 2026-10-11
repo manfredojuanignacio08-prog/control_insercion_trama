@@ -513,7 +513,7 @@ export async function retrocederFisico(req, res, next) {
 // Cada tipo tiene su efecto:
 //   marcha     → el telar arrancó   → estado 'tejiendo'
 //   pausa      → el telar se detuvo → estado 'pausado'
-//   retroceder → retrocedió UNA pasada (= una fila) → la posición vuelve una fila atrás
+//   retroceder → retrocedió UNA pasada → la posición vuelve una pasada atrás (una repetición de la fila)
 //   reinicio   → el ESP32 arrancó en frío: 'tejiendo' pasa a 'pausado' sin perder la posición
 //   sin_senal  → el sensor de pasada dejó de recibir pulsos con el telar "tejiendo":
 //                la máquina se frenó (paro de emergencia, hilo cortado, falla) o el
