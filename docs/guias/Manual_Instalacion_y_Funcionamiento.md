@@ -436,9 +436,9 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
   dimensiones, la producción (metros tejidos, pasadas, metros que faltan y
   horas de máquina), el hilado, la grilla coloreada y una vista previa de la
   tela a escala que sale de un telar dibujado arriba (con las bobinas de trama
-  en sus colores), con una llave por vuelta y, si están cargados los metros por
-  pasada, una regla en centímetros; generado en el navegador con `jsPDF` (no
-  depende de internet).
+  y sus alimentadores en sus colores), con una llave por vuelta y, si están
+  cargados los metros por pasada, una regla en centímetros; generado en el
+  navegador con `jsPDF` (no depende de internet).
 
 ### Biblioteca
 Lista todos los patrones guardados, con buscador por nombre. Permite cargar

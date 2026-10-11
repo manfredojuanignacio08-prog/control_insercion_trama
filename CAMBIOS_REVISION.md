@@ -1146,3 +1146,13 @@ Pruebas (ronda final, sin cambios): `npm test` (9 bloques), integración contra 
 | Dibujos sin colores | Antes todas las filas salían del mismo gris y no se distinguían; ahora cada bobina tiene su gris, en la tela y en los conos. |
 
 Pruebas: `npm test` (9 bloques), Chromium (editor, intercalados, tejido y el PDF en 8 casos, uno nuevo con una vuelta de 14 m), sin errores. Manual web y manual de instalación al día.
+
+## Vigesimotercera revisión: ficha más limpia y alimentadores de trama
+
+| Pedido | Qué se hizo |
+|---|---|
+| Sacar la descripción debajo de la vista previa | Fuera. Lo que decía ya se ve en la hoja: la llave de cada vuelta dice cuánto mide (o hasta qué fila se ve) y la regla da la escala. |
+| Sacar el modelo del telar | El encabezado dice solo «Control de Inserción de Trama»; el dato del modelo ya no se pasa a la ficha. |
+| Sacar «Cómo se teje» | Fuera. Sin ese recuadro, la tela de la vista previa (y la matriz) bajan hasta el pie de página. |
+| Mejorar el telar | Alimentadores de trama: cada hilo va del cono a su tambor (en el costado del telar, con el hilo enrollado en su color) y de ahí al orillo, como en la máquina. La fileta muestra todas las bobinas del dibujo (hasta 8, en dos estantes) y los conos tienen las vueltas del hilo. |
+| Una revisión más | `npm test` (9 bloques), integración contra PostgreSQL, `npm audit` (0), el SQL completo igual al generador y aplicado en una base vacía, firmware (83/83, 6/6, 2,4 millones de pasos, prueba del relé, los dos modos), simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, Chromium (editor, intercalados, tejido, confirmaciones, avisos y el PDF en 10 casos, uno con 8 bobinas y otro con una vuelta de 14 m) y contraste en los dos temas: sin errores. Manuales al día. |

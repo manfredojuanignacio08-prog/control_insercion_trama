@@ -2693,7 +2693,7 @@ async function exportDrawToPDF() {
     return;
   }
   // Ficha técnica: encabezado, datos del dibujo, colores de hilo, matriz con repeticiones
-  // (sigue en otras hojas si es larga), vista previa de la tela a escala e instrucciones.
+  // (sigue en otras hojas si es larga) y vista previa de la tela a escala, con el telar arriba.
   const AZUL = [30, 58, 95], AZUL2 = [61, 107, 150], CLARO = [237, 241, 245], TEXTO = [31, 41, 55], GRIS = [95, 105, 118];
   const hexARgb = (h) => { const n = parseInt(h.replace('#', ''), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
   const oscurecer = ([r, g, b], f) => [Math.round(r * f), Math.round(g * f), Math.round(b * f)];
@@ -2879,28 +2879,46 @@ async function exportDrawToPDF() {
     });
     doc.setFillColor(...OSCURO); doc.rect(xCaja - 0.4, Y(33.1), wCaja + 0.4, 0.9 * k, 'F');
 
-    // ── fileta: las bobinas de trama paradas en dos estantes, con su hilo hasta el orillo ──
-    const nb = Math.max(1, Math.min(4, (coloresBob || []).length || 4));
+    // ── fileta: las bobinas de trama paradas en dos estantes (todas las del dibujo, hasta 8) ──
+    // Cada hilo va de la punta de su cono a su alimentador de trama (el tambor chico del costado
+    // del telar, que muestra el hilo enrollado en su color) y de ahí al orillo, junto al peine.
+    const nb = Math.max(1, Math.min(8, (coloresBob || []).length || 4));
+    const porEstante = nb <= 4 ? 2 : Math.ceil(nb / 2);
     const xPoste = X + 4.5;
     degrade(doc, xPoste - 0.25, Y(4), 0.5, 29.4 * k, [[0, ACERO], [1, ACERO_OSC]], true, 4);
     doc.setFillColor(...ACERO_OSC); doc.rect(X + 1.5, Y(33.1), 6, 0.6 * k, 'F');      // base
     const estantes = [13.6, 25.6];
     estantes.forEach((u) => degrade(doc, X + 0.2, Y(u), 8.6, 0.5 * k, [[0, ACERO], [1, ACERO_OSC]], false, 3));
-    const hCono = 6.4 * k, bCono = 3.8, pCono = 1.2;
+    const anchoLugar = 8.6 / porEstante;
+    const hCono = 6.4 * k, bCono = Math.min(3.8, anchoLugar - 0.5), pCono = bCono * 0.32;
+    // alimentadores, uno por bobina, apilados sobre el panel del bastidor
+    const pasoAlim = 13.4 / Math.max(nb, 4), hAlim = pasoAlim * 0.7 * k;   // con pocas bobinas, del tamaño de 4
+    const xAlim0 = xBastidor + 0.45, xAlim1 = tx - 0.25, xMotor = xAlim0 + (xAlim1 - xAlim0) * 0.38;
     for (let b = 0; b < nb; b++) {
       const c = (coloresBob && coloresBob[b]) || GRIS_HILO;
-      const cx = X + 2.2 + (b % 2) * 4.4, base = Y(estantes[b >> 1]);
-      // hilo desde la punta del cono hasta el orillo izquierdo, junto al peine
-      doc.setDrawColor(...oscurecer(c, 0.85)); doc.setLineWidth(0.1); doc.line(cx, base - hCono, tx + 0.2, yt + 0.2);
+      const cx = X + 0.2 + anchoLugar * ((b % porEstante) + 0.5), base = Y(estantes[Math.floor(b / porEstante)]);
+      const yAlim = Y(3.4 + b * pasoAlim), ymAlim = yAlim + hAlim / 2;
+      // hilo: cono → alimentador → orillo
+      doc.setDrawColor(...oscurecer(c, 0.85)); doc.setLineWidth(0.1);
+      doc.line(cx, base - hCono, xAlim0, ymAlim);
+      doc.line(xAlim1, ymAlim, tx + 0.2, yt + 0.2);
+      // el alimentador: el motor gris a la izquierda y el tambor con el hilo enrollado
+      cilindro(xAlim0, xMotor, yAlim, hAlim, [104, 116, 120], [170, 180, 184], [52, 62, 66]);
+      cilindro(xMotor, xAlim1, yAlim, hAlim, c, mezclar(c, BLANCO, 0.4), oscurecer(c, 0.6));
       // el cono, de frente: ancho abajo y angosto arriba, redondeado por la luz (claro a la
-      // izquierda del centro, sombra en los costados)
+      // izquierda del centro, sombra en los costados), con las vueltas del hilo enrollado
       const trazo = () => doc.lines([[bCono / 2 - pCono / 2, -hCono], [pCono, 0], [bCono / 2 - pCono / 2, hCono]], cx - bCono / 2, base, [1, 1], null, true);
       degradeEn(doc, trazo, cx - bCono / 2, base - hCono, bCono, hCono,
-        [[0, oscurecer(c, 0.62)], [0.32, mezclar(c, BLANCO, 0.3)], [0.55, c], [1, oscurecer(c, 0.55)]], true, 12);
+        [[0, oscurecer(c, 0.62)], [0.32, mezclar(c, BLANCO, 0.3)], [0.55, c], [1, oscurecer(c, 0.55)]], true, 24);
+      doc.saveGraphicsState(); trazo(); doc.clip(); doc.discardPath();
+      opacidad(doc, 0.09); doc.setDrawColor(...BLANCO); doc.setLineWidth(0.06);
+      for (let yy = base - hCono + 0.45 * k; yy < base - 0.6 * k; yy += 0.55 * k) doc.line(cx - bCono / 2, yy, cx + bCono / 2, yy);
+      opacidad(doc, 1);
+      doc.restoreGraphicsState();
       doc.setFillColor(...oscurecer(c, 0.72)); doc.rect(cx - bCono / 2, base - 0.5 * k, bCono, 0.5 * k, 'F');
-      doc.setFillColor(236, 230, 214); doc.rect(cx - 0.35, base - hCono - 0.7 * k, 0.7, 0.7 * k, 'F');
+      doc.setFillColor(236, 230, 214); doc.rect(cx - pCono * 0.3, base - hCono - 0.7 * k, pCono * 0.6, 0.7 * k, 'F');
       const hex = '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(Math.max(3.2, 5 * k));
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(Math.max(3, Math.min(5 * k, bCono * 1.6)));
       doc.setTextColor(...hexARgb(textoSobre(hex)));
       doc.text(String(b + 1), cx, base - hCono * 0.32, { align: 'center' });
     }
@@ -2941,7 +2959,7 @@ async function exportDrawToPDF() {
     doc.setTextColor(255, 255, 255); doc.setFont('helvetica', 'bold'); doc.setFontSize(19);
     doc.text('Ficha técnica de inserción de trama', M, 15);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(201, 216, 230);
-    doc.text(`Control de Inserción de Trama · ${d.telar}`, M, 22.5);
+    doc.text('Control de Inserción de Trama', M, 22.5);
     doc.text(d.fecha, W - M, 15, { align: 'right' });
 
     doc.setTextColor(...AZUL); doc.setFont('helvetica', 'bold');
@@ -3089,7 +3107,7 @@ async function exportDrawToPDF() {
     // Matriz: encabezado de bobinas, número de fila, celdas y repeticiones.
     const cols = d.grid[0].length, filas = d.grid.length;
     const anchoNum = 9, anchoRep = 16;
-    const baseMatriz = H - 28;                   // hasta dónde puede bajar en la hoja 1
+    const baseMatriz = H - 22;                   // hasta dónde puede bajar en la hoja 1 (como en las demás)
     const altoDisp1 = baseMatriz - (yCols + 11);
     let cel = Math.min(9, (colMatriz.w - anchoNum - anchoRep) / cols, altoDisp1 / filas);
     if (cel < 3.4) cel = Math.min(6, (colMatriz.w - anchoNum - anchoRep) / cols);
@@ -3145,16 +3163,15 @@ async function exportDrawToPDF() {
       }
       yFila += cel;
     }
-    const hojaFinMatriz = hoja, yFinMatriz = yFila;
 
     // Vista previa de la tela (hoja 1), siempre a escala: cada fila es una franja con el alto
     // proporcional a sus pasadas y el color de su hilo. Arriba va el telar del que sale: la tela baja
-    // desde su rodillo y ocupa todo el alto libre de la columna, hasta el epígrafe.
+    // desde su rodillo y ocupa todo el alto libre de la columna, hasta el pie de página.
     //  - Si la vuelta entera entra con su fila más corta de al menos MIN_FRANJA mm, se muestra entera
     //    (dos veces si también así entra). Las franjas se ajustan para llenar justo el alto.
-    //  - Si no, se muestra desde el principio hasta donde entre, y el epígrafe dice qué filas se ven.
+    //  - Si no, se muestra desde el principio hasta donde entre, y la llave del costado dice qué filas se ven.
     doc.setPage(1);
-    const Y_FIN_TELA = 225;                       // deja lugar al epígrafe y a «Cómo se teje» en la hoja 1
+    const Y_FIN_TELA = H - 20;                    // la tela baja hasta el pie de página (con los flecos)
     const yTelar = yCols + 5;
     const ALTO_TELAR = Math.max(22, Math.min(34, (Y_FIN_TELA - yTelar) * 0.3));
     const { tx, tw: tWidth } = medidasTelar(colTela.x, colTela.w);
@@ -3214,13 +3231,13 @@ async function exportDrawToPDF() {
     // Cada franja dibujada guarda dónde está y cuántas pasadas reales lleva: con eso se ubican los
     // centímetros de la regla (aun si una fila chica se agrandó) y las llaves de cada vuelta.
     const tramosTela = [], vueltasDibujadas = [];
-    let yy = ty, ultimaFila = -1, chicasAgrandadas = false, ultimoColor = GRIS_HILO;
+    let yy = ty, ultimaFila = -1, ultimoColor = GRIS_HILO;
     for (let v = 0; v < vueltas && yy < fondo - 0.01; v++) {
       const yInicioVuelta = yy;
       for (const r of franjas) {
         if (yy >= fondo - 0.01) break;
         let hBanda = largos[r] * escala;
-        if (hBanda < MIN_VISIBLE) { hBanda = MIN_VISIBLE; chicasAgrandadas = true; }
+        if (hBanda < MIN_VISIBLE) hBanda = MIN_VISIBLE;
         const hVisible = Math.min(hBanda, fondo - yy);
         const gq = grupoEn(r);
         if (gq) {
@@ -3291,7 +3308,7 @@ async function exportDrawToPDF() {
     // Regla en el margen izquierdo, en centímetros de tela (en metros si es larga), si el dibujo tiene
     // los metros por pasada.
     // Cada centímetro se ubica dentro de su franja, así que la regla coincide con lo dibujado.
-    let hayRegla = false, reglaEnMetros = false;
+    let reglaEnMetros = false;
     if (d.metrosPorPasada && tramosTela.length) {
       const cmPorPasada = d.metrosPorPasada * 100;
       let acum = 0;
@@ -3308,7 +3325,6 @@ async function exportDrawToPDF() {
       const xr = tx - 1.1;
       reglaEnMetros = cmVisibles >= 200;             // una tela larga se mide en metros
       if (cmVisibles > 0 && Number.isFinite(mmPorCm)) {
-        hayRegla = true;
         doc.setDrawColor(...GRIS); doc.setLineWidth(0.25); doc.line(xr, yPie, xr, fondo);
         doc.setFont('helvetica', 'normal'); doc.setFontSize(4.6); doc.setTextColor(...GRIS);
         let primerRotulo = true;   // el primer número lleva la unidad: «10 cm», después «20», «30»...
@@ -3320,46 +3336,13 @@ async function exportDrawToPDF() {
           doc.setLineWidth(esMayor ? 0.25 : 0.15);
           doc.line(xr - (esMayor ? 1.5 : 0.8), yc, xr, yc);
           if (esMayor && yc > yPie + 1.5 && yc < fondo - 1) {
-            const valor = reglaEnMetros ? c / 100 : c;
+            const valor = Math.round((reglaEnMetros ? c / 100 : c) * 1000) / 1000;
             doc.text(String(valor).replace('.', ',') + (primerRotulo ? (reglaEnMetros ? ' m' : ' cm') : ''), xr - 1.9, yc + 0.6, { align: 'right' });
             primerRotulo = false;
           }
         }
       }
     }
-    // epígrafe
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...GRIS);
-    let ep = 'A escala: cada franja es una fila, con el alto de sus pasadas y el color de su hilo.';
-    if (parcial) ep += ` Por el largo del dibujo, se ve el principio de la vuelta, hasta la fila ${ultimaFila + 1} de ${filas}.`;
-    else ep += vueltas === 2 ? ' Se ven dos vueltas del dibujo.' : ' Se ve una vuelta completa.';
-    if (chicasAgrandadas) ep += ' Las filas de muy pocas pasadas se agrandan un poco.';
-    if (gruposPdf.length) ep += ' En un intercalado, las pasadas alternan el color de sus filas.';
-    if (!hayColores) ep += ' Sin colores asignados, cada bobina se ve en un gris distinto.';
-    else if (d.colores.some((c) => !c)) ep += ' Las filas sin color se ven en gris, un tono por bobina.';
-    if (hayRegla) ep += ` La regla marca los ${reglaEnMetros ? 'metros' : 'centímetros'} de tela.`;
-    else if (largoVuelta) ep += ` En la tela real, una vuelta mide unos ${largo(largoVuelta)}.`;
-    const lineasEp = doc.splitTextToSize(ep, colTela.w);
-    const yEp = fondo + 5.5;
-    doc.text(lineasEp, colTela.x, yEp);
-    const finEp = yEp + (lineasEp.length - 1) * 2.9 + 1.5;
-
-    // ── Instrucciones, al final ───────────────────────────────────────────
-    doc.setPage(hojaFinMatriz);
-    let yIns = Math.max(yFinMatriz + 6, hojaFinMatriz === 1 ? finEp + 5 : 0);
-    const ALTO_INS = 29;
-    if (yIns + ALTO_INS > H - 16) { doc.addPage(); yIns = 20; }
-    doc.setFillColor(...CLARO); doc.roundedRect(M, yIns, W - 2 * M, ALTO_INS, 2.5, 2.5, 'F');
-    doc.setFillColor(...AZUL); doc.rect(M, yIns, 1.6, ALTO_INS, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...AZUL);
-    doc.text('Cómo se teje', M + 6, yIns + 6.5);
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...TEXTO);
-    [
-      'Cada fila lleva una sola bobina: en cada pasada entra una sola trama.',
-      'Las filas unidas por una llave se intercalan: se alternan en el orden de sus números (1, 2, 3...).',
-      'El número de la derecha (x30, x5...) es cuántas pasadas seguidas se teje esa fila.',
-      'Se avanza fila por fila, de arriba hacia abajo; al terminar, el dibujo vuelve a empezar.',
-    ].forEach((t, i) => doc.text(`•  ${t}`, M + 6, yIns + 12.5 + i * 4.6));
-
     // ── Pie de página en todas las hojas ──────────────────────────────────
     const total = doc.getNumberOfPages();
     for (let i = 1; i <= total; i++) {
@@ -3380,8 +3363,6 @@ async function exportDrawToPDF() {
   const produccion = actual ? await obtenerProduccionParaFicha(actual.id) : null;
   const doc = generarFicha(jspdf.jsPDF, {
     nombre: name,
-    // El telar donde se implementa el sistema. Si se usara en otro, cambiar este texto.
-    telar: 'Vamatex C 201',
     fecha: date,
     metrosPorPasada: mpp > 0 ? mpp : null,
     grid: Array.from({ length: filasPdf }, (_, r) => Array.from({ length: colsPdf }, (_, c) => ((grid[r] && grid[r][c]) ? 1 : 0))),
