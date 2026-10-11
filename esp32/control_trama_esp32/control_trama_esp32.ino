@@ -56,9 +56,10 @@ bool  dibujo[MAX_FILAS][N_CANALES];
 // misma bobina se repita cien o mil veces antes de cambiar, y
 // dibujar cien filas idénticas era impracticable.
 int   repeticiones[MAX_FILAS];
-// Filas intercaladas: el orden de las bobinas (desde 1) que se alternan pasada por pasada, y
-// cuántas son. Largo 0 = fila común. Ver secuencias_por_fila en el backend (migración 021).
-static const int MAX_SECUENCIA = 16;
+// Intercalados: en la primera fila de cada grupo, la bobina (desde 1; 0 = ninguna) de cada pasada
+// de una vuelta del grupo, y cuántas son. Largo 0 = fila común. Lo arma el backend a partir de
+// grupos_intercalados (migración 022); las demás filas del grupo llegan con repeticiones 0.
+static const int MAX_SECUENCIA = 32;   // igual que el máximo que acepta el backend
 uint8_t secuencia[MAX_FILAS][MAX_SECUENCIA];
 uint8_t secuenciaLargo[MAX_FILAS];
 // Cuántas pasadas faltan de la fila que se está tejiendo.
@@ -506,12 +507,19 @@ bool descargarDibujo() {
   // asume 1: una pasada por fila, que es el comportamiento anterior.
   JsonArray reps = doc["repeticiones_por_fila"].as<JsonArray>();
   for (int f = 0; f < filas; f++) {
+    // 0 es válido: una fila dentro de un intercalado, que se saltea (ver posicion_dibujo.h).
     int r = (f < (int)reps.size()) ? reps[f].as<int>() : 1;
-    nuevoRep[f] = (r >= 1) ? r : 1;
+    nuevoRep[f] = (r >= 0) ? r : 1;
+  }
+  {
+    // Por las dudas: si ninguna fila tuviera largo, se teje una pasada por fila.
+    bool alguna = false;
+    for (int f = 0; f < filas; f++) if (nuevoRep[f] > 0) alguna = true;
+    if (!alguna) for (int f = 0; f < filas; f++) nuevoRep[f] = 1;
   }
 
-  // Filas intercaladas. Una secuencia con una bobina que no existe en este nodo, o de más de
-  // MAX_SECUENCIA, no se adopta: la fila se teje como fila común (sus celdas marcadas).
+  // Intercalados. Un ciclo con una bobina que no existe en este nodo, o de más de MAX_SECUENCIA
+  // pasadas, no se adopta: esa fila se teje como fila común (su celda marcada).
   JsonArray secs = doc["secuencias_por_fila"].as<JsonArray>();
   for (int f = 0; f < filas; f++) {
     nuevoSecLargo[f] = 0;
@@ -521,7 +529,7 @@ bool descargarDibujo() {
     bool ok = true;
     for (int i = 0; i < largo; i++) {
       const int b = sec[i].as<int>();
-      if (b < 1 || b > N_CANALES) { ok = false; break; }
+      if (b < 0 || b > N_CANALES) { ok = false; break; }
       nuevoSec[f][i] = (uint8_t)b;
     }
     if (ok) nuevoSecLargo[f] = (uint8_t)largo;
@@ -535,6 +543,8 @@ bool descargarDibujo() {
   long pasadasIniciales = 0;
   const long filaGuardada = doc["fila_actual"] | -1L;
   if (filaGuardada >= 0 && filaGuardada < filas) filaInicial = (int)filaGuardada;
+  // Una fila de largo 0 (dentro de un intercalado) no es una posición: se va a la primera con largo.
+  if (nuevoRep[filaInicial] <= 0) filaInicial = siguienteConLargo(filaInicial, 1, nuevoRep, filas);
   // El contador también se retoma: si el nodo empezara de cero, sus reportes quedarían
   // por debajo del valor guardado hasta alcanzarlo.
   pasadasIniciales = doc["pasadas_sensor"] | 0L;
@@ -989,8 +999,8 @@ void loop() {
     // cuenta igual (el contador vive en la interrupción), pero no se comanda nada.
     if (dib && dibujoFilas > 0) {
       if (tej) {
-        // Se aplica la fila que corresponde a esta pasada: su bobina, o en una fila intercalada
-        // la que le toca a esta pasada según su orden.
+        // Se aplica la fila que corresponde a esta pasada: su bobina, o en un intercalado la que
+        // le toca a esta pasada según su ciclo.
         //
         // DESPLAZAMIENTO_FILAS compensa filas enteras; RETARDO_APLICACION_US compensa un desfase
         // dentro de la pasada. Los dos quedan en cero hasta medir sobre la máquina.
@@ -1005,8 +1015,8 @@ void loop() {
         // anterior, que es otra combinación. Así lo modela también sim_nivel2_firmware.py.
         // También se sueltan los canales de la pasada anterior, si seguían activos, y se descarta esa
         // pasada como referencia de duración: medida contra ella, la pasada siguiente duraría el doble.
-        // En una fila intercalada va solo la bobina que le toca a esta pasada: la que sigue en su
-        // orden según cuántas pasadas de la fila ya se tejieron.
+        // En un intercalado va solo la bobina que le toca a esta pasada: la que sigue en su ciclo
+        // según cuántas pasadas del grupo ya se tejieron.
         const long hechasFila = (long)repeticiones[filaActual] - repeticionesRestantes;
         if (pulsoFueRetroceso)                  seleccionApagarTodo();
         else if (secuenciaLargo[filaAplicada])  seleccionAplicarIntercalada(secuencia[filaAplicada], secuenciaLargo[filaAplicada], hechasFila, dibujoColumnas);

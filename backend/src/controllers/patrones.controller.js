@@ -52,16 +52,18 @@ export async function obtenerPatron(req, res, next) {
   }
 }
 
-// Las filas intercaladas se guardan solo si hay alguna: un array de puros null queda en NULL,
+// Los intercalados se guardan ordenados y solo si hay alguno: un array vacío queda en NULL,
 // igual que un dibujo sin intercalados.
-function secuenciasParaGuardar(sec) {
-  return Array.isArray(sec) && sec.some((x) => Array.isArray(x)) ? JSON.stringify(sec) : null;
+function gruposParaGuardar(grupos) {
+  if (!Array.isArray(grupos) || grupos.length === 0) return null;
+  return JSON.stringify([...grupos].sort((a, b) => a.desde - b.desde)
+    .map((g) => ({ desde: g.desde, hasta: g.hasta, pasadas: g.pasadas })));
 }
 
 // POST /api/patrones
 export async function crearPatron(req, res, next) {
   try {
-    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, secuencias_por_fila } = req.body;
+    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, grupos_intercalados } = req.body;
 
     const errores = validarPatron(req.body);
     if (errores.length) throw badRequest(errores.join(' '));
@@ -69,7 +71,7 @@ export async function crearPatron(req, res, next) {
     const ligamento = matriz_ligamento ?? derivarLigamentoDesdePasadas(matriz_pasadas);
 
     const { rows } = await pool.query(
-      `INSERT INTO patrones (nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, creado_por_invitado, secuencias_por_fila)
+      `INSERT INTO patrones (nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, creado_por_invitado, grupos_intercalados)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
@@ -83,7 +85,7 @@ export async function crearPatron(req, res, next) {
         // En null, el telar teje una pasada por fila: el comportamiento de siempre.
         repeticiones_por_fila ?? null,
         esInvitado(req),
-        secuenciasParaGuardar(secuencias_por_fila),
+        gruposParaGuardar(grupos_intercalados),
       ]
     );
     res.status(201).json(rows[0]);
@@ -101,7 +103,7 @@ export async function actualizarPatron(req, res, next) {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, secuencias_por_fila } = req.body;
+    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, grupos_intercalados } = req.body;
 
     const errores = validarPatron(req.body);
     if (errores.length) throw badRequest(errores.join(' '));
@@ -113,7 +115,7 @@ export async function actualizarPatron(req, res, next) {
     // matriz hay que detener el trabajo primero (eso libera el dibujo).
     await client.query('BEGIN');
     const actual = await client.query(
-      `SELECT filas, columnas, matriz_pasadas, repeticiones_por_fila, secuencias_por_fila, creado_por_invitado,
+      `SELECT filas, columnas, matriz_pasadas, repeticiones_por_fila, grupos_intercalados, creado_por_invitado,
               date_trunc('milliseconds', modificado_at) AS version
          FROM patrones WHERE id = $1 FOR UPDATE`, [id]);
     if (actual.rows.length === 0) throw notFound(`No existe el dibujo con id ${id}.`);
@@ -146,8 +148,8 @@ export async function actualizarPatron(req, res, next) {
       JSON.stringify(previo.matriz_pasadas) !== JSON.stringify(matriz_pasadas) ||
       JSON.stringify(repsNormalizadas(previo.repeticiones_por_fila, previo.filas)) !==
         JSON.stringify(repsNormalizadas(repeticiones_por_fila, filas)) ||
-      // el orden de una fila intercalada también es contenido
-      secuenciasParaGuardar(previo.secuencias_por_fila) !== secuenciasParaGuardar(secuencias_por_fila);
+      // los intercalados también son contenido: cambian qué se teje y dónde cae la posición
+      gruposParaGuardar(previo.grupos_intercalados) !== gruposParaGuardar(grupos_intercalados);
     if (cambiaForma) {
       const enUso = await client.query(
         `SELECT t.codigo
@@ -173,7 +175,7 @@ export async function actualizarPatron(req, res, next) {
              repeticiones_por_fila = $9,
              -- si lo guarda un operario, el dibujo pasa a ser de los operarios
              creado_por_invitado = creado_por_invitado AND $10,
-             secuencias_por_fila = $11
+             grupos_intercalados = $11
        WHERE id = $8
        RETURNING *`,
       [
@@ -187,7 +189,7 @@ export async function actualizarPatron(req, res, next) {
         id,
         repeticiones_por_fila ?? null,
         esInvitado(req),
-        secuenciasParaGuardar(secuencias_por_fila),
+        gruposParaGuardar(grupos_intercalados),
       ]
     );
 

@@ -377,7 +377,7 @@
 
     <div class="editor-tools">
       <button type="button" class="tool-btn" onclick="clearGrid()">Limpiar</button>
-      <button type="button" class="tool-btn" onclick="abrirIntercalar()" title="Alternar bobinas pasada por pasada (por ejemplo 1, 3, 2)">Intercalar</button>
+      <button type="button" class="tool-btn" onclick="abrirIntercalar()" title="Agrupar filas para que se alternen pasada por pasada">Intercalar</button>
       <!-- Botón cargar eliminado -->
       <button type="button" class="btn-small" onclick="openColorSimulator()" title="Cambiar color del hilo" aria-label="Cambiar color del hilo" style="padding:6px 10px;background:var(--rose-md);color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-size:11px;font-weight:600;margin-left:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="15" cy="9.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1.3" fill="currentColor" stroke="none"/></svg></button>
       <button type="button" class="btn-small" onclick="exportDrawToPDF()" title="Descargar ficha técnica" aria-label="Descargar ficha técnica" style="padding:6px 10px;background:var(--amber);color:white;border:none;border-radius:var(--r-md);cursor:pointer;font-size:11px;font-weight:600;margin-left:4px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg></button>
@@ -920,7 +920,7 @@ function apiToLocal(p) {
     colores: p.colores_filas || Array(p.filas).fill(null),
     // Los dibujos guardados antes de las repeticiones no traen el campo: una por fila.
     repeticiones: p.repeticiones_por_fila || Array(p.filas).fill(1),
-    secuencias: Array.isArray(p.secuencias_por_fila) ? p.secuencias_por_fila : Array(p.filas).fill(null),
+    grupos: Array.isArray(p.grupos_intercalados) ? p.grupos_intercalados : [],
     // Para la ficha en PDF (largo de la tela). Sin esto, la ficha decía "Sin dato" aunque
     // el dibujo tuviera cargados los metros por pasada.
     metrosPorPasada: p.metros_por_pasada != null ? Number(p.metros_por_pasada) : null,
@@ -947,14 +947,10 @@ function localToApi(nombre, mat, colors) {
   // Misma red de seguridad para la matriz: exactamente nR filas de nC valores 0 o 1.
   // Si por cualquier camino quedó una fila más larga o más corta, se ajusta acá en
   // vez de que el backend rechace el guardado y el trabajo se pierda.
-  // Una fila intercalada marca exactamente las bobinas de su secuencia (así lo valida el servidor).
-  const secOk = Array.from({ length: nR }, (_, ri) => {
-    const sec = secFilas[ri];
-    return Array.isArray(sec) && sec.length >= 2 && sec.every((b) => Number.isInteger(b) && b >= 1 && b <= nC) ? sec : null;
-  });
   const matrizOk = Array.from({length: nR}, (_, ri) =>
-    Array.from({length: nC}, (_, ci) => secOk[ri] ? (secOk[ri].includes(ci + 1) ? 1 : 0) : ((mat && mat[ri] && mat[ri][ci]) ? 1 : 0))
+    Array.from({length: nC}, (_, ci) => (mat && mat[ri] && mat[ri][ci]) ? 1 : 0)
   );
+  const gruposOk = gruposValidos();
   return {
     nombre,
     filas: nR,
@@ -963,7 +959,7 @@ function localToApi(nombre, mat, colors) {
     colores_filas: coloresOk,
     // Mismo criterio que los colores: un valor por fila, siempre al menos 1.
     repeticiones_por_fila: Array.from({ length: nR }, (_, ri) => repFilas[ri] || 1),
-    secuencias_por_fila: secOk.some(Boolean) ? secOk : null,
+    grupos_intercalados: gruposOk.length ? gruposOk : null,
   };
 }
 
@@ -1102,9 +1098,9 @@ let editId = null;
 let curRow = -1;
 // Cuántas pasadas seguidas se teje cada fila del dibujo.
 let repFilas = [];
-// Filas intercaladas: por fila, null o el orden de las bobinas (desde 1) que se alternan
-// pasada por pasada (ver "Tramos intercalados").
-let secFilas = [];
+// Intercalados: grupos de filas seguidas que se tejen alternándose, [{desde, hasta, pasadas}]
+// con índices de fila desde 0 (ver "Intercalados").
+let grupos = [];
 // Cuántas pasadas de la fila actual faltan durante la reproducción.
 let repRestantes = 0;
 let curCol = -1;
@@ -1362,7 +1358,7 @@ function resetEditorForNew() {
   // Las repeticiones también son del dibujo: sin esto el dibujo nuevo heredaba las del
   // anterior y se guardaba con ellas.
   repFilas = Array(nR).fill(1);
-  secFilas = Array(nR).fill(null);
+  grupos = [];
   repRestantes = 1;
   
   // 5. GENERAR NOMBRE ÚNICO SIN REPETICIÓN
@@ -1415,19 +1411,13 @@ function mkGrid(r, c, keep = false) {
   // filas nuevas arrancan en 1 (una pasada), que es el comportamiento de siempre.
   repFilas = Array.from({ length: r }, (_, ri) => (keep && repFilas[ri]) ? repFilas[ri] : 1);
   repRestantes = repFilas[0] || 1;
-  // Un tramo intercalado sigue si todas sus bobinas siguen existiendo. Si se sacó una columna que
-  // usaba, la fila pasa a ser común con la primera bobina que quede (y se avisa).
-  let tramosCambiados = 0;
-  secFilas = Array.from({ length: r }, (_, ri) => {
-    const sec = keep ? secFilas[ri] : null;
-    if (!Array.isArray(sec)) return null;
-    if (sec.every((b) => b <= c)) return sec;
-    tramosCambiados++;
-    const queda = sec.find((b) => b <= c);
-    if (grid[ri]) grid[ri] = Array.from({ length: c }, (_, ci) => (queda && ci === queda - 1 ? 1 : 0));
-    return null;
-  });
-  if (tramosCambiados) toast(`${tramosCambiados === 1 ? 'Un tramo intercalado usaba' : tramosCambiados + ' tramos intercalados usaban'} una columna que se sacó: quedó con una sola bobina.`);
+  // Los intercalados siguen si sus filas siguen existiendo: uno que quedó cortado por la nueva
+  // cantidad de filas se achica, y si le queda una sola fila se quita (y se avisa).
+  if (keep) {
+    const antes = grupos.length;
+    grupos = grupos.map((g) => ({ ...g, hasta: Math.min(g.hasta, r - 1) })).filter((g) => g.hasta > g.desde);
+    if (grupos.length < antes) toast('Un intercalado quedó con menos de dos filas y se quitó.');
+  } else grupos = [];
 
   // Los colores van por fila: si cambia la cantidad de filas hay que
   // redimensionar el array, o el backend rechaza el guardado porque
@@ -1449,7 +1439,7 @@ function renderGrid() {
 	  const area = document.getElementById('grid-area');
 	  const anchoArea = area && area.clientWidth ? area.clientWidth : 0;
 	  if (anchoArea > 0) {
-	    const libre = anchoArea - 24 - 30 - 62;   // relleno, número de fila y casilla de repeticiones
+	    const libre = anchoArea - 24 - 30 - 62 - 30;   // relleno, número de fila, casilla de repeticiones e intercalado
 	    const cel = Math.max(30, Math.min(42, Math.floor(libre / Math.max(1, nC)) - 2));
 	    wrap.style.setProperty('--cel', cel + 'px');
 	  }
@@ -1457,10 +1447,11 @@ function renderGrid() {
 	  for (let c = 0; c < nC; c++)
 	    h += `<div class="g-col-n">${c+1}</div>`;
 	  h += '<div class="g-col-n g-rep-h" title="Cuántas pasadas seguidas se teje cada fila">×</div>';
+	  h += '<div class="g-col-n g-int-h" title="Intercalado: filas que se alternan">⇄</div>';
 	  h += '</div>';
 	  for (let r = 0; r < nR; r++) {
 	    let cls = 'grid-row';
-	    if (curRow === r) cls += ' active-row';
+	    if (filaVisible() === r) cls += ' active-row';
 	    // Solo un color #RRGGBB entra en el atributo: un valor viejo de la base con otro formato
 	    // (o con comillas) rompería el HTML de la grilla.
 	    const colorOk = typeof rowColors[r] === 'string' && /^#[0-9a-fA-F]{6}$/.test(rowColors[r]);
@@ -1468,22 +1459,30 @@ function renderGrid() {
 	    // claro (crudo) y claro sobre uno oscuro (bordó). Antes iba siempre el del tema, y en modo
 	    // oscuro quedaba azul oscuro sobre bordó.
 	    const rowStyle = colorOk ? `style="--acc: ${rowColors[r]}; --rose: ${rowColors[r]}; --on-rose: ${textoSobre(rowColors[r])};"` : '';
-	    const sec = secFilas[r];
-	    if (sec) cls += ' intercalada';
+	    const g = grupoDeFila(r);
+	    if (g) cls += ' intercalada';
 	    h += `<div class="${cls}" id="gr${r}" ${rowStyle}>`;
-	    h += `<div class="g-row-n"${sec ? ` title="Tramo intercalado: ${sec.join(', ')}"` : ''}>${r+1}</div>`;
+	    h += `<div class="g-row-n">${r+1}</div>`;
 	    for (let c = 0; c < nC; c++) {
 	      const val = grid[r][c] || 0;
 	      const isOn = val > 0;
-	      // En un tramo intercalado, cada bobina muestra en qué lugar de la secuencia va (1.º, 2.º...).
-	      const orden = sec ? sec.map((b, i) => (b === c + 1 ? i + 1 : 0)).filter(Boolean).join(',') : '';
-	      h += `<div class="g-cell${isOn ? ' on' : ''}${orden ? ' orden' : ''}" onclick="tapCell(${r},${c})">${sec ? orden : (isOn ? '1' : '')}</div>`;
+	      // En un intercalado, la bobina de la fila muestra en qué lugar del orden va (1, 2, 3...).
+	      const txt = isOn ? (g ? String(r - g.desde + 1) : '1') : '';
+	      h += `<div class="g-cell${isOn ? ' on' : ''}${g && isOn ? ' orden' : ''}" onclick="tapCell(${r},${c})">${txt}</div>`;
 	    }
 	    // Repeticiones de la fila: cuántas pasadas seguidas se teje esta misma
 	    // bobina antes de pasar a la siguiente.
 	    // Casilla de texto con teclado numérico (no type="number"): en el celular el teclado queda
 	    // abierto al pasar de una fila a otra y no cambia el valor al deslizar el dedo encima.
 	    h += `<input class="g-rep" type="text" data-r="${r}" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next" value="${repFilas[r] || 1}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="teclaRepeticion(event, ${r})" onchange="setRepeticion(${r}, this.value)" aria-label="Pasadas de la fila ${r+1}">`;
+	    // Apartado del intercalado, al costado: una llave que une las filas del grupo, con sus
+	    // pasadas en la primera. Tocarla abre el grupo; en una fila suelta, arma uno desde ahí.
+	    if (g) {
+	      const pos = r === g.desde ? ' ini' : (r === g.hasta ? ' fin' : '');
+	      h += `<button type="button" class="g-int en${pos}" onclick="abrirIntercalar(${g.desde})" aria-label="Intercalado de las filas ${g.desde + 1} a ${g.hasta + 1}, ${g.pasadas} pasadas">${r === g.desde ? `<span>${g.pasadas}</span>` : ''}</button>`;
+	    } else {
+	      h += `<button type="button" class="g-int" onclick="abrirIntercalar(-1, ${r})" aria-label="Intercalar desde la fila ${r + 1}" title="Intercalar desde esta fila"></button>`;
+	    }
 	    h += '</div>';
 	  }
 	  // Si se está escribiendo en una casilla de pasadas, se la vuelve a enfocar con lo que tenía
@@ -1525,8 +1524,6 @@ function tapCell(r, c) {
   // tamaño), escribir ahí estiraría la fila y cada guardado siguiente fallaría.
   if (!Number.isInteger(r) || !Number.isInteger(c) || r < 0 || r >= nR || c < 0 || c >= nC) return;
   curRow = r; // fila activa, para el color
-  // Un tramo intercalado se cambia desde su ventana (orden y pasadas), no celda por celda.
-  if (secFilas[r]) { abrirIntercalar(r); return; }
   // Una celda es binaria: el elemento del telar se activa o no se activa. Cada
   // FILA es una pasada; para repetirla se usan las repeticiones de la fila.
   // En cada pasada se inserta UNA sola trama, así que una fila lleva como máximo una bobina:
@@ -1598,7 +1595,7 @@ function clearGrid() {
   if (edicionBloqueada()) return;
   showConfirm('¿Limpiar toda la grilla?', 'Se borrarán todas las celdas activas.', () => {
     grid = Array.from({length:nR}, () => Array(nC).fill(0));
-    secFilas = Array(nR).fill(null);
+    grupos = [];
     pausePlay();
     renderGrid();
     setStatus('Modificado', false);
@@ -1633,8 +1630,13 @@ function updPlayUI() {
   const rw = document.getElementById('play-row');
   const r  = curRow >= 0 ? curRow + 1 : '-';
   let info = `Fila ${r} / ${nR}`;
-  // En un tramo intercalado se muestra su orden de bobinas.
-  if (curRow >= 0 && curRow < nR && secFilas[curRow]) info += ` · intercalado ${secFilas[curRow].join('-')}`;
+  // En un intercalado: qué fila del grupo va y cuántas pasadas del grupo se tejieron.
+  const gAct = curRow >= 0 && curRow < nR ? grupoQueEmpieza(curRow) : null;
+  if (gAct) {
+    info = `Fila ${filaVisible() + 1} / ${nR}`;
+    const hechas = Math.max(0, gAct.pasadas - repRestantes);
+    info += ` · intercalado ${Math.min(gAct.pasadas, hechas + 1)} de ${gAct.pasadas}`;
+  }
   
   // Una fila = una pasada: no hay celda ni repetición que mostrar, solo la fila.
 
@@ -1940,7 +1942,7 @@ let seguidor = false;
 
 // Cuántas pasadas le faltan a la fila, a partir de las que el backend dice que ya se tejieron.
 function restantesDesde(fila, hechas) {
-  const total = repFilas[fila] || 1;
+  const total = largoFila(fila) || 1;
   const h = Number.isInteger(hechas) ? hechas : 0;
   return (h > 0 && h < total) ? total - h : total;
 }
@@ -2002,14 +2004,19 @@ function doTick() {
   playTimer = setTimeout(() => {
     // Cada fila se teje tantas pasadas como diga su número de repeticiones. Solo
     // cuando se agotan se pasa a la fila siguiente.
+    // Un intercalado avanza como una sola fila larga (empieza en su primera fila); las demás
+    // filas del grupo miden 0 y se saltean.
+    if (largoFila(curRow) === 0) { const g = grupoDeFila(curRow); curRow = g ? g.desde : 0; repRestantes = largoFila(curRow) || 1; }
     repRestantes--;
     if (repRestantes <= 0) {
-      curRow++;
-      if (curRow >= nR) {
-        curRow = 0;
-        toast('Reiniciando el dibujo...');
-      }
-      repRestantes = repFilas[curRow] || 1;
+      do {
+        curRow++;
+        if (curRow >= nR) {
+          curRow = 0;
+          toast('Reiniciando el dibujo...');
+        }
+      } while (largoFila(curRow) === 0);
+      repRestantes = largoFila(curRow) || 1;
     }
     curPass = 0;
     curCol = 0; // dentro de una pasada las columnas son simultáneas
@@ -2135,10 +2142,11 @@ async function ejecutarRetroceso() {
       // Sin producción abierta el backend no tiene posición que mover: se retrocede solo en
       // pantalla, una pasada (desde la primera fila se va a la última: el dibujo es un lazo).
       if (curRow < 0) curRow = 0;
-      if (repRestantes < (repFilas[curRow] || 1)) {
+      if (largoFila(curRow) === 0) { const g = grupoDeFila(curRow); curRow = g ? g.desde : 0; }
+      if (repRestantes < (largoFila(curRow) || 1)) {
         repRestantes++;
       } else {
-        curRow = curRow > 0 ? curRow - 1 : nR - 1;
+        do { curRow = curRow > 0 ? curRow - 1 : nR - 1; } while (largoFila(curRow) === 0);
         repRestantes = 1;
       }
       curPass = 0;
@@ -2326,8 +2334,7 @@ function loadDrawInEditor(id, restaurando = false) {
 	  repFilas = Array.from({length: nR}, (_, ri) =>
 		    (d.repeticiones && d.repeticiones[ri]) ? d.repeticiones[ri] : 1
 		  );
-	  secFilas = Array.from({ length: nR }, (_, ri) =>
-	    (d.secuencias && Array.isArray(d.secuencias[ri]) && d.secuencias[ri].length >= 2) ? d.secuencias[ri].slice() : null);
+	  grupos = (d.grupos || []).map((g) => ({ desde: g.desde, hasta: g.hasta, pasadas: g.pasadas }));
 	  repRestantes = repFilas[0] || 1;
 	  document.getElementById('in-rows').value = nR;
 	  document.getElementById('in-cols').value = nC;
@@ -2346,13 +2353,13 @@ function loadDrawInEditor(id, restaurando = false) {
 // dibujos guardados antes de esta regla pueden tener filas así, y el servidor ya no las acepta.
 function filasConVariasBobinas() {
   const out = [];
-  for (let r = 0; r < nR; r++) if (!secFilas[r] && (grid[r] || []).filter((v) => v > 0).length > 1) out.push(r);
+  for (let r = 0; r < nR; r++) if ((grid[r] || []).filter((v) => v > 0).length > 1) out.push(r);
   return out;
 }
 
 function avisarFilasConVariasBobinas(filas) {
   const lista = filas.slice(0, 12).map((r) => r + 1).join(', ') + (filas.length > 12 ? '…' : '');
-  showAlert('Una sola bobina por fila', `En cada pasada entra una sola trama. Este dibujo tiene más de una bobina en ${filas.length === 1 ? 'la fila' : 'las filas'} ${lista}: dejá una sola en cada una (al tocar otra, la anterior se apaga sola), o convertila en un tramo intercalado con Intercalar, para poder guardarlo y tejerlo.`);
+  showAlert('Una sola bobina por fila', `En cada pasada entra una sola trama. Este dibujo tiene más de una bobina en ${filas.length === 1 ? 'la fila' : 'las filas'} ${lista}: dejá una sola en cada una (al tocar otra, la anterior se apaga sola) para poder guardarlo y tejerlo. Para alternar bobinas, poné cada una en su fila y agrupalas con Intercalar.`);
 }
 
 function deleteDraw(id) {
@@ -2691,50 +2698,81 @@ async function exportDrawToPDF() {
     ? `${(m * 100).toLocaleString('es-AR', { maximumFractionDigits: 1 })} cm`
     : `${m.toLocaleString('es-AR', { maximumFractionDigits: 2 })} m`;
 
-  // Telar estilizado (Vamatex C 201): rodillo de urdimbre atrás, marcos de lizos celestes, los
-  // hilos de urdimbre, el cuerpo gris verdoso con los costados y la placa redonda de la marca,
-  // y la barra delantera de la que sale la tela. Ocupa el ancho de la vista previa y `alto` mm.
-  function dibujarTelar(doc, x, y, w, alto) {
-    const CUERPO = [74, 88, 92], CUERPO_OSC = [52, 63, 66], ACERO = [196, 202, 206], CELESTE = [110, 165, 210];
-    const k = alto / 24;
-    // costados y patas
-    doc.setFillColor(...CUERPO_OSC);
-    doc.roundedRect(x - 5, y + 2 * k, 4.2, 22 * k, 0.8, 0.8, 'F');
-    doc.roundedRect(x + w + 0.8, y + 2 * k, 4.2, 22 * k, 0.8, 0.8, 'F');
-    // rodillo de urdimbre (atrás)
-    doc.setFillColor(...CUERPO); doc.roundedRect(x - 1, y + 1 * k, w + 2, 3.2 * k, 1.4, 1.4, 'F');
-    doc.setFillColor(...ACERO); doc.rect(x - 1, y + 1.9 * k, w + 2, 0.5 * k, 'F');
-    // hilos de urdimbre que bajan hasta el peine
-    doc.setDrawColor(226, 230, 233); doc.setLineWidth(0.12);
-    for (let xx = x + 0.7; xx < x + w; xx += 1.4) doc.line(xx, y + 4.2 * k, xx, y + 12 * k);
-    // marcos de lizos (las pestañas celestes de la máquina)
-    doc.setFillColor(...CELESTE);
-    const nMarcos = Math.max(6, Math.round(w / 9));
-    for (let i = 0; i < nMarcos; i++) {
-      const mx = x + 2 + i * ((w - 4) / nMarcos);
-      doc.roundedRect(mx, y + 5.6 * k, (w - 4) / nMarcos - 1.6, 2.2 * k, 0.4, 0.4, 'F');
+  // Telar Vamatex C 201 visto de frente, como en la foto de la planta: el bastidor izquierdo, la caja
+  // de mando a la derecha con la placa redonda de la marca, el rodillo de urdimbre atrás con sus
+  // hilos, los marcos de lizos celestes, el peine, la tela que se está tejiendo (con los colores
+  // del dibujo) y la barra delantera de la que baja la tela de la vista previa.
+  // `colores` son los colores de las primeras pasadas del dibujo, de arriba hacia abajo.
+  function dibujarTelar(doc, x, y, w, alto, colores) {
+    const k = alto / 30;
+    const VERDE = [70, 86, 90], VERDE_OSC = [47, 58, 61], VERDE_CLARO = [104, 122, 126];
+    const ACERO = [205, 210, 214], ACERO_OSC = [150, 158, 164], CELESTE = [96, 156, 206], CELESTE_OSC = [62, 118, 168];
+    const xi = x - 6, xd = x + w + 1;            // bastidor izquierdo y caja de mando derecha
+    // sombra en el piso
+    doc.setFillColor(222, 226, 230); doc.roundedRect(xi - 1, y + 29.2 * k, w + 15, 1.3 * k, 0.6, 0.6, 'F');
+    // bastidor izquierdo (con pata)
+    doc.setFillColor(...VERDE_OSC); doc.roundedRect(xi, y + 3 * k, 5, 26.5 * k, 1, 1, 'F');
+    doc.setFillColor(...VERDE); doc.roundedRect(xi + 0.8, y + 3.8 * k, 3.4, 24.5 * k, 0.8, 0.8, 'F');
+    doc.setFillColor(...VERDE_OSC); doc.rect(xi - 1, y + 28.4 * k, 7, 1.2 * k, 'F');
+    // caja de mando derecha (más ancha), con la placa redonda VAMATEX
+    doc.setFillColor(...VERDE_OSC); doc.roundedRect(xd, y + 1 * k, 7.5, 28.5 * k, 1.4, 1.4, 'F');
+    doc.setFillColor(...VERDE); doc.roundedRect(xd + 0.7, y + 1.8 * k, 6.1, 26.8 * k, 1.1, 1.1, 'F');
+    doc.setFillColor(...VERDE_OSC); doc.rect(xd - 0.5, y + 28.4 * k, 8.5, 1.2 * k, 'F');
+    const cx = xd + 3.75, cy = y + 9.5 * k, rr = Math.min(3.1, 3.1 * k);
+    doc.setFillColor(...VERDE_OSC); doc.circle(cx, cy, rr, 'F');
+    doc.setDrawColor(...ACERO); doc.setLineWidth(0.25); doc.circle(cx, cy, rr * 0.82, 'S');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(2.3 * k); doc.setTextColor(...ACERO);
+    doc.text('VAMATEX', cx, cy + 0.35 * k, { align: 'center' });
+    doc.setFillColor(...VERDE_CLARO); doc.roundedRect(xd + 1.6, y + 15 * k, 4.3, 7 * k, 0.6, 0.6, 'F');   // tapa de la caja
+    // rodillo de urdimbre (atrás): un cilindro con brillo
+    doc.setFillColor(...VERDE_OSC); doc.roundedRect(x - 0.5, y + 1.2 * k, w + 1, 3.6 * k, 1.6, 1.6, 'F');
+    doc.setFillColor(...VERDE_CLARO); doc.rect(x + 1, y + 1.9 * k, w - 2, 0.7 * k, 'F');
+    // hilos de urdimbre, del rodillo a los lizos
+    doc.setDrawColor(236, 238, 240); doc.setLineWidth(0.1);
+    for (let xx = x + 0.6; xx < x + w; xx += 1.1) doc.line(xx, y + 4.8 * k, xx, y + 16.5 * k);
+    // marcos de lizos: bandas celestes con su travesaño oscuro y los lizos verticales
+    for (let m = 0; m < 2; m++) {
+      const ym = y + (6.2 + m * 3.6) * k;
+      doc.setFillColor(...(m ? CELESTE_OSC : CELESTE)); doc.rect(x + 0.5, ym, w - 1, 1.2 * k, 'F');
+      doc.setFillColor(...VERDE_OSC); doc.rect(x + 0.5, ym + 2.2 * k, w - 1, 0.5 * k, 'F');
+      doc.setDrawColor(...CELESTE_OSC); doc.setLineWidth(0.08);
+      for (let xx = x + 1.1; xx < x + w - 0.5; xx += 1.1) doc.line(xx, ym + 1.2 * k, xx, ym + 2.2 * k);
     }
-    doc.setDrawColor(...CUERPO_OSC); doc.setLineWidth(0.35); doc.line(x, y + 9 * k, x + w, y + 9 * k);   // peine
-    // cuerpo delantero
-    doc.setFillColor(...CUERPO); doc.roundedRect(x - 2.5, y + 11.5 * k, w + 5, 8 * k, 1.2, 1.2, 'F');
-    doc.setFillColor(...CUERPO_OSC); doc.rect(x - 2.5, y + 17.6 * k, w + 5, 1.9 * k, 'F');
-    // placa del modelo y placa redonda de la marca (a la derecha, como en la máquina)
-    doc.setFillColor(238, 241, 243); doc.roundedRect(x + 2, y + 13 * k, 22, 3.6 * k, 0.6, 0.6, 'F');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(5.6 * k); doc.setTextColor(...CUERPO_OSC);
-    doc.text('VAMATEX C 201', x + 13, y + 15.5 * k, { align: 'center' });
-    doc.setFillColor(...CUERPO_OSC); doc.circle(x + w - 5, y + 15.4 * k, 3 * k, 'F');
-    doc.setDrawColor(...ACERO); doc.setLineWidth(0.3); doc.circle(x + w - 5, y + 15.4 * k, 2.3 * k, 'S');
-    doc.setFontSize(4.6 * k); doc.setTextColor(...ACERO); doc.text('V', x + w - 5, y + 16.4 * k, { align: 'center' });
-    // barra delantera: de acá sale la tela
-    doc.setFillColor(...ACERO); doc.roundedRect(x - 1.5, y + 20 * k, w + 3, 3 * k, 1.2, 1.2, 'F');
-    doc.setFillColor(160, 168, 174); doc.rect(x - 1.5, y + 22.2 * k, w + 3, 0.8 * k, 'F');
+    // peine (batán): barra con dientes finos
+    doc.setFillColor(...ACERO_OSC); doc.rect(x, y + 14.4 * k, w, 0.9 * k, 'F');
+    doc.setDrawColor(120, 128, 134); doc.setLineWidth(0.08);
+    for (let xx = x + 0.4; xx < x + w; xx += 0.7) doc.line(xx, y + 15.3 * k, xx, y + 16.5 * k);
+    // la tela que se está tejiendo, del peine a la barra delantera, con los colores del dibujo
+    const yt = y + 16.5 * k, ht = 5.5 * k;
+    const cs = (colores && colores.length) ? colores : [[184, 192, 202]];
+    const hb = ht / cs.length;
+    cs.forEach((c, i) => { doc.setFillColor(...c); doc.rect(x, yt + i * hb, w, hb + 0.05, 'F'); });
+    // cuerpo delantero (pecho del telar) y barra delantera de acero
+    doc.setFillColor(...VERDE); doc.roundedRect(x - 1.5, y + 22 * k, w + 3, 4.2 * k, 0.8, 0.8, 'F');
+    doc.setFillColor(...VERDE_CLARO); doc.rect(x - 1.5, y + 22 * k, w + 3, 0.6 * k, 'F');
+    doc.setFillColor(238, 241, 243); doc.roundedRect(x + 3, y + 23.2 * k, 20, 2 * k, 0.4, 0.4, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(3.6 * k); doc.setTextColor(...VERDE_OSC);
+    doc.text('VAMATEX C 201', x + 13, y + 24.6 * k, { align: 'center' });
+    doc.setFillColor(...ACERO); doc.roundedRect(x - 1, y + 26.4 * k, w + 2, 2.6 * k, 1.2, 1.2, 'F');
+    doc.setFillColor(...ACERO_OSC); doc.rect(x - 1, y + 28.2 * k, w + 2, 0.8 * k, 'F');
+    doc.setFillColor(255, 255, 255); doc.rect(x + 2, y + 26.8 * k, w - 4, 0.35 * k, 'F');   // brillo
   }
 
   function generarFicha(jsPDF, d) {
     const doc = new jsPDF({ unit: 'mm', format: 'a4' });
     const W = 210, H = 297, M = 14;
     const reps = d.grid.map((_, r) => (d.repeticiones && d.repeticiones[r]) || 1);
-    const pasadasVuelta = reps.reduce((a, b) => a + b, 0);
+    // Intercalados: el grupo entero cuenta en su primera fila (largo = sus pasadas) y las demás 0.
+    const gruposPdf = (d.grupos || []).filter((g) => g.hasta < d.grid.length);
+    const grupoEn = (r) => gruposPdf.find((g) => r >= g.desde && r <= g.hasta) || null;
+    const largos = reps.map((rp, r) => { const g = grupoEn(r); return g ? (r === g.desde ? g.pasadas : 0) : rp; });
+    const filaDelGrupo = (g, k) => {
+      let ciclo = 0; for (let i = g.desde; i <= g.hasta; i++) ciclo += reps[i];
+      let o = k % ciclo;
+      for (let i = g.desde; i <= g.hasta; i++) { if (o < reps[i]) return i; o -= reps[i]; }
+      return g.desde;
+    };
+    const pasadasVuelta = largos.reduce((a, b) => a + b, 0);
     const colorFila = (r) => (d.colores && d.colores[r]) ? hexARgb(d.colores[r]) : null;
     const hayColores = d.colores && d.colores.some(Boolean);
     // Recorta un texto al ancho disponible con la fuente actual (el nombre del dibujo admite 100
@@ -2922,18 +2960,18 @@ async function exportDrawToPDF() {
       }
       if (r % 2 === 1) { doc.setFillColor(246, 248, 250); doc.rect(colMatriz.x, yFila, colMatriz.w, cel, 'F'); }
       const cf = colorFila(r) || AZUL;
-      const sec = d.secuencias && d.secuencias[r];
+      const gr = grupoEn(r);
       const fz = Math.min(7.5, Math.max(5, cel * 1.1));
       for (let c = 0; c < cols; c++) {
         const x = xCel + c * cel;
         if (d.grid[r][c]) { doc.setFillColor(...cf); doc.rect(x + 0.35, yFila + 0.35, cel - 0.7, cel - 0.7, 'F'); }
         doc.setDrawColor(205, 213, 222); doc.setLineWidth(0.15); doc.rect(x, yFila, cel, cel, 'S');
-        // Tramo intercalado: en cada bobina, su lugar en la secuencia (1, 2, 3...).
-        if (sec && d.grid[r][c] && cel >= 4) {
-          const ord = sec.map((b, i) => (b === c + 1 ? i + 1 : 0)).filter(Boolean).join(',');
+        // Intercalado: la bobina de cada fila muestra su lugar en el orden (1, 2, 3...).
+        if (gr && d.grid[r][c] && cel >= 4) {
+          const ord = String(r - gr.desde + 1);
           const [cr, cg, cb] = cf;
           const claro = (0.299 * cr + 0.587 * cg + 0.114 * cb) > 150;
-          doc.setFont('helvetica', 'bold'); doc.setFontSize(Math.min(fz, ord.length > 2 ? 5 : 7));
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(Math.min(fz, 7));
           doc.setTextColor(...(claro ? TEXTO : [255, 255, 255]));
           doc.text(ord, x + cel / 2, yFila + cel / 2 + fz * 0.13, { align: 'center' });
         }
@@ -2942,10 +2980,17 @@ async function exportDrawToPDF() {
       doc.text(String(r + 1), colMatriz.x + anchoNum - 2, yFila + cel / 2 + fz * 0.13, { align: 'right' });
       doc.setFont('helvetica', 'bold'); doc.setTextColor(...TEXTO);
       doc.text(`x${reps[r]}`, xCel + cols * cel + 3, yFila + cel / 2 + fz * 0.13);
-      if (sec) {
-        const wx = doc.getTextWidth(`x${reps[r]}`);
-        doc.setFont('helvetica', 'normal'); doc.setFontSize(Math.max(5, fz - 1.5)); doc.setTextColor(...GRIS);
-        doc.text(recortar(`intercalado ${sec.join('-')}`, colMatriz.x + colMatriz.w - (xCel + cols * cel + 4.5 + wx)), xCel + cols * cel + 4.5 + wx, yFila + cel / 2 + fz * 0.13);
+      // Apartado del intercalado: una llave que une sus filas, con las pasadas en la primera.
+      if (gr) {
+        const xb = colMatriz.x + colMatriz.w - 2;
+        doc.setDrawColor(...AZUL2); doc.setLineWidth(0.5);
+        doc.line(xb, yFila + (r === gr.desde ? 1 : 0), xb, yFila + cel - (r === gr.hasta ? 1 : 0));
+        if (r === gr.desde) doc.line(xb - 2, yFila + 1, xb, yFila + 1);
+        if (r === gr.hasta) doc.line(xb - 2, yFila + cel - 1, xb, yFila + cel - 1);
+        if (r === gr.desde) {
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(Math.max(5, fz - 1)); doc.setTextColor(...AZUL2);
+          doc.text(`intercalado: ${gr.pasadas}`, xb - 3, yFila + cel / 2 + fz * 0.13, { align: 'right' });
+        }
       }
       yFila += cel;
     }
@@ -2958,12 +3003,20 @@ async function exportDrawToPDF() {
     // muestra desde el principio hasta donde entre, y el epígrafe dice qué filas se ven.
     doc.setPage(1);
     // Arriba de la tela va el telar del que sale: la tela baja desde su barra delantera.
-    const ALTO_TELAR = 24;
+    const ALTO_TELAR = 30;
     const tx = colTela.x, tWidth = colTela.w;
-    dibujarTelar(doc, tx, yCols + 5, tWidth, ALTO_TELAR);
+    // colores de las primeras pasadas, para la tela que se ve saliendo del peine
+    const coloresInicio = [];
+    for (let r = 0; r < filas && coloresInicio.length < 6; r++) {
+      if (largos[r] === 0) continue;
+      const g = grupoEn(r);
+      if (g) { for (let kk = 0; kk < Math.min(g.pasadas, 6) && coloresInicio.length < 6; kk++) coloresInicio.push(colorFila(filaDelGrupo(g, kk)) || [184, 192, 202]); }
+      else coloresInicio.push(colorFila(r) || [184, 192, 202]);
+    }
+    dibujarTelar(doc, tx, yCols + 5, tWidth, ALTO_TELAR, coloresInicio);
     const ty = yCols + 5 + ALTO_TELAR, tHeight = 133 - desp - ALTO_TELAR;
     const MIN_FRANJA = 1.6;
-    const minReps = Math.min(...reps);
+    const minReps = Math.min(...largos.filter((l) => l > 0));
     let escala = tHeight / pasadasVuelta;                 // mm por pasada, con una vuelta entera
     let vueltas = 1, parcial = false;
     if (escala * minReps >= MIN_FRANJA) {
@@ -2972,7 +3025,7 @@ async function exportDrawToPDF() {
       parcial = true;
       escala = MIN_FRANJA / minReps;
       // que igual se vean varias filas, aunque una sea mucho más larga que la más corta
-      const primeras = reps.slice(0, Math.min(6, filas)).reduce((a, b) => a + b, 0);
+      const primeras = largos.slice(0, Math.min(6, filas)).reduce((a, b) => a + b, 0);
       if (escala * primeras > tHeight) escala = tHeight / primeras;
     }
     const GRIS_HILO = [184, 192, 202];
@@ -2980,9 +3033,21 @@ async function exportDrawToPDF() {
     let yy = ty, ultimaFila = -1, chicasAgrandadas = false;
     for (let v = 0; v < vueltas && yy < fondo; v++) {
       for (let r = 0; r < filas && yy < fondo; r++) {
-        let hBanda = reps[r] * escala;
+        if (largos[r] === 0) continue;               // fila dentro de un intercalado: va con su grupo
+        let hBanda = largos[r] * escala;
         if (hBanda < 0.7) { hBanda = 0.7; chicasAgrandadas = true; }
         const hVisible = Math.min(hBanda, fondo - yy);
+        const gq = grupoEn(r);
+        if (gq) {
+          // Intercalado: cada pasada con el color de la fila que le toca, alternándose.
+          const hp = hBanda / gq.pasadas;
+          for (let k = 0; k < gq.pasadas && yy + k * hp < fondo; k++) {
+            const cfk = colorFila(filaDelGrupo(gq, k)) || GRIS_HILO;
+            doc.setFillColor(...cfk); doc.rect(tx, yy + k * hp, tWidth, Math.min(hp, fondo - yy - k * hp) + 0.05, 'F');
+          }
+          yy += hBanda; ultimaFila = gq.hasta;
+          continue;
+        }
         const cf = colorFila(r) || GRIS_HILO;
         doc.setFillColor(...cf); doc.rect(tx, yy, tWidth, hVisible + 0.05, 'F');
         const hPasada = hBanda / reps[r];
@@ -3016,7 +3081,7 @@ async function exportDrawToPDF() {
     if (parcial) ep += ` Por el largo del dibujo, se ven las filas 1 a ${ultimaFila + 1} de ${filas}.`;
     else ep += vueltas === 2 ? ' Se ven dos vueltas del dibujo.' : ' Se ve una vuelta completa del dibujo.';
     if (chicasAgrandadas) ep += ' Las filas de muy pocas pasadas se agrandan un poco para que se vean.';
-    if (d.secuencias && d.secuencias.some(Boolean)) ep += ' Un tramo intercalado se ve con el color de su fila.';
+    if (gruposPdf.length) ep += ' En un intercalado, las pasadas alternan el color de sus filas.';
     if (!hayColores) ep += ' Sin colores asignados, las franjas se ven en gris: se eligen con el simulador de color.';
     else if (d.colores.some((c) => !c)) ep += ' Las filas sin color asignado se ven en gris.';
     if (largoVuelta) ep += ` En la tela real, una vuelta mide unos ${largo(largoVuelta)}.`;
@@ -3034,7 +3099,7 @@ async function exportDrawToPDF() {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...TEXTO);
     [
       'Cada fila lleva una sola bobina: en cada pasada entra una sola trama.',
-      'En un tramo intercalado, las bobinas se alternan una por pasada en el orden que marcan sus números (1, 2, 3...).',
+      'Las filas unidas por una llave se intercalan: se alternan en el orden de sus números (1, 2, 3...).',
       'El número de la derecha (x30, x5...) es cuántas pasadas seguidas se teje esa fila.',
       'Se avanza fila por fila, de arriba hacia abajo; al terminar, el dibujo vuelve a empezar.',
     ].forEach((t, i) => doc.text(`•  ${t}`, M + 6, yIns + 12.5 + i * 4.6));
@@ -3065,7 +3130,7 @@ async function exportDrawToPDF() {
     metrosPorPasada: mpp > 0 ? mpp : null,
     grid: Array.from({ length: filasPdf }, (_, r) => Array.from({ length: colsPdf }, (_, c) => ((grid[r] && grid[r][c]) ? 1 : 0))),
     repeticiones: Array.from({ length: filasPdf }, (_, r) => repFilas[r] || 1),
-    secuencias: Array.from({ length: filasPdf }, (_, r) => secFilas[r] || null),
+    grupos: gruposValidos(),
     colores: Array.from({ length: filasPdf }, (_, r) => (rowColors && rowColors[r]) || null),
     produccion,
   });
@@ -3421,6 +3486,15 @@ function setRepeticion(r, valor) {
     toast('Las pasadas de una fila deben ser un número entre 1 y 9999.');
     n = Math.min(9999, Math.max(1, n));
   }
+  const g = grupoDeFila(r);
+  if (g) {
+    const ciclo = cicloDeGrupo(g) - anterior + n;
+    if (ciclo > MAX_CICLO_INTERCALADO) {
+      toast(`La fila ${r + 1} está en un intercalado: una vuelta del grupo tendría ${ciclo} pasadas y el máximo es ${MAX_CICLO_INTERCALADO}.`);
+      mostrar(anterior);
+      return;
+    }
+  }
   mostrar(n);
   if (n === anterior) return;
   repFilas[r] = n;
@@ -3442,7 +3516,7 @@ function teclaRepeticion(ev, r) {
 // Total de pasadas de una vuelta completa del dibujo: la suma de las repeticiones.
 function totalPasadasDibujo() {
   let t = 0;
-  for (let r = 0; r < nR; r++) t += repFilas[r] || 1;
+  for (let r = 0; r < nR; r++) t += largoFila(r);
   return t;
 }
 
@@ -3457,31 +3531,63 @@ function actualizarTotalPasadas() {
 }
 
 
-// ========== TRAMOS INTERCALADOS ==========
-// Un tramo como "una pasada de la bobina 1, una de la 3, una de la 4 y una de la 2, hasta
-// completar 120 pasadas" es UNA fila: su número de pasadas es 120 y su secuencia [1, 3, 4, 2]
-// dice qué bobina va en cada pasada, en orden y volviendo a empezar. El telar (y la web) lo
-// tejen así: 1, 3, 4, 2, 1, 3, 4, 2... Con una sola bobina es una fila común.
-let intercalarFila = -1;   // fila que se está cambiando desde la grilla (-1 = tramo nuevo)
+// ========== INTERCALADOS ==========
+// Cada fila lleva una sola bobina. Para alternar bobinas pasada por pasada, por ejemplo una de la
+// 1, una de la 3, una de la 4 y una de la 2 hasta completar 120 pasadas, se pone cada bobina en su
+// fila (1, 3, 4, 2) y esas filas se agrupan en un intercalado de 120 pasadas: se recorren en orden,
+// cada una tantas pasadas como su número de la derecha, y vuelven a empezar hasta completar las 120.
+// Para la posición, el grupo es una sola fila larga que empieza en su primera fila (como en el
+// backend, utils/posicion.js): su largo es el total y las demás filas del grupo miden 0.
+const MAX_CICLO_INTERCALADO = 32;   // pasadas de una vuelta del grupo (igual que el backend)
 
-function leerIntercalar() {
-  const partes = document.getElementById('int-orden').value.split(/[^0-9]+/).filter(Boolean).map((x) => parseInt(x, 10));
-  const total = parseInt(document.getElementById('int-total').value, 10);
-  const donde = document.getElementById('int-donde').value;
-  if (partes.length < 1) return { error: 'Escribí el orden de las bobinas, separadas por comas (por ejemplo: 1, 3, 4, 2).' };
-  if (partes.length > 16) return { error: 'Un tramo puede alternar hasta 16 pasadas distintas antes de repetirse.' };
-  const fuera = partes.find((x) => x < 1 || x > nC);
-  if (fuera !== undefined) return { error: `La bobina ${fuera} no existe: el dibujo tiene ${nC} columna${nC === 1 ? '' : 's'} (de la 1 a la ${nC}).` };
-  if (!Number.isInteger(total) || total < 1 || total > 9999) return { error: 'Las pasadas del tramo van de 1 a 9999.' };
-  const base = donde === 'reemplazar' ? 0 : (donde === 'fila' ? nR : (dibujoVacio() ? 0 : nR));
-  const filasFinal = donde === 'fila' ? nR : base + 1;
-  if (filasFinal > 300) return { error: 'El dibujo ya tiene 300 filas, el máximo.' };
-  return { partes, total, donde, base, filasFinal };
+function grupoDeFila(r) { return grupos.find((g) => r >= g.desde && r <= g.hasta) || null; }
+function grupoQueEmpieza(r) { return grupos.find((g) => g.desde === r) || null; }
+
+// Largo de una fila para la posición: sus pasadas, el total si empieza un intercalado, 0 si está adentro.
+function largoFila(r) {
+  const g = grupoDeFila(r);
+  if (g) return r === g.desde ? g.pasadas : 0;
+  return repFilas[r] || 1;
 }
 
-function dibujoVacio() {
-  for (let r = 0; r < nR; r++) if ((grid[r] || []).some((v) => v > 0)) return false;
-  return true;
+// Pasadas de una vuelta del grupo: la suma de los números de sus filas.
+function cicloDeGrupo(g) {
+  let c = 0;
+  for (let i = g.desde; i <= g.hasta; i++) c += repFilas[i] || 1;
+  return c;
+}
+
+// Qué fila se está tejiendo: en un intercalado, la que toca según las pasadas del grupo ya hechas.
+function filaVisible() {
+  const g = curRow >= 0 && curRow < nR ? grupoQueEmpieza(curRow) : null;
+  if (!g) return curRow;
+  let o = Math.max(0, g.pasadas - repRestantes) % cicloDeGrupo(g);
+  for (let i = g.desde; i <= g.hasta; i++) { const r = repFilas[i] || 1; if (o < r) return i; o -= r; }
+  return g.desde;
+}
+
+function gruposValidos() {
+  return grupos.filter((g) => Number.isInteger(g.desde) && Number.isInteger(g.hasta) && g.desde >= 0 && g.hasta > g.desde && g.hasta < nR
+    && Number.isInteger(g.pasadas) && g.pasadas >= 1 && g.pasadas <= 9999)
+    .sort((a, b) => a.desde - b.desde)
+    .map((g) => ({ desde: g.desde, hasta: g.hasta, pasadas: g.pasadas }));
+}
+
+let intercalarEditando = -1;   // desde de un grupo que se está cambiando (-1 = uno nuevo)
+
+function leerIntercalar() {
+  const desde = parseInt(document.getElementById('int-desde').value, 10) - 1;
+  const hasta = parseInt(document.getElementById('int-hasta').value, 10) - 1;
+  const pasadas = parseInt(document.getElementById('int-total').value, 10);
+  if (!Number.isInteger(desde) || !Number.isInteger(hasta) || desde < 0 || hasta >= nR) return { error: `Las filas van de 1 a ${nR}.` };
+  if (hasta <= desde) return { error: 'Un intercalado necesita por lo menos dos filas: la de «hasta» tiene que ser posterior a la de «desde».' };
+  if (!Number.isInteger(pasadas) || pasadas < 1 || pasadas > 9999) return { error: 'Las pasadas del intercalado van de 1 a 9999.' };
+  const choca = grupos.find((g) => g.desde !== intercalarEditando && !(hasta < g.desde || desde > g.hasta));
+  if (choca) return { error: `Las filas ${choca.desde + 1} a ${choca.hasta + 1} ya forman otro intercalado.` };
+  const g = { desde, hasta, pasadas };
+  const ciclo = cicloDeGrupo(g);
+  if (ciclo > MAX_CICLO_INTERCALADO) return { error: `Una vuelta del intercalado tiene ${ciclo} pasadas; el máximo es ${MAX_CICLO_INTERCALADO}. Bajá el número de la derecha de esas filas.` };
+  return { g, ciclo };
 }
 
 function previsualizarIntercalar() {
@@ -3490,39 +3596,44 @@ function previsualizarIntercalar() {
   const d = leerIntercalar();
   if (d.error) { prev.textContent = d.error; prev.classList.add('error'); ok.disabled = true; return; }
   prev.classList.remove('error'); ok.disabled = false;
-  const n = d.partes.length;
-  let txt;
-  if (n === 1) {
-    txt = `Tramo de ${d.total.toLocaleString('es-AR')} pasada${d.total === 1 ? '' : 's'} de la bobina ${d.partes[0]}.`;
-  } else {
-    const vueltas = Math.floor(d.total / n), resto = d.total % n;
-    const sobra = resto ? ` y ${resto} pasada${resto === 1 ? '' : 's'} más (${d.partes.slice(0, resto).map((b) => 'B' + b).join(', ')})` : '';
-    txt = `Tramo ${d.partes.map((b) => 'B' + b).join(' → ')}, ${d.total.toLocaleString('es-AR')} pasadas: la secuencia completa ${vueltas.toLocaleString('es-AR')} ${vueltas === 1 ? 'vez' : 'veces'}${sobra}.`;
+  const { g, ciclo } = d;
+  const orden = [];
+  let sinBobina = false;
+  for (let i = g.desde; i <= g.hasta; i++) {
+    const c = (grid[i] || []).findIndex((v) => v > 0);
+    if (c < 0) sinBobina = true;
+    const r = repFilas[i] || 1;
+    orden.push((c >= 0 ? `B${c + 1}` : 'sin bobina') + (r > 1 ? ` ×${r}` : ''));
   }
-  if (d.donde === 'fila') txt += ` Reemplaza la fila ${intercalarFila + 1}.`;
-  else if (d.donde === 'reemplazar') txt += ' El dibujo queda con este tramo solo, que se repite en bucle.';
-  else if (d.base === 0 && nR > 0) txt += ` Es la fila 1: ocupa el lugar de las ${nR} filas vacías del dibujo.`;
-  else txt += ` Se agrega como fila ${d.base + 1}.`;
+  const vueltas = Math.floor(g.pasadas / ciclo), resto = g.pasadas % ciclo;
+  let txt = `Filas ${g.desde + 1} a ${g.hasta + 1}: ${orden.join(' → ')}. ${g.pasadas.toLocaleString('es-AR')} pasadas = la secuencia ${vueltas.toLocaleString('es-AR')} ${vueltas === 1 ? 'vez' : 'veces'}`;
+  txt += resto ? ` y ${resto} pasada${resto === 1 ? '' : 's'} más.` : '.';
+  if (sinBobina) txt += ' Ojo: hay una fila sin bobina marcada.';
   prev.textContent = txt;
 }
 
-// Sin argumento, arma un tramo nuevo. Con una fila, la cambia (se abre al tocar una fila intercalada).
-function abrirIntercalar(fila) {
+// abrirIntercalar(desde) cambia el grupo que empieza en esa fila; abrirIntercalar(-1, fila) arma uno
+// nuevo desde esa fila; sin argumentos, desde la fila elegida o la primera.
+function abrirIntercalar(desde, filaInicio) {
   if (edicionBloqueada()) return;
-  intercalarFila = Number.isInteger(fila) && fila >= 0 && fila < nR ? fila : -1;
-  const opFila = document.getElementById('int-op-fila');
-  const sel = document.getElementById('int-donde');
+  const g = Number.isInteger(desde) && desde >= 0 ? grupoQueEmpieza(desde) : null;
+  intercalarEditando = g ? g.desde : -1;
   const titulo = document.getElementById('int-titulo');
-  if (intercalarFila >= 0) {
-    opFila.hidden = false; opFila.textContent = `Cambiar la fila ${intercalarFila + 1}`; sel.value = 'fila';
-    const sec = secFilas[intercalarFila];
-    const bobinas = sec || (grid[intercalarFila] || []).map((v, c) => (v ? c + 1 : 0)).filter(Boolean);
-    document.getElementById('int-orden').value = bobinas.join(', ');
-    document.getElementById('int-total').value = String(repFilas[intercalarFila] || 1);
-    if (titulo) titulo.textContent = `Fila ${intercalarFila + 1}: tramo intercalado`;
+  const quitar = document.getElementById('int-quitar');
+  if (g) {
+    document.getElementById('int-desde').value = String(g.desde + 1);
+    document.getElementById('int-hasta').value = String(g.hasta + 1);
+    document.getElementById('int-total').value = String(g.pasadas);
+    titulo.textContent = `Intercalado de las filas ${g.desde + 1} a ${g.hasta + 1}`;
+    quitar.hidden = false;
   } else {
-    opFila.hidden = true; if (sel.value === 'fila') sel.value = 'final';
-    if (titulo) titulo.textContent = 'Intercalar bobinas';
+    let ini = Number.isInteger(filaInicio) ? filaInicio : (curRow >= 0 && curRow < nR ? curRow : 0);
+    if (grupoDeFila(ini)) ini = 0;
+    document.getElementById('int-desde').value = String(ini + 1);
+    document.getElementById('int-hasta').value = String(Math.min(nR, ini + 2));
+    document.getElementById('int-total').value = '120';
+    titulo.textContent = 'Intercalar filas';
+    quitar.hidden = true;
   }
   document.getElementById('modal-intercalar').style.display = 'flex';
   previsualizarIntercalar();
@@ -3532,32 +3643,30 @@ function cerrarIntercalar() {
   document.getElementById('modal-intercalar').style.display = 'none';
 }
 
-function aplicarIntercalar() {
-  if (edicionBloqueada()) return;
-  const d = leerIntercalar();
-  if (d.error) { toast(d.error); return; }
-  const filaGrid = Array.from({ length: nC }, (_, ci) => (d.partes.includes(ci + 1) ? 1 : 0));
-  const sec = d.partes.length >= 2 ? d.partes.slice() : null;
-  if (d.donde === 'fila' && intercalarFila >= 0 && intercalarFila < nR) {
-    grid[intercalarFila] = filaGrid; repFilas[intercalarFila] = d.total; secFilas[intercalarFila] = sec;
-  } else {
-    const n = d.base;
-    grid = grid.slice(0, n).concat([filaGrid]);
-    repFilas = Array.from({ length: n }, (_, ri) => repFilas[ri] || 1).concat([d.total]);
-    rowColors = Array.from({ length: n }, (_, ri) => rowColors[ri] ?? null).concat([null]);
-    secFilas = Array.from({ length: n }, (_, ri) => secFilas[ri] || null).concat([sec]);
-    nR = grid.length;
-  }
-  repRestantes = repFilas[0] || 1;
+function despuesDeCambiarIntercalados(mensaje) {
+  repRestantes = largoFila(0) || 1;
   curRow = -1;
-  const inR = document.getElementById('in-rows');
-  if (inR) inR.value = nR;
   cerrarIntercalar();
   renderGrid();
   updPlayUI();
   setStatus('Modificado', false);
   sincronizarPatron();
-  toast(d.donde === 'fila' ? `Fila ${intercalarFila + 1} cambiada.` : d.donde === 'reemplazar' ? 'El dibujo es ahora este tramo.' : `Tramo agregado como fila ${nR}.`);
+  toast(mensaje);
+}
+
+function aplicarIntercalar() {
+  if (edicionBloqueada()) return;
+  const d = leerIntercalar();
+  if (d.error) { toast(d.error); return; }
+  grupos = grupos.filter((g) => g.desde !== intercalarEditando).concat([d.g]).sort((a, b) => a.desde - b.desde);
+  despuesDeCambiarIntercalados(`Filas ${d.g.desde + 1} a ${d.g.hasta + 1} intercaladas durante ${d.g.pasadas} pasadas.`);
+}
+
+function quitarIntercalar() {
+  if (edicionBloqueada() || intercalarEditando < 0) return;
+  const g = grupoQueEmpieza(intercalarEditando);
+  grupos = grupos.filter((x) => x.desde !== intercalarEditando);
+  despuesDeCambiarIntercalados(g ? `Se quitó el intercalado de las filas ${g.desde + 1} a ${g.hasta + 1}: vuelven a ser filas sueltas.` : 'Intercalado quitado.');
 }
 
 document.addEventListener('click', (e) => {
@@ -3659,26 +3768,25 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </div>
 
-<!-- MODAL: TRAMO INTERCALADO -->
+<!-- MODAL: INTERCALAR FILAS -->
 <div id="modal-intercalar" class="modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
   <div class="modal-content" style="background:var(--srf);border-radius:var(--r-lg);padding:24px;max-width:92%;width:420px;max-height:85vh;overflow-y:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-      <h2 id="int-titulo" style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--tx);">Intercalar bobinas</h2>
+      <h2 id="int-titulo" style="font-family:var(--font-display);font-size:18px;font-weight:800;color:var(--tx);">Intercalar filas</h2>
       <button type="button" aria-label="Cerrar" onclick="cerrarIntercalar()" style="background:none;border:none;font-size:24px;cursor:pointer;color:var(--tx);">×</button>
     </div>
-    <p style="font-size:13px;color:var(--tx2);margin-bottom:14px;line-height:1.45;">Un tramo es una fila: sus bobinas se alternan una por pasada, en el orden que escribas, hasta completar las pasadas del tramo. Por ejemplo 1, 3, 4, 2 durante 120 pasadas. Con una sola bobina es un tramo común (por ejemplo, 140 pasadas de la 4).</p>
-    <label for="int-orden" class="int-lbl">Orden de las bobinas</label>
-    <input id="int-orden" class="int-in" type="text" inputmode="numeric" autocomplete="off" placeholder="1, 3, 4, 2" value="1, 3, 4, 2" oninput="previsualizarIntercalar()">
-    <label for="int-total" class="int-lbl">Pasadas del tramo (cada bobina cuenta una)</label>
+    <p style="font-size:13px;color:var(--tx2);margin-bottom:14px;line-height:1.45;">Cada fila lleva su bobina. Las filas que agrupes se tejen alternándose en orden, cada una tantas pasadas como su número de la derecha, hasta completar las pasadas del intercalado. Por ejemplo, filas 1 a 4 con las bobinas 1, 3, 4 y 2 durante 120 pasadas.</p>
+    <div class="int-filas">
+      <div><label for="int-desde" class="int-lbl">Desde la fila</label>
+      <input id="int-desde" class="int-in" type="text" inputmode="numeric" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'');previsualizarIntercalar()"></div>
+      <div><label for="int-hasta" class="int-lbl">Hasta la fila</label>
+      <input id="int-hasta" class="int-in" type="text" inputmode="numeric" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9]/g,'');previsualizarIntercalar()"></div>
+    </div>
+    <label for="int-total" class="int-lbl">Pasadas del intercalado (cada bobina cuenta una)</label>
     <input id="int-total" class="int-in" type="text" inputmode="numeric" autocomplete="off" value="120" oninput="this.value=this.value.replace(/[^0-9]/g,'');previsualizarIntercalar()">
-    <label for="int-donde" class="int-lbl">Dónde</label>
-    <select id="int-donde" class="int-in" onchange="previsualizarIntercalar()">
-      <option value="final">Agregar al final del dibujo</option>
-      <option value="reemplazar">Reemplazar todo el dibujo</option>
-      <option value="fila" id="int-op-fila" hidden>Cambiar la fila</option>
-    </select>
     <div id="int-prev" class="int-prev" aria-live="polite"></div>
-    <div style="display:flex;gap:10px;margin-top:14px;">
+    <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+      <button type="button" id="int-quitar" hidden onclick="quitarIntercalar()" style="flex:1 1 100%;padding:10px;background:transparent;border:1px solid var(--bd);border-radius:var(--r-md);cursor:pointer;color:var(--tx);font-weight:600;">Quitar el intercalado</button>
       <button type="button" onclick="cerrarIntercalar()" style="flex:1;padding:10px;background:var(--srf2);border:1px solid var(--bd);border-radius:var(--r-md);cursor:pointer;color:var(--tx);font-weight:600;">Cancelar</button>
       <button type="button" id="int-ok" onclick="aplicarIntercalar()" style="flex:1;padding:10px;background:var(--acc);border:none;border-radius:var(--r-md);cursor:pointer;color:white;font-weight:600;">Aplicar</button>
     </div>

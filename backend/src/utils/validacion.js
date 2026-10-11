@@ -3,7 +3,7 @@
  * Devuelve un array de strings con los errores encontrados (vacío si está OK).
  */
 export function validarPatron(body) {
-  const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, secuencias_por_fila } = body;
+  const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, grupos_intercalados } = body;
   const errores = [];
 
   if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
@@ -38,19 +38,29 @@ export function validarPatron(body) {
     }
   }
 
-  // secuencias_por_fila es opcional: por fila, null (fila común) o el orden de las bobinas que
-  // se alternan pasada por pasada (2 a 16 números, de 1 a columnas). Ver migración 021.
-  const MAX_SECUENCIA = 16;
-  let secuencias = null;
-  if (secuencias_por_fila !== undefined && secuencias_por_fila !== null) {
-    if (!Array.isArray(secuencias_por_fila) || (filasOk && secuencias_por_fila.length !== filas)) {
-      errores.push(`secuencias_por_fila debe ser un array con ${filasOk ? filas : 'un'} elemento${filasOk && filas === 1 ? '' : 's'} (uno por fila): null o el orden de las bobinas.`);
+  // grupos_intercalados es opcional: grupos de filas seguidas que se tejen alternándose, cada
+  // uno {desde, hasta, pasadas} con índices de fila desde 0. Ver migración 022.
+  const MAX_CICLO = 32;   // pasadas de una vuelta del grupo (lo que guarda el nodo por grupo)
+  if (grupos_intercalados !== undefined && grupos_intercalados !== null) {
+    if (!Array.isArray(grupos_intercalados)) {
+      errores.push('grupos_intercalados debe ser un array de grupos {desde, hasta, pasadas}.');
     } else {
-      const mala = secuencias_por_fila.some((sec) => sec !== null && (
-        !Array.isArray(sec) || sec.length < 2 || sec.length > MAX_SECUENCIA ||
-        sec.some((b) => !Number.isInteger(b) || b < 1 || (columnasOk && b > columnas))));
-      if (mala) errores.push(`Cada secuencia intercalada lleva de 2 a ${MAX_SECUENCIA} bobinas, numeradas de 1 a ${columnasOk ? columnas : 'la cantidad de columnas'}.`);
-      else secuencias = secuencias_por_fila;
+      const reps = (i) => (Array.isArray(repeticiones_por_fila) && Number.isInteger(repeticiones_por_fila[i]) ? repeticiones_por_fila[i] : 1);
+      let anterior = -1;
+      const ordenados = [...grupos_intercalados].sort((a, b) => (a?.desde ?? 0) - (b?.desde ?? 0));
+      for (const g of ordenados) {
+        const forma = g && typeof g === 'object' && Number.isInteger(g.desde) && Number.isInteger(g.hasta) && Number.isInteger(g.pasadas);
+        if (!forma || g.desde < 0 || g.hasta <= g.desde || (filasOk && g.hasta >= filas)) {
+          errores.push('Cada intercalado va de una fila a otra posterior, dentro del dibujo (por lo menos dos filas).');
+          break;
+        }
+        if (g.pasadas < 1 || g.pasadas > MAX_REPETICIONES) { errores.push(`Las pasadas de un intercalado van de 1 a ${MAX_REPETICIONES}.`); break; }
+        if (g.desde <= anterior) { errores.push('Dos intercalados no pueden compartir filas.'); break; }
+        let ciclo = 0;
+        for (let i = g.desde; i <= g.hasta; i++) ciclo += reps(i);
+        if (ciclo > MAX_CICLO) { errores.push(`Una vuelta de un intercalado puede tener hasta ${MAX_CICLO} pasadas (filas ${g.desde + 1} a ${g.hasta + 1}: ${ciclo}).`); break; }
+        anterior = g.hasta;
+      }
     }
   }
 
@@ -70,19 +80,10 @@ export function validarPatron(body) {
       errores.push(`cada fila de matriz_pasadas debe tener ${columnasOk ? columnas : 'la misma cantidad de'} números >= 0.`);
     } else {
       // En cada pasada se inserta una sola trama: una fila lleva como máximo una bobina activa.
-      // Dos en la misma fila le pedirían al telar dos tramas a la vez. La excepción es una fila
-      // intercalada: alterna sus bobinas, una por pasada, y marca exactamente las de su secuencia.
+      // Dos en la misma fila le pedirían al telar dos tramas a la vez. Para alternar bobinas
+      // están los intercalados (grupos de filas), no varias bobinas en una fila.
       const dobles = [];
-      const noCoinciden = [];
-      matriz_pasadas.forEach((fila, i) => {
-        const sec = secuencias && secuencias[i];
-        if (sec) {
-          const marcadas = fila.map((celda, c) => (celda > 0 ? c + 1 : 0)).filter(Boolean);
-          const enSec = [...new Set(sec)].sort((a, b) => a - b);
-          if (JSON.stringify(marcadas) !== JSON.stringify(enSec)) noCoinciden.push(i + 1);
-        } else if (fila.filter((celda) => celda > 0).length > 1) dobles.push(i + 1);
-      });
-      if (noCoinciden.length) errores.push(`En una fila intercalada, las bobinas marcadas tienen que ser las de su secuencia (filas ${noCoinciden.join(', ')}).`);
+      matriz_pasadas.forEach((fila, i) => { if (fila.filter((celda) => celda > 0).length > 1) dobles.push(i + 1); });
       if (dobles.length) {
         const lista = dobles.slice(0, 10).join(', ') + (dobles.length > 10 ? '…' : '');
         errores.push(`Cada fila puede tener una sola bobina (una trama por pasada). Tienen más de una: ${dobles.length === 1 ? 'la fila' : 'las filas'} ${lista}.`);

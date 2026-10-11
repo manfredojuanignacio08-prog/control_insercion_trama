@@ -10,8 +10,8 @@
 --   - Una FILA es un tramo de pasadas: lleva una bobina, porque en cada pasada entra una
 --     sola trama (cada celda vale 0 o 1; el servidor rechaza una fila con dos). Cuántas
 --     pasadas seguidas se teje cada fila lo dice repeticiones_por_fila (migración 014);
---     sin ese dato, una. Una fila intercalada (secuencias_por_fila, migración 021) alterna
---     varias bobinas en orden, una por pasada.
+--     sin ese dato, una. Varias filas seguidas pueden formar un grupo intercalado
+--     (grupos_intercalados, migración 022): se alternan en orden hasta completar sus pasadas.
 --   - fila_actual + repeticion_en_fila en historial_produccion: posición exacta de la
 --     producción en curso (la fila y cuántas pasadas de esa fila ya se tejieron), para
 --     soportar "retroceder una pasada" sin reconstruir nada. columna_actual y
@@ -38,9 +38,9 @@ CREATE TABLE IF NOT EXISTS patrones (
   -- migración 014: cuántas pasadas seguidas se teje cada fila. Un elemento por
   -- fila; en NULL, una pasada por fila.
   repeticiones_por_fila INTEGER[],
-  -- migración 021: filas intercaladas. Por fila, NULL o el orden de las bobinas (desde 1) que
-  -- se alternan pasada por pasada, por ejemplo [1, 3, 4, 2]; las repeticiones son el total.
-  secuencias_por_fila JSONB,
+  -- migración 022: grupos de filas que se tejen intercalados, [{desde, hasta, pasadas}] con
+  -- índices de fila desde 0: sus filas se alternan en orden hasta completar las pasadas.
+  grupos_intercalados JSONB,
   -- migración 011: metros de tela que avanza el telar en una pasada, para este
   -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
   metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),

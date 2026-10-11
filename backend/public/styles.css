@@ -896,3 +896,19 @@ font-family:var(--font-mono);}
 /* La fila muestra en cada bobina su lugar en la secuencia (1, 2, 3...). */
 .grid-row.intercalada .g-row-n{color:var(--acc);font-weight:900;text-decoration:underline dotted;text-underline-offset:3px}
 .g-cell.orden{font-size:11px;letter-spacing:-.02em}
+
+/* ---------- Intercalados: apartado al costado de la grilla ----------
+   Con un color fijo: la fila redefine --acc con el color de su hilo, y la llave cambiaba de color. */
+.g-int,.g-int-h{width:28px;flex:none;position:sticky;right:0;z-index:2;background:var(--bg)}
+.g-int{height:var(--cel,42px);border:none;padding:0;cursor:pointer;position:sticky;display:flex;align-items:center;justify-content:center;color:var(--rose-md)}
+.g-int:not(.en)::after{content:"+";opacity:.25;font-weight:700;font-size:13px}
+.g-int:not(.en):hover::after,.g-int:not(.en):focus-visible::after{opacity:.8}
+/* llave: una línea que une las filas del grupo, con remates arriba y abajo */
+.g-int.en::before{content:"";position:absolute;left:8px;top:-2px;bottom:-2px;border-right:3px solid var(--rose-md)}
+.g-int.en.ini::before{top:6px;border-top:3px solid var(--rose-md);width:6px;left:2px;border-top-right-radius:4px}
+.g-int.en.fin::before{bottom:6px;border-bottom:3px solid var(--rose-md);width:6px;left:2px;border-bottom-right-radius:4px}
+.g-int.en span{position:relative;z-index:1;margin-left:12px;font-family:var(--font-mono);font-size:10px;font-weight:800;color:var(--rose-md);background:var(--bg);writing-mode:vertical-rl;transform:rotate(180deg);line-height:1}
+.g-int-h{text-align:center}
+/* la casilla de pasadas queda al lado del apartado */
+.g-rep,.g-rep-h{right:28px}
+.int-filas{display:grid;grid-template-columns:1fr 1fr;gap:10px}

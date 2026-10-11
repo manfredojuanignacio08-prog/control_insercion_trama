@@ -75,6 +75,10 @@ int main() {
     }
     chequear(ok, "fila intercalada 1, 3, 4, 2: una sola bobina por pasada, en orden y volviendo a empezar");
     chequear(seleccionCanalIntercalado(sec, 4, 119) == 1, "la pasada 120 de un tramo de 120 es la bobina 2");
+    const uint8_t secVacia[3] = { 1, 0, 2 };   // una fila del grupo sin bobina
+    seleccionAplicarIntercalada(secVacia, 3, 1, 4);
+    chequear(cuantosActivos() == 0, "una fila del intercalado sin bobina no activa ninguna");
+    seleccionApagarTodo();
     const uint8_t sec2[2] = { 2, 1 };
     chequear(seleccionCanalIntercalado(sec2, 2, 139) == 0, "la pasada 140 de un tramo 2, 1 es la bobina 1");
     seleccionApagarTodo();

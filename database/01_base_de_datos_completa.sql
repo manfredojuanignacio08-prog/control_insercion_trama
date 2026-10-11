@@ -26,8 +26,8 @@
 --   - Una FILA es un tramo de pasadas: lleva una bobina, porque en cada pasada entra una
 --     sola trama (cada celda vale 0 o 1; el servidor rechaza una fila con dos). Cuántas
 --     pasadas seguidas se teje cada fila lo dice repeticiones_por_fila (migración 014);
---     sin ese dato, una. Una fila intercalada (secuencias_por_fila, migración 021) alterna
---     varias bobinas en orden, una por pasada.
+--     sin ese dato, una. Varias filas seguidas pueden formar un grupo intercalado
+--     (grupos_intercalados, migración 022): se alternan en orden hasta completar sus pasadas.
 --   - fila_actual + repeticion_en_fila en historial_produccion: posición exacta de la
 --     producción en curso (la fila y cuántas pasadas de esa fila ya se tejieron), para
 --     soportar "retroceder una pasada" sin reconstruir nada. columna_actual y
@@ -54,9 +54,9 @@ CREATE TABLE IF NOT EXISTS patrones (
   -- migración 014: cuántas pasadas seguidas se teje cada fila. Un elemento por
   -- fila; en NULL, una pasada por fila.
   repeticiones_por_fila INTEGER[],
-  -- migración 021: filas intercaladas. Por fila, NULL o el orden de las bobinas (desde 1) que
-  -- se alternan pasada por pasada, por ejemplo [1, 3, 4, 2]; las repeticiones son el total.
-  secuencias_por_fila JSONB,
+  -- migración 022: grupos de filas que se tejen intercalados, [{desde, hasta, pasadas}] con
+  -- índices de fila desde 0: sus filas se alternan en orden hasta completar las pasadas.
+  grupos_intercalados JSONB,
   -- migración 011: metros de tela que avanza el telar en una pasada, para este
   -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
   metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),
@@ -949,6 +949,29 @@ COMMENT ON COLUMN patrones.secuencias_por_fila IS
 
 
 -- ============================================================
+-- migracion_022_grupos_intercalados.sql
+-- ============================================================
+-- ============================================================
+-- 022 · Intercalados por grupos de filas (reemplaza a la 021).
+--
+-- Cada fila lleva una sola bobina (una trama por pasada). Para alternar bobinas, varias filas
+-- seguidas forman un grupo que se teje intercalado: sus filas se recorren en orden, cada una
+-- tantas pasadas como sus repeticiones, y vuelven a empezar hasta completar las pasadas del
+-- grupo. Por ejemplo, las filas 1 a 4 (bobinas 1, 3, 4 y 2) durante 120 pasadas.
+--
+-- Formato: un array de {desde, hasta, pasadas}, con desde y hasta como índices de fila desde
+-- 0 (desde < hasta) y grupos que no se superponen. NULL = ningún intercalado.
+--
+-- La 021 guardaba el orden adentro de una sola fila (una fila con varias bobinas): se descartó
+-- porque una fila no puede llevar más de una bobina. Su columna se borra.
+ALTER TABLE patrones ADD COLUMN IF NOT EXISTS grupos_intercalados JSONB;
+ALTER TABLE patrones DROP COLUMN IF EXISTS secuencias_por_fila;
+
+COMMENT ON COLUMN patrones.grupos_intercalados IS
+  'Grupos de filas que se tejen intercalados: [{desde, hasta, pasadas}] con índices de fila desde 0. NULL = ninguno.';
+
+
+-- ============================================================
 -- Registro de migraciones
 -- ============================================================
 CREATE TABLE IF NOT EXISTS migraciones_aplicadas (
@@ -977,7 +1000,8 @@ INSERT INTO migraciones_aplicadas (archivo) VALUES
   ('migracion_018_senal_nivel2.sql'),
   ('migracion_019_dibujos_de_invitado.sql'),
   ('migracion_020_hilado.sql'),
-  ('migracion_021_secuencias_por_fila.sql')
+  ('migracion_021_secuencias_por_fila.sql'),
+  ('migracion_022_grupos_intercalados.sql')
 ON CONFLICT (archivo) DO NOTHING;
 
 -- ============================================================

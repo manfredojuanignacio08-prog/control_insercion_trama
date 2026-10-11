@@ -15,9 +15,9 @@
 //  microcontrolador el que decida qué "agujero" hay en cada pasada.
 //
 //  Una fila del dibujo lleva una bobina (una trama por pasada) y se teje durante
-//  tantas pasadas como diga su cantidad de repeticiones. Una fila intercalada alterna
-//  varias bobinas en orden, una por pasada (1, 3, 4, 2, 1, 3...): ver
-//  seleccionAplicarIntercalada. En CADA pasada los canales activos se cierran y,
+//  tantas pasadas como diga su cantidad de repeticiones. Un grupo de filas intercaladas
+//  alterna sus bobinas en orden, una por pasada (1, 3, 4, 2, 1, 3...): el backend manda el
+//  ciclo en la primera fila del grupo (ver seleccionAplicarIntercalada). En CADA pasada los canales activos se cierran y,
 //  pasado un porcentaje de la pasada (PORCENTAJE_SELECCION), se sueltan: igual
 //  que el papel, que entre dos agujeros seguidos de la misma columna tiene papel.
 //  Así la máquina ve un agujero por pasada y no uno solo largo.
@@ -53,8 +53,9 @@ void seleccionIniciar() {
   }
 }
 
-// Fila intercalada: en la pasada número `hechas` de la fila (0 la primera) va la bobina
-// sec[hechas % largo], numerada desde 1. Devuelve el canal, desde 0, o -1 si no hay.
+// Intercalado: en la pasada número `hechas` del grupo (0 la primera) va la bobina
+// sec[hechas % largo], numerada desde 1 (0 = una fila sin bobina). Devuelve el canal, desde 0,
+// o -1 si no hay.
 static inline int seleccionCanalIntercalado(const uint8_t sec[], int largo, long hechas) {
   if (largo <= 0) return -1;
   long i = hechas % largo;
@@ -64,7 +65,7 @@ static inline int seleccionCanalIntercalado(const uint8_t sec[], int largo, long
 
 void seleccionAplicarFila(const bool fila[], int nCols);
 
-// Aplica la pasada `hechas` de una fila intercalada: solo el canal que le toca.
+// Aplica la pasada `hechas` de un intercalado: solo el canal que le toca (o ninguno).
 void seleccionAplicarIntercalada(const uint8_t sec[], int largo, long hechas, int nCols) {
   bool fila[N_CANALES] = { false };
   const int c = seleccionCanalIntercalado(sec, largo, hechas);
