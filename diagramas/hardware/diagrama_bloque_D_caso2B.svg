@@ -237,7 +237,7 @@
 <line x1="780" y1="795" x2="1180" y2="795" stroke="#1F2937" stroke-width="2.2"/>
 <text x="900" y="789" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → R prot. → − del conector 4</text>
 <text x="30" y="906" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">Relé cerrado: la señal queda en 0 V = agujero. Relé abierto: la resistencia la sube a +V = papel. ESP32 apagado: los 4 relés abiertos = papel (ninguna bobina salta).</text>
-<text x="30" y="924" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">R prot. (resistencia de protección): 220 Ω 1 W si el lector se alimenta con hasta 15 V; 470 Ω 2 W de 15 a 30 V. Limita la corriente si algo queda en corto.</text>
+<text x="30" y="924" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">R prot. (resistencia de protección): 220 Ω 2 W si el lector se alimenta con hasta 15 V; 470 Ω 3 W de 15 a 30 V. Limita la corriente si algo queda en corto.</text>
 <text x="30" y="942" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">Cada canal usa el + y el − de su propio conector, con sus propias resistencias. No unir las señales de los canales entre sí.</text>
 <text x="1370" y="966" font-size="12" font-weight="bold" fill="#2E6E4A" text-anchor="end">relé cerrado = agujero → CANAL_ACTIVO_EN_ALTO true</text>
 <text x="30" y="966" font-size="10.5" font-weight="normal" fill="#6B7684" text-anchor="start">Un solo valor en config.h vale para los 4 canales.</text>

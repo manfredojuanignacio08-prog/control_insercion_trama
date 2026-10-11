@@ -62,7 +62,7 @@
 <rect x="766.0" y="195" width="68" height="22" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.8"/>
 <line x1="834.0" y1="206" x2="900" y2="206" stroke="#B4423C" stroke-width="2.2"/>
 <text x="800.0" y="188" font-size="9.5" font-weight="bold" fill="#B4423C" text-anchor="middle">R de protección</text>
-<text x="800.0" y="234" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">220 Ω 1 W (hasta 15 V) · 470 Ω 2 W (15 a 30 V)</text>
+<text x="800.0" y="234" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">220 Ω 2 W (hasta 15 V) · 470 Ω 3 W (15 a 30 V)</text>
 <line x1="900" y1="206" x2="1150" y2="206" stroke="#B4423C" stroke-width="2.2"/>
 <text x="1030" y="198" font-size="9.5" font-weight="bold" fill="#B4423C" text-anchor="middle">+ del conector</text>
 <line x1="630" y1="286" x2="1150" y2="286" stroke="#1E3A5F" stroke-width="2.4"/>
@@ -115,7 +115,7 @@
 <text x="714" y="694" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Por canal, lado ESP32: 330 Ω ¼ W en serie con la pata 1 y 10 kΩ ¼ W del pin a GND.</text>
 <text x="714" y="711" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Por canal, lado telar: R de protección en serie con la pata 4 y 10 kΩ ½ W de la señal al −.</text>
 <text x="714" y="728" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">R de protección según la alimentación del lector (medirla entre + y −):</text>
-<text x="714" y="745" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">      hasta 15 V → 220 Ω 1 W   ·   de 15 a 30 V → 470 Ω 2 W   ·   más de 30 V → consultar.</text>
+<text x="714" y="745" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">      hasta 15 V → 220 Ω 2 W   ·   de 15 a 30 V → 470 Ω 3 W   ·   más de 30 V → consultar.</text>
 <text x="714" y="762" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">config.h: CANAL_ACTIVO_EN_ALTO = true (relé cerrado = agujero, como viene)</text>
 <text x="714" y="779" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">                PORCENTAJE_SELECCION = 0 (se mantiene mientras se repite la bobina).</text>
 <text x="714" y="796" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Si con agujero la salida del lector fuera a 0 V (y no a +V), es la variante 2B:</text>

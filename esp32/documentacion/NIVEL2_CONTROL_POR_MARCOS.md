@@ -64,10 +64,12 @@ lugar del lector óptico de la cinta de papel.
 - **El punto de intervención es el propio lector óptico, no la bobina.** El
   dueño de la planta lo explicó así: cada lector óptico se corta con una llave,
   de modo que en lugar de que sea el papel el que interrumpe el haz, lo hace un
-  interruptor electrónico que entrega un 1 o un 0. Esto simplifica bastante la
-  etapa de potencia, porque el sistema no conmuta la corriente de la bobina
-  sino la señal del lector, que maneja mucha menos corriente. Las plaquetas del
-  telar quedan intactas y siguen haciendo su trabajo.
+  interruptor electrónico que entrega un 1 o un 0. Con agujero, el lector da la
+  señal que activa la bobina; en la conexión final (la más segura) el relé ocupa
+  el lugar del lector y da esa señal. Esto simplifica bastante la etapa de
+  potencia, porque el sistema no conmuta la corriente de la bobina sino la señal
+  del lector, que maneja mucha menos corriente. Las plaquetas del telar quedan
+  intactas y siguen haciendo su trabajo.
 - **Relés de estado sólido LCA110 (OptoMOS), uno por lector óptico, cuatro en total (uno por bobina de selección).** Es el punto donde más se
   equivoca la intuición: un relé mecánico común no sirve acá. El telar trabaja
   a 300 pasadas por minuto, o sea 5 por segundo, y cada bobina puede activarse

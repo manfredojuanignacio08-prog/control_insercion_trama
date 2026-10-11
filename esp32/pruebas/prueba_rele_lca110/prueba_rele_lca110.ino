@@ -16,8 +16,9 @@
 //
 //  Qué hace: imita al telar a 300 pasadas por minuto (una cada 200 ms) con un dibujo de
 //  dos filas de 25 repeticiones: la fila 1 activa el canal y la fila 2 no. En cada pasada
-//  de la fila 1 el relé se cierra durante el 50 % de la pasada y se suelta, como un agujero
-//  del papel. Lo que se tiene que ver:
+//  de la fila 1 el relé se cierra durante el 50 % de la pasada y se suelta, para que se vea cada
+//  pasada (el firmware viene con PORCENTAJE_SELECCION en 0: lo deja cerrado mientras la bobina se
+//  repite). Lo que se tiene que ver:
 //    el LED parpadea unas 5 veces por segundo durante 5 s, queda apagado 5 s, y se repite.
 //
 //  Por el monitor serie (115200 baudios) se puede cambiar de modo, para medir con el
@@ -26,14 +27,15 @@
 //    0  relé abierto fijo   → tiene que marcar abierto
 //    p  vuelve al ciclo de pasadas
 //
-//  Esta prueba solo dice si el relé conduce cuando se le pide. Si en la máquina va en serie
-//  o en paralelo se decide con la medición del lector (sección 5 de la guía) y se configura
-//  en CANAL_ACTIVO_EN_ALTO de control_trama_esp32/config.h; acá no influye.
+//  Esta prueba solo dice si el relé conduce cuando se le pide. En la máquina va en lugar del
+//  lector (la conexión final, diagramas/hardware/conexion_final_rele.png); la medición del lector
+//  (sección 5 de la guía) lo confirma, y CANAL_ACTIVO_EN_ALTO de control_trama_esp32/config.h
+//  queda en true. Acá no influye.
 // ============================================================================
 
 static const int PIN_CANAL = 18;                      // canal 1 (columna 1 del dibujo)
 static const unsigned long PASADA_MS = 200;           // 300 pasadas por minuto
-static const unsigned long PORCENTAJE_SELECCION = 50; // igual que control_trama_esp32/config.h
+static const unsigned long PORCENTAJE_SELECCION = 50; // en la prueba parpadea; el firmware viene en 0
 static const int REPETICIONES = 25;                   // pasadas de cada fila
 
 enum Modo { PATRON, FIJO_CERRADO, FIJO_ABIERTO };

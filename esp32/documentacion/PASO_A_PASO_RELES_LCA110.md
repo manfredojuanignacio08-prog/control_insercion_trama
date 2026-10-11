@@ -46,7 +46,7 @@ Diagramas que acompañan esta guía (en `diagramas/hardware/`):
 - Cinta de papel o de enmascarar y un marcador para etiquetar cables. Celular para sacar fotos.
 - 4 relés LCA110, 4 resistencias de 330 Ω y 4 de 10 kΩ (¼ W), del lado del ESP32.
 - Solo para los casos 2A y 2B, del lado del telar: 4 resistencias de 10 kΩ **½ W** y 4 resistencias de
-  protección: **220 Ω 1 W** si el lector se alimenta con hasta 15 V, o **470 Ω 2 W** de 15 a 30 V.
+  protección: **220 Ω 2 W** si el lector se alimenta con hasta 15 V, o **470 Ω 3 W** de 15 a 30 V.
 - Borneras, placa perforada, termocontraíble y cable fino.
 - Para la prueba en el banco: una pila de 9 V, un LED y una resistencia de 1 kΩ.
 
@@ -147,7 +147,7 @@ que de paso muestra si la bobina 1 reacciona. Hacer la conexión con el telar ap
 desenchufado. Recién después encenderlo, sin tejer, y leer.
 
 En los casos 2A y 2B, primero elegir la resistencia de protección con la tensión del paso 1.3:
-**hasta 15 V, 220 Ω 1 W; de 15 a 30 V, 470 Ω 2 W**; con más de 30 V, parar y consultar. La medición se
+**hasta 15 V, 220 Ω 2 W; de 15 a 30 V, 470 Ω 3 W**; con más de 30 V, parar y consultar. La medición se
 hace con esa resistencia en serie con el multímetro: así, aunque algo estuviera mal, la corriente queda
 limitada.
 
@@ -230,9 +230,9 @@ Al terminar, **volver `MODO_BANCO` a `false`.** Con `true` no se instala nunca e
 
 ## Etapa 4 · Conectar el relé 1 al telar
 
-**4.1** Telar apagado y desenchufado, ESP32 apagado. Seguir el diagrama del caso que corresponde
-(`diagrama_bloque_D_caso1`, `_caso2A` o `_caso2B`). Todo va con bornera, para poder volver a
-conectar el lector si hiciera falta.
+**4.1** Telar apagado y desenchufado, ESP32 apagado. Seguir `conexion_final_rele.png` (caso 2A, la
+conexión final); solo si la medición dio otro caso, el diagrama de ese caso (`diagrama_bloque_D_caso1`
+o `_caso2B`). Todo va con bornera, para poder volver a conectar el lector si hiciera falta.
 
 **Caso 1**
 

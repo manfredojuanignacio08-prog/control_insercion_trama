@@ -143,26 +143,23 @@ static const int  N_CANALES = 4;
 static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 
 // Sentido de la señal. El relé LCA110 conduce cuando su LED recibe corriente,
-// o sea con el pin en alto. Queda como constante porque, según cómo esté
-// cableado el lector óptico, puede que haya que invertir el criterio:
-//   - Si el relé va EN PARALELO con el lector (el agujero cierra el circuito),
-//     activar el canal significa cerrar el relé.
-//   - Si va EN SERIE (el agujero abre el circuito), activarlo significa abrirlo.
-//   - Si el relé reemplaza al lector: true en los casos 2A y 2B; en el caso 1, true si el
-//     agujero une los 2 bornes de señal y false si los separa.
+// o sea con el pin en alto.
 // CONEXIÓN FINAL (la más segura, diagramas/hardware/conexion_final_rele.png): el relé en lugar del
 // lector, caso 2A (con agujero el lector da la señal +V que activa la bobina), con una resistencia
-// de protección en serie y 10 kΩ ½ W de la señal al −. Va con true, como viene.
+// de protección en serie y 10 kΩ ½ W de la señal al −. Va con true, como viene: relé cerrado = agujero.
+// Otros casos, solo si la medición diera otra cosa (documentacion/PASO_A_PASO_RELES_LCA110.md):
+//   - Variante 2B (con agujero la señal va a 0 V): también true.
+//   - Caso 1 (la tensión la pone la plaqueta): true si el agujero une los 2 bornes de señal y
+//     false si los separa.
+// Las conexiones en paralelo o en serie con el lector, que se evaluaron primero, quedan descartadas.
 // A_CONFIRMAR: la medición sobre el lector (documentacion/PASO_A_PASO_RELES_LCA110.md) confirma el caso.
 #define CANAL_ACTIVO_EN_ALTO   true
 
 // Cómo se aplica la selección: en cada pasada se activa el canal de su bobina. Si la pasada
 // siguiente es de la misma bobina, sigue activo; cuando cambia, se suelta y se activa el nuevo.
-// Lo define PORCENTAJE_SELECCION (más abajo), que también permite soltarlo en cada pasada. El lector
-// tiene que ver siempre cinta sin agujero (una cinta sin perforar, o el lector tapado): el relé
-// ocupa el lugar de los agujeros. Sin cinta, el lector vería luz todo el tiempo. Si en cambio
-// se saca el lector y el relé va en su lugar (casos 1, 2A y 2B de
-// documentacion/PASO_A_PASO_RELES_LCA110.md), no hace falta cinta.
+// Lo define PORCENTAJE_SELECCION (más abajo), que también permite soltarlo en cada pasada. Con la
+// conexión final el lector queda desconectado (sus cables, marcados y aislados en una bornera), así
+// que la cinta de papel ya no interviene: el dibujo lo decide el ESP32.
 
 // ---------------------------------------------- Sincronización con la máquina
 // El telar lee la selección en un instante concreto de su ciclo, cuando abre la
