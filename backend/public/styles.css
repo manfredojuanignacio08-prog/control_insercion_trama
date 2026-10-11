@@ -84,6 +84,8 @@ body{
 }
 button{font-family:inherit;cursor:pointer}
 input{font-family:inherit;outline:none}
+/* El foco se marca con un borde propio: sin esto, con teclado no se veía en qué campo se escribía. */
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc-md);outline-offset:1px}
 input[type=number]{-moz-appearance:textfield}
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button{-webkit-appearance:none}
