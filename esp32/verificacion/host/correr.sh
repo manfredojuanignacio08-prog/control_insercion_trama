@@ -16,12 +16,15 @@ echo "== 1) sensor_pasada.h"
 g++ -std=c++17 -I. -I$FW -include Arduino.h test_sensor_pasada.cpp -o /tmp/test_sensor_pasada
 /tmp/test_sensor_pasada
 echo "== 1b) seleccion_dibujo.h"
-g++ -std=c++17 -I. -I$FW -include Arduino.h test_seleccion.cpp -o /tmp/test_seleccion
+g++ -std=c++17 -I. -I$FW -include Arduino.h -DPORCENTAJE_SELECCION_PRUEBA=50 test_seleccion.cpp -o /tmp/test_seleccion
 /tmp/test_seleccion
+echo "== 1b') seleccion_dibujo.h con el valor de config.h (la bobina se mantiene mientras se repite)"
+g++ -std=c++17 -I. -I$FW -include Arduino.h test_seleccion_mantener.cpp -o /tmp/test_seleccion_mantener
+/tmp/test_seleccion_mantener
 echo "== 1c) posicion_dibujo.h (misma posición que el backend)"
 g++ -std=c++17 -I. -I$FW test_posicion_dibujo.cpp -o /tmp/test_posicion_dibujo
 /tmp/test_posicion_dibujo
-echo "== 1d) sketch de prueba de mesa de un relé (patrón del LED)"
+echo "== 1d) sketch de prueba de mesa de un relé (ciclo del LED)"
 g++ -std=c++17 -I. -include Arduino.h -Wall test_prueba_rele.cpp -o /tmp/test_prueba_rele
 /tmp/test_prueba_rele
 echo "== 1e) Bloque A del firmware"

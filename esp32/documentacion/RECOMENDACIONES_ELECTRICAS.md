@@ -127,9 +127,9 @@ usar para comandarlas y qué no.
   plaquetas del telar quedan intactas.
 - **Relé de estado sólido LCA110 (OptoMOS), uno por lector óptico: cuatro en total**, uno por
   cada bobina de selección. Un relé mecánico común no sirve: el telar hace 5 pasadas por segundo y
-  cada canal se activa y se suelta en cada pasada, hasta 180.000 conmutaciones en una jornada de 10
-  horas, y la vida típica de un relé mecánico con carga ronda las 100.000. Los relés mecánicos del
-  Bloque A quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas pocas veces
+  en un intercalado (o si se configura que la selección se suelte en cada pasada) un canal se
+  activa y se suelta en cada pasada, hasta 180.000 conmutaciones en una jornada de 10 horas, y
+  la vida típica de un relé mecánico con carga ronda las 100.000. Los relés mecánicos del Bloque A quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas pocas veces
   por día.
 - **Por qué el LCA110.** Como va sobre la señal del lector (unos pocos mA, menos de 24 V) y no sobre
   la bobina, no hace falta un SSR de potencia. Su salida son dos MOSFET en antiserie, así que

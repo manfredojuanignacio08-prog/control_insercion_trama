@@ -185,8 +185,10 @@ En cada canal:
 1. En `config.h`, poner `NIVEL2_INSTALADO` y `MODO_BANCO` en `true`.
 2. Entre las patas 4 y 6 de cada relé, conectar la pila de 9 V, la resistencia de 1 kΩ y el LED,
    en serie.
-3. Cargar un dibujo en la web y ponerlo a tejer: el LED de cada canal tiene que parpadear según
-   su columna.
+3. Cargar un dibujo en la web y ponerlo a tejer: el LED de cada canal tiene que encenderse según
+   su columna. Con `PORCENTAJE_SELECCION` en 0 (como viene) queda encendido fijo mientras la misma
+   bobina se repite y cambia cuando cambia la bobina; con un porcentaje (por ejemplo 50) parpadea
+   una vez por pasada.
 4. Con el ESP32 apagado, los cuatro LED quedan apagados (los relés abiertos).
 
 Al terminar, **volver `MODO_BANCO` a `false`.** Con `true` no se instala nunca en la máquina.

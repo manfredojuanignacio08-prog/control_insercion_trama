@@ -40,8 +40,8 @@ así que hay que cambiar las dos antes de poner el sistema en la fábrica.
 
 **Qué se quiere saber.** Cada pasada, el telar "mira" la selección en un instante preciso (cuando abre la
 calada), y el sensor inductivo avisa el comienzo de la pasada en otro instante. Además, con el papel la
-selección se activa y se suelta en cada pasada (entre dos agujeros seguidos hay papel), y el firmware
-tiene que imitarlo. Si la fila se aplica antes o después de tiempo, o dura poco, la tela sale mal.
+selección se activa y se suelta en cada pasada (entre dos agujeros seguidos hay papel); el firmware, como
+viene, la mantiene mientras la bobina se repite, y también puede soltarla en cada pasada. Si la fila se aplica antes o después de tiempo, o dura poco, la tela sale mal.
 
 **Sin osciloscopio** (el camino previsto; la guía de los relés LCA110 lo explica paso a paso):
 
@@ -49,8 +49,10 @@ tiene que imitarlo. Si la fila se aplica antes o después de tiempo, o dura poco
    conectan los relés LCA110 (en serie o en paralelo con el lector, o en su lugar, en uno de los casos
    1, 2A o 2B). El paso a paso de la medición y la conexión está en
    `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
-2. Estimar `PORCENTAJE_SELECCION` con una regla sobre la cinta de papel: si avanza de forma pareja, la
-   señal dura más o menos el diámetro del agujero dividido por la distancia entre los centros de dos
+2. `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita (por ejemplo, las 120
+   pasadas seguidas de una bobina) y cambia cuando cambia la bobina, que es lo que se ve en el telar.
+   Si en la prueba alguna pasada no toma la selección, probar con un porcentaje: se estima con una regla
+   sobre la cinta de papel, el diámetro del agujero dividido por la distancia entre los centros de dos
    agujeros seguidos (agujeros de 4 mm cada 8 mm dan 50 %).
 3. Tejer una prueba corta con un dibujo fácil de reconocer y corregir según la tabla de abajo.
 
@@ -65,7 +67,7 @@ lector cuando pasa un agujero.
 |---|---|
 | El dibujo sale corrido una pasada (la ventana de lectura llega antes de que se aplique la fila, o después) | `DESPLAZAMIENTO_FILAS` en 1 o −1, o mover el blanco metálico en el eje |
 | Hay un desfase pequeño dentro de la pasada (solo se ve con osciloscopio) | `RETARDO_APLICACION_US` (máximo 50 000 µs) |
-| Algunas pasadas no toman la selección, o la señal del lector dura otra parte de la pasada que la mitad | `PORCENTAJE_SELECCION` (hoy 50 %; hasta 90 %) |
+| Algunas pasadas no toman la selección, o la señal del lector dura otra parte de la pasada que la mitad | `PORCENTAJE_SELECCION` (hoy 0: se mantiene mientras la bobina se repita; de 1 a 90 se suelta en cada pasada) |
 | La tela sale bien | No se toca nada |
 
 **Seguridad.** Las bobinas trabajan a 24 V de alterna. Medir del lado de baja tensión (el lector); con

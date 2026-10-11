@@ -17,10 +17,10 @@
 //  Una fila del dibujo lleva una bobina (una trama por pasada) y se teje durante
 //  tantas pasadas como diga su cantidad de repeticiones. Un grupo de filas intercaladas
 //  alterna sus bobinas en orden, una por pasada (1, 3, 4, 2, 1, 3...): el backend manda el
-//  ciclo en la primera fila del grupo (ver seleccionAplicarIntercalada). En CADA pasada los canales activos se cierran y,
-//  pasado un porcentaje de la pasada (PORCENTAJE_SELECCION), se sueltan: igual
-//  que el papel, que entre dos agujeros seguidos de la misma columna tiene papel.
-//  Así la máquina ve un agujero por pasada y no uno solo largo.
+//  ciclo en la primera fila del grupo (ver seleccionAplicarIntercalada). En cada pasada se
+//  activa el canal que toca. Con PORCENTAJE_SELECCION en 0 (el valor de hoy) queda activo
+//  hasta el pulso siguiente: en una racha de la misma bobina no se suelta nunca. Con un
+//  porcentaje, se suelta pasado ese porcentaje de cada pasada, como el papel entre dos agujeros.
 // ============================================================================
 
 // La combinación que se aplicó en la última pasada, para el registro. Indica lo que

@@ -153,7 +153,7 @@ con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
 | Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado |
 | Si el agujero del papel abre o cierra el circuito | Definir si el relé va en serie o en paralelo, y el valor de `CANAL_ACTIVO_EN_ALTO` |
 | Sincronización entre el pulso del sensor y la lectura del telar | Ajustar `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba |
-| Qué parte de cada pasada dura la señal del lector con la cinta | Ajustar `PORCENTAJE_SELECCION` (hoy 50 %): la selección se activa y se suelta en cada pasada, como el papel |
+| Si la plaqueta toma la selección mantenida | `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita y cambia cuando cambia. Si alguna pasada no la toma, probar un porcentaje (50 %): se suelta en cada pasada, como el papel |
 
 Hasta tener esos datos, los valores marcados como `A_CONFIRMAR` en `config.h`
 son estimaciones y no deben darse por buenos.
@@ -200,7 +200,7 @@ detenida.
 maneja un LCA110 en el GPIO 18 sin WiFi ni backend. Imita 25 pasadas con el canal activo y 25 sin
 activar, a 300 por minuto: el LED de la salida parpadea 5 veces por segundo durante 5 s y queda
 apagado 5 s. Por el monitor serie, `1` / `0` dejan el relé cerrado o abierto fijo para medir con el
-multímetro entre las patas 4 y 6, y `p` vuelve al patrón.
+multímetro entre las patas 4 y 6, y `p` vuelve al ciclo de 25 y 25.
 
 **Después, el firmware completo:**
 

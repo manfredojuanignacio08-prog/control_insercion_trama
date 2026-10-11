@@ -24,7 +24,7 @@
 //  multímetro entre las patas 4 y 6 (sin el LED conectado):
 //    1  relé cerrado fijo   → tiene que marcar entre 23 y 35 Ω
 //    0  relé abierto fijo   → tiene que marcar abierto
-//    p  vuelve al patrón de pasadas
+//    p  vuelve al ciclo de pasadas
 //
 //  Esta prueba solo dice si el relé conduce cuando se le pide. Si en la máquina va en serie
 //  o en paralelo se decide con la medición del lector (sección 5 de la guía) y se configura
@@ -66,7 +66,7 @@ void setup() {
   Serial.println("");
   Serial.println("=== Prueba de mesa de un relé LCA110 (GPIO 18) ===");
   Serial.println("Patrón: 25 pasadas con el canal activo (el LED parpadea) y 25 sin activar (apagado).");
-  Serial.println("Comandos: 1 = cerrado fijo, 0 = abierto fijo, p = patrón de pasadas");
+  Serial.println("Comandos: 1 = cerrado fijo, 0 = abierto fijo, p = ciclo de pasadas");
   inicioPasada = millis();
   anunciarFila();
 }
