@@ -14,16 +14,17 @@
 //  cortar la señal de cada lector con un relé de estado sólido LCA110, de modo que sea el
 //  microcontrolador el que decida qué "agujero" hay en cada pasada.
 //
-//  Una fila del dibujo es una combinación de canales que se activan al mismo
-//  tiempo (no se recorren de a uno), y se teje durante tantas pasadas como diga
-//  su cantidad de repeticiones. En CADA pasada los canales activos se cierran y,
-//  pasado un porcentaje de la pasada (PORCENTAJE_SELECCION), se sueltan: igual
-//  que el papel, que entre dos agujeros seguidos de la misma columna tiene papel.
-//  Así la máquina ve un agujero por pasada y no uno solo largo.
+//  Una fila del dibujo lleva una bobina (una trama por pasada) y se teje durante
+//  tantas pasadas como diga su cantidad de repeticiones. Un grupo de filas intercaladas
+//  alterna sus bobinas en orden, una por pasada (1, 3, 4, 2, 1, 3...): el backend manda el
+//  ciclo en la primera fila del grupo (ver seleccionAplicarIntercalada). En cada pasada se
+//  activa el canal que toca. Con PORCENTAJE_SELECCION en 0 (el valor de hoy) queda activo
+//  hasta el pulso siguiente: en una racha de la misma bobina no se suelta nunca. Con un
+//  porcentaje, se suelta pasado ese porcentaje de cada pasada, como el papel entre dos agujeros.
 // ============================================================================
 
 // La combinación que se aplicó en la última pasada, para el registro. Indica lo que
-// se seleccionó, no si el relé sigue cerrado: se suelta pasada la duración de la selección.
+// se seleccionó, no si el relé sigue cerrado: con un porcentaje se suelta antes del pulso siguiente.
 bool canalActivo[N_CANALES] = { false };
 
 // Cuándo se aplicó la última selección, cuánto tiene que durar, y si todavía falta soltarla.
@@ -50,6 +51,26 @@ void seleccionIniciar() {
     digitalWrite(PIN_CANAL[i], nivelPara(false));
     canalActivo[i] = false;
   }
+}
+
+// Intercalado: en la pasada número `hechas` del grupo (0 la primera) va la bobina
+// sec[hechas % largo], numerada desde 1 (0 = una fila sin bobina). Devuelve el canal, desde 0,
+// o -1 si no hay.
+static inline int seleccionCanalIntercalado(const uint8_t sec[], int largo, long hechas) {
+  if (largo <= 0) return -1;
+  long i = hechas % largo;
+  if (i < 0) i += largo;
+  return (int)sec[i] - 1;
+}
+
+void seleccionAplicarFila(const bool fila[], int nCols);
+
+// Aplica la pasada `hechas` de un intercalado: solo el canal que le toca (o ninguno).
+void seleccionAplicarIntercalada(const uint8_t sec[], int largo, long hechas, int nCols) {
+  bool fila[N_CANALES] = { false };
+  const int c = seleccionCanalIntercalado(sec, largo, hechas);
+  if (c >= 0 && c < N_CANALES) fila[c] = true;
+  seleccionAplicarFila(fila, nCols);
 }
 
 // Aplica una fila del dibujo: todos los canales a la vez, no de a uno.

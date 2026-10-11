@@ -33,7 +33,7 @@ aplica además el servidor solo al arrancar.
 ## 3. Levantar el servidor
 
 ```bash
-npm run dev      # con autoreload (nodemon)
+npm run dev      # con autoreload (node --watch)
 npm start        # modo normal
 ```
 
@@ -119,35 +119,36 @@ en vez de la del proxy.
 ### Patrones (biblioteca)
 | Método | Ruta | Body | Descripción |
 |---|---|---|---|
-| GET | `/api/patrones?buscar=texto` |, | Lista (filtra por nombre, ILIKE) |
-| GET | `/api/patrones/:id` |, | Detalle |
-| POST | `/api/patrones` | `{nombre, filas, columnas, matriz_pasadas, repeticiones_por_fila?, matriz_ligamento?, colores_filas?, metadata?}` | Crea. Si no mandás `matriz_ligamento`, se deriva automáticamente (`pasadas>0 → 1`) |
+| GET | `/api/patrones?buscar=texto` | sin cuerpo | Lista (filtra por nombre, ILIKE) |
+| GET | `/api/patrones/:id` | sin cuerpo | Detalle |
+| POST | `/api/patrones` | `{nombre, filas, columnas, matriz_pasadas, repeticiones_por_fila?, grupos_intercalados?, matriz_ligamento?, colores_filas?, metadata?}` | Crea. Si no mandás `matriz_ligamento`, se deriva automáticamente (`pasadas>0 → 1`). Cada fila de `matriz_pasadas` puede tener **una sola** bobina activa (una trama por pasada): con dos responde **400**. Para alternar bobinas está `grupos_intercalados` (opcional): `[{desde, hasta, pasadas}]` con índices de fila desde 0; las filas del grupo se recorren en orden, cada una sus repeticiones, hasta completar `pasadas`. Los grupos no se superponen, tienen al menos dos filas y una vuelta de hasta 32 pasadas |
 | PUT | `/api/patrones/:id` | igual que POST, más `version_esperada?` | Reemplaza el patrón. Si se manda `version_esperada` (el `modificado_at` que tenía la pantalla) y otra persona lo guardó después, responde **409** `DIBUJO_MODIFICADO` en vez de pisar sus cambios |
-| DELETE | `/api/patrones/:id` |, | Borra (falla con 409 si tiene historial asociado) |
+| DELETE | `/api/patrones/:id` | sin cuerpo | Borra (falla con 409 si tiene historial asociado) |
 | PUT | `/api/patrones/:id/metros-por-pasada` | `{metros_por_pasada}` (número mayor que 0 y hasta 1, o `null`) | Cuánto avanza la tela por pasada: con este dato las estadísticas pasan pasadas a metros. `null` lo deja sin definir |
-| GET | `/api/patrones/:id/estadisticas` |, | Producción acumulada del dibujo: veces tejido, pasadas, vueltas, horas de máquina, primera y última vez, y metros si tiene `metros_por_pasada`. Indica si el conteo es estimado o del sensor (`precision_conteo`) |
+| PUT | `/api/patrones/:id/hilado` | `{peso_kg, metros_max, reiniciar}` (números mayores que 0 o `null`; `reiniciar` true/false) | Hilado disponible: peso en kg y metros de tela que alcanza a tejer. Las estadísticas devuelven `hilado` con lo usado, lo restante y los metros que faltan, contados desde que se cargó (`reiniciar: true` = hilado nuevo, vuelve a contar desde cero). Los dos en `null` borran el dato |
+| GET | `/api/patrones/:id/estadisticas` | sin cuerpo | Producción acumulada del dibujo: veces tejido, pasadas, vueltas, horas de máquina, primera y última vez, y metros si tiene `metros_por_pasada`. Indica si el conteo es estimado o del sensor (`precision_conteo`) |
 
-Una sesión de **invitado** puede crear dibujos y cambiar o borrar solo los que creó como invitado; en los de los operarios, `PUT`, `DELETE` y `metros-por-pasada` responden **403** `SOLO_OPERARIO`. Cuando un operario guarda un dibujo hecho por un invitado, pasa a ser de los operarios.
+Una sesión de **invitado** puede crear dibujos y cambiar o borrar solo los que creó como invitado; en los de los operarios, `PUT`, `DELETE`, `metros-por-pasada` e `hilado` responden **403** `SOLO_OPERARIO`. Cuando un operario guarda un dibujo hecho por un invitado, pasa a ser de los operarios.
 
 `GET /api/patrones` y `GET /api/historial` aceptan `limit` (defecto 500 / 100) y `offset`. `PUT /api/patrones/:id` responde **409** (`codigo: PATRON_EN_PRODUCCION`) si se intenta cambiar la matriz o las dimensiones de un dibujo que se está tejiendo (producción abierta): hay que detener el trabajo primero. Nombre, colores y metadatos sí se pueden editar.
 
 ### Telares
 | Método | Ruta | Body | Descripción |
 |---|---|---|---|
-| GET | `/api/telares` |, | Lista con nombre del patrón actual |
-| GET | `/api/telares/:id` |, | Detalle. Con la clave de dispositivo, `?origen=esp32` (Nivel 1) renueva `ultimo_ping_esp32` y `?origen=nivel2` renueva `ultimo_reporte_sensor` (el nodo del Nivel 2 conectado lleva la posición). Incluye `segundos_desde_ping` (calculado con el reloj del servidor: la web lo usa para el indicador "ESP32 conectado" sin depender de la hora de la PC) |
+| GET | `/api/telares` | sin cuerpo | Lista con nombre del patrón actual |
+| GET | `/api/telares/:id` | sin cuerpo | Detalle. Con la clave de dispositivo, `?origen=esp32` (Nivel 1) renueva `ultimo_ping_esp32` y `?origen=nivel2` renueva `ultimo_reporte_sensor` (el nodo del Nivel 2 conectado lleva la posición). Incluye `segundos_desde_ping` (calculado con el reloj del servidor: la web lo usa para el indicador "ESP32 conectado" sin depender de la hora de la PC) |
 | POST | `/api/telares` | `{codigo, nombre?}` | Crea un telar nuevo |
 | POST | `/api/telares/:id/asignar-patron` | `{patron_id, reiniciar?}` | Asigna patrón y abre una producción nueva en la fila 0. Si el telar **ya tiene abierta una producción de ese mismo dibujo**, la **reanuda** (`200`, `reanudado: true`) en vez de reiniciarla, salvo que se mande `reiniciar: true`. Si tenía una de otro dibujo, la cierra como `detenido_manual` |
 | POST | `/api/telares/:id/detener` | `{pasadas_totales?, alertas_disparadas?}` | Cierra la producción en curso (409 si no había ninguna). Si no se manda `pasadas_totales`, conserva el contador ya acumulado por `/avanzar` |
-| POST | `/api/telares/:id/pausar` |, | Pausa sin cerrar nada: deja la producción abierta y el dibujo asignado, y el telar pasa a `pausado` (el ESP32 pulsa Pausa). Si no hay ninguna producción abierta (telar apagado, o arrancado a mano con Marcha sin trabajo) queda `apagado`: no hay nada que retomar |
-| POST | `/api/telares/:id/reanudar` |, | Vuelve a `tejiendo` en la misma posición. **409** si no hay una producción en curso: en ese caso corresponde asignar el dibujo |
+| POST | `/api/telares/:id/pausar` | sin cuerpo | Pausa sin cerrar nada: deja la producción abierta y el dibujo asignado, y el telar pasa a `pausado` (el ESP32 pulsa Pausa). Si no hay ninguna producción abierta (telar apagado, o arrancado a mano con Marcha sin trabajo) queda `apagado`: no hay nada que retomar |
+| POST | `/api/telares/:id/reanudar` | sin cuerpo | Vuelve a `tejiendo` en la misma posición. **409** si no hay una producción en curso: en ese caso corresponde asignar el dibujo |
 | POST | `/api/telares/:id/avanzar` | `{pasos?, cliente?}` (`pasos` de 1 a 10000, default 1) | Avanza N pasadas **por reloj** (lo llama la web en cada paso de su animación; **es una estimación**). Cada fila se teje tantas pasadas como diga `repeticiones_por_fila`; al terminar el dibujo vuelve a la fila 0 (suma a `vueltas_completadas`). Si el nodo del Nivel 2 está conectado, o la producción ya tiene pasadas medidas por el sensor, responde **409 `SENSOR_ACTIVO`** y no toca nada: la posición y el conteo los lleva el sensor. `cliente` identifica la pestaña: si otra pestaña avanzó ese telar hace menos de 1,5 s responde **409 `OTRO_CONDUCTOR`** y la web pasa a solo mostrar la posición (así dos pestañas abiertas no cuentan el doble). Si el telar no está `tejiendo` responde **409 `TELAR_NO_TEJIENDO`** (con `estado`, `motivo_pausa` y la posición) y, sin trabajo abierto, **409 `SIN_TRABAJO`**: la web deja de avanzar |
 | POST | `/api/telares/:id/retroceder` | `{pasos?}` (de 1 a 10000, default 1) | Espejo exacto de `/avanzar`: deshace N pasadas (si la fila tiene repeticiones, primero descuenta las de esa fila). Desde la fila 0 vuelve a la última (el dibujo es un lazo; `al_inicio: true`). Descuenta la pasada del conteo |
-| POST | `/api/telares/:id/retroceder-fisico` |, | Pulsa el relé del botón **físico** Retroceder del telar (mueve la máquina de verdad). No confundir con `/retroceder`, que solo mueve el cursor del patrón en la web. Incrementa `retroceder_seq` (orden para el Nivel 1: el ESP32 detecta el cambio al sondear y da el pulso) y `retrocesos_contados` (hecho, que lee el Nivel 2) |
+| POST | `/api/telares/:id/retroceder-fisico` | sin cuerpo | Pulsa el relé del botón **físico** Retroceder del telar (mueve la máquina de verdad). No confundir con `/retroceder`, que solo mueve el cursor del patrón en la web. Incrementa `retroceder_seq` (orden para el Nivel 1: el ESP32 detecta el cambio al sondear y da el pulso) y `retrocesos_contados` (hecho, que lee el Nivel 2) |
 | POST | `/api/telares/:id/evento-fisico` | `{tipo: 'marcha'\|'pausa'\|'retroceder'\|'sin_senal'\|'reinicio'}` | **Solo con clave de dispositivo.** Lo llama el ESP32 cuando **sensa** (no acciona) algo en la máquina. Actualiza el estado real: `marcha`→`tejiendo`, `pausa`→`pausado` (o `apagado` si no hay trabajo abierto, igual que `/pausar`), `retroceder`→ una pasada atrás (si el sensor del Nivel 2 lleva la posición, solo suma a `retrocesos_contados`: el nodo descuenta la pasada y la informa en su próximo reporte; moverla también acá la restaría dos veces), `sin_senal` (el sensor dejó de recibir pulsos con el telar en marcha)→`pausado` con `motivo_pausa='sin_senal'` y un registro en el log de errores. `reinicio` (el ESP32 arrancó en frío: corte de luz o traslado)→ si figuraba `tejiendo`, pasa a `pausado` con `motivo_pausa='reinicio'` **conservando producción, dibujo y posición**, y marca la posición como incierta. Sin esto, alguien podía arrancar el telar a mano y la web seguía mostrando "detenido" |
 | POST | `/api/telares/:id/confirmar-posicion` | `{visto_hasta?}` | El operario ya revisó el telar y confirma la posición: limpia `posicion_incierta`. Si se manda `visto_hasta` (timestamp del evento que la web mostró) y llegó otro evento después, responde **409** en vez de tapar el aviso nuevo |
 | POST | `/api/telares/:id/validar-conteo` | `{confirmo: true}` | El operario da por bueno el conteo del sensor tras compararlo con el contador mecánico del telar |
-| GET | `/api/telares/:id/historial` |, | Historial de ese telar (`limit`, `offset`) |
+| GET | `/api/telares/:id/historial` | sin cuerpo | Historial de ese telar (`limit`, `offset`) |
 
 ### Nivel 2 (los usa el firmware con el sensor)
 | Método | Ruta | Descripción |
@@ -191,6 +192,9 @@ src/
 │   ├── migracion_017_filas_hasta_300.sql  Migración: el máximo de filas de un dibujo pasa de 100 a 300.
 │   ├── migracion_018_senal_nivel2.sql  Migración: solo actualiza la descripción de `ultimo_reporte_sensor`, que ahora también renueva la consulta periódica del nodo del Nivel 2.
 │   ├── migracion_019_dibujos_de_invitado.sql  Migración: marca los dibujos creados por un invitado (`creado_por_invitado`): el invitado solo puede cambiar o borrar esos. Índice para buscar el usuario sin distinguir mayúsculas.
+│   ├── migracion_020_hilado.sql  Migración: hilado del dibujo (`hilado_peso_kg`, `hilado_metros_max`, `hilado_pasadas_base`) para la ficha y el PDF.
+│   ├── migracion_021_secuencias_por_fila.sql  Migración: primera versión de los intercalados (el orden dentro de una fila); la reemplaza la 022.
+│   ├── migracion_022_grupos_intercalados.sql  Migración: intercalados por grupos de filas (`grupos_intercalados`) y borra `secuencias_por_fila`.
 │   ├── migrator.js                               Aplica cada migración UNA vez (tabla migraciones_aplicadas)
 │   └── migrate.js                                Corre las migraciones pendientes (npm run migrate)
 ├── scripts/
@@ -213,7 +217,7 @@ src/
   columnas NO se recorren una por una, son simultáneas dentro de la misma
   pasada. Lo que avanza es la fila.
 - La repetición es **de fila entera** y va en `repeticiones_por_fila` (migración 014): un
-  número por fila, cuántas pasadas seguidas se teje esa combinación antes de pasar a la
+  número por fila, cuántas pasadas seguidas se teje esa fila antes de pasar a la
   siguiente. Las celdas de `matriz_pasadas` dicen si la bobina se activa (mayor que cero) o
   no; la web guarda solo ceros y unos.
 - `historial_produccion.fila_actual` y `repeticion_en_fila` guardan la posición de la

@@ -1,5 +1,5 @@
 import assert from 'assert'; import { boot } from './frontend.harness.mjs';
-const MAT = [[1,0,1,0],[0,1,0,1],[1,1,0,0],[0,0,1,1]];
+const MAT = [[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]];
 const patron = (id,n)=>({ id, nombre:n, filas:4, columnas:4, matriz_pasadas:MAT, colores_filas:[null,null,null,null], creado_at:'2026-09-01', modificado_at:'2026-09-01' });
 let telar; const posts = [];
 const routes = (m,u,b) => {
@@ -294,5 +294,56 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   for (let i = 0; i < 20; i++) f.run("logError('Error al avanzar', 'falla', 'AVANZAR')");
   await settle();
   assert.equal(posts.filter(p=>p.includes('/api/errores')).length, 1, posts.join('|')); }
+
+// ── editor: una sola bobina por fila, pasadas de cada fila e intercalar
+{ f = boot(routes); await f.run('iniciarApp()'); f.run("newDraw()"); await settle();
+  f.run('nR=3; nC=4; grid=[[0,0,0,0],[0,0,0,0],[0,0,0,0]]; repFilas=[1,1,1]; rowColors=[null,null,null]; editId=null; trabajoEnCursoPatronId=null; isPlaying=false');
+  f.run('tapCell(0,1)'); f.run('tapCell(0,3)');
+  assert.deepEqual(f.run('grid[0]'), [0,0,0,1], 'al marcar otra bobina de la fila, la anterior se apaga');
+  f.run('tapCell(0,3)'); assert.deepEqual(f.run('grid[0]'), [0,0,0,0], 'tocarla de nuevo la desmarca');
+  f.run('grid[1]=[1,1,0,0]'); assert.deepEqual(f.run('filasConVariasBobinas()'), [1]);
+  // pasadas: un valor inválido conserva el anterior; uno válido se guarda sin redibujar la grilla
+  f.run("setRepeticion(2, '25')"); assert.equal(f.run('repFilas[2]'), 25);
+  f.run("setRepeticion(2, '1.000')"); assert.equal(f.run('repFilas[2]'), 25);
+  f.run("setRepeticion(2, '99999')"); assert.equal(f.run('repFilas[2]'), 9999);
+  // intercalados: filas 1-4 (B1, B3, B4, B2) 120 pasadas; fila 5 (B4) 140; filas 6-7 (B2, B1) 140
+  const val = (id, v) => f.run(`document.getElementById('${id}').value=${JSON.stringify(v)}`);
+  f.run('nR=7; nC=4; grid=[[1,0,0,0],[0,0,1,0],[0,0,0,1],[0,1,0,0],[0,0,0,1],[0,1,0,0],[1,0,0,0]]; repFilas=[1,1,1,1,140,1,1]; rowColors=Array(7).fill(null); grupos=[]; curRow=-1');
+  f.run('abrirIntercalar()'); val('int-desde','1'); val('int-hasta','4'); val('int-total','120'); f.run('aplicarIntercalar()');
+  f.run('abrirIntercalar(-1, 5)'); assert.equal(f.run("document.getElementById('int-desde').value"), '6');
+  val('int-hasta','7'); val('int-total','140'); f.run('aplicarIntercalar()');
+  assert.deepEqual(f.run('grupos'), [{desde:0,hasta:3,pasadas:120},{desde:5,hasta:6,pasadas:140}]);
+  assert.equal(f.run('totalPasadasDibujo()'), 400);
+  assert.deepEqual(f.run('Array.from({length:7},(_,r)=>largoFila(r))'), [120,0,0,0,140,140,0]);
+  assert.deepEqual(f.run('filasConVariasBobinas()'), [], 'cada fila sigue con una sola bobina');
+  const api = f.run("localToApi('Tramos', grid, rowColors)");
+  assert.deepEqual(api.grupos_intercalados, [{desde:0,hasta:3,pasadas:120},{desde:5,hasta:6,pasadas:140}]);
+  // se superponen: no se acepta
+  f.run('abrirIntercalar()'); val('int-desde','3'); val('int-hasta','6'); val('int-total','10');
+  assert.match(f.run('leerIntercalar().error'), /otro intercalado/);
+  // la fila que se teje: en un intercalado, la que toca según las pasadas del grupo
+  f.run('curRow=0; repRestantes=120'); assert.equal(f.run('filaVisible()'), 0);
+  f.run('repRestantes=118'); assert.equal(f.run('filaVisible()'), 2);
+  f.run('repRestantes=1'); assert.equal(f.run('filaVisible()'), 3);
+  // cambiar y quitar un intercalado
+  f.run('abrirIntercalar(5)'); assert.equal(f.run("document.getElementById('int-total').value"), '140');
+  val('int-total','100'); f.run('aplicarIntercalar()'); assert.equal(f.run('grupos[1].pasadas'), 100);
+  f.run('abrirIntercalar(5)'); f.run('quitarIntercalar()'); assert.equal(f.run('grupos.length'), 1);
+  // el ciclo de un grupo no puede pasar de 32 pasadas
+  f.run("setRepeticion(0, '40')"); assert.equal(f.run('repFilas[0]'), 1);
+  // al achicar el dibujo, un intercalado que queda con una sola fila se quita
+  f.run('mkGrid(1, 4, true)'); assert.equal(f.run('grupos.length'), 0);
+  assert.equal(f.run('repRestantes'), 1, 'la primera fila ya no empieza un intercalado: mide sus pasadas');
+  // desde la última fila, el diálogo propone las dos últimas (con una sola no hay intercalado)
+  f.run('mkGrid(4, 4, true); grupos=[]'); f.run('abrirIntercalar(-1, 3)');
+  assert.equal(f.run("document.getElementById('int-desde').value"), '3');
+  assert.equal(f.run("document.getElementById('int-hasta').value"), '4');
+  // errores del diálogo
+  f.run('nR=3'); f.run('abrirIntercalar()'); val('int-desde','2'); val('int-hasta','2');
+  assert.match(f.run('leerIntercalar().error'), /dos filas/);
+  val('int-hasta','3'); val('int-total','10000'); assert.match(f.run('leerIntercalar().error'), /9999/);
+  // cantidades con punto de miles
+  assert.equal(f.run("leerCantidad('1.000')"), 1000); assert.equal(f.run("leerCantidad('52,5')"), 52.5);
+  assert.equal(f.run("leerCantidad('1.250,5')"), 1250.5); assert.equal(f.run("leerCantidad('52.5')"), 52.5); }
 
 console.log('frontend OK');

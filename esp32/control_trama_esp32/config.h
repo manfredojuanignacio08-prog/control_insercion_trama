@@ -36,8 +36,8 @@
 // la copia local antes de subir el programa y NO se suben con valores reales (igual que
 // DEVICE_KEY). La clave real de la fábrica estuvo escrita acá y quedó en el historial del
 // repositorio: conviene cambiarla en el router.
-#define WIFI_SSID          "Claro4347"
-#define WIFI_PASSWORD      "11335577"
+#define WIFI_SSID          "NOMBRE_DE_LA_RED"
+#define WIFI_PASSWORD      "CLAVE_DE_LA_RED"
 // Red de respaldo (punto de acceso del celular). Vacía = se reintenta la principal.
 #define WIFI_SSID_ALT      ""
 #define WIFI_PASSWORD_ALT  ""
@@ -56,7 +56,7 @@
 
 // Clave del dispositivo: va en el header X-Device-Key de cada pedido. Tiene que ser IGUAL a
 // ESP32_DEVICE_KEY del backend. Si no coincide, el monitor serie muestra "401".
-#define DEVICE_KEY         "cc1ce04d-f582-4150-be55-dc06a0d1faf33e97df76-6c70-407d-963b-518b3a931f7cY"
+#define DEVICE_KEY         "CAMBIAR_POR_LA_CLAVE_DE_ESP32_DEVICE_KEY"
 
 // Verificación del certificado HTTPS (opcional). Sin esto el nodo cifra el tráfico pero no
 // comprueba con quién habla. Para verificarlo, pegar el certificado raíz (PEM) y descomentar:
@@ -143,19 +143,23 @@ static const int  N_CANALES = 4;
 static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 
 // Sentido de la señal. El relé LCA110 conduce cuando su LED recibe corriente,
-// o sea con el pin en alto. Queda como constante porque, según cómo esté
-// cableado el lector óptico, puede que haya que invertir el criterio:
-//   - Si el relé va EN PARALELO con el lector (el agujero cierra el circuito),
-//     activar el canal significa cerrar el relé.
-//   - Si va EN SERIE (el agujero abre el circuito), activarlo significa abrirlo.
-// A_CONFIRMAR: depende de la medición sobre el lector.
+// o sea con el pin en alto.
+// CONEXIÓN FINAL (la más segura, diagramas/hardware/conexion_final_rele.png): el relé en lugar del
+// lector, caso 2A (con agujero el lector da la señal +V que activa la bobina), con una resistencia
+// de protección en serie y 10 kΩ ½ W de la señal al −. Va con true, como viene: relé cerrado = agujero.
+// Otros casos, solo si la medición diera otra cosa (documentacion/PASO_A_PASO_RELES_LCA110.md):
+//   - Variante 2B (con agujero la señal va a 0 V): también true.
+//   - Caso 1 (la tensión la pone la plaqueta): true si el agujero une los 2 bornes de señal y
+//     false si los separa.
+// Las conexiones en paralelo o en serie con el lector, que se evaluaron primero, quedan descartadas.
+// A_CONFIRMAR: la medición sobre el lector (documentacion/PASO_A_PASO_RELES_LCA110.md) confirma el caso.
 #define CANAL_ACTIVO_EN_ALTO   true
 
-// Cómo se aplica la selección: en CADA pasada, los canales de la fila se activan y se
-// sueltan antes de la pasada siguiente, como el papel, que entre dos agujeros seguidos de la
-// misma columna tiene papel. Cuánto dura lo define PORCENTAJE_SELECCION (más abajo). El lector
-// tiene que ver siempre cinta sin agujero (una cinta sin perforar, o el lector tapado): el relé
-// ocupa el lugar de los agujeros. Sin cinta, el lector vería luz todo el tiempo.
+// Cómo se aplica la selección: en cada pasada se activa el canal de su bobina. Si la pasada
+// siguiente es de la misma bobina, sigue activo; cuando cambia, se suelta y se activa el nuevo.
+// Lo define PORCENTAJE_SELECCION (más abajo), que también permite soltarlo en cada pasada. Con la
+// conexión final el lector queda desconectado (sus cables, marcados y aislados en una bornera), así
+// que la cinta de papel ya no interviene: el dibujo lo decide el ESP32.
 
 // ---------------------------------------------- Sincronización con la máquina
 // El telar lee la selección en un instante concreto de su ciclo, cuando abre la
@@ -190,23 +194,27 @@ static const int DESPLAZAMIENTO_FILAS = 0;
 static const unsigned long RETARDO_APLICACION_US = 0;
 static_assert(RETARDO_APLICACION_US <= 50000UL, "RETARDO_APLICACION_US no puede pasar de 50 ms");
 
-// Qué parte de cada pasada queda activa la selección. Con la cinta de papel, entre dos
-// agujeros seguidos de la misma columna hay papel: la bobina se activa y se suelta en cada
-// pasada, aunque la combinación se repita. Una fila con 25 repeticiones son 25 activaciones
-// separadas, no una sola larga.
+// Qué parte de cada pasada queda activa la selección.
 //
-// Se expresa como porcentaje de lo que duró la pasada anterior, que el sensor mide: así se
-// adapta sola a la velocidad, como el agujero del papel, que queda más tiempo frente al lector
-// cuando la máquina va lenta. A 300 pasadas por minuto, el 50 % son 100 ms. En la primera
-// pasada, y después de una parada, todavía no hay una anterior con qué medir: se usa
-// DURACION_SELECCION_INICIAL_MS.
+// 0 (el valor de hoy): la selección se mantiene hasta el pulso siguiente. En una racha de
+//   pasadas de la misma bobina (por ejemplo 120 seguidas) el relé no se suelta nunca: queda
+//   activo toda la racha y cambia recién cuando cambia la bobina. Es lo que se ve en el telar
+//   (dato de la planta, 10/2026): tejiendo muchas pasadas de una bobina, su relé se mantiene
+//   activo y la aguja va y vuelve igual en cada pasada (el movimiento es mecánico, no lo da la
+//   señal). En un intercalado (1, 3, 4, 2...) cambia en cada pasada, porque cambia la bobina.
+// 1 a 90: el relé se suelta pasado ese porcentaje de cada pasada, aunque la bobina se repita,
+//   como el papel, que entre dos agujeros seguidos de la misma columna tiene papel. Se expresa
+//   como porcentaje de lo que duró la pasada anterior, que el sensor mide, así se adapta sola a
+//   la velocidad (a 300 pasadas por minuto, el 50 % son 100 ms). En la primera pasada, y después
+//   de una parada, se usa DURACION_SELECCION_INICIAL_MS.
 //
-// Con 0, la selección se mantiene hasta el pulso siguiente (no se suelta nunca entre pasadas):
-// solo si la medición mostrara que la máquina lo necesita así.
-// A_CONFIRMAR: se estima con una regla sobre la cinta de papel (diámetro del agujero dividido
-// por la distancia entre los centros de dos agujeros seguidos) y se confirma tejiendo una
-// prueba, o con un osciloscopio si hay uno.
-static const unsigned long PORCENTAJE_SELECCION = 50;
+// A_CONFIRMAR con la primera prueba en la máquina: si con 0 alguna pasada no toma la selección
+// (la plaqueta necesitara ver el papel entre pasadas), probar con 50.
+#ifndef PORCENTAJE_SELECCION_PRUEBA
+static const unsigned long PORCENTAJE_SELECCION = 0;
+#else
+static const unsigned long PORCENTAJE_SELECCION = PORCENTAJE_SELECCION_PRUEBA;   // solo en las pruebas en la PC
+#endif
 static const unsigned long DURACION_SELECCION_INICIAL_MS = 100;
 static_assert(PORCENTAJE_SELECCION <= 90UL, "PORCENTAJE_SELECCION tiene que dejar un hueco entre pasadas");
 static_assert(DURACION_SELECCION_INICIAL_MS <= 180UL, "DURACION_SELECCION_INICIAL_MS tiene que ser menor que una pasada (200 ms)");

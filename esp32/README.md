@@ -130,6 +130,8 @@ perforada, que dicta el dibujo pasada por pasada).
 - **Nivel 2, Dictar el dibujo (en desarrollo):** contar las pasadas con un sensor inductivo
   y reemplazar la cinta de papel perforada del dobby con cuatro relés LCA110 sobre los lectores
   ópticos. Lo hace el mismo firmware, con `NIVEL2_INSTALADO` en `true`.
+  La medición de los lectores y la conexión de los relés, paso a paso, están en
+  `documentacion/PASO_A_PASO_RELES_LCA110.md`.
 
 El detalle completo de esta distinción -clave para entender el alcance del
 proyecto y para la presentación- está en **`documentacion/NIVELES_DE_CONTROL.md`**.

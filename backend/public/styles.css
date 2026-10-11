@@ -14,6 +14,10 @@
   --gray-md:  #3F4B5C;
   --gray-lt:  #5F6976;   /* 4,7:1 o más sobre todas las superficies claras (antes 4,06:1, debajo del mínimo de 4,5) */
   --on-rose:  #F0F4F8;
+  --on-amber: #FFFFFF;   /* texto sobre el ámbar (botón del PDF) */
+  /* Intercalados (llave y número de fila). Variable propia: cada fila redefine --acc y --rose
+     con el color de su hilo, y un número de fila en hilo crudo o azul oscuro no se leía. */
+  --int-color: #3D6B96;
   --green:    #2E6E4A;
   --amber:    #9C5C0A;
   --red:      #8B1F1F;
@@ -41,6 +45,8 @@
   /* En oscuro el acento es celeste: el texto encima tiene que ser oscuro. Con el claro
      de antes, "Aplicar" y "Nuevo" quedaban en 1,9:1, casi ilegibles. */
   --on-rose: #0F2440;
+  --on-amber: #2A1D08;   /* el ámbar del modo oscuro es claro: texto oscuro */
+  --int-color: #8FB8DC;
   --bg:    #131A24;
   --srf:   #1F2937;
   --srf2:  #2C3846;
@@ -78,6 +84,8 @@ body{
 }
 button{font-family:inherit;cursor:pointer}
 input{font-family:inherit;outline:none}
+/* El foco se marca con un borde propio: sin esto, con teclado no se veía en qué campo se escribía. */
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc-md);outline-offset:1px}
 input[type=number]{-moz-appearance:textfield}
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button{-webkit-appearance:none}
@@ -141,7 +149,8 @@ font-family:var(--font-mono);}
    ██ SCREEN: INICIO, HERO
 ───────────────────────────────────────────── */
 .hero{
-  background:linear-gradient(150deg, var(--rose) 0%, #3D6B96 55%, #7FA8C9 100%);
+  /* Termina en un azul medio (antes un celeste claro): el texto blanco de abajo quedaba en 2,4:1. */
+  background:linear-gradient(150deg, var(--rose) 0%, #2E5680 55%, #3D6B96 100%);
   padding:36px 24px 32px;
   display:flex;flex-direction:column;align-items:center;gap:0;
   position:relative;overflow:hidden;
@@ -183,7 +192,7 @@ font-family:var(--font-mono);}
   margin-bottom:8px;
 }
 .hero-sub{
-  font-size:13px;color:rgba(255,255,255,.72);
+  font-size:13px;color:rgba(255,255,255,.9);
   text-align:center;line-height:1.55;font-weight:400;
 }
 
@@ -818,6 +827,15 @@ font-family:var(--font-mono);}
 /* ---------- Ficha del dibujo: el botón sigue el estilo de los de guardado ---------- */
 .ficha-guardar{flex:none;padding:9px 18px}
 
+/* ---------- Ficha del dibujo: hilado ---------- */
+.ficha-hilado{margin-top:16px;border-top:1px solid var(--bd);padding-top:14px}
+.ficha-fila-2{margin-bottom:8px}
+.ficha-campo{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.ficha-campo span{font-size:11.5px;color:var(--tx2)}
+.ficha-campo input{width:100%;padding:9px 11px;border:1px solid var(--bd);
+  border-radius:9px;background:var(--bg);color:var(--tx);font-size:16px}
+#hil-res{line-height:1.5}
+
 /* ---------- Selector del color del hilo ----------
    El control nativo del navegador dibuja un marco claro alrededor de la muestra.
    En modo claro pasaba desapercibido, pero en modo oscuro quedaba un recuadro blanco.
@@ -851,6 +869,8 @@ font-family:var(--font-mono);}
   border:1px solid var(--bd);border-radius:var(--r-sm,6px);background:var(--bg);
   color:var(--tx);font-family:var(--font-mono);font-size:12px}
 .g-rep:focus{outline:2px solid var(--acc);outline-offset:1px}
+/* En el celular, con letra de menos de 16 px el navegador agranda la página al tocar la casilla. */
+@media (pointer:coarse){.g-rep{font-size:16px;padding:3px 2px}}
 .g-rep-h{width:54px;flex:none;margin-left:6px;text-align:center;position:sticky;right:0;z-index:2;background:var(--bg)}
 
 /* Aviso informativo: sin botón de cancelar, el botón no va en rojo. */
@@ -873,3 +893,31 @@ font-family:var(--font-mono);}
 .confirm-p{white-space:pre-line}
 .confirm-p.con-codigo::first-line{font-family:var(--font-mono);font-size:20px;font-weight:700;
   letter-spacing:.06em;color:var(--tx)}
+
+/* ---------- Intercalar bobinas ---------- */
+.int-lbl{display:block;font-weight:600;margin:10px 0 6px;color:var(--tx);font-size:13px}
+.int-in{width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--bd);background:var(--srf);color:var(--tx);font-family:inherit;font-size:16px}
+.int-prev{margin-top:12px;padding:10px 12px;border-radius:var(--r-md);background:var(--srf2);color:var(--tx);font-size:13px;line-height:1.45}
+.int-prev.error{background:transparent;border:1px solid var(--rose-md);color:var(--tx)}
+#int-ok:disabled{opacity:.5;cursor:not-allowed}
+
+/* ---------- Tramos intercalados ---------- */
+/* La fila muestra en cada bobina su lugar en la secuencia (1, 2, 3...). */
+.grid-row.intercalada .g-row-n{color:var(--int-color);font-weight:900;text-decoration:underline dotted;text-underline-offset:3px}
+.g-cell.orden{font-size:11px;letter-spacing:-.02em}
+
+/* ---------- Intercalados: apartado al costado de la grilla ----------
+   Con --int-color: la fila redefine --acc con el color de su hilo, y la llave cambiaba de color. */
+.g-int,.g-int-h{width:28px;flex:none;position:sticky;right:0;z-index:2;background:var(--bg)}
+.g-int{height:var(--cel,42px);border:none;padding:0;cursor:pointer;position:sticky;display:flex;align-items:center;justify-content:center;color:var(--int-color)}
+.g-int:not(.en)::after{content:"+";opacity:.25;font-weight:700;font-size:13px}
+.g-int:not(.en):hover::after,.g-int:not(.en):focus-visible::after{opacity:.8}
+/* llave: una línea que une las filas del grupo, con remates arriba y abajo */
+.g-int.en::before{content:"";position:absolute;left:8px;top:-2px;bottom:-2px;border-right:3px solid var(--int-color);box-sizing:content-box;width:0}
+.g-int.en.ini::before{top:6px;border-top:3px solid var(--int-color);width:6px;left:2px;border-top-right-radius:4px}
+.g-int.en.fin::before{bottom:6px;border-bottom:3px solid var(--int-color);width:6px;left:2px;border-bottom-right-radius:4px}
+.g-int.en span{position:relative;z-index:1;margin-left:12px;font-family:var(--font-mono);font-size:10px;font-weight:800;color:var(--int-color);background:var(--bg);writing-mode:vertical-rl;transform:rotate(180deg);line-height:1}
+.g-int-h{text-align:center}
+/* la casilla de pasadas queda al lado del apartado */
+.g-rep,.g-rep-h{right:28px}
+.int-filas{display:grid;grid-template-columns:1fr 1fr;gap:10px}

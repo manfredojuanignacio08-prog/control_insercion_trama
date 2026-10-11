@@ -23,9 +23,11 @@
 --   - Esquema multi-telar desde el día 1 (el piloto arranca con 1).
 --   - Usuarios con login por huella (WebAuthn): tablas usuarios,
 --     credenciales_biometricas, desafios_webauthn e invitaciones (más abajo).
---   - Una FILA es una combinación de bobinas: sus columnas se activan de forma
---     simultánea (cada celda vale 0 o 1). Cuántas pasadas seguidas se teje cada
---     fila lo dice repeticiones_por_fila (migración 014); sin ese dato, una.
+--   - Una FILA es un tramo de pasadas: lleva una bobina, porque en cada pasada entra una
+--     sola trama (cada celda vale 0 o 1; el servidor rechaza una fila con dos). Cuántas
+--     pasadas seguidas se teje cada fila lo dice repeticiones_por_fila (migración 014);
+--     sin ese dato, una. Varias filas seguidas pueden formar un grupo intercalado
+--     (grupos_intercalados, migración 022): se alternan en orden hasta completar sus pasadas.
 --   - fila_actual + repeticion_en_fila en historial_produccion: posición exacta de la
 --     producción en curso (la fila y cuántas pasadas de esa fila ya se tejieron), para
 --     soportar "retroceder una pasada" sin reconstruir nada. columna_actual y
@@ -44,7 +46,7 @@ CREATE TABLE IF NOT EXISTS patrones (
   nombre            TEXT NOT NULL UNIQUE,
   filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 300),
   columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 1 AND 8),
-  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por pasada-combinación): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
+  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por pasada, con una bobina como máximo): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
   matriz_ligamento  JSONB,            -- array de arrays binarios (0/1), derivado de matriz_pasadas si no se manda
   colores_filas     JSONB,            -- array de colores hex, uno por fila
   metadata          JSONB,            -- ej: {"tipo": "Tafetán"}
@@ -52,10 +54,18 @@ CREATE TABLE IF NOT EXISTS patrones (
   -- migración 014: cuántas pasadas seguidas se teje cada fila. Un elemento por
   -- fila; en NULL, una pasada por fila.
   repeticiones_por_fila INTEGER[],
+  -- migración 022: grupos de filas que se tejen intercalados, [{desde, hasta, pasadas}] con
+  -- índices de fila desde 0: sus filas se alternan en orden hasta completar las pasadas.
+  grupos_intercalados JSONB,
   -- migración 011: metros de tela que avanza el telar en una pasada, para este
   -- dibujo. Lo carga el operario; queda en NULL mientras no se conozca.
   metros_por_pasada NUMERIC(10, 6) CHECK (metros_por_pasada IS NULL OR (metros_por_pasada > 0 AND metros_por_pasada <= 1)),
   creado_por_invitado BOOLEAN NOT NULL DEFAULT false,  -- migración 019: lo creó un invitado (un invitado solo puede cambiar o borrar esos)
+  -- migración 020: hilado disponible (peso en kg y metros de tela que alcanza a tejer) y las
+  -- pasadas que ya tenía el dibujo cuando se cargó, para contar el consumo desde ahí.
+  hilado_peso_kg      NUMERIC(10, 3) CHECK (hilado_peso_kg IS NULL OR (hilado_peso_kg > 0 AND hilado_peso_kg <= 100000)),
+  hilado_metros_max   NUMERIC(12, 2) CHECK (hilado_metros_max IS NULL OR (hilado_metros_max > 0 AND hilado_metros_max <= 10000000)),
+  hilado_pasadas_base INTEGER CHECK (hilado_pasadas_base IS NULL OR hilado_pasadas_base >= 0),
   modificado_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -890,6 +900,78 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_usuario_lower ON usuarios (lower(usuario
 
 
 -- ============================================================
+-- migracion_020_hilado.sql
+-- ============================================================
+-- ============================================================
+-- 020 · Hilado del dibujo: peso y máximo de metros que alcanza a tejer.
+--
+-- El operario carga cuánto pesa el hilado disponible (kg) y cuántos metros de tela alcanza a
+-- tejer con él. Con los metros por pasada (migración 011) y el conteo de pasadas, la ficha
+-- y el PDF muestran cuánto hilado se usó, cuánto queda y cuántos metros faltan.
+--
+-- hilado_pasadas_base guarda las pasadas que ya tenía tejidas el dibujo cuando se cargó ese
+-- hilado: lo usado se cuenta desde ahí, no desde la primera vez que se tejió el dibujo. Se
+-- vuelve a tomar al cargar un hilado nuevo ("empezar de cero").
+ALTER TABLE patrones
+  ADD COLUMN IF NOT EXISTS hilado_peso_kg      NUMERIC(10, 3)
+    CHECK (hilado_peso_kg IS NULL OR (hilado_peso_kg > 0 AND hilado_peso_kg <= 100000)),
+  ADD COLUMN IF NOT EXISTS hilado_metros_max   NUMERIC(12, 2)
+    CHECK (hilado_metros_max IS NULL OR (hilado_metros_max > 0 AND hilado_metros_max <= 10000000)),
+  ADD COLUMN IF NOT EXISTS hilado_pasadas_base INTEGER
+    CHECK (hilado_pasadas_base IS NULL OR hilado_pasadas_base >= 0);
+
+COMMENT ON COLUMN patrones.hilado_peso_kg IS
+  'Peso del hilado disponible para este dibujo, en kg. NULL = sin cargar.';
+COMMENT ON COLUMN patrones.hilado_metros_max IS
+  'Metros de tela que alcanza a tejer ese hilado (el máximo a poder hacer). NULL = sin cargar.';
+COMMENT ON COLUMN patrones.hilado_pasadas_base IS
+  'Pasadas acumuladas del dibujo cuando se cargó el hilado: el consumo se cuenta desde acá.';
+
+
+-- ============================================================
+-- migracion_021_secuencias_por_fila.sql
+-- ============================================================
+-- ============================================================
+-- 021 · Filas intercaladas: una secuencia de bobinas por fila.
+--
+-- Un tramo como "una pasada de la bobina 1, una de la 3, una de la 4 y una de la 2, hasta
+-- completar 120 pasadas" es UNA fila: sus repeticiones son las 120 pasadas del tramo y la
+-- secuencia dice qué bobina va en cada una, en orden y volviendo a empezar (1, 3, 4, 2, 1, 3...).
+-- Antes había que dibujar 120 filas de una bobina cada una, con el límite de 300 filas.
+--
+-- Un elemento por fila: NULL (fila común, una sola bobina) o un array de 2 a 16 bobinas
+-- numeradas desde 1, por ejemplo [1, 3, 4, 2]. En matriz_pasadas esa fila marca las bobinas
+-- que aparecen en la secuencia. NULL en la columna entera = ninguna fila intercalada.
+ALTER TABLE patrones ADD COLUMN IF NOT EXISTS secuencias_por_fila JSONB;
+
+COMMENT ON COLUMN patrones.secuencias_por_fila IS
+  'Por fila: NULL o el orden de las bobinas (desde 1) que se alternan pasada por pasada en esa fila. Las repeticiones de la fila son el total de pasadas del tramo.';
+
+
+-- ============================================================
+-- migracion_022_grupos_intercalados.sql
+-- ============================================================
+-- ============================================================
+-- 022 · Intercalados por grupos de filas (reemplaza a la 021).
+--
+-- Cada fila lleva una sola bobina (una trama por pasada). Para alternar bobinas, varias filas
+-- seguidas forman un grupo que se teje intercalado: sus filas se recorren en orden, cada una
+-- tantas pasadas como sus repeticiones, y vuelven a empezar hasta completar las pasadas del
+-- grupo. Por ejemplo, las filas 1 a 4 (bobinas 1, 3, 4 y 2) durante 120 pasadas.
+--
+-- Formato: un array de {desde, hasta, pasadas}, con desde y hasta como índices de fila desde
+-- 0 (desde < hasta) y grupos que no se superponen. NULL = ningún intercalado.
+--
+-- La 021 guardaba el orden adentro de una sola fila (una fila con varias bobinas): se descartó
+-- porque una fila no puede llevar más de una bobina. Su columna se borra.
+ALTER TABLE patrones ADD COLUMN IF NOT EXISTS grupos_intercalados JSONB;
+ALTER TABLE patrones DROP COLUMN IF EXISTS secuencias_por_fila;
+
+COMMENT ON COLUMN patrones.grupos_intercalados IS
+  'Grupos de filas que se tejen intercalados: [{desde, hasta, pasadas}] con índices de fila desde 0. NULL = ninguno.';
+
+
+-- ============================================================
 -- Registro de migraciones
 -- ============================================================
 CREATE TABLE IF NOT EXISTS migraciones_aplicadas (
@@ -916,7 +998,10 @@ INSERT INTO migraciones_aplicadas (archivo) VALUES
   ('migracion_016_recovery_cifrado.sql'),
   ('migracion_017_filas_hasta_300.sql'),
   ('migracion_018_senal_nivel2.sql'),
-  ('migracion_019_dibujos_de_invitado.sql')
+  ('migracion_019_dibujos_de_invitado.sql'),
+  ('migracion_020_hilado.sql'),
+  ('migracion_021_secuencias_por_fila.sql'),
+  ('migracion_022_grupos_intercalados.sql')
 ON CONFLICT (archivo) DO NOTHING;
 
 -- ============================================================

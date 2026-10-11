@@ -415,7 +415,17 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
   cuadrícula. Si el nombre ya existe, el sistema lo avisa.
 - **Cuadrícula**: cada fila es una pasada y tocar una celda marca la bobina
   que se activa en ella; el número a la derecha de la fila (columna ×) dice
-  cuántas pasadas seguidas se teje esa fila.
+  cuántas pasadas seguidas se teje esa fila. Cada fila lleva una sola bobina
+  (una trama por pasada): al marcar otra, la anterior se desmarca. En el
+  celular, «Siguiente» en el teclado pasa a la casilla de la fila de abajo.
+- **Intercalar**: agrupa filas seguidas (cada una con su bobina) para que se
+  alternen pasada por pasada hasta completar las pasadas del intercalado: por
+  ejemplo las filas de las bobinas 1, 3, 4 y 2 durante 120 pasadas. Se arma con
+  el botón o con el «+» de la columna ⇄; una llave une las filas del grupo y
+  tocarla permite cambiarlo o quitarlo.
+- **Ficha del dibujo (engranaje)**: metros de tela por pasada y hilado
+  (peso y metros de tela que alcanza a tejer). Muestra el hilado usado y el
+  restante y los metros que faltan, contados desde que se cargó el hilado.
 - **Color por fila**: a cada fila se le puede asignar un color de hilo.
 - **Controles (⏸ ▶ ⏪ ⏹)**: mueven la grilla y al mismo tiempo dan la orden al
   telar (por ahora hay un solo telar, se usa automáticamente). ▶ asigna el
@@ -423,8 +433,10 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
   sin cerrar el trabajo; ⏪ pausa y retrocede una pasada la máquina real (pide
   confirmación); ⏹ termina el trabajo (cierra esa producción en el historial).
 - **Exportar ficha técnica**: descarga un **PDF real** con el nombre, las
-  dimensiones y la grilla coloreada, generado en el navegador con `jsPDF`
-  (no depende de internet).
+  dimensiones, la producción (metros tejidos, pasadas, metros que faltan y
+  horas de máquina), el hilado, la grilla coloreada y una vista previa de la
+  tela que sale de un telar dibujado arriba (con las bobinas de trama en sus
+  colores), generado en el navegador con `jsPDF` (no depende de internet).
 
 ### Biblioteca
 Lista todos los patrones guardados, con buscador por nombre. Permite cargar

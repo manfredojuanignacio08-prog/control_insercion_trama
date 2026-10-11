@@ -101,7 +101,7 @@ primera fila: ahí empezar de cero es lo correcto.
 ## Repeticiones por fila
 
 Sin repeticiones, una fila del dibujo sería una pasada. Pero en un tejido real es habitual que la misma
-combinación de bobinas se repita cien o mil veces seguidas antes de cambiar, y
+bobina se repita cien o mil veces seguidas antes de cambiar, y
 dibujar cien filas idénticas era impracticable.
 
 Por eso cada fila lleva un número de repeticiones: cuántas pasadas seguidas se teje
@@ -113,6 +113,18 @@ las repeticiones vuelve a la fila anterior, a su última pasada.
 
 Los dibujos guardados antes de esto no traen el campo; el backend manda un 1 por
 fila y se tejen igual que siempre.
+
+## Intercalados
+
+Varias filas seguidas pueden formar un grupo que se teje alternándose: por ejemplo las filas de
+las bobinas 1, 3, 4 y 2 durante 120 pasadas (1, 3, 4, 2, 1, 3...). El backend se lo manda al nodo
+ya resuelto: en `repeticiones_por_fila`, la primera fila del grupo trae el total del grupo y las
+demás 0; en `secuencias_por_fila`, la primera fila trae la bobina de cada pasada de una vuelta del
+grupo (0 = una fila sin bobina). Las filas de largo 0 se saltean al avanzar y al retroceder
+(`posicion_dibujo.h`), y en cada pulso se activa la bobina que sigue en el ciclo según cuántas
+pasadas del grupo ya se tejieron (`seleccionAplicarIntercalada`). Así la posición sigue siendo
+fila + pasada dentro de la fila, igual que en el backend, y el retroceso y la recuperación tras un
+reinicio funcionan sin nada aparte.
 
 ## Depende del Bloque C
 
@@ -127,9 +139,10 @@ aunque en la documentación aparezcan como bloques separados.
 
 ## Estado del Nivel 2
 
-**El Nivel 2 no está instalado en la máquina.** Su parte del código está escrita para poder
-revisarla y probarla en banco antes de que existan las mediciones que faltan. Hasta entonces la
-placa corre este mismo programa con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
+**El Nivel 2 no está instalado en la máquina.** El 10/10/2026 se probó todo en protoboard (el
+sensor de pasada y el relé LCA110 con el ESP32) y funcionó; ahora se está haciendo la plaqueta
+para probarlo de manera correcta en el telar. Hasta entonces la placa corre este mismo programa
+con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
 
 ## Qué falta antes de poder usarlo
 
@@ -138,9 +151,9 @@ placa corre este mismo programa con `NIVEL2_INSTALADO` en `false`: solo maneja l
 | Tensión continua que entrega el telar al sensor (12 a 14 V), con la máquina en marcha | Confirmar la resistencia del canal del sensor (1,2 kΩ; con 24 V sería de 2,2 kΩ) |
 | Relación de giro del eje elegido | Confirmado el 10/09/2026: una vuelta por pasada |
 | Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado |
-| Si el agujero del papel abre o cierra el circuito | Definir si el relé va en serie o en paralelo, y el valor de `CANAL_ACTIVO_EN_ALTO` |
+| Si con agujero la señal del lector va a +V (lo que dijeron en la planta: el lector da la señal) | Confirmar la conexión final (el relé en lugar del lector, caso 2A, `diagramas/hardware/conexion_final_rele.png`) y `CANAL_ACTIVO_EN_ALTO` en `true` |
 | Sincronización entre el pulso del sensor y la lectura del telar | Ajustar `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba |
-| Qué parte de cada pasada dura la señal del lector con la cinta | Ajustar `PORCENTAJE_SELECCION` (hoy 50 %): la selección se activa y se suelta en cada pasada, como el papel |
+| Si la plaqueta toma la selección mantenida | `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita y cambia cuando cambia. Si alguna pasada no la toma, probar un porcentaje (50 %): se suelta en cada pasada, como el papel |
 
 Hasta tener esos datos, los valores marcados como `A_CONFIRMAR` en `config.h`
 son estimaciones y no deben darse por buenos.
@@ -187,7 +200,7 @@ detenida.
 maneja un LCA110 en el GPIO 18 sin WiFi ni backend. Imita 25 pasadas con el canal activo y 25 sin
 activar, a 300 por minuto: el LED de la salida parpadea 5 veces por segundo durante 5 s y queda
 apagado 5 s. Por el monitor serie, `1` / `0` dejan el relé cerrado o abierto fijo para medir con el
-multímetro entre las patas 4 y 6, y `p` vuelve al patrón.
+multímetro entre las patas 4 y 6, y `p` vuelve al ciclo de 25 y 25.
 
 **Después, el firmware completo:**
 

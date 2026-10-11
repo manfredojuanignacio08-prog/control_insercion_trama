@@ -1,15 +1,10 @@
 /**
- * MODELO DE TEJIDO: una FILA es una COMBINACIÓN de bobinas, que se teje durante
- * tantas pasadas seguidas como indiquen sus repeticiones (ver más abajo).
- *
- * En cada pasada, la fila define QUÉ BOBINAS de selección se activan. Cada columna
- * es una bobina y la celda es binaria (se activa o no):
- *   [1, 0, 1, 0] → se activan las bobinas 1 y 3
- *   [0, 1, 1, 0] → se activan las bobinas 2 y 3
- *
- * Las columnas NO se recorren una por una: se envían juntas, de una sola vez,
- * porque son simultáneas dentro de la misma pasada. Lo que avanza, pasada a
- * pasada, es la FILA.
+ * MODELO DE TEJIDO: una FILA lleva UNA bobina (en cada pasada entra una sola trama) y
+ * se teje durante tantas pasadas seguidas como indiquen sus repeticiones (ver más abajo).
+ * Cada columna es una bobina y la celda es binaria:
+ *   [0, 0, 1, 0] → se activa la bobina 3
+ * Lo que avanza, pasada a pasada, es la FILA. Un grupo de filas intercaladas se alterna
+ * pasada por pasada (ver normalizarGrupos).
  *
  * REPETICIONES (migración 014): cada fila lleva cuántas pasadas seguidas se teje.
  * En un tejido real es habitual que la misma combinación se repita cien o mil
@@ -49,6 +44,50 @@ function normalizarRepeticiones(reps, filas) {
   return out;
 }
 
+/**
+ * INTERCALADOS (migración 022): un grupo de filas seguidas {desde, hasta, pasadas} se teje
+ * alternando sus filas en orden (cada una sus repeticiones) hasta completar `pasadas`. Por
+ * ejemplo las filas 0 a 3 (bobinas 1, 3, 4 y 2, una pasada cada una) durante 120 pasadas.
+ *
+ * Para la posición, el grupo es una sola "fila larga" que empieza en `desde`: su largo es
+ * `pasadas`, y las demás filas del grupo miden 0 (se saltean). Así la posición sigue siendo
+ * fila + pasadas ya tejidas (fila = primera del grupo) y toda la aritmética de abajo no cambia.
+ * Devuelve los grupos válidos, ordenados y sin superponerse.
+ */
+export function normalizarGrupos(grupos, filas) {
+  if (!Array.isArray(grupos)) return [];
+  const ok = grupos
+    .filter((g) => g && Number.isInteger(g.desde) && Number.isInteger(g.hasta) && Number.isInteger(g.pasadas)
+      && g.desde >= 0 && g.hasta > g.desde && g.hasta < filas && g.pasadas >= 1)
+    .sort((a, b) => a.desde - b.desde);
+  const out = [];
+  for (const g of ok) if (!out.length || g.desde > out[out.length - 1].hasta) out.push({ desde: g.desde, hasta: g.hasta, pasadas: g.pasadas });
+  return out;
+}
+
+/** Largo de cada fila para la posición: sus repeticiones, o en un intercalado el total en la primera y 0 en las demás. */
+export function largosDeFilas(reps, filas, grupos) {
+  const largos = normalizarRepeticiones(reps, filas);
+  for (const g of normalizarGrupos(grupos, filas)) {
+    largos[g.desde] = g.pasadas;
+    for (let i = g.desde + 1; i <= g.hasta; i++) largos[i] = 0;
+  }
+  return largos;
+}
+
+/**
+ * Qué fila del grupo se teje en la pasada `hechas` (0 la primera) de un intercalado: se recorre
+ * el ciclo de sus filas, cada una tantas veces como sus repeticiones, y vuelve a empezar.
+ */
+export function filaDeIntercalado(grupo, reps, hechas) {
+  const r = (i) => (Array.isArray(reps) && Number.isInteger(Number(reps[i])) && Number(reps[i]) >= 1 ? Number(reps[i]) : 1);
+  let ciclo = 0;
+  for (let i = grupo.desde; i <= grupo.hasta; i++) ciclo += r(i);
+  let o = ((Math.trunc(hechas) % ciclo) + ciclo) % ciclo;
+  for (let i = grupo.desde; i <= grupo.hasta; i++) { if (o < r(i)) return i; o -= r(i); }
+  return grupo.desde;
+}
+
 function contarFilas(matrizOFilas) {
   if (Array.isArray(matrizOFilas)) return matrizOFilas.length;
   const n = Number(matrizOFilas);
@@ -80,8 +119,10 @@ function desdeDesplazamiento(desplazamiento, reps) {
 // Fila y pasada dentro de la fila, normalizadas como siempre: la fila envuelta al rango
 // del dibujo y una pasada fuera de rango (dato incoherente) reencuadrada al principio.
 function posicionInicial(filaActual, repeticionEnFila, filas, reps) {
-  const fila = ((Number(filaActual) || 0) % filas + filas) % filas;
+  let fila = ((Number(filaActual) || 0) % filas + filas) % filas;
   let dentro = Math.max(0, Math.trunc(Number(repeticionEnFila) || 0));
+  // Una fila de largo 0 está dentro de un intercalado: la posición es la de su primera fila.
+  if (reps[fila] === 0) { while (fila > 0 && reps[fila] === 0) fila--; dentro = 0; }
   if (dentro >= reps[fila]) dentro = 0;
   return { fila, dentro };
 }
@@ -93,12 +134,12 @@ const pasosValidos = (pasos) => Math.max(0, Math.trunc(Number(pasos) || 0));
  * `matrizOFilas` puede ser la matriz del dibujo o directamente su cantidad de filas.
  * Devuelve la nueva fila y cuántas vueltas completas del dibujo se dieron.
  */
-export function avanzarPosicionTejido(filaActual, matrizOFilas, pasos = 1, repeticiones = null, repeticionEnFila = 0) {
+export function avanzarPosicionTejido(filaActual, matrizOFilas, pasos = 1, repeticiones = null, repeticionEnFila = 0, grupos = null) {
   const filas = contarFilas(matrizOFilas);
   if (filas === 0) {
     return { fila_actual: 0, columna_actual: 0, pasada_actual: 0, repeticion_en_fila: 0, vueltas_completadas: 0 };
   }
-  const reps = normalizarRepeticiones(repeticiones, filas);
+  const reps = largosDeFilas(repeticiones, filas, grupos);
   const porVuelta = reps.reduce((a, r) => a + r, 0);
   const { fila, dentro } = posicionInicial(filaActual, repeticionEnFila, filas, reps);
 
@@ -123,12 +164,12 @@ export function avanzarPosicionTejido(filaActual, matrizOFilas, pasos = 1, repet
  * `vueltas_deshechas` cuenta cuántas veces se cruzó el inicio hacia atrás, para
  * que quien llama pueda descontarlas de vueltas_completadas.
  */
-export function retrocederPosicionTejido(filaActual, matrizOFilas, pasos = 1, repeticiones = null, repeticionEnFila = 0) {
+export function retrocederPosicionTejido(filaActual, matrizOFilas, pasos = 1, repeticiones = null, repeticionEnFila = 0, grupos = null) {
   const filas = contarFilas(matrizOFilas);
   if (filas === 0) {
     return { fila_actual: 0, columna_actual: 0, pasada_actual: 0, repeticion_en_fila: 0, vueltas_deshechas: 0, al_inicio: false };
   }
-  const reps = normalizarRepeticiones(repeticiones, filas);
+  const reps = largosDeFilas(repeticiones, filas, grupos);
   const porVuelta = reps.reduce((a, r) => a + r, 0);
   const { fila, dentro } = posicionInicial(filaActual, repeticionEnFila, filas, reps);
 

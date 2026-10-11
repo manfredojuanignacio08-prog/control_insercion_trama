@@ -33,6 +33,34 @@ int main() {
       casos++;
     }
   }
+  // Con intercalados: filas de largo 0 (dentro de un grupo) se saltean, igual que en el backend.
+  for (int t = 0; t < 20000; t++) {
+    const int filas = 2 + rand() % 7;
+    int reps[9]; long porVuelta = 0;
+    for (int i = 0; i < filas; i++) { reps[i] = (rand() % 3 == 0) ? 0 : 1 + rand() % 5; porVuelta += reps[i]; }
+    if (porVuelta == 0) { reps[0] = 3; porVuelta = 3; }
+    int fila = rand() % filas;
+    while (reps[fila] == 0) fila = (fila + 1) % filas;
+    int restantes = 1 + rand() % reps[fila];
+    long esperado = desplazamiento(fila, restantes, reps);
+    for (int k = 0; k < 60; k++) {
+      if (rand() % 3) { posicionAdelante(fila, restantes, reps, filas); esperado = (esperado + 1) % porVuelta; }
+      else            { posicionAtras(fila, restantes, reps, filas);    esperado = (esperado - 1 + porVuelta) % porVuelta; }
+      assert(reps[fila] > 0);
+      assert(restantes >= 1 && restantes <= reps[fila]);
+      assert(desplazamiento(fila, restantes, reps) == esperado);
+      casos++;
+    }
+  }
+  // El ejemplo del telar: filas 0-3 intercaladas 120 pasadas, la 4 con 140, filas 5-6 intercaladas 140
+  { int reps[7] = { 120, 0, 0, 0, 140, 140, 0 }; int fila = 0, restantes = 120;
+    for (int i = 0; i < 120; i++) posicionAdelante(fila, restantes, reps, 7);
+    assert(fila == 4 && restantes == 140);
+    for (int i = 0; i < 280; i++) posicionAdelante(fila, restantes, reps, 7);
+    assert(fila == 0 && restantes == 120);
+    posicionAtras(fila, restantes, reps, 7);
+    assert(fila == 5 && restantes == 1); }
+
   // Ida y vuelta: n adelante y n atrás vuelven al mismo lugar
   int reps[3] = { 4, 1, 3 }; int fila = 2, restantes = 2;
   for (int i = 0; i < 37; i++) posicionAdelante(fila, restantes, reps, 3);
