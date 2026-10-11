@@ -109,7 +109,7 @@
 <text x="1164" y="630" font-size="12" font-weight="bold" fill="#2E6E4A" text-anchor="end">agujero = bornes unidos → true · agujero = bornes separados → false</text>
 <rect x="16" y="686" width="1168" height="384" rx="10" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
 <text x="36" y="714" font-size="14" font-weight="bold" fill="#1E3A5F" text-anchor="start" font-family="Questrial, IBM Plex Sans, sans-serif">CASO 2A · El lector pone la tensión y el agujero es +V: el relé va entre + y la señal</text>
-<text x="36" y="732" font-size="10" font-weight="normal" fill="#6B7684" text-anchor="start">Se usa la alimentación del lector. Una resistencia de 10 kΩ deja la señal en 0 V (papel) cuando el relé está abierto.</text>
+<text x="36" y="732" font-size="10" font-weight="normal" fill="#6B7684" text-anchor="start">Se usa la alimentación del lector. Una resistencia de 10 kΩ deja la señal en 0 V (papel) con el relé abierto, y la R prot. (220 Ω 1 W hasta 15 V, 470 Ω 2 W de 15 a 30 V) limita la corriente.</text>
 <rect x="30" y="748" width="506" height="250" rx="8" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.4" stroke-dasharray="6 4"/>
 <text x="283" y="766" font-size="10" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LADO ESP32 (igual en los tres casos)</text>
 <rect x="48" y="796" width="86" height="92" rx="6" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1"/>
@@ -156,8 +156,13 @@
 <text x="1018" y="960" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">− (alim. del lector)</text>
 <rect x="860" y="774" width="120" height="26" rx="5" fill="#FFFFFF" stroke="#6B7684" stroke-width="1.2" stroke-dasharray="4 3"/>
 <text x="920" y="791" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">lector: desconectado</text>
-<polyline points="1010,816 620,816 620,826 520,826" fill="none" stroke="#B4423C" stroke-width="2.2" stroke-linejoin="round"/>
-<text x="740" y="810" font-size="9" font-weight="bold" fill="#B4423C" text-anchor="middle">+ alimentación → pata 4</text>
+<polyline points="1010,816 760,816" fill="none" stroke="#B4423C" stroke-width="2.2" stroke-linejoin="round"/>
+<line x1="640" y1="816" x2="670.0" y2="816" stroke="#B4423C" stroke-width="2.2"/>
+<rect x="670.0" y="806" width="60" height="20" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.6"/>
+<line x1="730.0" y1="816" x2="760" y2="816" stroke="#B4423C" stroke-width="2.2"/>
+<text x="700.0" y="820" font-size="8.5" font-weight="bold" fill="#B4423C" text-anchor="middle">R prot.</text>
+<polyline points="640,816 620,816 620,826 520,826" fill="none" stroke="#B4423C" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="890" y="810" font-size="9" font-weight="bold" fill="#B4423C" text-anchor="middle">+ alimentación → R prot. → pata 4</text>
 <polyline points="520,866 700,866 1010,866" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
 <text x="640" y="860" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 6 → señal</text>
 <circle cx="840" cy="866" r="3.8" fill="#1F2937"/>
@@ -179,7 +184,7 @@
 <text x="1164" y="1028" font-size="12" font-weight="bold" fill="#2E6E4A" text-anchor="end">relé cerrado = agujero → CANAL_ACTIVO_EN_ALTO true</text>
 <rect x="16" y="1084" width="1168" height="384" rx="10" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
 <text x="36" y="1112" font-size="14" font-weight="bold" fill="#1E3A5F" text-anchor="start" font-family="Questrial, IBM Plex Sans, sans-serif">CASO 2B · El lector pone la tensión y el agujero es 0 V: el relé va entre la señal y −</text>
-<text x="36" y="1130" font-size="10" font-weight="normal" fill="#6B7684" text-anchor="start">Se usa la alimentación del lector. Una resistencia de 10 kΩ deja la señal en +V (papel) cuando el relé está abierto.</text>
+<text x="36" y="1130" font-size="10" font-weight="normal" fill="#6B7684" text-anchor="start">Se usa la alimentación del lector. Una resistencia de 10 kΩ deja la señal en +V (papel) con el relé abierto, y la R prot. (220 Ω 1 W hasta 15 V, 470 Ω 2 W de 15 a 30 V) limita la corriente.</text>
 <rect x="30" y="1146" width="506" height="250" rx="8" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.4" stroke-dasharray="6 4"/>
 <text x="283" y="1164" font-size="10" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LADO ESP32 (igual en los tres casos)</text>
 <rect x="48" y="1194" width="86" height="92" rx="6" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1"/>
@@ -237,8 +242,13 @@
 <polyline points="840,1264 1010,1264" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
 <polyline points="840,1264 620,1264 620,1224 520,1224" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
 <text x="720" y="1258" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 → señal</text>
-<polyline points="520,1264 580,1264 580,1354 1010,1354" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
-<text x="760" y="1348" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → − alimentación</text>
+<polyline points="520,1264 580,1264 580,1354 640,1354" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
+<line x1="640" y1="1354" x2="670.0" y2="1354" stroke="#1F2937" stroke-width="2.2"/>
+<rect x="670.0" y="1344" width="60" height="20" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.6"/>
+<line x1="730.0" y1="1354" x2="760" y2="1354" stroke="#1F2937" stroke-width="2.2"/>
+<text x="700.0" y="1358" font-size="8.5" font-weight="bold" fill="#1F2937" text-anchor="middle">R prot.</text>
+<polyline points="760,1354 1010,1354" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="880" y="1348" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → R prot. → − alimentación</text>
 <polyline points="980,1304 980,1354" fill="none" stroke="#1F2937" stroke-width="2" stroke-linejoin="round"/>
 <circle cx="980" cy="1304" r="3.8" fill="#1F2937"/>
 <circle cx="980" cy="1354" r="3.8" fill="#1F2937"/>

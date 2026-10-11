@@ -151,7 +151,7 @@ con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
 | Tensión continua que entrega el telar al sensor (12 a 14 V), con la máquina en marcha | Confirmar la resistencia del canal del sensor (1,2 kΩ; con 24 V sería de 2,2 kΩ) |
 | Relación de giro del eje elegido | Confirmado el 10/09/2026: una vuelta por pasada |
 | Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado |
-| Si el agujero del papel abre o cierra el circuito | Definir si el relé va en serie o en paralelo, y el valor de `CANAL_ACTIVO_EN_ALTO` |
+| Si con agujero la señal del lector va a +V (lo que dijeron en la planta: el lector da la señal) | Confirmar la conexión final (el relé en lugar del lector, caso 2A, `diagramas/hardware/conexion_final_rele.png`) y `CANAL_ACTIVO_EN_ALTO` en `true` |
 | Sincronización entre el pulso del sensor y la lectura del telar | Ajustar `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba |
 | Si la plaqueta toma la selección mantenida | `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita y cambia cuando cambia. Si alguna pasada no la toma, probar un porcentaje (50 %): se suelta en cada pasada, como el papel |
 

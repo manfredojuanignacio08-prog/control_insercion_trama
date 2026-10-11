@@ -4,8 +4,34 @@ Cómo reemplazar cada lector óptico por un relé LCA110: qué medir, cómo deci
 casos corresponde, cómo armar los relés y cómo conectarlos al telar. Se hace **primero con un
 solo lector** (el lector 1) y recién cuando ese canal funciona se repite con los otros tres.
 
+## La conexión final (la más segura)
+
+Con agujero, el lector óptico **da la señal** que activa la bobina. La conexión final hace que esa
+señal la dé el relé: **el relé ocupa el lugar del lector**, entre el **+** del conector del lector y
+la **señal**, con una **resistencia de protección** en serie y una de **10 kΩ ½ W** de la señal al
+**−** (caso 2A). Diagrama: `diagramas/hardware/conexion_final_rele.png`.
+
+| Situación | Relé | Señal | Bobina |
+|---|---|---|---|
+| El ESP32 pide la bobina | cerrado | +V, como con agujero | activa |
+| No la pide, o el ESP32 está apagado, arrancando o sin red | abierto | 0 V (la 10 kΩ), como con papel | en reposo |
+| Falla de cableado (la señal o la pata 4 tocan el −) | cualquiera | la resistencia de protección limita la corriente (unos 50 mA) | no se daña nada |
+
+Por qué es la más segura: el relé solo toca la señal del lector (pocos mA), nunca las bobinas ni su
+alimentación; el ESP32 y el telar quedan aislados (3.750 V); el LCA110 es normalmente abierto, así que
+sin orden la plaqueta ve papel; la corriente queda limitada aun con un error de cableado; no depende de
+la cinta de papel ni pelea con la salida del lector (que se desconecta); y es reversible: con la bornera
+se vuelve a conectar el lector en minutos.
+
+Mientras la misma bobina se repite, el relé queda cerrado (`PORCENTAJE_SELECCION` en 0, como viene):
+es lo que se ve en la planta, el relé del telar queda activo y la aguja va y vuelve igual en cada pasada.
+
+La medición de la etapa 1 confirma que es el caso 2A (con agujero, la señal va a +V). Si diera 0 V es la
+variante 2B (abajo), y si con el lector desconectado hubiera tensión entre los bornes de señal, el caso 1.
+
 Diagramas que acompañan esta guía (en `diagramas/hardware/`):
 
+- `conexion_final_rele.png`: la conexión final de un canal, con los valores y las comprobaciones.
 - `canal_rele_sin_sensor.png`: un canal, con el cuadro "cómo saber cuál corresponde" y los tres casos.
 - `diagrama_bloque_D_caso1.png`, `diagrama_bloque_D_caso2A.png` y `diagrama_bloque_D_caso2B.png`: los
   cuatro relés conectados, uno por caso.
@@ -19,7 +45,8 @@ Diagramas que acompañan esta guía (en `diagramas/hardware/`):
 - Multímetro con tensión continua (V), continuidad y corriente (mA, y el borne de 10 A).
 - Cinta de papel o de enmascarar y un marcador para etiquetar cables. Celular para sacar fotos.
 - 4 relés LCA110, 4 resistencias de 330 Ω y 4 de 10 kΩ (¼ W), del lado del ESP32.
-- Solo para los casos 2A y 2B: 4 resistencias de 10 kΩ **½ W**, del lado del telar.
+- Solo para los casos 2A y 2B, del lado del telar: 4 resistencias de 10 kΩ **½ W** y 4 resistencias de
+  protección: **220 Ω 1 W** si el lector se alimenta con hasta 15 V, o **470 Ω 2 W** de 15 a 30 V.
 - Borneras, placa perforada, termocontraíble y cable fino.
 - Para la prueba en el banco: una pila de 9 V, un LED y una resistencia de 1 kΩ.
 
@@ -51,6 +78,7 @@ Diagramas que acompañan esta guía (en `diagramas/hardware/`):
 | B contra −, con papel / con luz (paso 1.5) | |
 | Tensión entre los bornes de señal **con el lector desconectado** (paso 2.2) | |
 | Caso que corresponde | |
+| Resistencia de protección elegida (paso 2.5) | |
 | Corriente con el relé "cerrado" (paso 2.5) | |
 
 ---
@@ -118,19 +146,24 @@ salida, **con luz** (agujero):
 que de paso muestra si la bobina 1 reacciona. Hacer la conexión con el telar apagado y
 desenchufado. Recién después encenderlo, sin tejer, y leer.
 
+En los casos 2A y 2B, primero elegir la resistencia de protección con la tensión del paso 1.3:
+**hasta 15 V, 220 Ω 1 W; de 15 a 30 V, 470 Ω 2 W**; con más de 30 V, parar y consultar. La medición se
+hace con esa resistencia en serie con el multímetro: así, aunque algo estuviera mal, la corriente queda
+limitada.
+
 Multímetro en corriente continua, **empezando por el borne y la escala de 10 A**. Si la lectura
 es chica, pasar a mA. Para cambiar de borne, apagar el telar primero. Según el caso:
 
 | Caso | Dónde va el multímetro (en lugar del relé) |
 |---|---|
 | 1 | entre los 2 bornes de señal |
-| 2A | entre el + y la salida, con la resistencia de 10 kΩ ½ W ya puesta entre la salida y el − |
-| 2B | entre la salida y el −, con la resistencia de 10 kΩ ½ W ya puesta entre el + y la salida |
+| 2A | entre el + y la salida, en serie con la resistencia de protección, y con la de 10 kΩ ½ W ya puesta entre la salida y el − |
+| 2B | entre la salida y el −, en serie con la resistencia de protección, y con la de 10 kΩ ½ W ya puesta entre el + y la salida |
 
 - **Pocos mA (menos de 20): perfecto.**
 - Entre 20 y 100 mA: sirve, pero anotarlo y consultarlo antes de seguir.
 - **Más de 100 mA: no se puede usar el LCA110** (aguanta 120 mA como máximo). Parar.
-- La tensión de alimentación tiene que ser menor de 60 V. Con más, parar y consultar.
+- La tensión de alimentación tiene que ser menor de 30 V. Con más, parar y consultar.
 
 Mientras el multímetro está puesto, fijarse si la bobina 1 se activa (si se escucha, o si la
 plaqueta tiene una luz). **En los casos 2A y 2B la bobina tiene que activarse con el multímetro
@@ -207,9 +240,9 @@ conectar el lector si hiciera falta.
 - Pata 6 → el otro borne de señal.
 - Los cables + y − que iban al lector quedan sin usar: aislar las puntas (o dejar la bornera vacía).
 
-**Caso 2A**
+**Caso 2A (la conexión final)**
 
-- Pata 4 del relé 1 → **+** del conector del lector 1.
+- **+** del conector del lector 1 → resistencia de protección → pata 4 del relé 1.
 - Pata 6 → **salida** (señal).
 - Resistencia de 10 kΩ ½ W de la salida al **−**.
 - La referencia se une al − de ese mismo conector (si en la plaqueta ya están unidas, no hace
@@ -219,11 +252,11 @@ conectar el lector si hiciera falta.
 
 - Resistencia de 10 kΩ ½ W del **+** a la **salida** (señal).
 - Pata 4 del relé 1 → salida.
-- Pata 6 → **−** del conector del lector 1.
+- Pata 6 → resistencia de protección → **−** del conector del lector 1.
 - La referencia se une al − de ese mismo conector.
 
-En los casos 2A y 2B, cada canal usa el + y el − **de su propio conector** y lleva su propia
-resistencia. Las salidas de los cuatro relés no se unen entre sí.
+En los casos 2A y 2B, cada canal usa el + y el − **de su propio conector** y lleva sus propias
+resistencias (la de 10 kΩ ½ W y la de protección). Las salidas de los cuatro relés no se unen entre sí.
 
 **4.2 Configurar el firmware** (`esp32/control_trama_esp32/config.h`):
 

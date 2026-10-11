@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" font-family="IBM Plex Sans, system-ui, sans-serif">
 <rect width="1400" height="1000" fill="#F6F8FA"/>
 <text x="700.0" y="32" font-size="18" font-weight="bold" fill="#1E3A5F" text-anchor="middle" font-family="Questrial, IBM Plex Sans, sans-serif">Bloque D · Caso 2B: los 4 relés entre la señal y −</text>
-<text x="700.0" y="52" font-size="10.5" font-weight="normal" fill="#6B7684" text-anchor="middle">La tensión la ponía el lector y, con agujero, su salida va a 0 V. Cada canal usa el + y el − de su propio conector, más una resistencia de 10 kΩ ½ W.</text>
+<text x="700.0" y="52" font-size="10.5" font-weight="normal" fill="#6B7684" text-anchor="middle">La tensión la ponía el lector y, con agujero, su salida va a 0 V. Cada canal usa el + y el − de su propio conector, una resistencia de 10 kΩ ½ W y una de protección.</text>
 <rect x="20" y="70" width="560" height="810" rx="10" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.4" stroke-dasharray="6 4"/>
 <text x="300" y="92" font-size="11.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LADO ESP32 · igual en los tres casos</text>
 <rect x="605" y="70" width="775" height="810" rx="10" fill="#FBF1E3" stroke="#9C5C0A" stroke-width="1.4" stroke-dasharray="6 4"/>
@@ -64,8 +64,13 @@
 <line x1="1000" y1="212" x2="1180" y2="212" stroke="#1E3A5F" stroke-width="2.2"/>
 <polyline points="560,162 640,162 640,212 1000,212" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
 <text x="820" y="206" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 → señal</text>
-<polyline points="560,202 610,202 610,270 1180,270" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
-<text x="820" y="264" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → − del conector 1</text>
+<polyline points="560,202 610,202 610,270 680,270" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
+<line x1="680" y1="270" x2="704.0" y2="270" stroke="#1F2937" stroke-width="2.2"/>
+<rect x="704.0" y="261" width="52" height="18" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.6"/>
+<line x1="756.0" y1="270" x2="780" y2="270" stroke="#1F2937" stroke-width="2.2"/>
+<text x="730.0" y="274" font-size="8" font-weight="bold" fill="#1F2937" text-anchor="middle">R prot.</text>
+<line x1="780" y1="270" x2="1180" y2="270" stroke="#1F2937" stroke-width="2.2"/>
+<text x="900" y="264" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → R prot. → − del conector 1</text>
 <line x1="120" y1="337" x2="260" y2="337" stroke="#1F2937" stroke-width="2"/>
 <text x="126" y="330" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="start">GPIO 19</text>
 <rect x="260" y="326" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
@@ -114,8 +119,13 @@
 <line x1="1000" y1="387" x2="1180" y2="387" stroke="#1E3A5F" stroke-width="2.2"/>
 <polyline points="560,337 640,337 640,387 1000,387" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
 <text x="820" y="381" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 → señal</text>
-<polyline points="560,377 610,377 610,445 1180,445" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
-<text x="820" y="439" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → − del conector 2</text>
+<polyline points="560,377 610,377 610,445 680,445" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
+<line x1="680" y1="445" x2="704.0" y2="445" stroke="#1F2937" stroke-width="2.2"/>
+<rect x="704.0" y="436" width="52" height="18" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.6"/>
+<line x1="756.0" y1="445" x2="780" y2="445" stroke="#1F2937" stroke-width="2.2"/>
+<text x="730.0" y="449" font-size="8" font-weight="bold" fill="#1F2937" text-anchor="middle">R prot.</text>
+<line x1="780" y1="445" x2="1180" y2="445" stroke="#1F2937" stroke-width="2.2"/>
+<text x="900" y="439" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → R prot. → − del conector 2</text>
 <line x1="120" y1="512" x2="260" y2="512" stroke="#1F2937" stroke-width="2"/>
 <text x="126" y="505" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="start">GPIO 21</text>
 <rect x="260" y="501" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
@@ -164,8 +174,13 @@
 <line x1="1000" y1="562" x2="1180" y2="562" stroke="#1E3A5F" stroke-width="2.2"/>
 <polyline points="560,512 640,512 640,562 1000,562" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
 <text x="820" y="556" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 → señal</text>
-<polyline points="560,552 610,552 610,620 1180,620" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
-<text x="820" y="614" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → − del conector 3</text>
+<polyline points="560,552 610,552 610,620 680,620" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
+<line x1="680" y1="620" x2="704.0" y2="620" stroke="#1F2937" stroke-width="2.2"/>
+<rect x="704.0" y="611" width="52" height="18" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.6"/>
+<line x1="756.0" y1="620" x2="780" y2="620" stroke="#1F2937" stroke-width="2.2"/>
+<text x="730.0" y="624" font-size="8" font-weight="bold" fill="#1F2937" text-anchor="middle">R prot.</text>
+<line x1="780" y1="620" x2="1180" y2="620" stroke="#1F2937" stroke-width="2.2"/>
+<text x="900" y="614" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → R prot. → − del conector 3</text>
 <line x1="120" y1="687" x2="260" y2="687" stroke="#1F2937" stroke-width="2"/>
 <text x="126" y="680" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="start">GPIO 22</text>
 <rect x="260" y="676" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
@@ -214,11 +229,17 @@
 <line x1="1000" y1="737" x2="1180" y2="737" stroke="#1E3A5F" stroke-width="2.2"/>
 <polyline points="560,687 640,687 640,737 1000,737" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
 <text x="820" y="731" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 → señal</text>
-<polyline points="560,727 610,727 610,795 1180,795" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
-<text x="820" y="789" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → − del conector 4</text>
+<polyline points="560,727 610,727 610,795 680,795" fill="none" stroke="#1F2937" stroke-width="2.2" stroke-linejoin="round"/>
+<line x1="680" y1="795" x2="704.0" y2="795" stroke="#1F2937" stroke-width="2.2"/>
+<rect x="704.0" y="786" width="52" height="18" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.6"/>
+<line x1="756.0" y1="795" x2="780" y2="795" stroke="#1F2937" stroke-width="2.2"/>
+<text x="730.0" y="799" font-size="8" font-weight="bold" fill="#1F2937" text-anchor="middle">R prot.</text>
+<line x1="780" y1="795" x2="1180" y2="795" stroke="#1F2937" stroke-width="2.2"/>
+<text x="900" y="789" font-size="9" font-weight="normal" fill="#1F2937" text-anchor="middle">pata 6 → R prot. → − del conector 4</text>
 <text x="30" y="906" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">Relé cerrado: la señal queda en 0 V = agujero. Relé abierto: la resistencia la sube a +V = papel. ESP32 apagado: los 4 relés abiertos = papel (ninguna bobina salta).</text>
-<text x="30" y="924" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">Cada canal usa el + y el − de su propio conector, con su propia resistencia. No unir las señales de los canales entre sí.</text>
-<text x="1370" y="952" font-size="12" font-weight="bold" fill="#2E6E4A" text-anchor="end">relé cerrado = agujero → CANAL_ACTIVO_EN_ALTO true</text>
-<text x="30" y="952" font-size="10.5" font-weight="normal" fill="#6B7684" text-anchor="start">Un solo valor en config.h vale para los 4 canales.</text>
-<text x="700.0" y="986" font-size="10" font-weight="bold" fill="#1F2937" text-anchor="middle">Antes de los 4: probar un solo canal, medir que la corriente por el relé cerrado sea de pocos mA (nunca más de 100) y conectar con bornera para poder volver a poner los lectores.</text>
+<text x="30" y="924" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">R prot. (resistencia de protección): 220 Ω 1 W si el lector se alimenta con hasta 15 V; 470 Ω 2 W de 15 a 30 V. Limita la corriente si algo queda en corto.</text>
+<text x="30" y="942" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">Cada canal usa el + y el − de su propio conector, con sus propias resistencias. No unir las señales de los canales entre sí.</text>
+<text x="1370" y="966" font-size="12" font-weight="bold" fill="#2E6E4A" text-anchor="end">relé cerrado = agujero → CANAL_ACTIVO_EN_ALTO true</text>
+<text x="30" y="966" font-size="10.5" font-weight="normal" fill="#6B7684" text-anchor="start">Un solo valor en config.h vale para los 4 canales.</text>
+<text x="700.0" y="990" font-size="10" font-weight="bold" fill="#1F2937" text-anchor="middle">Antes de los 4: probar un solo canal, medir que la corriente por el relé cerrado sea de pocos mA (nunca más de 100) y conectar con bornera para poder volver a poner los lectores.</text>
 </svg>

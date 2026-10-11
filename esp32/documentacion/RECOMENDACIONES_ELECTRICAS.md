@@ -139,8 +139,9 @@ usar para comandarlas y qué no.
   diodo interno deja pasar el otro semiciclo; un optoacoplador común (PC817) también conduce en un
   solo sentido. Con una señal de alterna, cualquiera de los dos dejaría pasar medio ciclo.
 - **Antes de conectarlo hay que medir** la tensión y la corriente en la salida de un lector óptico,
-  y si el agujero abre o cierra el circuito: eso decide si el relé va en paralelo o en serie
-  (`Guia_Conexion_Reles_LCA110.docx`, sección 5).
+  y qué hace la señal con el agujero. La conexión final (la más segura) pone el relé en lugar del
+  lector, con una resistencia de protección: `diagramas/hardware/conexion_final_rele.png` y
+  `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
 
 ## 7. Protecciones que ya quedaron aplicadas en el firmware
 

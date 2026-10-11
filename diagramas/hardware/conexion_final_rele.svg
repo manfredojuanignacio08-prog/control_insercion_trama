@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1136" font-family="IBM Plex Sans, system-ui, sans-serif">
+<rect width="1400" height="1136" fill="#F6F8FA"/>
+<text x="700.0" y="34" font-size="20" font-weight="bold" fill="#1E3A5F" text-anchor="middle" font-family="Questrial, IBM Plex Sans, sans-serif">Conexión final del relé LCA110 · la más segura</text>
+<text x="700.0" y="56" font-size="11" font-weight="normal" fill="#6B7684" text-anchor="middle">El relé ocupa el lugar del lector óptico: con agujero, el lector daba la señal (+V) que activa la bobina; ahora esa señal la da el relé cuando el ESP32 lo pide.</text>
+<text x="700.0" y="74" font-size="11" font-weight="normal" fill="#6B7684" text-anchor="middle">Un canal (relé 1, GPIO 18, lector y bobina 1). Los otros tres son iguales: GPIO 19, 21 y 22, cada uno con su propio conector y sus propias resistencias.</text>
+<rect x="20" y="96" width="470" height="360" rx="10" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="255" y="118" font-size="12" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LADO ESP32 (3,3 V)</text>
+<rect x="610" y="96" width="770" height="360" rx="10" fill="#FBF1E3" stroke="#9C5C0A" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="995" y="118" font-size="12" font-weight="bold" fill="#9C5C0A" text-anchor="middle">LADO TELAR (la plaqueta del lector)</text>
+<line x1="550" y1="92" x2="550" y2="460" stroke="#6B7684" stroke-width="1.4" stroke-dasharray="5 4"/>
+<text x="550" y="476" font-size="9.5" font-weight="bold" fill="#6B7684" text-anchor="middle">aislamiento de 3.750 V: el GND del ESP32 no se une con nada del telar</text>
+<rect x="40" y="156" width="90" height="190" rx="6" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1"/>
+<text x="85" y="246" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">ESP32</text>
+<text x="85" y="264" font-size="10" font-weight="normal" fill="#B8CDE0" text-anchor="middle">GPIO 18</text>
+<line x1="130" y1="206" x2="175" y2="206" stroke="#1F2937" stroke-width="2"/>
+<circle cx="175" cy="206" r="4" fill="#1F2937"/>
+<line x1="175" y1="206" x2="218.5" y2="206" stroke="#1F2937" stroke-width="2.2"/>
+<rect x="218.5" y="195" width="68" height="22" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.8"/>
+<line x1="286.5" y1="206" x2="330" y2="206" stroke="#1F2937" stroke-width="2.2"/>
+<text x="252.5" y="188" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="middle">330 Ω ¼ W</text>
+<text x="252.5" y="234" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">unos 6,4 mA al LED</text>
+<line x1="330" y1="206" x2="470" y2="206" stroke="#1F2937" stroke-width="2"/>
+<line x1="175" y1="206" x2="175" y2="246" stroke="#1F2937" stroke-width="2"/>
+<rect x="164" y="246" width="22" height="60" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.8"/>
+<line x1="175" y1="306" x2="175" y2="386" stroke="#1F2937" stroke-width="2"/>
+<text x="194" y="272" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ ¼ W</text>
+<text x="194" y="286" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="start">pegada al pin: abierto</text>
+<text x="194" y="298" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="start">mientras el ESP32 arranca</text>
+<polyline points="470,286 430,286 430,386" fill="none" stroke="#1F2937" stroke-width="2" stroke-linejoin="round"/>
+<line x1="175" y1="386" x2="430" y2="386" stroke="#1F2937" stroke-width="2"/>
+<circle cx="430" cy="386" r="4" fill="#1F2937"/>
+<line x1="288" y1="386" x2="312" y2="386" stroke="#1F2937" stroke-width="2.4"/>
+<line x1="292" y1="392" x2="308" y2="392" stroke="#1F2937" stroke-width="2"/>
+<line x1="296" y1="398" x2="304" y2="398" stroke="#1F2937" stroke-width="1.6"/>
+<text x="300" y="418" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">GND del ESP32</text>
+<rect x="470" y="166" width="160" height="170" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2.4"/>
+<text x="550" y="188" font-size="11" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LCA110 · relé 1</text>
+<text x="550" y="202" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">en zócalo DIP-6</text>
+<line x1="550" y1="210" x2="550" y2="328" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="3 3"/>
+<text x="478" y="210" font-size="10" font-weight="bold" fill="#1E3A5F" text-anchor="start">1</text>
+<text x="478" y="290" font-size="10" font-weight="bold" fill="#1E3A5F" text-anchor="start">2</text>
+<text x="622" y="210" font-size="10" font-weight="bold" fill="#1E3A5F" text-anchor="end">4</text>
+<text x="622" y="290" font-size="10" font-weight="bold" fill="#1E3A5F" text-anchor="end">6</text>
+<text x="510" y="236" font-size="9" font-weight="normal" fill="#6B7684" text-anchor="middle">LED</text>
+<text x="590" y="236" font-size="9" font-weight="normal" fill="#6B7684" text-anchor="middle">salida</text>
+<text x="550" y="322" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">patas 3 y 5: sin conectar</text>
+<rect x="1150" y="146" width="214" height="300" rx="6" fill="#FFFFFF" stroke="#9C5C0A" stroke-width="1.8"/>
+<text x="1257" y="168" font-size="11" font-weight="bold" fill="#9C5C0A" text-anchor="middle">PLAQUETA · conector</text>
+<text x="1257" y="182" font-size="11" font-weight="bold" fill="#9C5C0A" text-anchor="middle">del lector 1</text>
+<circle cx="1150" cy="206" r="4" fill="#9C5C0A"/>
+<text x="1160" y="210" font-size="9.5" font-weight="normal" fill="#9C5C0A" text-anchor="start">+ (alimentación)</text>
+<circle cx="1150" cy="286" r="4" fill="#9C5C0A"/>
+<text x="1160" y="290" font-size="9.5" font-weight="normal" fill="#9C5C0A" text-anchor="start">señal</text>
+<circle cx="1150" cy="334" r="4" fill="#9C5C0A"/>
+<text x="1160" y="338" font-size="9.5" font-weight="normal" fill="#9C5C0A" text-anchor="start">referencia</text>
+<circle cx="1150" cy="382" r="4" fill="#9C5C0A"/>
+<text x="1160" y="386" font-size="9.5" font-weight="normal" fill="#9C5C0A" text-anchor="start">− (alimentación)</text>
+<text x="1257" y="410" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">lector desconectado: sus 4 cables</text>
+<text x="1257" y="423" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">marcados y aislados en la bornera</text>
+<line x1="630" y1="206" x2="700" y2="206" stroke="#B4423C" stroke-width="2.2"/>
+<line x1="700" y1="206" x2="766.0" y2="206" stroke="#B4423C" stroke-width="2.2"/>
+<rect x="766.0" y="195" width="68" height="22" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.8"/>
+<line x1="834.0" y1="206" x2="900" y2="206" stroke="#B4423C" stroke-width="2.2"/>
+<text x="800.0" y="188" font-size="9.5" font-weight="bold" fill="#B4423C" text-anchor="middle">R de protección</text>
+<text x="800.0" y="234" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">220 Ω 1 W (hasta 15 V) · 470 Ω 2 W (15 a 30 V)</text>
+<line x1="900" y1="206" x2="1150" y2="206" stroke="#B4423C" stroke-width="2.2"/>
+<text x="1030" y="198" font-size="9.5" font-weight="bold" fill="#B4423C" text-anchor="middle">+ del conector</text>
+<line x1="630" y1="286" x2="1150" y2="286" stroke="#1E3A5F" stroke-width="2.4"/>
+<text x="760" y="278" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">pata 6 → señal</text>
+<circle cx="900" cy="286" r="4" fill="#1F2937"/>
+<line x1="900" y1="286" x2="900" y2="296" stroke="#1F2937" stroke-width="2"/>
+<rect x="889" y="296" width="22" height="76" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="1.8"/>
+<line x1="900" y1="372" x2="900" y2="382" stroke="#1F2937" stroke-width="2"/>
+<text x="918" y="334.0" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ ½ W</text>
+<text x="918" y="348.0" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="start">deja la señal en 0 V</text>
+<circle cx="900" cy="382" r="4" fill="#1F2937"/>
+<line x1="900" y1="382" x2="1150" y2="382" stroke="#1F2937" stroke-width="2.2"/>
+<text x="1040" y="374" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="middle">− del conector</text>
+<polyline points="1150,334 1110,334 1110,382" fill="none" stroke="#1F2937" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="1110" cy="334" r="4" fill="#1F2937"/>
+<circle cx="1110" cy="382" r="4" fill="#1F2937"/>
+<text x="1102" y="354" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="end">ref. al −</text>
+<text x="820" y="442" font-size="9" font-weight="normal" fill="#6B7684" text-anchor="middle">pocos mA: el relé solo maneja la señal del lector, nunca la bobina</text>
+<text x="30" y="506" font-size="14" font-weight="bold" fill="#1E3A5F" text-anchor="start" font-family="Questrial, IBM Plex Sans, sans-serif">Qué pasa en cada situación</text>
+<rect x="20" y="518" width="440" height="112" rx="8" fill="#EEF6F1" stroke="#2E6E4A" stroke-width="1.6"/>
+<text x="34" y="540" font-size="11" font-weight="bold" fill="#2E6E4A" text-anchor="start">El ESP32 pide la bobina 1</text>
+<text x="34" y="560" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">El relé se cierra: la señal queda en +V,</text>
+<text x="34" y="577" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">igual que con agujero, y la bobina 1 se activa.</text>
+<text x="34" y="594" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">Mientras la misma bobina se repite, sigue cerrado</text>
+<text x="34" y="611" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">(la aguja va y vuelve igual en cada pasada).</text>
+<rect x="480" y="518" width="440" height="112" rx="8" fill="#EEF6F1" stroke="#2E6E4A" stroke-width="1.6"/>
+<text x="494" y="540" font-size="11" font-weight="bold" fill="#2E6E4A" text-anchor="start">No la pide, o el ESP32 está apagado</text>
+<text x="494" y="560" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">El relé queda abierto: la resistencia de 10 kΩ deja</text>
+<text x="494" y="577" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">la señal en 0 V, igual que con papel: la bobina 1</text>
+<text x="494" y="594" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">queda en reposo. Lo mismo al arrancar, sin red o</text>
+<text x="494" y="611" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">si se corta la luz del gabinete: falla segura.</text>
+<rect x="940" y="518" width="440" height="112" rx="8" fill="#FDF3F2" stroke="#B4423C" stroke-width="1.6"/>
+<text x="954" y="540" font-size="11" font-weight="bold" fill="#B4423C" text-anchor="start">Una falla de cableado</text>
+<text x="954" y="560" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">Si la señal o la pata 4 tocan el −, la resistencia</text>
+<text x="954" y="577" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">de protección limita la corriente (unos 50 mA):</text>
+<text x="954" y="594" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">no se daña ni el relé (aguanta 120 mA) ni la</text>
+<text x="954" y="611" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">alimentación del lector.</text>
+<rect x="20" y="652" width="660" height="190" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="34" y="674" font-size="11" font-weight="bold" fill="#1E3A5F" text-anchor="start">Por qué es la más segura</text>
+<text x="34" y="694" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">1. El relé toca solo la señal del lector (pocos mA). Las bobinas y su alimentación no se tocan.</text>
+<text x="34" y="711" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">2. El ESP32 y el telar quedan aislados: entre los dos lados solo está la luz del LED del relé.</text>
+<text x="34" y="728" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">3. Falla segura: el LCA110 es normalmente abierto. Sin orden, la plaqueta ve papel.</text>
+<text x="34" y="745" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">4. La corriente queda limitada por la resistencia de protección aun con un error de cableado.</text>
+<text x="34" y="762" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">5. No depende de la cinta de papel ni pelea con la salida del lector (el lector se desconecta).</text>
+<text x="34" y="779" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">6. Es reversible: con la bornera se vuelve a conectar el lector en minutos.</text>
+<text x="34" y="796" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">7. Cada canal es independiente: su propio +, −, relé y resistencias.</text>
+<text x="34" y="813" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">8. La placa va en el gabinete cerrado, con zócalos, borneras rotuladas y cables sujetos.</text>
+<rect x="700" y="652" width="680" height="190" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="714" y="674" font-size="11" font-weight="bold" fill="#1E3A5F" text-anchor="start">Valores y configuración</text>
+<text x="714" y="694" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Por canal, lado ESP32: 330 Ω ¼ W en serie con la pata 1 y 10 kΩ ¼ W del pin a GND.</text>
+<text x="714" y="711" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Por canal, lado telar: R de protección en serie con la pata 4 y 10 kΩ ½ W de la señal al −.</text>
+<text x="714" y="728" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">R de protección según la alimentación del lector (medirla entre + y −):</text>
+<text x="714" y="745" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">      hasta 15 V → 220 Ω 1 W   ·   de 15 a 30 V → 470 Ω 2 W   ·   más de 30 V → consultar.</text>
+<text x="714" y="762" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">config.h: CANAL_ACTIVO_EN_ALTO = true (relé cerrado = agujero, como viene)</text>
+<text x="714" y="779" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">                PORCENTAJE_SELECCION = 0 (se mantiene mientras se repite la bobina).</text>
+<text x="714" y="796" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Si con agujero la salida del lector fuera a 0 V (y no a +V), es la variante 2B:</text>
+<text x="714" y="813" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">relé y R de protección entre la señal y el −, y la 10 kΩ ½ W del + a la señal.</text>
+<rect x="20" y="864" width="860" height="250" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="34" y="886" font-size="11" font-weight="bold" fill="#1E3A5F" text-anchor="start">Antes de dejarlo conectado (telar encendido sin tejer; los cables, siempre con el telar desenchufado)</text>
+<text x="34" y="906" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">1. Con el lector conectado: medir la señal contra el −. Con papel tiene que dar unos 0 V y con agujero cerca de +V.</text>
+<text x="34" y="923" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">    Si da al revés, es la variante 2B. Si no cambia, o da otra cosa, parar y consultar.</text>
+<text x="34" y="940" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">2. Medir la alimentación entre + y − del conector y elegir la R de protección.</text>
+<text x="34" y="957" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">3. Lector desconectado: poner la 10 kΩ ½ W y, en el lugar del relé, la R de protección con el amperímetro en serie.</text>
+<text x="34" y="974" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">    Tiene que marcar pocos mA (menos de 20) y la bobina 1 activarse; al sacarlo, soltarse.</text>
+<text x="34" y="991" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">4. Conectar el relé con el ESP32 apagado: la bobina 1 queda en reposo (relé abierto = papel).</text>
+<text x="34" y="1008" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">5. Prender el ESP32 sin tejer: la bobina sigue en reposo hasta que haya un trabajo en curso.</text>
+<text x="34" y="1025" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">6. Recién con el canal 1 andando, repetir con los lectores 2, 3 y 4.</text>
+<rect x="900" y="864" width="480" height="250" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="914" y="886" font-size="11" font-weight="bold" fill="#1E3A5F" text-anchor="start">Los cuatro canales</text>
+<text x="930" y="916" font-size="10.5" font-weight="bold" fill="#1F2937" text-anchor="start">Relé</text>
+<text x="1000" y="916" font-size="10.5" font-weight="bold" fill="#1F2937" text-anchor="start">GPIO</text>
+<text x="1080" y="916" font-size="10.5" font-weight="bold" fill="#1F2937" text-anchor="start">Conector y bobina</text>
+<line x1="916" y1="925" x2="1364" y2="925" stroke="#CDD8E0" stroke-width="1"/>
+<text x="930" y="944" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">1</text>
+<text x="1000" y="944" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">18</text>
+<text x="1080" y="944" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">lector 1 · bobina 1</text>
+<line x1="916" y1="953" x2="1364" y2="953" stroke="#CDD8E0" stroke-width="1"/>
+<text x="930" y="972" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">2</text>
+<text x="1000" y="972" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">19</text>
+<text x="1080" y="972" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">lector 2 · bobina 2</text>
+<line x1="916" y1="981" x2="1364" y2="981" stroke="#CDD8E0" stroke-width="1"/>
+<text x="930" y="1000" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">3</text>
+<text x="1000" y="1000" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">21</text>
+<text x="1080" y="1000" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">lector 3 · bobina 3</text>
+<line x1="916" y1="1009" x2="1364" y2="1009" stroke="#CDD8E0" stroke-width="1"/>
+<text x="930" y="1028" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">4</text>
+<text x="1000" y="1028" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">22</text>
+<text x="1080" y="1028" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">lector 4 · bobina 4</text>
+<text x="916" y="1060" font-size="9.5" font-weight="normal" fill="#6B7684" text-anchor="start">El orden de los relés tiene que coincidir con el de las</text>
+<text x="916" y="1075" font-size="9.5" font-weight="normal" fill="#6B7684" text-anchor="start">columnas del dibujo (B1 a B4). Rotular cada bornera.</text>
+<text x="916" y="1096" font-size="9.5" font-weight="bold" fill="#B4423C" text-anchor="start">Las señales de los canales nunca se unen entre sí.</text>
+</svg>

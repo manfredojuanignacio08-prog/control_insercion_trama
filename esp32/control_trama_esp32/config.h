@@ -150,7 +150,10 @@ static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 //   - Si va EN SERIE (el agujero abre el circuito), activarlo significa abrirlo.
 //   - Si el relé reemplaza al lector: true en los casos 2A y 2B; en el caso 1, true si el
 //     agujero une los 2 bornes de señal y false si los separa.
-// A_CONFIRMAR: depende de la medición sobre el lector (documentacion/PASO_A_PASO_RELES_LCA110.md).
+// CONEXIÓN FINAL (la más segura, diagramas/hardware/conexion_final_rele.png): el relé en lugar del
+// lector, caso 2A (con agujero el lector da la señal +V que activa la bobina), con una resistencia
+// de protección en serie y 10 kΩ ½ W de la señal al −. Va con true, como viene.
+// A_CONFIRMAR: la medición sobre el lector (documentacion/PASO_A_PASO_RELES_LCA110.md) confirma el caso.
 #define CANAL_ACTIVO_EN_ALTO   true
 
 // Cómo se aplica la selección: en cada pasada se activa el canal de su bobina. Si la pasada
@@ -198,9 +201,10 @@ static_assert(RETARDO_APLICACION_US <= 50000UL, "RETARDO_APLICACION_US no puede 
 //
 // 0 (el valor de hoy): la selección se mantiene hasta el pulso siguiente. En una racha de
 //   pasadas de la misma bobina (por ejemplo 120 seguidas) el relé no se suelta nunca: queda
-//   activo toda la racha y cambia recién cuando cambia la bobina. Es lo que se ve en el telar:
-//   tejiendo muchas pasadas de una bobina, su relé se mantiene activo (10/2026). En un
-//   intercalado (1, 3, 4, 2...) cambia en cada pasada, porque cambia la bobina.
+//   activo toda la racha y cambia recién cuando cambia la bobina. Es lo que se ve en el telar
+//   (dato de la planta, 10/2026): tejiendo muchas pasadas de una bobina, su relé se mantiene
+//   activo y la aguja va y vuelve igual en cada pasada (el movimiento es mecánico, no lo da la
+//   señal). En un intercalado (1, 3, 4, 2...) cambia en cada pasada, porque cambia la bobina.
 // 1 a 90: el relé se suelta pasado ese porcentaje de cada pasada, aunque la bobina se repita,
 //   como el papel, que entre dos agujeros seguidos de la misma columna tiene papel. Se expresa
 //   como porcentaje de lo que duró la pasada anterior, que el sensor mide, así se adapta sola a

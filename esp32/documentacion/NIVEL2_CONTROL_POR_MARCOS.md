@@ -79,9 +79,10 @@ lugar del lector óptico de la cinta de papel.
   (unos pocos mA, menos de 24 V) y no la corriente de la bobina, alcanza con un
   relé de señal. Su salida son dos MOSFET en antiserie: conduce en los dos
   sentidos, así que sirve con continua y con alterna (hasta 350 V y 120 mA). Se
-  comanda directo desde un pin del ESP32 y aísla los dos lados. Cómo se conecta,
-  en paralelo o en serie según la medición del lector, está en
-  `Guia_Conexion_Reles_LCA110.docx`.
+  comanda directo desde un pin del ESP32 y aísla los dos lados. La conexión final,
+  la más segura, pone el relé en lugar del lector (con agujero el lector da la señal +V; ahora la
+  da el relé), con una resistencia de protección: `diagramas/hardware/conexion_final_rele.png` y
+  `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
 - El **ESP32** recibe del backend la secuencia y, en cada pasada, activa las
   bobinas que corresponden a esa fila.
 - **Los LCA110 se conectan directo a los GPIO del ESP32** (18, 19, 21 y 22, con
@@ -100,7 +101,7 @@ dos MOSFET enfrentados y además no actúa sobre la bobina sino sobre el lector.
 
 **Dato que falta medir en la máquina:** la tensión y la corriente en la salida
 de un lector óptico, que confirman que el LCA110 alcanza (hasta 350 V y 120 mA) y
-si va en paralelo o en serie. La velocidad ya está
+el caso de la conexión final (2A si con agujero la señal va a +V). La velocidad ya está
 confirmada: el telar trabaja a 300 pasadas por minuto, dato que dio el dueño de
 la planta el 06/09/26, lo que equivale a 5 conmutaciones por segundo y hasta
 180.000 por jornada de 10 horas.
