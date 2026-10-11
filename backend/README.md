@@ -33,7 +33,7 @@ aplica además el servidor solo al arrancar.
 ## 3. Levantar el servidor
 
 ```bash
-npm run dev      # con autoreload (nodemon)
+npm run dev      # con autoreload (node --watch)
 npm start        # modo normal
 ```
 
