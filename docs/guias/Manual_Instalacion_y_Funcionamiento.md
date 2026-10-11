@@ -435,8 +435,10 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
 - **Exportar ficha técnica**: descarga un **PDF real** con el nombre, las
   dimensiones, la producción (metros tejidos, pasadas, metros que faltan y
   horas de máquina), el hilado, la grilla coloreada y una vista previa de la
-  tela que sale de un telar dibujado arriba (con las bobinas de trama en sus
-  colores), generado en el navegador con `jsPDF` (no depende de internet).
+  tela a escala que sale de un telar dibujado arriba (con las bobinas de trama
+  en sus colores), con una llave por vuelta y, si están cargados los metros por
+  pasada, una regla en centímetros; generado en el navegador con `jsPDF` (no
+  depende de internet).
 
 ### Biblioteca
 Lista todos los patrones guardados, con buscador por nombre. Permite cargar

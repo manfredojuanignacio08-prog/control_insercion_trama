@@ -2710,6 +2710,43 @@ async function exportDrawToPDF() {
     return { xBastidor: X + FILETA, tx: X + FILETA + BASTIDOR, tw: W - FILETA - BASTIDOR - CAJA, xCaja: X + W - CAJA, wCaja: CAJA };
   }
 
+  // Degradés: jsPDF no los trae simples, así que se arman con franjas finas que, impresas, se ven
+  // continuas. `paradas`: [[posición de 0 a 1, color], ...]; `horizontal`: de izquierda a derecha.
+  const mezclar = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  const colorEn = (paradas, t) => {
+    for (let i = 1; i < paradas.length; i++) {
+      if (t <= paradas[i][0]) {
+        const [t0, c0] = paradas[i - 1], [t1, c1] = paradas[i];
+        return mezclar(c0, c1, (t - t0) / ((t1 - t0) || 1));
+      }
+    }
+    return paradas[paradas.length - 1][1];
+  };
+  function degrade(doc, x, y, w, h, paradas, horizontal = false, n = 18) {
+    const paso = (horizontal ? w : h) / n;
+    for (let i = 0; i < n; i++) {
+      doc.setFillColor(...colorEn(paradas, (i + 0.5) / n));
+      if (horizontal) doc.rect(x + i * paso, y, paso + 0.03, h, 'F');
+      else doc.rect(x, y + i * paso, w, paso + 0.03, 'F');
+    }
+  }
+  // El mismo degradé, recortado a una forma: `trazar` arma el camino (con estilo null) y se usa de
+  // máscara, así un rectángulo redondeado o un cono quedan con sus bordes.
+  function degradeEn(doc, trazar, x, y, w, h, paradas, horizontal, n) {
+    doc.saveGraphicsState(); trazar(); doc.clip(); doc.discardPath();
+    degrade(doc, x, y, w, h, paradas, horizontal, n);
+    doc.restoreGraphicsState();
+  }
+  // Transparencia (para sombras): un GState por valor y por documento.
+  const estadosOpacidad = new WeakMap();
+  function opacidad(doc, a) {
+    let m = estadosOpacidad.get(doc);
+    if (!m) { m = {}; estadosOpacidad.set(doc, m); }
+    const k = a.toFixed(3);
+    if (!m[k]) m[k] = new doc.GState({ opacity: a, 'stroke-opacity': a });
+    doc.setGState(m[k]);
+  }
+
   // Telar visto de frente, desde el lugar del operario, como en la foto de la planta: arriba el
   // travesaño gris con la fila de piezas celestes de los marcos, los lizos con la urdimbre, el
   // peine, la tela que se está tejiendo (con los colores de las primeras pasadas, los templazos en
@@ -2717,127 +2754,159 @@ async function exportDrawToPDF() {
   // de los mecanismos y el rodillo de acero con sus anillos, del que baja la tela de la vista
   // previa. A la izquierda el bastidor y la fileta con las bobinas de trama (una por bobina del
   // dibujo, con su color y su número, y su hilo hasta el orillo); a la derecha la caja grande con
-  // el escudo redondo. Sin textos de marca ni de modelo.
+  // el escudo redondo. Las piezas llevan degradés de luz (de arriba a la izquierda) para que se
+  // vean con volumen: el rodillo y el peine brillan como acero, los conos se ven redondos. Sin
+  // textos de marca ni de modelo.
   // `colores`: colores de las primeras pasadas; `coloresBob`: color de cada bobina (o null).
   function dibujarTelar(doc, X, W, y, alto, colores, coloresBob) {
     const { xBastidor, tx, tw, xCaja, wCaja } = medidasTelar(X, W);
     const k = alto / 34;
     const Y = (u) => y + u * k;
     const CUERPO = [52, 66, 70], CUERPO_MED = [70, 88, 92], CUERPO_CLARO = [102, 122, 126], OSCURO = [30, 38, 41];
-    const GRIS_RIEL = [150, 160, 160], CELESTE = [118, 172, 218], ACERO = [186, 192, 196], ACERO_CLARO = [228, 231, 233], ACERO_OSC = [128, 135, 139];
-    const URDIMBRE = [226, 222, 212], GRIS_HILO = [184, 192, 202];
+    const GRIS_RIEL = [150, 160, 160], CELESTE = [118, 172, 218], ACERO = [186, 192, 196], ACERO_CLARO = [238, 240, 241], ACERO_OSC = [128, 135, 139];
+    const URDIMBRE = [226, 222, 212], GRIS_HILO = [184, 192, 202], NEGRO = [0, 0, 0], BLANCO = [255, 255, 255];
     const cs = (colores && colores.length) ? colores : [GRIS_HILO];
     const der = tx + tw;   // borde derecho de la tela
-    const cilindro = (x0, x1, y0, h, base, claro, oscuro) => {
-      doc.setFillColor(...base); doc.rect(x0, y0, x1 - x0, h, 'F');
-      doc.setFillColor(...claro); doc.rect(x0, y0 + h * 0.18, x1 - x0, h * 0.2, 'F');
-      doc.setFillColor(...oscuro); doc.rect(x0, y0 + h * 0.78, x1 - x0, h * 0.22, 'F');
-    };
+    // un cilindro de acero visto de costado: borde oscuro, brillo arriba, sombra abajo
+    const cilindro = (x0, x1, y0, h, base, claro, oscuro) => degrade(doc, x0, y0, x1 - x0, h,
+      [[0, oscuro], [0.2, claro], [0.42, base], [0.8, oscuro], [1, mezclar(oscuro, NEGRO, 0.35)]]);
+    // un panel pintado: más claro arriba, más oscuro abajo
+    const panel = (x0, y0, w0, h0, r, arriba, abajo) => degradeEn(doc, () => doc.roundedRect(x0, y0, w0, h0, r, r, null),
+      x0, y0, w0, h0, [[0, arriba], [1, abajo]], false, 12);
 
-    // sombra en el piso, debajo de las patas
-    doc.setFillColor(228, 231, 234);
-    doc.rect(xBastidor - 1, Y(33.6), tx - xBastidor + 2, 0.8 * k, 'F'); doc.rect(xCaja - 1, Y(33.6), wCaja + 1, 0.8 * k, 'F');
+    // sombra suave en el piso, debajo de la máquina
+    opacidad(doc, 0.14); doc.setFillColor(...NEGRO);
+    doc.ellipse((xBastidor + xCaja + wCaja) / 2, Y(34), (xCaja + wCaja - xBastidor) / 2 + 1, 0.9 * k, 'F');
+    opacidad(doc, 0.08); doc.ellipse((xBastidor + xCaja + wCaja) / 2, Y(34), (xCaja + wCaja - xBastidor) / 2 + 2.5, 1.4 * k, 'F');
+    opacidad(doc, 1);
 
     // ── atrás: travesaño, piezas celestes de los marcos, lizos y urdimbre ──
-    doc.setFillColor(...OSCURO); doc.rect(tx, Y(2), tw, 9 * k, 'F');
+    degrade(doc, tx, Y(2), tw, 9 * k, [[0, OSCURO], [1, [44, 54, 57]]], false, 8);
     // urdimbre: hilos claros, finos y apretados, que bajan de los lizos al peine
-    doc.setFillColor(78, 86, 86); doc.rect(tx, Y(6.2), tw, 4.4 * k, 'F');
+    degrade(doc, tx, Y(6.2), tw, 4.4 * k, [[0, [64, 72, 72]], [1, [92, 100, 100]]], false, 8);
     doc.setDrawColor(...URDIMBRE); doc.setLineWidth(0.06);
     for (let xx = tx + 0.2; xx < der; xx += 0.4) doc.line(xx, Y(6.2), xx, Y(10.6));
     // marcos de lizos: travesaños oscuros arriba y abajo
     doc.setFillColor(...CUERPO_MED); doc.rect(tx, Y(6), tw, 0.6 * k, 'F'); doc.rect(tx, Y(9.2), tw, 0.5 * k, 'F');
-    // travesaño superior gris, de bastidor a caja
-    doc.setFillColor(...GRIS_RIEL); doc.rect(xBastidor, Y(0.4), xCaja - xBastidor, 2 * k, 'F');
-    doc.setFillColor(118, 128, 128); doc.rect(xBastidor, Y(2.1), xCaja - xBastidor, 0.4 * k, 'F');
-    // fila de piezas celestes (la que se ve en la foto arriba de los marcos)
-    doc.setFillColor(...CELESTE);
-    for (let xx = tx + 1; xx + 2.2 < der; xx += 3.4) doc.rect(xx, Y(3), 2.2, 1.9 * k, 'F');
+    // travesaño superior gris, de bastidor a caja, con su brillo
+    degrade(doc, xBastidor, Y(0.4), xCaja - xBastidor, 2 * k, [[0, [212, 218, 218]], [0.35, GRIS_RIEL], [1, [112, 122, 122]]], false, 10);
+    doc.setFillColor(96, 106, 106); doc.rect(xBastidor, Y(2.1), xCaja - xBastidor, 0.4 * k, 'F');
+    // fila de piezas celestes (la que se ve en la foto arriba de los marcos), con su canto claro
+    for (let xx = tx + 1; xx + 2.2 < der; xx += 3.4) {
+      degrade(doc, xx, Y(3), 2.2, 1.9 * k, [[0, [176, 210, 238]], [0.3, CELESTE], [1, [84, 136, 184]]], false, 5);
+    }
     doc.setFillColor(...CUERPO); doc.rect(tx, Y(5.1), tw, 0.6 * k, 'F');
 
-    // ── peine (batán) ──
-    doc.setFillColor(...ACERO_OSC); doc.rect(tx - 0.3, Y(10.6), tw + 0.6, 1.5 * k, 'F');
-    doc.setFillColor(...ACERO); doc.rect(tx - 0.3, Y(10.6), tw + 0.6, 0.5 * k, 'F');
+    // ── peine (batán), de acero ──
+    degrade(doc, tx - 0.3, Y(10.6), tw + 0.6, 1.5 * k, [[0, ACERO_CLARO], [0.35, ACERO], [1, ACERO_OSC]], false, 8);
 
     // ── la tela que se está tejiendo, vista desde arriba ──
     const yt = Y(12.1), ht = 6.4 * k;
     const hb = ht / cs.length;
     cs.forEach((c, i) => { doc.setFillColor(...c); doc.rect(tx, yt + i * hb, tw, hb + 0.05, 'F'); });
-    doc.setGState(new doc.GState({ opacity: 0.16, 'stroke-opacity': 0.16 }));
-    doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.1);
+    opacidad(doc, 0.16); doc.setDrawColor(...BLANCO); doc.setLineWidth(0.1);
     for (let xx = tx + 0.3; xx < der; xx += 0.6) doc.line(xx, yt, xx, yt + ht);
-    doc.setGState(new doc.GState({ opacity: 1, 'stroke-opacity': 1 }));
+    // sombra del peine sobre la tela y luz hacia el pecho
+    doc.setFillColor(...NEGRO);
+    for (let i = 0; i < 5; i++) { opacidad(doc, 0.22 * (1 - i / 5)); doc.rect(tx, yt + i * 0.25, tw, 0.26, 'F'); }
+    opacidad(doc, 1);
     // la trama que está entrando, junto al peine, y la pinza que la lleva
     doc.setDrawColor(...cs[0]); doc.setLineWidth(0.3); doc.line(tx, yt + 0.2, tx + tw * 0.6, yt + 0.2);
     doc.setFillColor(...OSCURO); doc.roundedRect(tx + tw * 0.6, yt - 0.3, 3, 0.9, 0.4, 0.4, 'F');
+    doc.setFillColor(...ACERO); doc.rect(tx + tw * 0.6 + 0.4, yt - 0.15, 2.2, 0.2, 'F');
     // templazos en los orillos
-    doc.setFillColor(...OSCURO);
-    doc.roundedRect(tx - 0.4, yt + 0.5 * k, 3, 1.3 * k, 0.4, 0.4, 'F');
-    doc.roundedRect(der - 2.6, yt + 0.5 * k, 3, 1.3 * k, 0.4, 0.4, 'F');
+    [tx - 0.4, der - 2.6].forEach((xx) => {
+      panel(xx, yt + 0.5 * k, 3, 1.3 * k, 0.4, [72, 84, 88], OSCURO);
+    });
 
     // ── pecho: la viga oscura de adelante, con su placa blanca y la marca roja ──
-    doc.setFillColor(...CUERPO); doc.rect(xBastidor, Y(18.5), xCaja - xBastidor, 5.2 * k, 'F');
-    doc.setFillColor(...CUERPO_CLARO); doc.rect(xBastidor, Y(18.5), xCaja - xBastidor, 0.8 * k, 'F');
-    doc.setFillColor(...OSCURO); doc.rect(xBastidor, Y(23.3), xCaja - xBastidor, 0.4 * k, 'F');
+    degrade(doc, xBastidor, Y(18.5), xCaja - xBastidor, 5.2 * k,
+      [[0, [128, 148, 152]], [0.14, CUERPO_MED], [0.55, CUERPO], [0.92, [40, 50, 54]], [1, OSCURO]], false, 14);
     const xPlaca = tx + tw * 0.56, wPlaca = tw * 0.26;
-    doc.setFillColor(240, 242, 243); doc.rect(xPlaca, Y(20), wPlaca, 1.7 * k, 'F');
-    doc.setFillColor(196, 52, 48); doc.rect(xPlaca + wPlaca, Y(20), 2.4, 1.7 * k, 'F');
+    degrade(doc, xPlaca, Y(20), wPlaca, 1.7 * k, [[0, [250, 251, 251]], [1, [214, 219, 222]]], false, 5);
+    degrade(doc, xPlaca + wPlaca, Y(20), 2.4, 1.7 * k, [[0, [222, 82, 76]], [1, [168, 40, 38]]], false, 5);
 
     // ── abajo del pecho: mecanismos en sombra y el rodillo de acero con sus anillos ──
     // La tela pasa por detrás del rodillo y sale por debajo: ahí empieza la vista previa.
-    doc.setFillColor(...OSCURO); doc.rect(tx, Y(23.7), tw, 3 * k, 'F');
+    degrade(doc, tx, Y(23.7), tw, 3 * k, [[0, [18, 24, 26]], [1, [38, 48, 51]]], false, 6);
     // varilla y pieza del mecanismo de la derecha
-    doc.setFillColor(...ACERO_OSC); doc.rect(tx + tw * 0.62, Y(24.4), tw * 0.36, 0.6 * k, 'F');
-    doc.setFillColor(...ACERO); doc.roundedRect(der - 7, Y(23.9), 4, 1.5 * k, 0.4, 0.4, 'F');
+    degrade(doc, tx + tw * 0.62, Y(24.4), tw * 0.36, 0.6 * k, [[0, ACERO], [1, ACERO_OSC]], false, 4);
+    panel(der - 7, Y(23.9), 4, 1.5 * k, 0.4, ACERO_CLARO, ACERO_OSC);
     cilindro(xBastidor, xCaja, Y(26.6), 3.6 * k, ACERO, ACERO_CLARO, ACERO_OSC);   // los extremos quedan tapados por los costados
-    doc.setFillColor(...ACERO_OSC);
-    for (let xx = tx + 6; xx < der - 3; xx += 11) doc.rect(xx, Y(26.6), 1.3, 3.6 * k, 'F');   // anillos
+    // anillos: un poco más gruesos que el rodillo, con su propio brillo
+    for (let xx = tx + 6; xx < der - 3; xx += 11) {
+      cilindro(xx, xx + 1.3, Y(26.6) - 0.15, 3.6 * k + 0.3, [150, 156, 160], [214, 218, 220], [96, 102, 106]);
+    }
 
-    // ── bastidor izquierdo ──
-    doc.setFillColor(...CUERPO); doc.roundedRect(xBastidor, Y(0), tx - xBastidor, 33.6 * k, 0.6, 0.6, 'F');
-    doc.setFillColor(...CUERPO_MED); doc.rect(xBastidor + 0.8, Y(3), tx - xBastidor - 1.6, 14 * k, 'F');
-    doc.setFillColor(...ACERO); doc.circle(xBastidor + (tx - xBastidor) / 2, Y(28.4), Math.min(1.3, 1.6 * k), 'F');   // eje del rodillo
+    // ── bastidor izquierdo, con la luz de la izquierda ──
+    degradeEn(doc, () => doc.roundedRect(xBastidor, Y(0), tx - xBastidor, 33.6 * k, 0.6, 0.6, null),
+      xBastidor, Y(0), tx - xBastidor, 33.6 * k, [[0, CUERPO_CLARO], [0.25, CUERPO_MED], [1, OSCURO]], true, 8);
+    panel(xBastidor + 0.8, Y(3), tx - xBastidor - 1.6, 14 * k, 0.3, CUERPO_MED, CUERPO);
+    // eje del rodillo: un círculo de acero con su brillo
+    const rEje = Math.min(1.3, 1.6 * k), cxEje = xBastidor + (tx - xBastidor) / 2;
+    doc.setFillColor(...ACERO_OSC); doc.circle(cxEje, Y(28.4), rEje, 'F');
+    doc.setFillColor(...ACERO); doc.circle(cxEje - rEje * 0.12, Y(28.4) - rEje * 0.12, rEje * 0.78, 'F');
+    doc.setFillColor(...ACERO_CLARO); doc.circle(cxEje - rEje * 0.35, Y(28.4) - rEje * 0.35, rEje * 0.28, 'F');
     doc.setFillColor(...OSCURO); doc.rect(xBastidor - 0.6, Y(33.1), tx - xBastidor + 1.4, 0.9 * k, 'F');            // pata
 
     // ── caja grande de la derecha, con el escudo redondo ──
-    doc.setFillColor(...CUERPO); doc.roundedRect(xCaja, Y(0), wCaja, 33.6 * k, 1.6, 1.6, 'F');
-    doc.setFillColor(...CUERPO_MED); doc.roundedRect(xCaja + 0.9, Y(1), wCaja - 1.8, 16.5 * k, 1.2, 1.2, 'F');
-    doc.setFillColor(...CUERPO_CLARO); doc.rect(xCaja + 0.9, Y(1), wCaja - 1.8, 0.5 * k, 'F');
+    degradeEn(doc, () => doc.roundedRect(xCaja, Y(0), wCaja, 33.6 * k, 1.6, 1.6, null),
+      xCaja, Y(0), wCaja, 33.6 * k, [[0, CUERPO_CLARO], [0.1, CUERPO_MED], [0.65, CUERPO], [1, mezclar(CUERPO, OSCURO, 0.7)]], true, 16);
+    panel(xCaja + 0.9, Y(1), wCaja - 1.8, 16.5 * k, 1.2, [92, 112, 116], [58, 72, 76]);
+    doc.setFillColor(...CUERPO_CLARO); doc.rect(xCaja + 2, Y(1), wCaja - 4, 0.4 * k, 'F');
+    // el escudo: un disco hundido (más oscuro arriba, por la sombra del borde), con sus dos aros claros
     const cxE = xCaja + wCaja / 2, cyE = Y(9.2), rE = Math.min(wCaja / 2 - 1.4, 6.3 * k);
-    doc.setFillColor(...OSCURO); doc.circle(cxE, cyE, rE, 'F');
-    doc.setDrawColor(210, 214, 216); doc.setLineWidth(0.3); doc.circle(cxE, cyE, rE * 0.8, 'S');
-    doc.setLineWidth(0.15); doc.circle(cxE, cyE, rE * 0.35, 'S');
+    doc.setFillColor(128, 146, 150); doc.circle(cxE + rE * 0.03, cyE + rE * 0.05, rE * 1.04, 'F');   // canto iluminado
+    for (let i = 0; i < 6; i++) {
+      doc.setFillColor(...mezclar([18, 24, 26], [48, 60, 64], i / 5));
+      doc.circle(cxE, cyE + rE * 0.04 * i, rE * (1 - i * 0.03), 'F');
+    }
+    doc.setDrawColor(222, 226, 228); doc.setLineWidth(0.3); doc.circle(cxE, cyE, rE * 0.8, 'S');
+    doc.setDrawColor(150, 158, 162); doc.setLineWidth(0.12); doc.circle(cxE, cyE, rE * 0.72, 'S');
+    doc.setDrawColor(210, 214, 216); doc.setLineWidth(0.15); doc.circle(cxE, cyE, rE * 0.35, 'S');
     // tapa de abajo, con sus tornillos, y los botones de marcha y parada
-    doc.setFillColor(...CUERPO_MED); doc.rect(xCaja + 0.9, Y(19.5), wCaja - 1.8, 12.5 * k, 'F');
-    doc.setFillColor(...ACERO);
-    [[1.8, 20.5], [wCaja - 1.8, 20.5], [1.8, 31], [wCaja - 1.8, 31]].forEach(([dx, u]) => doc.circle(xCaja + dx, Y(u), 0.35, 'F'));
-    doc.setFillColor(64, 160, 92); doc.circle(cxE - 1.6, Y(24), Math.min(0.9, 1.2 * k), 'F');
-    doc.setFillColor(200, 60, 60); doc.circle(cxE + 1.6, Y(24), Math.min(0.9, 1.2 * k), 'F');
+    panel(xCaja + 0.9, Y(19.5), wCaja - 1.8, 12.5 * k, 0.4, [84, 104, 108], [56, 70, 74]);
+    [[1.8, 20.5], [wCaja - 1.8, 20.5], [1.8, 31], [wCaja - 1.8, 31]].forEach(([dx, u]) => {
+      doc.setFillColor(...ACERO_OSC); doc.circle(xCaja + dx, Y(u), 0.35, 'F');
+      doc.setFillColor(...ACERO_CLARO); doc.circle(xCaja + dx - 0.08, Y(u) - 0.08, 0.16, 'F');
+    });
+    const rBoton = Math.min(0.9, 1.2 * k);
+    [[cxE - 1.6, [64, 160, 92]], [cxE + 1.6, [200, 60, 60]]].forEach(([bx, c]) => {
+      doc.setFillColor(...OSCURO); doc.circle(bx, Y(24) + 0.12, rBoton + 0.2, 'F');
+      doc.setFillColor(...oscurecer(c, 0.8)); doc.circle(bx, Y(24), rBoton, 'F');
+      doc.setFillColor(...c); doc.circle(bx - rBoton * 0.12, Y(24) - rBoton * 0.12, rBoton * 0.75, 'F');
+      doc.setFillColor(...mezclar(c, BLANCO, 0.6)); doc.circle(bx - rBoton * 0.35, Y(24) - rBoton * 0.35, rBoton * 0.22, 'F');
+    });
     doc.setFillColor(...OSCURO); doc.rect(xCaja - 0.4, Y(33.1), wCaja + 0.4, 0.9 * k, 'F');
 
     // ── fileta: las bobinas de trama paradas en dos estantes, con su hilo hasta el orillo ──
     const nb = Math.max(1, Math.min(4, (coloresBob || []).length || 4));
     const xPoste = X + 4.5;
-    doc.setFillColor(...ACERO_OSC); doc.rect(xPoste - 0.25, Y(4), 0.5, 29.4 * k, 'F');
-    doc.rect(X + 1.5, Y(33.1), 6, 0.6 * k, 'F');                                       // base
+    degrade(doc, xPoste - 0.25, Y(4), 0.5, 29.4 * k, [[0, ACERO], [1, ACERO_OSC]], true, 4);
+    doc.setFillColor(...ACERO_OSC); doc.rect(X + 1.5, Y(33.1), 6, 0.6 * k, 'F');      // base
     const estantes = [13.6, 25.6];
-    estantes.forEach((u) => { doc.setFillColor(...ACERO_OSC); doc.rect(X + 0.2, Y(u), 8.6, 0.5 * k, 'F'); });
+    estantes.forEach((u) => degrade(doc, X + 0.2, Y(u), 8.6, 0.5 * k, [[0, ACERO], [1, ACERO_OSC]], false, 3));
     const hCono = 6.4 * k, bCono = 3.8, pCono = 1.2;
     for (let b = 0; b < nb; b++) {
       const c = (coloresBob && coloresBob[b]) || GRIS_HILO;
       const cx = X + 2.2 + (b % 2) * 4.4, base = Y(estantes[b >> 1]);
       // hilo desde la punta del cono hasta el orillo izquierdo, junto al peine
       doc.setDrawColor(...oscurecer(c, 0.85)); doc.setLineWidth(0.1); doc.line(cx, base - hCono, tx + 0.2, yt + 0.2);
-      // el cono, de frente: ancho abajo y angosto arriba, con su tubo
-      doc.setFillColor(...c);
-      doc.lines([[bCono / 2 - pCono / 2, -hCono], [pCono, 0], [bCono / 2 - pCono / 2, hCono]], cx - bCono / 2, base, [1, 1], 'F', true);
-      doc.setFillColor(...oscurecer(c, 0.78)); doc.rect(cx - bCono / 2, base - 0.5 * k, bCono, 0.5 * k, 'F');
+      // el cono, de frente: ancho abajo y angosto arriba, redondeado por la luz (claro a la
+      // izquierda del centro, sombra en los costados)
+      const trazo = () => doc.lines([[bCono / 2 - pCono / 2, -hCono], [pCono, 0], [bCono / 2 - pCono / 2, hCono]], cx - bCono / 2, base, [1, 1], null, true);
+      degradeEn(doc, trazo, cx - bCono / 2, base - hCono, bCono, hCono,
+        [[0, oscurecer(c, 0.62)], [0.32, mezclar(c, BLANCO, 0.3)], [0.55, c], [1, oscurecer(c, 0.55)]], true, 12);
+      doc.setFillColor(...oscurecer(c, 0.72)); doc.rect(cx - bCono / 2, base - 0.5 * k, bCono, 0.5 * k, 'F');
       doc.setFillColor(236, 230, 214); doc.rect(cx - 0.35, base - hCono - 0.7 * k, 0.7, 0.7 * k, 'F');
       const hex = '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
       doc.setFont('helvetica', 'bold'); doc.setFontSize(Math.max(3.2, 5 * k));
       doc.setTextColor(...hexARgb(textoSobre(hex)));
       doc.text(String(b + 1), cx, base - hCono * 0.32, { align: 'center' });
     }
-    return Y(30.2);   // donde la tela sale por debajo del rodillo
+    // donde la tela sale por debajo del rodillo, y dónde terminan las patas (lo que va al costado
+    // de la tela, como la regla y las llaves, empieza más abajo para no taparlas)
+    return { yTela: Y(30.2), yPie: Y(34.6) };
   }
 
   function generarFicha(jsPDF, d) {
@@ -3093,19 +3162,23 @@ async function exportDrawToPDF() {
     const franjas = [];
     for (let r = 0; r < filas; r++) if (largos[r] > 0) franjas.push(r);
     // colores de las primeras pasadas, para la tela que se ve en el telar
+    // Sin color, cada bobina se ve en un gris distinto: así el dibujo se lee igual (antes todas las
+    // filas salían del mismo gris y no se distinguían).
     const GRIS_HILO = [184, 192, 202];
-    const colorPasada = (r, kk) => { const g = grupoEn(r); return colorFila(g ? filaDelGrupo(g, kk) : r) || GRIS_HILO; };
+    const GRISES_BOBINA = [[150, 160, 172], [204, 210, 218], [116, 127, 141], [178, 186, 196]];
+    const grisDeFila = (r) => { const b = d.grid[r].findIndex(Boolean); return b >= 0 ? GRISES_BOBINA[b % GRISES_BOBINA.length] : GRIS_HILO; };
+    const colorPasada = (r, kk) => { const g = grupoEn(r); const rr = g ? filaDelGrupo(g, kk) : r; return colorFila(rr) || grisDeFila(rr); };
     const coloresInicio = [];
     for (const r of franjas) {
       for (let kk = 0; kk < largos[r] && coloresInicio.length < 6; kk++) coloresInicio.push(colorPasada(r, kk));
       if (coloresInicio.length >= 6) break;
     }
-    // color de cada bobina: el de la primera fila que la usa
+    // color de cada bobina: el de la primera fila que la usa (o su gris, si no tiene)
     const coloresBob = d.grid[0].map((_, b) => {
       for (let r = 0; r < filas; r++) if (d.grid[r][b] && colorFila(r)) return colorFila(r);
-      return null;
+      return GRISES_BOBINA[b % GRISES_BOBINA.length];
     });
-    const ty = dibujarTelar(doc, colTela.x, colTela.w, yTelar, ALTO_TELAR, coloresInicio, coloresBob);
+    const { yTela: ty, yPie } = dibujarTelar(doc, colTela.x, colTela.w, yTelar, ALTO_TELAR, coloresInicio, coloresBob);
     const tHeight = Y_FIN_TELA - ty;
 
     const MIN_FRANJA = 1.6, MIN_VISIBLE = 0.6;
@@ -3133,8 +3206,17 @@ async function exportDrawToPDF() {
       else parcial = true;
     }
     const fondo = ty + tHeight;
+    // sombra de la tela sobre la hoja (la levanta un poco del papel)
+    doc.setFillColor(0, 0, 0);
+    opacidad(doc, 0.07); doc.rect(tx + 0.9, ty + 0.9, tWidth, tHeight, 'F');
+    opacidad(doc, 0.07); doc.rect(tx + 0.45, ty + 0.45, tWidth, tHeight, 'F');
+    opacidad(doc, 1);
+    // Cada franja dibujada guarda dónde está y cuántas pasadas reales lleva: con eso se ubican los
+    // centímetros de la regla (aun si una fila chica se agrandó) y las llaves de cada vuelta.
+    const tramosTela = [], vueltasDibujadas = [];
     let yy = ty, ultimaFila = -1, chicasAgrandadas = false, ultimoColor = GRIS_HILO;
     for (let v = 0; v < vueltas && yy < fondo - 0.01; v++) {
+      const yInicioVuelta = yy;
       for (const r of franjas) {
         if (yy >= fondo - 0.01) break;
         let hBanda = largos[r] * escala;
@@ -3158,28 +3240,92 @@ async function exportDrawToPDF() {
             for (let pp = 1; pp < reps[r] && pp * hPasada < hVisible; pp++) doc.line(tx, yy + pp * hPasada, tx + tWidth, yy + pp * hPasada);
           }
         }
+        tramosTela.push({ y0: yy, h: hBanda, pasadas: largos[r] });
         yy += hBanda; ultimaFila = gq ? gq.hasta : r;
       }
+      vueltasDibujadas.push({ y0: yInicioVuelta, y1: Math.min(yy, fondo), completa: yy <= fondo + 0.01 && !parcial });
       if (v < vueltas - 1 && yy < fondo) {         // límite entre vueltas
         doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.5); doc.setLineDashPattern([1.5, 1.2], 0);
         doc.line(tx, yy, tx + tWidth, yy); doc.setLineDashPattern([], 0);
       }
     }
-    // textura de urdimbre: hilos verticales translúcidos (los mismos de la tela del telar)
-    doc.setGState(new doc.GState({ opacity: 0.12, 'stroke-opacity': 0.12 }));   // opacity solo afecta rellenos; las líneas usan stroke-opacity
-    doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.12);
+    // Textura del tejido: los hilos de la urdimbre, claros y oscuros alternados, translúcidos.
+    // (opacity solo afecta rellenos; las líneas usan stroke-opacity, por eso opacidad() pone las dos)
+    opacidad(doc, 0.12); doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.12);
     for (let x = tx + 0.3; x < tx + tWidth; x += 0.6) doc.line(x, ty, x, fondo);
-    doc.setGState(new doc.GState({ opacity: 1, 'stroke-opacity': 1 }));
-    // orillos: un borde apenas más oscuro a cada lado, y los flecos abajo, del color de la última pasada
+    opacidad(doc, 0.05); doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.1);
+    for (let x = tx + 0.6; x < tx + tWidth; x += 0.6) doc.line(x, ty, x, fondo);
+    // sombra del rodillo: la tela sale de abajo de él, así que arriba queda más oscura
+    doc.setFillColor(0, 0, 0);
+    for (let i = 0; i < 8; i++) { opacidad(doc, 0.3 * (1 - i / 8) ** 1.5); doc.rect(tx, ty + i * 0.4, tWidth, 0.41, 'F'); }
+    // orillos: la tela se ve apenas más oscura en los bordes
+    for (let i = 0; i < 3; i++) {
+      opacidad(doc, 0.1 - i * 0.03);
+      doc.rect(tx + i * 0.3, ty, 0.31, tHeight, 'F'); doc.rect(tx + tWidth - (i + 1) * 0.3, ty, 0.31, tHeight, 'F');
+    }
+    opacidad(doc, 1);
     doc.setDrawColor(120, 128, 136); doc.setLineWidth(0.2);
     doc.line(tx, ty, tx, fondo); doc.line(tx + tWidth, ty, tx + tWidth, fondo);
+    // flecos abajo, del color de la última pasada
     doc.setDrawColor(...oscurecer(ultimoColor, 0.9)); doc.setLineWidth(0.15);
     for (let x = tx + 0.3; x < tx + tWidth; x += 0.6) doc.line(x, fondo, x, fondo + 1.4);
-    if (vueltas === 2) for (let v = 0; v < vueltas; v++) {   // rótulos de vuelta
-      const yv = ty + v * (tHeight / 2) + 6.5;
-      doc.setFillColor(255, 255, 255); doc.roundedRect(tx + tWidth - 17, yv - 3, 15, 4.4, 1, 1, 'F');
-      doc.setFont('helvetica', 'bold'); doc.setFontSize(6.5); doc.setTextColor(...AZUL);
-      doc.text(`vuelta ${v + 1}`, tx + tWidth - 9.5, yv, { align: 'center' });
+
+    // Llaves de cada vuelta, en el margen derecho (afuera de la tela, así no tapan nada): qué vuelta
+    // es y cuánto mide (o hasta qué fila se ve, si la vuelta no entra entera).
+    const xLlave = tx + tWidth + 1.6, anchoRotulo = colTela.x + colTela.w - (xLlave + 1.3);
+    vueltasDibujadas.forEach((vd, i) => {
+      const y0 = Math.max(vd.y0 + 0.5, yPie), y1 = vd.y1 - 0.5;
+      if (y1 - y0 < 4) return;
+      doc.setDrawColor(...AZUL2); doc.setLineWidth(0.35);
+      doc.line(xLlave, y0, xLlave, y1); doc.line(xLlave - 0.9, y0, xLlave, y0); doc.line(xLlave - 0.9, y1, xLlave, y1);
+      const titulo = `vuelta ${i + 1}`;
+      const detalle = vd.completa ? (largoVuelta ? largo(largoVuelta) : `${miles(pasadasVuelta)} pas.`) : `filas 1 a ${ultimaFila + 1}`;
+      const ajustar = (txt, fz, min) => { doc.setFontSize(fz); while (fz > min && doc.getTextWidth(txt) > anchoRotulo) { fz -= 0.25; doc.setFontSize(fz); } return fz; };
+      const ym = (y0 + y1) / 2;
+      doc.setFont('helvetica', 'bold'); doc.setTextColor(...AZUL); ajustar(titulo, 6.2, 4.4);
+      doc.text(titulo, xLlave + 1.3, ym - 0.4);
+      doc.setFont('helvetica', 'normal'); doc.setTextColor(...GRIS); ajustar(detalle, 5.6, 4.2);
+      doc.text(detalle, xLlave + 1.3, ym + 2.2);
+    });
+
+    // Regla en el margen izquierdo, en centímetros de tela (en metros si es larga), si el dibujo tiene
+    // los metros por pasada.
+    // Cada centímetro se ubica dentro de su franja, así que la regla coincide con lo dibujado.
+    let hayRegla = false, reglaEnMetros = false;
+    if (d.metrosPorPasada && tramosTela.length) {
+      const cmPorPasada = d.metrosPorPasada * 100;
+      let acum = 0;
+      const tramosCm = tramosTela.map((t) => { const o = { ...t, c0: acum, cm: t.pasadas * cmPorPasada }; acum += o.cm; return o; });
+      const yDeCm = (c) => {
+        for (const t of tramosCm) if (c <= t.c0 + t.cm + 1e-9) return t.y0 + ((c - t.c0) / (t.cm || 1)) * t.h;
+        return Infinity;
+      };
+      const cmVisibles = (() => { let c = 0; for (const t of tramosCm) { if (t.y0 >= fondo) break; c = t.c0 + t.cm * Math.min(1, (fondo - t.y0) / t.h); } return c; })();
+      const mmPorCm = tHeight / Math.max(cmVisibles, 1e-6);
+      const pasos = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000];
+      const menor = pasos.find((p) => p * mmPorCm >= 1.2) || pasos[pasos.length - 1];
+      const mayor = pasos.find((p) => p > menor && (p / menor) % 1 === 0 && p * mmPorCm >= 7) || menor * 10;
+      const xr = tx - 1.1;
+      reglaEnMetros = cmVisibles >= 200;             // una tela larga se mide en metros
+      if (cmVisibles > 0 && Number.isFinite(mmPorCm)) {
+        hayRegla = true;
+        doc.setDrawColor(...GRIS); doc.setLineWidth(0.25); doc.line(xr, yPie, xr, fondo);
+        doc.setFont('helvetica', 'normal'); doc.setFontSize(4.6); doc.setTextColor(...GRIS);
+        let primerRotulo = true;   // el primer número lleva la unidad: «10 cm», después «20», «30»...
+        for (let n = 1; n * menor <= cmVisibles + 1e-9 && n < 2000; n++) {
+          const c = n * menor, yc = yDeCm(c);
+          if (!(yc <= fondo + 0.01)) break;
+          if (yc < yPie) continue;                   // detrás de la pata del telar
+          const esMayor = Math.abs(c / mayor - Math.round(c / mayor)) < 1e-9;
+          doc.setLineWidth(esMayor ? 0.25 : 0.15);
+          doc.line(xr - (esMayor ? 1.5 : 0.8), yc, xr, yc);
+          if (esMayor && yc > yPie + 1.5 && yc < fondo - 1) {
+            const valor = reglaEnMetros ? c / 100 : c;
+            doc.text(String(valor).replace('.', ',') + (primerRotulo ? (reglaEnMetros ? ' m' : ' cm') : ''), xr - 1.9, yc + 0.6, { align: 'right' });
+            primerRotulo = false;
+          }
+        }
+      }
     }
     // epígrafe
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...GRIS);
@@ -3188,9 +3334,10 @@ async function exportDrawToPDF() {
     else ep += vueltas === 2 ? ' Se ven dos vueltas del dibujo.' : ' Se ve una vuelta completa.';
     if (chicasAgrandadas) ep += ' Las filas de muy pocas pasadas se agrandan un poco.';
     if (gruposPdf.length) ep += ' En un intercalado, las pasadas alternan el color de sus filas.';
-    if (!hayColores) ep += ' Sin colores asignados, las franjas se ven en gris.';
-    else if (d.colores.some((c) => !c)) ep += ' Las filas sin color se ven en gris.';
-    if (largoVuelta) ep += ` En la tela real, una vuelta mide unos ${largo(largoVuelta)}.`;
+    if (!hayColores) ep += ' Sin colores asignados, cada bobina se ve en un gris distinto.';
+    else if (d.colores.some((c) => !c)) ep += ' Las filas sin color se ven en gris, un tono por bobina.';
+    if (hayRegla) ep += ` La regla marca los ${reglaEnMetros ? 'metros' : 'centímetros'} de tela.`;
+    else if (largoVuelta) ep += ` En la tela real, una vuelta mide unos ${largo(largoVuelta)}.`;
     const lineasEp = doc.splitTextToSize(ep, colTela.w);
     const yEp = fondo + 5.5;
     doc.text(lineasEp, colTela.x, yEp);
