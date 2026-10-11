@@ -10,12 +10,15 @@ el repositorio para que el código y la documentación viajen juntos.
 | `Estado_Completo_del_Proyecto.docx` | **Empezar por acá.** Resume todo: qué es el proyecto, qué se construyó, las decisiones técnicas y su fundamento, y lo que falta. |
 | `Documentación_de_Proyecto.docx` | El documento formal completo, con 85 secciones (contando los subtítulos). |
 | `Bitácora.docx` | Registro cronológico de avances y decisiones. |
-| `Registro de Entrevistas.docx` | Las minutas de las seis reuniones con el cliente (la última, del 19/09/2026) y la séptima, pendiente. |
+| `Registro de Entrevistas.docx` | Las minutas de las siete reuniones con el cliente (la última, del 10/10/2026) y la octava, pendiente. |
 
 ## Guías de trabajo
 
 | Archivo | Qué contiene |
 |---|---|
+| `Guia_Conexion_y_Puesta_en_Marcha.docx` | **El paso a paso de todo:** las cuatro plaquetas, cómo se conectan entre sí y al telar, cómo levantar el servidor, la web y el ESP32, y qué muestra la web cuando se usa la botonera. |
+| `Guia_Conexion_Reles_LCA110.docx` | Los relés de selección: mediciones, la conexión final (la más segura), pruebas y problemas frecuentes. |
+| `Guia_Mediciones_y_Verificaciones.docx` | Todas las mediciones y pruebas, en orden, con la planilla para anotar. |
 | `Conexionado_Nivel2.docx` | El paso a paso del sensor de pasada y los relés, con sus diagramas. |
 | `Guia_Bloques_C_y_D.docx` | Qué falta hacer en esos dos bloques y en qué orden. |
 | `Checklist_verificaciones.xlsx` | Las 25 verificaciones antes y durante la instalación. |
