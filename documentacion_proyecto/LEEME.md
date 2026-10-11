@@ -10,7 +10,7 @@ el repositorio para que el código y la documentación viajen juntos.
 | `Estado_Completo_del_Proyecto.docx` | **Empezar por acá.** Resume todo: qué es el proyecto, qué se construyó, las decisiones técnicas y su fundamento, y lo que falta. |
 | `Documentación_de_Proyecto.docx` | El documento formal completo, con 85 secciones (contando los subtítulos). |
 | `Bitácora.docx` | Registro cronológico de avances y decisiones. |
-| `Registro de Entrevistas.docx` | Las minutas de las seis reuniones con el cliente (la última, del 19/09/2026) y la séptima, pendiente. |
+| `Registro de Entrevistas.docx` | Las minutas de las siete reuniones con el cliente (la última, del 10/10/2026) y la octava, pendiente. |
 
 ## Guías de trabajo
 
