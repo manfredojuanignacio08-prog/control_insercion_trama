@@ -121,7 +121,7 @@ en vez de la del proxy.
 |---|---|---|---|
 | GET | `/api/patrones?buscar=texto` |, | Lista (filtra por nombre, ILIKE) |
 | GET | `/api/patrones/:id` |, | Detalle |
-| POST | `/api/patrones` | `{nombre, filas, columnas, matriz_pasadas, repeticiones_por_fila?, matriz_ligamento?, colores_filas?, metadata?}` | Crea. Si no mandás `matriz_ligamento`, se deriva automáticamente (`pasadas>0 → 1`). Cada fila de `matriz_pasadas` puede tener **una sola** bobina activa (una trama por pasada): con dos responde **400**. Excepción: `secuencias_por_fila` (opcional, uno por fila: `null` o el orden de 2 a 16 bobinas, por ejemplo `[1,3,4,2]`) marca un tramo intercalado, que alterna esas bobinas una por pasada durante las repeticiones de la fila; esa fila marca exactamente sus bobinas |
+| POST | `/api/patrones` | `{nombre, filas, columnas, matriz_pasadas, repeticiones_por_fila?, matriz_ligamento?, colores_filas?, metadata?}` | Crea. Si no mandás `matriz_ligamento`, se deriva automáticamente (`pasadas>0 → 1`). Cada fila de `matriz_pasadas` puede tener **una sola** bobina activa (una trama por pasada): con dos responde **400**. Para alternar bobinas está `grupos_intercalados` (opcional): `[{desde, hasta, pasadas}]` con índices de fila desde 0; las filas del grupo se recorren en orden, cada una sus repeticiones, hasta completar `pasadas`. Los grupos no se superponen, tienen al menos dos filas y una vuelta de hasta 32 pasadas |
 | PUT | `/api/patrones/:id` | igual que POST, más `version_esperada?` | Reemplaza el patrón. Si se manda `version_esperada` (el `modificado_at` que tenía la pantalla) y otra persona lo guardó después, responde **409** `DIBUJO_MODIFICADO` en vez de pisar sus cambios |
 | DELETE | `/api/patrones/:id` |, | Borra (falla con 409 si tiene historial asociado) |
 | PUT | `/api/patrones/:id/metros-por-pasada` | `{metros_por_pasada}` (número mayor que 0 y hasta 1, o `null`) | Cuánto avanza la tela por pasada: con este dato las estadísticas pasan pasadas a metros. `null` lo deja sin definir |
@@ -193,7 +193,8 @@ src/
 │   ├── migracion_018_senal_nivel2.sql  Migración: solo actualiza la descripción de `ultimo_reporte_sensor`, que ahora también renueva la consulta periódica del nodo del Nivel 2.
 │   ├── migracion_019_dibujos_de_invitado.sql  Migración: marca los dibujos creados por un invitado (`creado_por_invitado`): el invitado solo puede cambiar o borrar esos. Índice para buscar el usuario sin distinguir mayúsculas.
 │   ├── migracion_020_hilado.sql  Migración: hilado del dibujo (`hilado_peso_kg`, `hilado_metros_max`, `hilado_pasadas_base`) para la ficha y el PDF.
-│   ├── migracion_021_secuencias_por_fila.sql  Migración: tramos intercalados (`secuencias_por_fila`): una fila alterna varias bobinas en orden, una por pasada.
+│   ├── migracion_021_secuencias_por_fila.sql  Migración: primera versión de los intercalados (el orden dentro de una fila); la reemplaza la 022.
+│   ├── migracion_022_grupos_intercalados.sql  Migración: intercalados por grupos de filas (`grupos_intercalados`) y borra `secuencias_por_fila`.
 │   ├── migrator.js                               Aplica cada migración UNA vez (tabla migraciones_aplicadas)
 │   └── migrate.js                                Corre las migraciones pendientes (npm run migrate)
 ├── scripts/

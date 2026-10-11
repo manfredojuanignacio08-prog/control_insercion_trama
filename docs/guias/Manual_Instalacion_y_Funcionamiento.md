@@ -418,11 +418,11 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
   cuántas pasadas seguidas se teje esa fila. Cada fila lleva una sola bobina
   (una trama por pasada): al marcar otra, la anterior se desmarca. En el
   celular, «Siguiente» en el teclado pasa a la casilla de la fila de abajo.
-- **Intercalar**: arma un tramo en una sola fila: un orden de bobinas que se
-  alternan una por pasada (por ejemplo 1, 3, 4, 2) y las pasadas del tramo
-  (por ejemplo 120). Con una sola bobina es un tramo común (140 pasadas de la
-  4). Va al final del dibujo o en lugar de todo el dibujo; tocar la fila de un
-  tramo intercalado permite cambiarlo.
+- **Intercalar**: agrupa filas seguidas (cada una con su bobina) para que se
+  alternen pasada por pasada hasta completar las pasadas del intercalado: por
+  ejemplo las filas de las bobinas 1, 3, 4 y 2 durante 120 pasadas. Se arma con
+  el botón o con el «+» de la columna ⇄; una llave une las filas del grupo y
+  tocarla permite cambiarlo o quitarlo.
 - **Ficha del dibujo (engranaje)**: metros de tela por pasada y hilado
   (peso y metros de tela que alcanza a tejer). Muestra el hilado usado y el
   restante y los metros que faltan, contados desde que se cargó el hilado.

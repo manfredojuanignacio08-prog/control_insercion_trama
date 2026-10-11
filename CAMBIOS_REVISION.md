@@ -1098,3 +1098,11 @@ Pruebas: `npm test` (6, con casos nuevos del editor), integración contra Postgr
 | Documentación de la web y manual | Manual de la página web (Intercalar, pregunta frecuente con el ejemplo, PDF), Documentación de Proyecto (campo nuevo y su regla), manual de instalación, README del backend y del firmware. |
 
 Pruebas: `npm test` (casos nuevos de tramos), integración contra PostgreSQL real (tramos válidos, inválidos y lo que recibe el firmware), firmware en la PC (selección intercalada 1, 3, 4, 2: una bobina por pasada, en orden), simulaciones, coherencia 19/19 y Chromium (tramos, guardado, edición y PDF).
+
+## Decimoctava revisión: intercalados por grupos de filas
+
+| Pedido | Qué se hizo |
+|---|---|
+| El intercalado tiene que respetar una bobina por fila: el número en el mismo cuadrado y un apartado al costado para agrupar filas | Cada fila lleva su bobina. Un intercalado agrupa filas seguidas (`grupos_intercalados`, migración 022, que reemplaza a la 021): se recorren en orden, cada una sus pasadas, hasta completar las del intercalado. En la grilla, una columna ⇄ al costado muestra una llave con las pasadas (tocarla lo cambia o lo quita; el «+» arma uno desde esa fila) y el cuadrado de cada bobina muestra su lugar en el orden. |
+| Posición, telar y sensor | El grupo cuenta como una sola fila larga que empieza en su primera fila (las demás miden 0): backend, firmware y web usan la misma regla. El firmware recibe el ciclo de bobinas del grupo. Pruebas de posición (web, backend y firmware: 2,4 millones de pasos iguales), selección e integración con un telar real en PostgreSQL. |
+| Telar de la vista previa | Más fiel a la máquina de la foto: bastidor, caja de mando con la placa VAMATEX, rodillo de urdimbre, dos marcos de lizos, peine, la tela que se está tejiendo con los colores del dibujo, pecho y barra delantera. |

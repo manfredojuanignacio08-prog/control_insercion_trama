@@ -114,15 +114,17 @@ las repeticiones vuelve a la fila anterior, a su última pasada.
 Los dibujos guardados antes de esto no traen el campo; el backend manda un 1 por
 fila y se tejen igual que siempre.
 
-## Tramos intercalados
+## Intercalados
 
-Una fila puede alternar varias bobinas, una por pasada y en orden: por ejemplo 1, 3, 4, 2
-durante 120 pasadas. El backend la manda en `secuencias_por_fila` (un elemento por fila: `null`
-o el orden, de 2 a 16 bobinas). En cada pulso, el nodo activa solo la bobina que sigue en ese
-orden según cuántas pasadas de la fila ya se tejieron (`seleccionAplicarIntercalada`). Como
-depende de la posición dentro de la fila, el retroceso y la recuperación tras un reinicio la
-mantienen sin hacer nada aparte. Una secuencia con una bobina que este nodo no tiene se ignora y
-la fila se teje como fila común.
+Varias filas seguidas pueden formar un grupo que se teje alternándose: por ejemplo las filas de
+las bobinas 1, 3, 4 y 2 durante 120 pasadas (1, 3, 4, 2, 1, 3...). El backend se lo manda al nodo
+ya resuelto: en `repeticiones_por_fila`, la primera fila del grupo trae el total del grupo y las
+demás 0; en `secuencias_por_fila`, la primera fila trae la bobina de cada pasada de una vuelta del
+grupo (0 = una fila sin bobina). Las filas de largo 0 se saltean al avanzar y al retroceder
+(`posicion_dibujo.h`), y en cada pulso se activa la bobina que sigue en el ciclo según cuántas
+pasadas del grupo ya se tejieron (`seleccionAplicarIntercalada`). Así la posición sigue siendo
+fila + pasada dentro de la fila, igual que en el backend, y el retroceso y la recuperación tras un
+reinicio funcionan sin nada aparte.
 
 ## Depende del Bloque C
 
