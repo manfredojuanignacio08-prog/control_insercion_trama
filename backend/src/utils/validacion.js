@@ -3,7 +3,7 @@
  * Devuelve un array de strings con los errores encontrados (vacío si está OK).
  */
 export function validarPatron(body) {
-  const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila } = body;
+  const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, grupos_intercalados } = body;
   const errores = [];
 
   if (!nombre || typeof nombre !== 'string' || !nombre.trim()) {
@@ -38,6 +38,32 @@ export function validarPatron(body) {
     }
   }
 
+  // grupos_intercalados es opcional: grupos de filas seguidas que se tejen alternándose, cada
+  // uno {desde, hasta, pasadas} con índices de fila desde 0. Ver migración 022.
+  const MAX_CICLO = 32;   // pasadas de una vuelta del grupo (lo que guarda el nodo por grupo)
+  if (grupos_intercalados !== undefined && grupos_intercalados !== null) {
+    if (!Array.isArray(grupos_intercalados)) {
+      errores.push('grupos_intercalados debe ser un array de grupos {desde, hasta, pasadas}.');
+    } else {
+      const reps = (i) => (Array.isArray(repeticiones_por_fila) && Number.isInteger(repeticiones_por_fila[i]) ? repeticiones_por_fila[i] : 1);
+      let anterior = -1;
+      const ordenados = [...grupos_intercalados].sort((a, b) => (a?.desde ?? 0) - (b?.desde ?? 0));
+      for (const g of ordenados) {
+        const forma = g && typeof g === 'object' && Number.isInteger(g.desde) && Number.isInteger(g.hasta) && Number.isInteger(g.pasadas);
+        if (!forma || g.desde < 0 || g.hasta <= g.desde || (filasOk && g.hasta >= filas)) {
+          errores.push('Cada intercalado va de una fila a otra posterior, dentro del dibujo (por lo menos dos filas).');
+          break;
+        }
+        if (g.pasadas < 1 || g.pasadas > MAX_REPETICIONES) { errores.push(`Las pasadas de un intercalado van de 1 a ${MAX_REPETICIONES}.`); break; }
+        if (g.desde <= anterior) { errores.push('Dos intercalados no pueden compartir filas.'); break; }
+        let ciclo = 0;
+        for (let i = g.desde; i <= g.hasta; i++) ciclo += reps(i);
+        if (ciclo > MAX_CICLO) { errores.push(`Una vuelta de un intercalado puede tener hasta ${MAX_CICLO} pasadas (filas ${g.desde + 1} a ${g.hasta + 1}: ${ciclo}).`); break; }
+        anterior = g.hasta;
+      }
+    }
+  }
+
   if (!Array.isArray(matriz_pasadas)) {
     errores.push('matriz_pasadas debe ser un array de arrays de números.');
   } else {
@@ -52,6 +78,16 @@ export function validarPatron(body) {
     );
     if (filaInvalida) {
       errores.push(`cada fila de matriz_pasadas debe tener ${columnasOk ? columnas : 'la misma cantidad de'} números >= 0.`);
+    } else {
+      // En cada pasada se inserta una sola trama: una fila lleva como máximo una bobina activa.
+      // Dos en la misma fila le pedirían al telar dos tramas a la vez. Para alternar bobinas
+      // están los intercalados (grupos de filas), no varias bobinas en una fila.
+      const dobles = [];
+      matriz_pasadas.forEach((fila, i) => { if (fila.filter((celda) => celda > 0).length > 1) dobles.push(i + 1); });
+      if (dobles.length) {
+        const lista = dobles.slice(0, 10).join(', ') + (dobles.length > 10 ? '…' : '');
+        errores.push(`Cada fila puede tener una sola bobina (una trama por pasada). Tienen más de una: ${dobles.length === 1 ? 'la fila' : 'las filas'} ${lista}.`);
+      }
     }
   }
 

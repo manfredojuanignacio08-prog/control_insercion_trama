@@ -7,7 +7,7 @@
 
 import { pool } from '../db.js';
 import { badRequest, notFound } from '../middleware/errorHandler.js';
-import { avanzarPosicionTejido, retrocederPosicionTejido } from '../utils/posicion.js';
+import { avanzarPosicionTejido, retrocederPosicionTejido, largosDeFilas, normalizarGrupos } from '../utils/posicion.js';
 
 // Cuánto puede bajar el conteo entre dos reportes sin que se considere un error.
 // Con Retroceder el telar deshace pasadas y el contador del sensor BAJA de verdad
@@ -43,7 +43,7 @@ export async function obtenerPatronActual(req, res, next) {
     // memoria volvió a cero y sin este dato retomaría el dibujo desde la primera
     // fila, dejando un salto visible en la tela a mitad de una pieza.
     const { rows } = await pool.query(
-      `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas, p.repeticiones_por_fila,
+      `SELECT p.id, p.nombre, p.filas, p.columnas, p.matriz_pasadas, p.repeticiones_por_fila, p.grupos_intercalados,
               h.id AS historial_id, h.fila_actual, h.repeticion_en_fila, h.pasadas_sensor
          FROM telares t
          JOIN patrones p ON p.id = t.patron_actual_id
@@ -69,7 +69,12 @@ export async function obtenerPatronActual(req, res, next) {
       matriz_pasadas: p.matriz_pasadas,
       // Cuántas pasadas seguidas se teje cada fila. Si el dibujo no lo define, se
       // manda un 1 por fila: el nodo no tiene que interpretar ausencias.
-      repeticiones_por_fila: p.repeticiones_por_fila ?? Array.from({ length: p.filas }, () => 1),
+      // Con intercalados, la primera fila de cada grupo mide el total del grupo y las demás 0
+      // (el nodo las saltea). Sin intercalados son las repeticiones de siempre.
+      repeticiones_por_fila: largosDeFilas(p.repeticiones_por_fila, p.filas, p.grupos_intercalados),
+      // Intercalados: en la primera fila de cada grupo, el ciclo de bobinas pasada por pasada
+      // (cada fila tantas veces como sus repeticiones; 0 = una fila sin bobina). null en las demás.
+      secuencias_por_fila: secuenciasParaNodo(p),
       // Posición de la producción en curso, para que el nodo retome donde quedó.
       // En null si no hay producción abierta: ahí el nodo arranca desde el principio.
       fila_actual: p.fila_actual ?? null,
@@ -82,6 +87,24 @@ export async function obtenerPatronActual(req, res, next) {
   } catch (err) {
     next(err);
   }
+}
+
+// Para el nodo: por fila, null o (en la primera de un intercalado) la bobina de cada pasada del
+// ciclo, numeradas desde 1. Una fila sin bobina va como 0.
+function secuenciasParaNodo(p) {
+  const out = Array.from({ length: p.filas }, () => null);
+  const reps = Array.isArray(p.repeticiones_por_fila) ? p.repeticiones_por_fila : [];
+  for (const g of normalizarGrupos(p.grupos_intercalados, p.filas)) {
+    const ciclo = [];
+    for (let i = g.desde; i <= g.hasta; i++) {
+      const fila = Array.isArray(p.matriz_pasadas) ? p.matriz_pasadas[i] : null;
+      const c = Array.isArray(fila) ? fila.findIndex((v) => Number(v) > 0) : -1;
+      const r = Number.isInteger(Number(reps[i])) && Number(reps[i]) >= 1 ? Number(reps[i]) : 1;
+      for (let k = 0; k < r; k++) ciclo.push(c + 1);
+    }
+    out[g.desde] = ciclo;
+  }
+  return out;
 }
 
 /**
@@ -121,7 +144,7 @@ export async function reportarPasadas(req, res, next) {
     // Se bloquea la fila del historial mientras se actualiza, para que dos
     // reportes seguidos no se pisen entre sí.
     const { rows } = await cliente.query(
-      `SELECT h.id, h.pasadas_sensor, h.fila_actual, h.repeticion_en_fila, p.filas, p.repeticiones_por_fila
+      `SELECT h.id, h.pasadas_sensor, h.fila_actual, h.repeticion_en_fila, p.filas, p.repeticiones_por_fila, p.grupos_intercalados
          FROM historial_produccion h
          JOIN patrones p ON p.id = h.patron_id
         WHERE h.telar_id = $1 AND h.estado = 'en_curso'
@@ -146,10 +169,10 @@ export async function reportarPasadas(req, res, next) {
     // rango se ignora (no se rechaza). Sin posición guardada previa no hay contra
     // qué cotejar: coherente queda en null.
     const delta = pasadasSensor - actual.pasadas_sensor;
-    const repsDeFila = (i) => {
-      const r = Array.isArray(actual.repeticiones_por_fila) ? Number(actual.repeticiones_por_fila[i]) : NaN;
-      return Number.isInteger(r) && r >= 1 ? r : 1;
-    };
+    // Largo de cada fila para la posición (con intercalados, el grupo entero en su primera fila).
+    const largos = Number.isInteger(actual.filas) && actual.filas > 0
+      ? largosDeFilas(actual.repeticiones_por_fila, actual.filas, actual.grupos_intercalados) : [];
+    const repsDeFila = (i) => largos[i] ?? 1;
     // Posición como cantidad de pasadas desde el principio del dibujo.
     const aPasadas = (fila, rep) => {
       let acc = 0;
@@ -160,12 +183,12 @@ export async function reportarPasadas(req, res, next) {
     let esperada = null;
     let porVuelta = 0;
     if (
-      Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas &&
+      Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas && repsDeFila(fila_actual) > 0 &&
       Number.isInteger(actual.fila_actual) && Number.isInteger(actual.filas) && actual.filas > 0
     ) {
       esperada = delta >= 0
-        ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0)
-        : retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0);
+        ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0, actual.grupos_intercalados)
+        : retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0, actual.grupos_intercalados);
       // La distancia se mide sobre el lazo: la última pasada del dibujo y la primera de la vuelta
       // siguiente están a una pasada, no a una vuelta entera. Antes, si el reporte caía justo en
       // el cambio de vuelta (el conteo y la fila se leen con un instante de diferencia), se
@@ -197,7 +220,8 @@ export async function reportarPasadas(req, res, next) {
       );
     }
 
-    const filaValida = Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas
+    // Una fila de largo 0 (dentro de un intercalado) no es una posición: se ignora.
+    const filaValida = Number.isInteger(fila_actual) && fila_actual >= 0 && fila_actual < actual.filas && repsDeFila(fila_actual) > 0
       ? fila_actual
       : null;
 
@@ -207,9 +231,7 @@ export async function reportarPasadas(req, res, next) {
     // número, también al lado de la fila vieja cuando la informada no servía, y la posición
     // guardada quedaba incoherente. Si no viene (o no sirve) con una fila nueva, la fila arranca
     // en su primera pasada; con la misma fila se conserva la que había.
-    const repsFila = filaValida === null ? 0
-      : (Array.isArray(actual.repeticiones_por_fila) && Number.isInteger(Number(actual.repeticiones_por_fila[filaValida]))
-          && Number(actual.repeticiones_por_fila[filaValida]) >= 1 ? Number(actual.repeticiones_por_fila[filaValida]) : 1);
+    const repsFila = filaValida === null ? 0 : repsDeFila(filaValida);
     const repValida = filaValida === null ? null
       : (Number.isInteger(repeticion_en_fila) && repeticion_en_fila >= 0 && repeticion_en_fila < repsFila)
         ? repeticion_en_fila
@@ -221,8 +243,8 @@ export async function reportarPasadas(req, res, next) {
     // si la producción ya había avanzado por reloj (el nodo arrancó sin red), al tomar el control
     // el sensor (que cuenta desde 0) borraba del historial las vueltas ya tejidas.
     let cruce = delta >= 0
-      ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0).vueltas_completadas
-      : -retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0).vueltas_deshechas;
+      ? avanzarPosicionTejido(actual.fila_actual, actual.filas, delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0, actual.grupos_intercalados).vueltas_completadas
+      : -retrocederPosicionTejido(actual.fila_actual, actual.filas, -delta, actual.repeticiones_por_fila, actual.repeticion_en_fila ?? 0, actual.grupos_intercalados).vueltas_deshechas;
     // La posición que se guarda es la que informa el nodo, que puede estar hasta
     // TOLERANCIA_POSICION_PASADAS pasadas antes o después de la que da el conteo (el contador sube
     // en la interrupción y la fila se mueve un instante después). Si esa diferencia cae justo en

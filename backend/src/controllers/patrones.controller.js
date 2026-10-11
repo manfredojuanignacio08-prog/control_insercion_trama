@@ -52,10 +52,18 @@ export async function obtenerPatron(req, res, next) {
   }
 }
 
+// Los intercalados se guardan ordenados y solo si hay alguno: un array vacío queda en NULL,
+// igual que un dibujo sin intercalados.
+function gruposParaGuardar(grupos) {
+  if (!Array.isArray(grupos) || grupos.length === 0) return null;
+  return JSON.stringify([...grupos].sort((a, b) => a.desde - b.desde)
+    .map((g) => ({ desde: g.desde, hasta: g.hasta, pasadas: g.pasadas })));
+}
+
 // POST /api/patrones
 export async function crearPatron(req, res, next) {
   try {
-    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila } = req.body;
+    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, grupos_intercalados } = req.body;
 
     const errores = validarPatron(req.body);
     if (errores.length) throw badRequest(errores.join(' '));
@@ -63,8 +71,8 @@ export async function crearPatron(req, res, next) {
     const ligamento = matriz_ligamento ?? derivarLigamentoDesdePasadas(matriz_pasadas);
 
     const { rows } = await pool.query(
-      `INSERT INTO patrones (nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, creado_por_invitado)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO patrones (nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, creado_por_invitado, grupos_intercalados)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         nombre.trim(),   // sin espacios sobrantes: "Raya" y "Raya " no son dos dibujos distintos
@@ -77,6 +85,7 @@ export async function crearPatron(req, res, next) {
         // En null, el telar teje una pasada por fila: el comportamiento de siempre.
         repeticiones_por_fila ?? null,
         esInvitado(req),
+        gruposParaGuardar(grupos_intercalados),
       ]
     );
     res.status(201).json(rows[0]);
@@ -94,7 +103,7 @@ export async function actualizarPatron(req, res, next) {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila } = req.body;
+    const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, grupos_intercalados } = req.body;
 
     const errores = validarPatron(req.body);
     if (errores.length) throw badRequest(errores.join(' '));
@@ -106,7 +115,7 @@ export async function actualizarPatron(req, res, next) {
     // matriz hay que detener el trabajo primero (eso libera el dibujo).
     await client.query('BEGIN');
     const actual = await client.query(
-      `SELECT filas, columnas, matriz_pasadas, repeticiones_por_fila, creado_por_invitado,
+      `SELECT filas, columnas, matriz_pasadas, repeticiones_por_fila, grupos_intercalados, creado_por_invitado,
               date_trunc('milliseconds', modificado_at) AS version
          FROM patrones WHERE id = $1 FOR UPDATE`, [id]);
     if (actual.rows.length === 0) throw notFound(`No existe el dibujo con id ${id}.`);
@@ -138,7 +147,9 @@ export async function actualizarPatron(req, res, next) {
       previo.columnas !== columnas ||
       JSON.stringify(previo.matriz_pasadas) !== JSON.stringify(matriz_pasadas) ||
       JSON.stringify(repsNormalizadas(previo.repeticiones_por_fila, previo.filas)) !==
-        JSON.stringify(repsNormalizadas(repeticiones_por_fila, filas));
+        JSON.stringify(repsNormalizadas(repeticiones_por_fila, filas)) ||
+      // los intercalados también son contenido: cambian qué se teje y dónde cae la posición
+      gruposParaGuardar(previo.grupos_intercalados) !== gruposParaGuardar(grupos_intercalados);
     if (cambiaForma) {
       const enUso = await client.query(
         `SELECT t.codigo
@@ -163,7 +174,8 @@ export async function actualizarPatron(req, res, next) {
              matriz_ligamento = $5, colores_filas = $6, metadata = $7,
              repeticiones_por_fila = $9,
              -- si lo guarda un operario, el dibujo pasa a ser de los operarios
-             creado_por_invitado = creado_por_invitado AND $10
+             creado_por_invitado = creado_por_invitado AND $10,
+             grupos_intercalados = $11
        WHERE id = $8
        RETURNING *`,
       [
@@ -177,6 +189,7 @@ export async function actualizarPatron(req, res, next) {
         id,
         repeticiones_por_fila ?? null,
         esInvitado(req),
+        gruposParaGuardar(grupos_intercalados),
       ]
     );
 
@@ -251,6 +264,67 @@ export async function actualizarMetrosPorPasada(req, res, next) {
   }
 }
 
+// Pasadas acumuladas de un dibujo: de cada producción, la mejor cifra disponible (la del
+// sensor si la hay; si no, la del reloj de la web). Es la misma cuenta que las estadísticas.
+const SQL_PASADAS_ACUMULADAS = `
+  SELECT COALESCE(SUM(CASE WHEN pasadas_sensor > 0 THEN pasadas_sensor ELSE pasadas_totales END), 0)::int AS pasadas
+    FROM historial_produccion
+   WHERE patron_id = $1`;
+
+/**
+ * PUT /api/patrones/:id/hilado
+ * Guarda el hilado disponible para el dibujo: cuánto pesa (kg) y cuántos metros de tela
+ * alcanza a tejer (el máximo). Con los metros por pasada, la ficha calcula cuánto se usó,
+ * cuánto queda y cuántos metros faltan.
+ *
+ * El consumo se cuenta desde que se cargó el hilado: la primera vez (o con reiniciar: true,
+ * "hilado nuevo") se toman como punto de partida las pasadas que el dibujo ya tenía tejidas.
+ * Corregir un número sin reiniciar conserva ese punto de partida. Los dos en null borran el dato.
+ */
+export async function actualizarHilado(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { peso_kg = null, metros_max = null, reiniciar = false } = req.body ?? {};
+    const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+    const peso = num(peso_kg);
+    const metros = num(metros_max);
+    if (peso !== null && (!Number.isFinite(peso) || peso <= 0 || peso > 100000)) {
+      throw badRequest('El peso del hilado tiene que ser un número mayor que 0 (en kg, hasta 100.000).');
+    }
+    if (metros !== null && (!Number.isFinite(metros) || metros <= 0 || metros > 10000000)) {
+      throw badRequest('Los metros que alcanza a tejer el hilado tienen que ser un número mayor que 0.');
+    }
+    if (typeof reiniciar !== 'boolean') throw badRequest('reiniciar debe ser true o false.');
+
+    const sinDatos = peso === null && metros === null;
+    const actual = await pool.query(SQL_PASADAS_ACUMULADAS, [id]);
+    const pasadasAhora = actual.rows[0]?.pasadas ?? 0;
+
+    const r = await pool.query(
+      `UPDATE patrones
+          SET hilado_peso_kg = $1,
+              hilado_metros_max = $2,
+              hilado_pasadas_base = CASE
+                WHEN $5 THEN NULL
+                WHEN $6 OR hilado_pasadas_base IS NULL THEN $7
+                ELSE hilado_pasadas_base END,
+              modificado_at = now(),
+              creado_por_invitado = creado_por_invitado AND $4
+        WHERE id = $3 AND (NOT $4 OR creado_por_invitado)
+      RETURNING id, nombre, hilado_peso_kg, hilado_metros_max, hilado_pasadas_base, modificado_at`,
+      [peso, metros, id, esInvitado(req), sinDatos, reiniciar, pasadasAhora]
+    );
+    if (r.rows.length === 0) {
+      const existe = await pool.query('SELECT 1 FROM patrones WHERE id = $1', [id]);
+      if (existe.rows.length === 0) return res.status(404).json({ error: `No existe el dibujo con id ${id}.` });
+      throw prohibido(AVISO_DIBUJO_DE_OPERARIO, 'SOLO_OPERARIO');
+    }
+    res.json(r.rows[0]);
+  } catch (err) {
+    next(err);
+  }
+}
+
 /**
  * Estadísticas de producción de un dibujo, calculadas sobre el historial.
  *
@@ -271,7 +345,10 @@ export async function actualizarMetrosPorPasada(req, res, next) {
 export async function estadisticasPatron(req, res, next) {
   try {
     const { id } = req.params;
-    const p = await pool.query('SELECT id, nombre, filas, columnas, metros_por_pasada FROM patrones WHERE id = $1', [id]);
+    const p = await pool.query(
+      'SELECT id, nombre, filas, columnas, metros_por_pasada, hilado_peso_kg, hilado_metros_max, hilado_pasadas_base FROM patrones WHERE id = $1',
+      [id]
+    );
     if (p.rows.length === 0) return res.status(404).json({ error: `No existe el dibujo con id ${id}.` });
 
     const h = await pool.query(
@@ -335,6 +412,33 @@ export async function estadisticasPatron(req, res, next) {
       out.pasadas_por_metro = Math.round(1 / mpp);
     } else {
       out.aviso = 'Este dibujo todavía no tiene cargados los metros por pasada, así que no se pueden calcular los metros tejidos. Se carga desde el ícono de engranaje en el editor.';
+    }
+
+    // Hilado: lo usado y lo que falta se cuentan desde que se cargó (hilado_pasadas_base). Lo
+    // usado es proporcional a los metros tejidos: si el hilado alcanza para 1000 m y pesa 50 kg,
+    // cada metro tejido usa 50 g. Sin metros por pasada no se pueden calcular metros ni consumo.
+    const pr = p.rows[0];
+    const pesoHilado = pr.hilado_peso_kg === null ? null : Number(pr.hilado_peso_kg);
+    const metrosMax = pr.hilado_metros_max === null ? null : Number(pr.hilado_metros_max);
+    if (pesoHilado !== null || metrosMax !== null) {
+      const base = pr.hilado_pasadas_base === null ? s.pasadas_totales : Number(pr.hilado_pasadas_base);
+      const pasadasDesde = Math.max(0, s.pasadas_totales - base);
+      const hilado = { peso_kg: pesoHilado, metros_max: metrosMax, pasadas_desde_carga: pasadasDesde };
+      if (mpp !== null) {
+        const metrosDesde = Math.round(pasadasDesde * mpp * 100) / 100;
+        hilado.metros_desde_carga = metrosDesde;
+        if (metrosMax !== null) {
+          hilado.metros_que_faltan = Math.max(0, Math.round((metrosMax - metrosDesde) * 100) / 100);
+          hilado.porcentaje_usado = Math.min(100, Math.round((metrosDesde / metrosMax) * 1000) / 10);
+          if (pesoHilado !== null) {
+            const usado = Math.min(pesoHilado, (metrosDesde / metrosMax) * pesoHilado);
+            hilado.peso_usado_kg = Math.round(usado * 1000) / 1000;
+            hilado.peso_restante_kg = Math.round((pesoHilado - usado) * 1000) / 1000;
+          }
+        }
+      }
+      hilado.son_estimados = precision !== 'sensor_validado';
+      out.hilado = hilado;
     }
 
     res.json(out);

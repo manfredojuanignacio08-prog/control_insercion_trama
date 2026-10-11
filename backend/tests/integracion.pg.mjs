@@ -33,7 +33,24 @@ r = await api('GET','/telares',null,{ck:'trama_sesion=%E0%A4%A'}); assert.equal(
 // alta de telar y dibujo
 r = await api('POST','/telares',{codigo:'TELAR-01',nombre:'Principal'}); assert.equal(r.s,201); const T = r.b.id;
 r = await api('POST','/telares',{codigo:'X'},{ck:INV}); assert.equal(r.s,403);
-const MAT = [[1,0,1,0],[0,1,0,1],[1,1,0,0]];
+const MAT = [[1,0,0,0],[0,0,1,0],[0,1,0,0]];
+// una sola bobina por fila (una trama por pasada): dos en la misma fila se rechazan
+r = await api('POST','/patrones',{nombre:'Doble',filas:2,columnas:4,matriz_pasadas:[[1,0,0,0],[1,1,0,0]]}); assert.equal(r.s,400); assert.match(r.b.error,/una sola bobina/);
+// intercalados: filas 1-4 (B1, B3, B4, B2) 120 pasadas, fila 5 (B4) 140, filas 6-7 (B2, B1) 140
+{ const tramos = {nombre:'Tramos',filas:7,columnas:4,matriz_pasadas:[[1,0,0,0],[0,0,1,0],[0,0,0,1],[0,1,0,0],[0,0,0,1],[0,1,0,0],[1,0,0,0]],
+    repeticiones_por_fila:[1,1,1,1,140,1,1],grupos_intercalados:[{desde:5,hasta:6,pasadas:140},{desde:0,hasta:3,pasadas:120}]};
+  let t = await api('POST','/patrones',tramos); assert.equal(t.s,201);
+  assert.deepEqual(t.b.grupos_intercalados,[{desde:0,hasta:3,pasadas:120},{desde:5,hasta:6,pasadas:140}], 'se guardan ordenados');
+  const PT = t.b.id;
+  // superpuestos, de una fila, fuera del dibujo o con una vuelta de más de 32 pasadas: se rechazan
+  for (const [n, gr, reps] of [['a',[{desde:0,hasta:3,pasadas:9},{desde:3,hasta:4,pasadas:9}]],['b',[{desde:2,hasta:2,pasadas:9}]],['c',[{desde:5,hasta:7,pasadas:9}]],
+                               ['d',[{desde:0,hasta:3,pasadas:9}],[30,1,1,1,140,1,1]]]) {
+    t = await api('POST','/patrones',{...tramos,nombre:'Tramos '+n,grupos_intercalados:gr,repeticiones_por_fila:reps||tramos.repeticiones_por_fila}); assert.equal(t.s,400, n);
+  }
+  // sin intercalados se guarda NULL
+  t = await api('PUT',`/patrones/${PT}`,{...tramos,grupos_intercalados:[]}); assert.equal(t.s,200); assert.equal(t.b.grupos_intercalados,null);
+  t = await api('PUT',`/patrones/${PT}`,tramos); assert.equal(t.s,200);
+  await api('DELETE',`/patrones/${PT}`); }
 r = await api('POST','/patrones',{nombre:'Raya',filas:3,columnas:4,matriz_pasadas:MAT,repeticiones_por_fila:[2,1,3]}); assert.equal(r.s,201); const P = r.b.id;
 r = await api('POST','/patrones',{nombre:'Mala',filas:3,columnas:4,matriz_pasadas:MAT,matriz_ligamento:[[2]]}); assert.equal(r.s,400);
 // asignar → tejiendo; el ESP32 lo ve
@@ -78,6 +95,22 @@ r = await api('POST',`/telares/${T}/avanzar`,{pasos:1,cliente:'A'}); assert.equa
 // estadísticas, metros, historial, errores
 r = await api('PUT',`/patrones/${P}/metros-por-pasada`,{metros_por_pasada:0.0005}); assert.equal(r.s,200);
 r = await api('GET',`/patrones/${P}/estadisticas`); assert.equal(r.s,200); assert.equal(r.b.producciones,1);
+{ // hilado: peso y metros máximos; lo usado se cuenta desde que se cargó
+  const pasadasAntes = r.b.pasadas_totales;
+  assert.equal(r.b.hilado, undefined);
+  let h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:-1,metros_max:100}); assert.equal(h.s,400);
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:50,metros_max:1000}); assert.equal(h.s,200);
+  assert.equal(Number(h.b.hilado_peso_kg),50); assert.equal(h.b.hilado_pasadas_base,pasadasAntes);
+  h = await api('GET',`/patrones/${P}/estadisticas`);
+  assert.equal(h.b.hilado.peso_kg,50); assert.equal(h.b.hilado.metros_max,1000);
+  assert.equal(h.b.hilado.pasadas_desde_carga,0); assert.equal(h.b.hilado.metros_que_faltan,1000); assert.equal(h.b.hilado.peso_usado_kg,0);
+  // corregir el peso sin reiniciar conserva el punto de partida; null y null borra el dato
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:60,metros_max:1000}); assert.equal(h.b.hilado_pasadas_base,pasadasAntes);
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:60,metros_max:1000,reiniciar:true}); assert.equal(h.s,200);
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:null,metros_max:null}); assert.equal(h.s,200); assert.equal(h.b.hilado_pasadas_base,null);
+  h = await api('GET',`/patrones/${P}/estadisticas`); assert.equal(h.b.hilado, undefined);
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:50,metros_max:1000}); assert.equal(h.s,200);
+}
 r = await api('GET',`/historial?telar_id=${T}`); assert.equal(r.s,200); assert.equal(r.b.length,1);
 r = await api('GET',`/historial?desde=no-es-fecha`); assert.equal(r.s,400);
 r = await api('POST','/errores',{telar_id:T,titulo:'prueba',codigo:'X'},{ck:null,dev:true}); assert.equal(r.s,201);
@@ -112,6 +145,8 @@ r = await api('POST',`/telares/${T2}/asignar-patron`,{patron_id:P}); assert.equa
 r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,200, 'sin nodo, la web estima por reloj');
 psql(`update telares set ultimo_reporte_sensor = now() - interval '5 minutes' where id=${T2}`);
 r = await api('GET',`/telares/${T2}?origen=nivel2`,null,{ck:null,dev:true}); assert.equal(r.s,200);
+{ const pa = await api('GET',`/telares/${T2}/patron-actual`,null,{ck:null,dev:true}); assert.equal(pa.s,200);
+  assert.ok(Array.isArray(pa.b.secuencias_por_fila) && pa.b.secuencias_por_fila.length === pa.b.filas, 'el firmware recibe un ciclo (o null) por fila'); }
 r = await api('GET',`/telares/${T2}`); assert.equal(r.b.sensor_activo,true, 'la consulta del nodo es su señal de vida');
 assert(r.b.segundos_desde_ping < 5, 'y también la de la placa ("ESP32 conectado"): es el único ESP32');
 r = await api('POST',`/telares/${T2}/avanzar`,{pasos:1,cliente:'W'}); assert.equal(r.s,409); assert.equal(r.b.codigo,'SENSOR_ACTIVO');
@@ -177,10 +212,11 @@ assert.equal(r.b.creado_por_invitado, true);
 r = await api('PUT',`/patrones/${PI}`,{nombre:'Boceto',filas:1,columnas:2,matriz_pasadas:[[0,1]]},{ck:INV}); assert.equal(r.s,200);
 r = await api('PUT',`/patrones/${P}`,{nombre:'Raya azul',filas:3,columnas:4,matriz_pasadas:MAT,repeticiones_por_fila:[2,1,3]},{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
 r = await api('PUT',`/patrones/${P}/metros-por-pasada`,{metros_por_pasada:0.001},{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
+r = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:1,metros_max:1},{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
 r = await api('DELETE',`/patrones/${P}`,null,{ck:INV}); assert.equal(r.s,403); assert.equal(r.b.codigo,'SOLO_OPERARIO');
 r = await api('DELETE','/patrones/987654',null,{ck:INV}); assert.equal(r.s,404);
 // si un operario lo guarda, pasa a ser de los operarios
-r = await api('PUT',`/patrones/${PI}`,{nombre:'Boceto',filas:1,columnas:2,matriz_pasadas:[[1,1]]}); assert.equal(r.s,200); assert.equal(r.b.creado_por_invitado, false);
+r = await api('PUT',`/patrones/${PI}`,{nombre:'Boceto',filas:1,columnas:2,matriz_pasadas:[[0,1]]}); assert.equal(r.s,200); assert.equal(r.b.creado_por_invitado, false);
 r = await api('DELETE',`/patrones/${PI}`,null,{ck:INV}); assert.equal(r.s,403);
 r = await api('POST','/patrones',{nombre:'Boceto 2',filas:1,columnas:2,matriz_pasadas:[[1,0]]},{ck:INV});
 r = await api('DELETE',`/patrones/${r.b.id}`,null,{ck:INV}); assert.equal(r.s,204);
@@ -199,5 +235,29 @@ assert.equal(psql(`select vueltas_completadas from historial_produccion where te
   const h = (await fetch(B.replace(/\/api$/, '') + '/')).headers;
   assert.ok(!/upgrade-insecure-requests/.test(h.get('content-security-policy') || ''), 'sin upgrade-insecure-requests por http');
   assert.equal(h.get('strict-transport-security'), null, 'sin HSTS por http');
+}
+// Un dibujo con intercalados en un telar: la posición avanza por grupos y el nodo recibe el ciclo
+{ const tramos = {nombre:'Tramos en telar',filas:7,columnas:4,matriz_pasadas:[[1,0,0,0],[0,0,1,0],[0,0,0,1],[0,1,0,0],[0,0,0,1],[0,1,0,0],[1,0,0,0]],
+    repeticiones_por_fila:[1,1,1,1,140,1,1],grupos_intercalados:[{desde:0,hasta:3,pasadas:120},{desde:5,hasta:6,pasadas:140}]};
+  let t = await api('POST','/patrones',tramos); assert.equal(t.s,201); const PT = t.b.id;
+  t = await api('POST','/telares',{codigo:'TELAR-INT'}); assert.equal(t.s,201); const TI = t.b.id;
+  t = await api('POST',`/telares/${TI}/asignar-patron`,{patron_id:PT}); assert.equal(t.s,201);
+  // lo que recibe el nodo: largo del grupo en su primera fila, 0 en las demás, y el ciclo de bobinas
+  t = await api('GET',`/telares/${TI}/patron-actual`,null,{ck:null,dev:true}); assert.equal(t.s,200);
+  assert.deepEqual(t.b.repeticiones_por_fila,[120,0,0,0,140,140,0]);
+  assert.deepEqual(t.b.secuencias_por_fila,[[1,3,4,2],null,null,null,null,[2,1],null]);
+  // por reloj (web): 120 pasadas completan el primer intercalado y pasan a la fila 5
+  t = await api('POST',`/telares/${TI}/avanzar`,{pasos:119,cliente:'Z'}); assert.equal(t.s,200);
+  assert.deepEqual([t.b.fila_actual,t.b.repeticion_en_fila],[0,119]);
+  t = await api('POST',`/telares/${TI}/avanzar`,{pasos:1,cliente:'Z'}); assert.deepEqual([t.b.fila_actual,t.b.repeticion_en_fila],[4,0]);
+  // el sensor: 300 pasadas más desde ahí (140 de la fila 5 + 140 del segundo grupo = vuelta + 20)
+  t = await api('POST',`/telares/${TI}/pasadas`,{pasadas_sensor:300,fila_actual:0,repeticion_en_fila:20},{ck:null,dev:true});
+  assert.equal(t.s,200, JSON.stringify(t.b));
+  t = await api('GET',`/telares/${TI}`); assert.deepEqual([t.b.fila_actual,t.b.repeticion_en_fila],[0,20]);
+  // una fila sin largo (dentro de un grupo) no se toma como posición del nodo: se cuenta la pasada
+  // y la posición guardada no se pisa con una que no existe
+  t = await api('POST',`/telares/${TI}/pasadas`,{pasadas_sensor:301,fila_actual:2,repeticion_en_fila:0},{ck:null,dev:true});
+  assert.equal(t.s,200); t = await api('GET',`/telares/${TI}`); assert.equal(t.b.fila_actual,0);
+  await api('POST',`/telares/${TI}/detener`,{});
 }
 console.log('integración contra PostgreSQL real: OK');
