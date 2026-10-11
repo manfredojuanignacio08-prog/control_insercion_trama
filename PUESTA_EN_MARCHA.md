@@ -1,5 +1,9 @@
 # Puesta en marcha en el telar (Vamatex C 201, cuatro bobinas)
 
+> El armado y la conexión de todo, plaqueta por plaqueta, y cómo levantar el servidor, la web y el ESP32
+> están en [`docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`](docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md).
+> Este documento cubre las claves, la sincronización y la validación del conteo.
+
 La fábrica tiene telares C 201, C 301 y C 401; el equipo investigó los tres, y el hardware se
 instala en el **C 201** (matrícula 1104, cuatro bobinas de selección), el mismo telar que se relevó y
 midió. El diseño sirve igual para los otros dos modelos, que comparten la arquitectura de selección. Este documento reúne lo que hay que hacer

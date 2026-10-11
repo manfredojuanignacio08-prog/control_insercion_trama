@@ -16,6 +16,9 @@ el repositorio para que el código y la documentación viajen juntos.
 
 | Archivo | Qué contiene |
 |---|---|
+| `Guia_Conexion_y_Puesta_en_Marcha.docx` | **El paso a paso de todo:** las cuatro plaquetas, cómo se conectan entre sí y al telar, cómo levantar el servidor, la web y el ESP32, y qué muestra la web cuando se usa la botonera. |
+| `Guia_Conexion_Reles_LCA110.docx` | Los relés de selección: mediciones, la conexión final (la más segura), pruebas y problemas frecuentes. |
+| `Guia_Mediciones_y_Verificaciones.docx` | Todas las mediciones y pruebas, en orden, con la planilla para anotar. |
 | `Conexionado_Nivel2.docx` | El paso a paso del sensor de pasada y los relés, con sus diagramas. |
 | `Guia_Bloques_C_y_D.docx` | Qué falta hacer en esos dos bloques y en qué orden. |
 | `Checklist_verificaciones.xlsx` | Las 25 verificaciones antes y durante la instalación. |
