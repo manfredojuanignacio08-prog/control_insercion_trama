@@ -24,7 +24,7 @@
 // ============================================================================
 
 // La combinación que se aplicó en la última pasada, para el registro. Indica lo que
-// se seleccionó, no si el relé sigue cerrado: se suelta pasada la duración de la selección.
+// se seleccionó, no si el relé sigue cerrado: con un porcentaje se suelta antes del pulso siguiente.
 bool canalActivo[N_CANALES] = { false };
 
 // Cuándo se aplicó la última selección, cuánto tiene que durar, y si todavía falta soltarla.

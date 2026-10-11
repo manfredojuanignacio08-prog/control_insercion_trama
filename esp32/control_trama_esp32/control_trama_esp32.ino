@@ -961,7 +961,7 @@ void loop() {
   // pausado desde la web. Con MODO_BANCO en false no hace nada.
   if (tej) sensorPasadaSimular();
   sensorPasadaActualizar();       // libera la traba cuando la paleta pasó de largo
-  seleccionSoltarSiCorresponde(); // suelta los canales pasada la duración de la selección
+  seleccionSoltarSiCorresponde(); // con un porcentaje, suelta los canales pasada la duración de la selección
 
   // ---- cambios de estado que decidió la tarea de red ----
   static bool tejiendoAntes = false;
@@ -1058,11 +1058,11 @@ void loop() {
     }
   }
 
-  // La selección se suelta sola pasado un porcentaje de la pasada (seleccionSoltarSiCorresponde, al
-  // principio del ciclo), y el pulso siguiente la vuelve a aplicar. Así reproduce el papel, que
-  // entre dos agujeros seguidos de la misma columna tiene papel: un agujero por pasada. Antes se
-  // mantenía hasta el pulso siguiente, y una fila con 25 repeticiones era, para la máquina, un
-  // solo agujero largo en lugar de 25.
+  // Con PORCENTAJE_SELECCION en 0 (como viene) la selección se mantiene hasta el pulso siguiente:
+  // en una racha de la misma bobina el relé no se suelta, y cambia cuando cambia la bobina. Con
+  // un porcentaje se suelta sola pasado ese porcentaje de la pasada (seleccionSoltarSiCorresponde,
+  // al principio del ciclo) y el pulso siguiente la vuelve a aplicar, como el papel, que entre dos
+  // agujeros seguidos de la misma columna tiene papel.
 
   // ---- el telar dejó de dar pulsos ----
   // La máquina se frenó o el sensor dejó de detectar. Se apagan los canales y se avisa al
