@@ -2701,64 +2701,127 @@ async function exportDrawToPDF() {
     ? `${(m * 100).toLocaleString('es-AR', { maximumFractionDigits: 1 })} cm`
     : `${m.toLocaleString('es-AR', { maximumFractionDigits: 2 })} m`;
 
-  // Telar Vamatex C 201 visto de frente, como en la foto de la planta: el bastidor izquierdo, la caja
-  // de mando a la derecha con la placa redonda de la marca, el rodillo de urdimbre atrás con sus
-  // hilos, los marcos de lizos celestes, el peine, la tela que se está tejiendo (con los colores
-  // del dibujo) y la barra delantera de la que baja la tela de la vista previa.
-  // `colores` son los colores de las primeras pasadas del dibujo, de arriba hacia abajo.
-  function dibujarTelar(doc, x, y, w, alto, colores) {
+  // Telar Vamatex C 201 visto desde arriba y de frente, como en la foto de la planta, dibujado
+  // dentro de la columna [X, X + W]: a la izquierda la fileta con las bobinas de trama (una por
+  // bobina del dibujo, con su color y su número) y sus hilos hasta el borde de la tela; el bastidor
+  // izquierdo; arriba el travesaño y el rodillo de urdimbre con sus hilos; los marcos de lizos
+  // celestes; el batán con el peine; la tela que se está tejiendo (con los colores de las primeras
+  // pasadas), con los templazos en los orillos y la pinza que lleva la trama; el pecho con la placa
+  // de la marca y la barra delantera, de la que baja la tela de la vista previa. A la derecha, la
+  // caja de mando con la placa redonda VAMATEX, el visor y los botones de marcha y parada.
+  // [tx, tx + tw] es el ancho de la tela, el mismo de la vista previa de abajo.
+  function dibujarTelar(doc, X, W, y, alto, tx, tw, colores, coloresBob) {
     const k = alto / 30;
-    const VERDE = [70, 86, 90], VERDE_OSC = [47, 58, 61], VERDE_CLARO = [104, 122, 126];
-    const ACERO = [205, 210, 214], ACERO_OSC = [150, 158, 164], CELESTE = [96, 156, 206], CELESTE_OSC = [62, 118, 168];
-    const xi = x - 6, xd = x + w + 1;            // bastidor izquierdo y caja de mando derecha
+    const Y = (v) => y + v * k;
+    const VERDE = [70, 86, 90], VERDE_OSC = [44, 55, 58], VERDE_CLARO = [108, 126, 130];
+    const ACERO = [208, 213, 217], ACERO_OSC = [148, 156, 162], CELESTE = [98, 158, 208], CELESTE_OSC = [60, 116, 166];
+    const CRUDO = [244, 240, 230], CRUDO_OSC = [214, 206, 188];
+    const GRIS_HILO = [184, 192, 202];
+    const bi = tx - 3.4, bd = tx + tw + 0.8, xd = X + W;   // bastidor izquierdo, caja de mando, borde
     // sombra en el piso
-    doc.setFillColor(222, 226, 230); doc.roundedRect(xi - 1, y + 29.2 * k, w + 15, 1.3 * k, 0.6, 0.6, 'F');
-    // bastidor izquierdo (con pata)
-    doc.setFillColor(...VERDE_OSC); doc.roundedRect(xi, y + 3 * k, 5, 26.5 * k, 1, 1, 'F');
-    doc.setFillColor(...VERDE); doc.roundedRect(xi + 0.8, y + 3.8 * k, 3.4, 24.5 * k, 0.8, 0.8, 'F');
-    doc.setFillColor(...VERDE_OSC); doc.rect(xi - 1, y + 28.4 * k, 7, 1.2 * k, 'F');
-    // caja de mando derecha (más ancha), con la placa redonda VAMATEX
-    doc.setFillColor(...VERDE_OSC); doc.roundedRect(xd, y + 1 * k, 7.5, 28.5 * k, 1.4, 1.4, 'F');
-    doc.setFillColor(...VERDE); doc.roundedRect(xd + 0.7, y + 1.8 * k, 6.1, 26.8 * k, 1.1, 1.1, 'F');
-    doc.setFillColor(...VERDE_OSC); doc.rect(xd - 0.5, y + 28.4 * k, 8.5, 1.2 * k, 'F');
-    const cx = xd + 3.75, cy = y + 9.5 * k, rr = Math.min(3.1, 3.1 * k);
-    doc.setFillColor(...VERDE_OSC); doc.circle(cx, cy, rr, 'F');
-    doc.setDrawColor(...ACERO); doc.setLineWidth(0.25); doc.circle(cx, cy, rr * 0.82, 'S');
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(2.3 * k); doc.setTextColor(...ACERO);
-    doc.text('VAMATEX', cx, cy + 0.35 * k, { align: 'center' });
-    doc.setFillColor(...VERDE_CLARO); doc.roundedRect(xd + 1.6, y + 15 * k, 4.3, 7 * k, 0.6, 0.6, 'F');   // tapa de la caja
-    // rodillo de urdimbre (atrás): un cilindro con brillo
-    doc.setFillColor(...VERDE_OSC); doc.roundedRect(x - 0.5, y + 1.2 * k, w + 1, 3.6 * k, 1.6, 1.6, 'F');
-    doc.setFillColor(...VERDE_CLARO); doc.rect(x + 1, y + 1.9 * k, w - 2, 0.7 * k, 'F');
-    // hilos de urdimbre, del rodillo a los lizos
-    doc.setDrawColor(236, 238, 240); doc.setLineWidth(0.1);
-    for (let xx = x + 0.6; xx < x + w; xx += 1.1) doc.line(xx, y + 4.8 * k, xx, y + 16.5 * k);
-    // marcos de lizos: bandas celestes con su travesaño oscuro y los lizos verticales
+    doc.setFillColor(226, 230, 234); doc.roundedRect(bi - 1, Y(29.3), xd - bi + 1, 1.2 * k, 0.6, 0.6, 'F');
+
+    // ── urdimbre: rodillo, hilos, lizos y peine ──
+    // hoja de urdimbre (hilo crudo) desde el rodillo hasta el peine, con sus hilos
+    doc.setFillColor(...CRUDO); doc.rect(tx, Y(4.6), tw, 12 * k, 'F');
+    doc.setDrawColor(...CRUDO_OSC); doc.setLineWidth(0.07);
+    for (let xx = tx + 0.45; xx < tx + tw; xx += 0.9) doc.line(xx, Y(4.6), xx, Y(16.6));
+    // travesaño superior y rodillo de urdimbre, con sus discos en las puntas y un brillo
+    doc.setFillColor(...VERDE_OSC); doc.rect(bi, Y(0.4), bd - bi, 1.1 * k, 'F');
+    doc.setFillColor(...VERDE); doc.roundedRect(tx - 0.4, Y(1.7), tw + 0.8, 3.1 * k, 1.4, 1.4, 'F');
+    doc.setFillColor(...VERDE_CLARO); doc.rect(tx + 1.2, Y(2.2), tw - 2.4, 0.55 * k, 'F');
+    doc.setFillColor(...VERDE_OSC);
+    doc.roundedRect(tx - 0.9, Y(1.3), 1.4, 3.9 * k, 0.5, 0.5, 'F');
+    doc.roundedRect(tx + tw - 0.5, Y(1.3), 1.4, 3.9 * k, 0.5, 0.5, 'F');
+    // barra de apoyo de la urdimbre
+    doc.setFillColor(...ACERO_OSC); doc.rect(tx, Y(5.5), tw, 0.45 * k, 'F');
+    // marcos de lizos: travesaños celestes, lizos verticales y montantes en los costados
     for (let m = 0; m < 2; m++) {
-      const ym = y + (6.2 + m * 3.6) * k;
-      doc.setFillColor(...(m ? CELESTE_OSC : CELESTE)); doc.rect(x + 0.5, ym, w - 1, 1.2 * k, 'F');
-      doc.setFillColor(...VERDE_OSC); doc.rect(x + 0.5, ym + 2.2 * k, w - 1, 0.5 * k, 'F');
-      doc.setDrawColor(...CELESTE_OSC); doc.setLineWidth(0.08);
-      for (let xx = x + 1.1; xx < x + w - 0.5; xx += 1.1) doc.line(xx, ym + 1.2 * k, xx, ym + 2.2 * k);
+      const ym = Y(6.8 + m * 3.5), hm = 2.9 * k;
+      doc.setDrawColor(...CELESTE_OSC); doc.setLineWidth(0.07);
+      for (let xx = tx + 0.45 + m * 0.45; xx < tx + tw; xx += 0.9) doc.line(xx, ym, xx, ym + hm);
+      doc.setFillColor(...(m ? CELESTE_OSC : CELESTE));
+      doc.rect(tx - 0.6, ym, tw + 1.2, 0.65 * k, 'F');
+      doc.rect(tx - 0.6, ym + hm - 0.65 * k, tw + 1.2, 0.65 * k, 'F');
+      doc.setFillColor(...VERDE_OSC);
+      doc.rect(tx - 1.1, ym - 0.2 * k, 0.8, hm + 0.4 * k, 'F');
+      doc.rect(tx + tw + 0.3, ym - 0.2 * k, 0.8, hm + 0.4 * k, 'F');
     }
-    // peine (batán): barra con dientes finos
-    doc.setFillColor(...ACERO_OSC); doc.rect(x, y + 14.4 * k, w, 0.9 * k, 'F');
-    doc.setDrawColor(120, 128, 134); doc.setLineWidth(0.08);
-    for (let xx = x + 0.4; xx < x + w; xx += 0.7) doc.line(xx, y + 15.3 * k, xx, y + 16.5 * k);
-    // la tela que se está tejiendo, del peine a la barra delantera, con los colores del dibujo
-    const yt = y + 16.5 * k, ht = 5.5 * k;
-    const cs = (colores && colores.length) ? colores : [[184, 192, 202]];
+    // batán con el peine: barra de acero y dientes finos
+    doc.setFillColor(...ACERO_OSC); doc.rect(tx - 0.6, Y(14.1), tw + 1.2, 1 * k, 'F');
+    doc.setFillColor(...ACERO); doc.rect(tx - 0.6, Y(14.1), tw + 1.2, 0.3 * k, 'F');
+    doc.setDrawColor(118, 126, 132); doc.setLineWidth(0.06);
+    for (let xx = tx + 0.3; xx < tx + tw; xx += 0.6) doc.line(xx, Y(15.1), xx, Y(16.5));
+
+    // ── la tela que se está tejiendo ──
+    const yt = Y(16.6), ht = 5.4 * k;
+    const cs = (colores && colores.length) ? colores : [GRIS_HILO];
     const hb = ht / cs.length;
-    cs.forEach((c, i) => { doc.setFillColor(...c); doc.rect(x, yt + i * hb, w, hb + 0.05, 'F'); });
-    // cuerpo delantero (pecho del telar) y barra delantera de acero
-    doc.setFillColor(...VERDE); doc.roundedRect(x - 1.5, y + 22 * k, w + 3, 4.2 * k, 0.8, 0.8, 'F');
-    doc.setFillColor(...VERDE_CLARO); doc.rect(x - 1.5, y + 22 * k, w + 3, 0.6 * k, 'F');
-    doc.setFillColor(238, 241, 243); doc.roundedRect(x + 3, y + 23.2 * k, 20, 2 * k, 0.4, 0.4, 'F');
+    cs.forEach((c, i) => { doc.setFillColor(...c); doc.rect(tx, yt + i * hb, tw, hb + 0.05, 'F'); });
+    doc.setGState(new doc.GState({ opacity: 0.14, 'stroke-opacity': 0.14 }));
+    doc.setDrawColor(255, 255, 255); doc.setLineWidth(0.12);
+    for (let xx = tx + 0.45; xx < tx + tw; xx += 0.9) doc.line(xx, yt, xx, yt + ht);
+    doc.setGState(new doc.GState({ opacity: 1, 'stroke-opacity': 1 }));
+    // la pasada que está entrando (con el color de la primera) y la pinza que la lleva
+    doc.setDrawColor(...cs[0]); doc.setLineWidth(0.35); doc.line(tx, yt + 0.15, tx + tw * 0.62, yt + 0.15);
+    doc.setFillColor(...VERDE_OSC); doc.roundedRect(tx + tw * 0.62, yt - 0.45, 4, 1.1, 0.5, 0.5, 'F');
+    doc.setFillColor(...ACERO); doc.rect(tx + tw * 0.62 + 4, yt - 0.1, tw * 0.38 - 4, 0.4, 'F');
+    // templazos que estiran la tela en los orillos
+    doc.setFillColor(...VERDE_OSC);
+    doc.roundedRect(tx - 0.6, yt + 0.6 * k, 3.2, 1.5 * k, 0.5, 0.5, 'F');
+    doc.roundedRect(tx + tw - 2.6, yt + 0.6 * k, 3.2, 1.5 * k, 0.5, 0.5, 'F');
+
+    // ── bastidor izquierdo y fileta con las bobinas de trama ──
+    doc.setFillColor(...VERDE_OSC); doc.roundedRect(bi, Y(0.4), 2.8, 29 * k, 0.6, 0.6, 'F');
+    doc.setFillColor(...VERDE); doc.rect(bi + 0.6, Y(1.6), 1.2, 26.6 * k, 'F');
+    doc.setFillColor(...VERDE_OSC); doc.rect(bi - 0.8, Y(28.4), 4.4, 1.1 * k, 'F');
+    const nb = Math.max(1, Math.min(4, (coloresBob || []).length || 4));
+    const xc = X + (bi - X) / 2 - 0.2, rc = Math.min(1.75, (bi - X) / 2 - 0.4, 5 * k / 2 - 0.4);
+    doc.setDrawColor(...ACERO_OSC); doc.setLineWidth(0.4); doc.line(xc, Y(2.2), xc, Y(28.6));   // poste de la fileta
+    doc.setFillColor(...ACERO_OSC); doc.roundedRect(xc - 2, Y(28.4), 4, 0.9 * k, 0.4, 0.4, 'F');      // y su base
+    for (let b = 0; b < nb; b++) {
+      const yc = Y(4 + b * 5.4);
+      const c = (coloresBob && coloresBob[b]) || GRIS_HILO;
+      // hilo de la bobina hasta el orillo, donde lo toma la pinza
+      doc.setDrawColor(...c); doc.setLineWidth(0.12); doc.line(xc + rc * 0.7, yc + rc * 0.4, tx + 0.2, yt + 0.15);
+      // la bobina: un cono visto desde arriba, con una vuelta de hilo marcada y su número
+      doc.setFillColor(...oscurecer(c, 0.78)); doc.circle(xc, yc, rc, 'F');
+      doc.setFillColor(...c); doc.circle(xc, yc, rc * 0.82, 'F');
+      doc.setDrawColor(...oscurecer(c, 0.85)); doc.setLineWidth(0.08); doc.circle(xc, yc, rc * 0.58, 'S');
+      const hex = '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(Math.max(3.4, 4.4 * Math.min(1, k)));
+      doc.setTextColor(...hexARgb(textoSobre(hex)));
+      doc.text(String(b + 1), xc, yc + 0.5, { align: 'center' });
+    }
+
+    // ── pecho, placa y barra delantera ──
+    doc.setFillColor(...VERDE); doc.roundedRect(bi, Y(22), bd - bi, 4.2 * k, 0.8, 0.8, 'F');
+    doc.setFillColor(...VERDE_CLARO); doc.rect(bi, Y(22), bd - bi, 0.55 * k, 'F');
+    doc.setFillColor(238, 241, 243); doc.roundedRect(tx + 2.5, Y(23.15), 22, 2 * k, 0.4, 0.4, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(3.6 * k); doc.setTextColor(...VERDE_OSC);
-    doc.text('VAMATEX C 201', x + 13, y + 24.6 * k, { align: 'center' });
-    doc.setFillColor(...ACERO); doc.roundedRect(x - 1, y + 26.4 * k, w + 2, 2.6 * k, 1.2, 1.2, 'F');
-    doc.setFillColor(...ACERO_OSC); doc.rect(x - 1, y + 28.2 * k, w + 2, 0.8 * k, 'F');
-    doc.setFillColor(255, 255, 255); doc.rect(x + 2, y + 26.8 * k, w - 4, 0.35 * k, 'F');   // brillo
+    doc.text('VAMATEX C 201', tx + 13.5, Y(24.55), { align: 'center' });
+    doc.setFillColor(...VERDE_OSC); doc.roundedRect(tx + tw - 9, Y(23.4), 7, 1.5 * k, 0.7, 0.7, 'F');   // manija
+    doc.setFillColor(...ACERO); doc.roundedRect(bi + 1, Y(26.4), bd - bi - 2, 2.6 * k, 1.2, 1.2, 'F');
+    doc.setFillColor(...ACERO_OSC); doc.rect(bi + 1, Y(28.2), bd - bi - 2, 0.8 * k, 'F');
+    doc.setFillColor(255, 255, 255); doc.rect(tx + 1.5, Y(26.8), tw - 3, 0.35 * k, 'F');   // brillo
+
+    // ── caja de mando derecha ──
+    const wc = xd - bd, cxm = bd + wc / 2;
+    doc.setFillColor(...VERDE_OSC); doc.roundedRect(bd, Y(0.4), wc, 29 * k, 1.2, 1.2, 'F');
+    doc.setFillColor(...VERDE); doc.roundedRect(bd + 0.6, Y(1.2), wc - 1.2, 27.4 * k, 0.9, 0.9, 'F');
+    doc.setFillColor(...VERDE_OSC); doc.rect(bd - 0.4, Y(28.4), wc + 0.4, 1.1 * k, 'F');
+    const rr = Math.min(wc / 2 - 0.5, 3 * k);
+    doc.setFillColor(...VERDE_OSC); doc.circle(cxm, Y(6), rr, 'F');
+    doc.setDrawColor(...ACERO); doc.setLineWidth(0.22); doc.circle(cxm, Y(6), rr * 0.84, 'S');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(Math.min(2.1 * k, rr * 1.15)); doc.setTextColor(...ACERO);
+    doc.text('VAMATEX', cxm, Y(6) + 0.3 * k, { align: 'center' });
+    // visor con dos renglones y los botones de marcha (verde) y parada (rojo)
+    doc.setFillColor(30, 40, 44); doc.roundedRect(bd + 1.2, Y(11), wc - 2.4, 3.4 * k, 0.4, 0.4, 'F');
+    doc.setDrawColor(120, 210, 150); doc.setLineWidth(0.18);
+    doc.line(bd + 1.8, Y(12), bd + wc - 2.2, Y(12)); doc.line(bd + 1.8, Y(13.3), bd + wc / 2, Y(13.3));
+    doc.setFillColor(64, 160, 92); doc.circle(cxm - 1.3, Y(17.2), 0.95, 'F');
+    doc.setFillColor(200, 60, 60); doc.circle(cxm + 1.3, Y(17.2), 0.95, 'F');
+    doc.setFillColor(...VERDE_CLARO); doc.roundedRect(bd + 1.2, Y(20.2), wc - 2.4, 6.2 * k, 0.6, 0.6, 'F');   // tapa
   }
 
   function generarFicha(jsPDF, d) {
@@ -3006,8 +3069,10 @@ async function exportDrawToPDF() {
     // muestra desde el principio hasta donde entre, y el epígrafe dice qué filas se ven.
     doc.setPage(1);
     // Arriba de la tela va el telar del que sale: la tela baja desde su barra delantera.
+    // La tela ocupa la columna menos los costados del telar: la fileta y el bastidor a la izquierda,
+    // la caja de mando a la derecha.
     const ALTO_TELAR = 30;
-    const tx = colTela.x, tWidth = colTela.w;
+    const tx = colTela.x + 10, tWidth = colTela.w - 18;
     // colores de las primeras pasadas, para la tela que se ve saliendo del peine
     const coloresInicio = [];
     for (let r = 0; r < filas && coloresInicio.length < 6; r++) {
@@ -3016,7 +3081,12 @@ async function exportDrawToPDF() {
       if (g) { for (let kk = 0; kk < Math.min(g.pasadas, 6) && coloresInicio.length < 6; kk++) coloresInicio.push(colorFila(filaDelGrupo(g, kk)) || [184, 192, 202]); }
       else coloresInicio.push(colorFila(r) || [184, 192, 202]);
     }
-    dibujarTelar(doc, tx, yCols + 5, tWidth, ALTO_TELAR, coloresInicio);
+    // color de cada bobina: el de la primera fila que la usa
+    const coloresBob = d.grid[0].map((_, b) => {
+      for (let r = 0; r < filas; r++) if (d.grid[r][b] && colorFila(r)) return colorFila(r);
+      return null;
+    });
+    dibujarTelar(doc, colTela.x, colTela.w, yCols + 5, ALTO_TELAR, tx, tWidth, coloresInicio, coloresBob);
     const ty = yCols + 5 + ALTO_TELAR, tHeight = 133 - desp - ALTO_TELAR;
     const MIN_FRANJA = 1.6;
     const minReps = Math.min(...largos.filter((l) => l > 0));
@@ -3088,7 +3158,7 @@ async function exportDrawToPDF() {
     if (!hayColores) ep += ' Sin colores asignados, las franjas se ven en gris: se eligen con el simulador de color.';
     else if (d.colores.some((c) => !c)) ep += ' Las filas sin color asignado se ven en gris.';
     if (largoVuelta) ep += ` En la tela real, una vuelta mide unos ${largo(largoVuelta)}.`;
-    doc.text(doc.splitTextToSize(ep, tWidth), tx, ty + tHeight + 5);
+    doc.text(doc.splitTextToSize(ep, colTela.w), colTela.x, ty + tHeight + 5);
 
     // ── Instrucciones, al final ───────────────────────────────────────────
     doc.setPage(hojaFinMatriz);
