@@ -543,8 +543,10 @@ bool descargarDibujo() {
   long pasadasIniciales = 0;
   const long filaGuardada = doc["fila_actual"] | -1L;
   if (filaGuardada >= 0 && filaGuardada < filas) filaInicial = (int)filaGuardada;
-  // Una fila de largo 0 (dentro de un intercalado) no es una posición: se va a la primera con largo.
-  if (nuevoRep[filaInicial] <= 0) filaInicial = siguienteConLargo(filaInicial, 1, nuevoRep, filas);
+  // Una fila de largo 0 (dentro de un intercalado) no es una posición: se vuelve a la primera fila
+  // del grupo, desde su primera pasada, igual que hace el backend (posicionInicial).
+  bool filaCorregida = false;
+  if (nuevoRep[filaInicial] <= 0) { filaInicial = siguienteConLargo(filaInicial, -1, nuevoRep, filas); filaCorregida = true; }
   // El contador también se retoma: si el nodo empezara de cero, sus reportes quedarían
   // por debajo del valor guardado hasta alcanzarlo.
   pasadasIniciales = doc["pasadas_sensor"] | 0L;
@@ -561,7 +563,7 @@ bool descargarDibujo() {
     // Se retoma la pasada exacta dentro de la fila (repeticion_en_fila), no el principio de la
     // fila. Solo si ese dato falta o no cuadra con las repeticiones de la fila se empieza por su
     // primera pasada: perder unas pocas repeticiones es preferible a saltearlas.
-    const long hechas = doc["repeticion_en_fila"] | 0L;
+    const long hechas = filaCorregida ? 0L : (doc["repeticion_en_fila"] | 0L);
     const int  restan = nuevoRep[filaInicial] - (int)hechas;
     repeticionesRestantes = (hechas >= 0 && restan >= 1 && restan <= nuevoRep[filaInicial])
                             ? restan : nuevoRep[filaInicial];

@@ -1410,7 +1410,6 @@ function mkGrid(r, c, keep = false) {
   // Las repeticiones también van por fila: se conservan las que ya estaban y las
   // filas nuevas arrancan en 1 (una pasada), que es el comportamiento de siempre.
   repFilas = Array.from({ length: r }, (_, ri) => (keep && repFilas[ri]) ? repFilas[ri] : 1);
-  repRestantes = largoFila(0) || 1;
   // Los intercalados siguen si sus filas siguen existiendo: uno que quedó cortado por la nueva
   // cantidad de filas se achica, y si le queda una sola fila se quita (y se avisa).
   if (keep) {
@@ -1418,6 +1417,8 @@ function mkGrid(r, c, keep = false) {
     grupos = grupos.map((g) => ({ ...g, hasta: Math.min(g.hasta, r - 1) })).filter((g) => g.hasta > g.desde);
     if (grupos.length < antes) toast('Un intercalado quedó con menos de dos filas y se quitó.');
   } else grupos = [];
+  // Después de ajustar los intercalados: la primera fila puede haber dejado de empezar uno.
+  repRestantes = largoFila(0) || 1;
 
   // Los colores van por fila: si cambia la cantidad de filas hay que
   // redimensionar el array, o el backend rechaza el guardado porque
@@ -3100,6 +3101,8 @@ async function exportDrawToPDF() {
       // que igual se vean varias filas, aunque una sea mucho más larga que la más corta
       const primeras = largos.slice(0, Math.min(6, filas)).reduce((a, b) => a + b, 0);
       if (escala * primeras > tHeight) escala = tHeight / primeras;
+      // si con esa escala igual entra la vuelta entera, se ve completa
+      if (escala * pasadasVuelta <= tHeight + 1e-6) parcial = false;
     }
     const GRIS_HILO = [184, 192, 202];
     const fondo = ty + tHeight;
@@ -3702,6 +3705,7 @@ function abrirIntercalar(desde, filaInicio) {
   } else {
     let ini = Number.isInteger(filaInicio) ? filaInicio : (curRow >= 0 && curRow < nR ? curRow : 0);
     if (grupoDeFila(ini)) ini = 0;
+    if (ini >= nR - 1) ini = Math.max(0, nR - 2);   // desde la última fila no se puede: hacen falta dos
     document.getElementById('int-desde').value = String(ini + 1);
     document.getElementById('int-hasta').value = String(Math.min(nR, ini + 2));
     document.getElementById('int-total').value = '120';

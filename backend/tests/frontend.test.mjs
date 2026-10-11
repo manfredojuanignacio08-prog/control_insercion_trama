@@ -333,6 +333,11 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   f.run("setRepeticion(0, '40')"); assert.equal(f.run('repFilas[0]'), 1);
   // al achicar el dibujo, un intercalado que queda con una sola fila se quita
   f.run('mkGrid(1, 4, true)'); assert.equal(f.run('grupos.length'), 0);
+  assert.equal(f.run('repRestantes'), 1, 'la primera fila ya no empieza un intercalado: mide sus pasadas');
+  // desde la última fila, el diálogo propone las dos últimas (con una sola no hay intercalado)
+  f.run('mkGrid(4, 4, true); grupos=[]'); f.run('abrirIntercalar(-1, 3)');
+  assert.equal(f.run("document.getElementById('int-desde').value"), '3');
+  assert.equal(f.run("document.getElementById('int-hasta').value"), '4');
   // errores del diálogo
   f.run('nR=3'); f.run('abrirIntercalar()'); val('int-desde','2'); val('int-hasta','2');
   assert.match(f.run('leerIntercalar().error'), /dos filas/);
