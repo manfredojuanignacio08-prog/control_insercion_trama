@@ -1506,6 +1506,9 @@ function renderGrid() {
 	    }
 	  }
 	  actualizarTotalPasadas();
+	  // La barra de reproducción dice "Fila X / N": con otra cantidad de filas tiene que actualizarse
+	  // (al crear un dibujo nuevo o cambiar el tamaño seguía mostrando la cantidad anterior).
+	  if (typeof updPlayUI === 'function' && document.getElementById('play-row')) updPlayUI();
 	}
 
 // Color de texto legible sobre un color de hilo (#RRGGBB), según su luminancia.
