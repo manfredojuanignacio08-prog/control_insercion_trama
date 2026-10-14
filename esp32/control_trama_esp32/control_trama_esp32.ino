@@ -159,12 +159,14 @@ void conectarWifi() {
 //
 //  Protecciones: arranque seguro (los relés no se mueven al encender), la primera lectura del
 //  backend solo se memoriza (un reinicio no da un Marcha ni un Pausa que nadie pidió), anti-
-//  doble-pulso, el sensado ignora el eco del propio relé, y sin red no se acciona nada.
+//  doble-pulso, el sensado ignora el eco del propio relé y los canales que bajan juntos cuando se
+//  prende el telar, y sin red no se acciona nada.
 // ============================================================================
 static const unsigned long DURACION_PULSO_MS     = 300;   // "apretar el botón"
 static const unsigned long MIN_ENTRE_COMANDOS_MS = 2000;  // anti-doble-pulso
 static const unsigned long DEBOUNCE_BOTON_MS     = 400;   // rebotes del pulsador sensado
 static const unsigned long IGNORAR_ECO_MS        = 800;   // el sensado ve el pulso del propio relé
+static const unsigned long VENTANA_SIMULTANEOS_MS = 150;   // canales que bajan juntos: se prendió el telar
 static const unsigned long REINTENTO_AVISO_MS    = 3000;  // entre reintentos si el backend no responde
 static const int           FALLOS_PARA_AVISAR    = 5;     // consultas fallidas seguidas = caída
 // Retrocesos pedidos desde la web que todavía no se pulsaron. Cada uno es un pedido con su propia
@@ -210,6 +212,10 @@ void encolarError(const String& codigo, const String& titulo, const String& deta
   errCodigo = codigo; errTitulo = titulo; errDetalle = detalle; errPendiente = true;
 }
 
+// Sensado de la botonera. En el par NA de cada botón hay 24 V mientras nadie lo aprieta: el LED
+// del PC817 queda encendido y el pin en bajo. Al apretar, la tensión cae a 0 y el pin sube cuando
+// se descarga el capacitor del canal (0,15 a 0,25 s con 22 µF); al soltar, vuelve a bajar. Ese
+// flanco descendente es el aviso: sale cuando se suelta el botón.
 void IRAM_ATTR isrBotonMarcha() {
   const unsigned long ahora = millis();
   if (ahora - ultimoPulsoMarcha < IGNORAR_ECO_MS) return;   // eco del propio relé
@@ -366,11 +372,46 @@ void botoneraAplicarEstado(const char* estado, long retrocederSeqAhora, bool lis
   }
 }
 
+// Encendido del telar. Si el gabinete ya está prendido cuando se enciende el telar, al aparecer los
+// 24 V de la botonera los tres canales bajan juntos, y para el sensado eso es soltar los tres
+// botones a la vez: el backend recibiría Marcha, Pausa y Retroceder, y la posición quedaría una
+// pasada atrás. Pasa lo mismo cuando vuelve la tensión del telar después de un corte. Un operario
+// no suelta dos botones distintos en el mismo instante, así que cada aviso espera
+// VENTANA_SIMULTANEOS_MS desde su flanco y, si otro canal bajó dentro de esa ventana, se descartan
+// todos los que bajaron juntos. Los ecos del propio relé no cuentan: la interrupción ya los ignoró
+// y no anotó su hora. Devuelve false mientras algún aviso siga dentro de su ventana (todavía puede
+// llegar el flanco de otro canal).
+bool botoneraFiltrarSimultaneos() {
+  const unsigned long ahora = millis();
+  volatile bool* const pendiente[3] = { &eventoMarchaPendiente, &eventoPausaPendiente, &eventoRetrocederPendiente };
+  const unsigned long flanco[3] = { ultimoEventoMarcha, ultimoEventoPausa, ultimoEventoRetroceder };
+  bool juntos[3] = { false, false, false };
+  int cuantos = 0;
+  for (int i = 0; i < 3; i++) {
+    if (!*pendiente[i]) continue;
+    if (ahora - flanco[i] < VENTANA_SIMULTANEOS_MS) return false;
+    for (int j = 0; j < 3; j++) {
+      if (j == i || flanco[j] == 0) continue;
+      // Distancia entre los dos flancos, en cualquier orden (sin signo: vale aunque millis() dé la vuelta).
+      const unsigned long a = flanco[i] - flanco[j], b = flanco[j] - flanco[i];
+      if ((a < b ? a : b) < VENTANA_SIMULTANEOS_MS) juntos[i] = true;
+    }
+    if (juntos[i]) cuantos++;
+  }
+  if (cuantos == 0) return true;
+  for (int i = 0; i < 3; i++) if (juntos[i]) *pendiente[i] = false;
+  log("Botonera: " + String(cuantos) + " canales bajaron juntos (se prendió el telar o volvió su tensión): " +
+      "no es un botón, no se avisa");
+  return true;
+}
+
 // Avisos pendientes: botones usados a mano, arranque en frío y errores del equipo. Espaciados:
 // con el backend caído no se lo golpea cada 50 ms.
 void botoneraDespacharAvisos() {
-  if ((eventoMarchaPendiente || eventoPausaPendiente || eventoRetrocederPendiente) &&
-      millis() - ultimoIntentoAviso >= REINTENTO_AVISO_MS) {
+  const bool hayAvisos = (eventoMarchaPendiente || eventoPausaPendiente || eventoRetrocederPendiente) &&
+                         botoneraFiltrarSimultaneos() &&
+                         (eventoMarchaPendiente || eventoPausaPendiente || eventoRetrocederPendiente);
+  if (hayAvisos && millis() - ultimoIntentoAviso >= REINTENTO_AVISO_MS) {
     ultimoIntentoAviso = millis();
     // La bandera se baja ANTES de enviar: una pulsación nueva durante el envío no se pierde.
     if (eventoMarchaPendiente) {

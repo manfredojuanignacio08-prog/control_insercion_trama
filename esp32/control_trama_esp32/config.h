@@ -67,7 +67,7 @@
 // mismos tres botones (optoacoplador PC817) para saber cuándo alguien los usa a mano.
 static const int PIN_RELE_MARCHA       = 25;   // IN1 del módulo de 2 canales
 static const int PIN_RELE_PAUSA        = 26;   // IN2 del módulo de 2 canales
-static const int PIN_RELE_RETROCEDER   = 27;   // IN3, módulo individual
+static const int PIN_RELE_RETROCEDER   = 27;   // S del módulo individual
 static const int PIN_BOTON_MARCHA      = 32;   // PC817: sensa el botón Marcha (solo lectura)
 static const int PIN_BOTON_PAUSA       = 33;   // PC817: sensa el botón Pausa
 static const int PIN_BOTON_RETROCEDER  = 34;   // PC817: sensa el botón Retroceder (solo entrada)
