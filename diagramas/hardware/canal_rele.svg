@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 640" font-family="IBM Plex Sans, system-ui, sans-serif">
 <rect width="980" height="640" fill="#F6F8FA"/>
 <text font-family="Questrial, IBM Plex Sans, sans-serif" x="490" y="30" text-anchor="middle" font-size="17" font-weight="bold" fill="#1E3A5F">Bloque D, Canal del relé LCA110</text>
-<text x="490" y="49" text-anchor="middle" font-size="10.5" fill="#6B7684">Uno por lector óptico · cuatro canales idénticos, uno por bobina de selección</text>
+<text x="490" y="51" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#B4423C">DESCARTADO · queda como referencia. La conexión que se usa es la de conexion_final_rele: el relé en lugar del lector.</text>
 
 <!-- ESP32 -->
 <rect x="24" y="76" width="290" height="286" rx="9" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.6" stroke-dasharray="6 4"/>
@@ -58,7 +58,7 @@
 <rect x="668" y="124" width="260" height="72" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
 <text x="798" y="148" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1E3A5F">LECTOR ÓPTICO</text>
 <text x="798" y="165" text-anchor="middle" font-size="9.5" fill="#3F4B5C">Hoy lo interrumpe la cinta de papel</text>
-<text x="798" y="181" text-anchor="middle" font-size="9.5" fill="#3F4B5C">24 V alterna · consumo A MEDIR</text>
+<text x="798" y="181" text-anchor="middle" font-size="9.5" fill="#3F4B5C">tensión y consumo A MEDIR</text>
 <line x1="568" y1="212" x2="668" y2="212" stroke="#9C5C0A" stroke-width="2"/>
 <line x1="568" y1="240" x2="668" y2="240" stroke="#9C5C0A" stroke-width="2"/>
 <line x1="668" y1="196" x2="668" y2="212" stroke="#9C5C0A" stroke-width="2"/>
@@ -101,4 +101,5 @@
 <text x="42" y="574" font-size="10.5" font-weight="bold" fill="#9C5C0A">Antes de comprar los cuatro relés: medir la salida de un lector óptico con el telar encendido.</text>
 <text x="42" y="592" font-size="9.5" fill="#3F4B5C">Hay que conocer tres cosas: la tensión, la corriente, y si el agujero abre o cierra el circuito. Con esos datos queda definido el conexionado.</text>
 <text x="42" y="610" font-size="9.5" fill="#3F4B5C">Comprar UNA unidad, armar un canal completo, probarlo en la máquina y recién entonces comprar las tres restantes.</text>
+<g pointer-events="none"><text x="490" y="350" text-anchor="middle" font-size="120" font-weight="bold" fill="#B4423C" fill-opacity="0.10" letter-spacing="8" transform="rotate(-20 490 350)">DESCARTADO</text></g>
 </svg>
