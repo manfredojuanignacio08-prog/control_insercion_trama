@@ -341,8 +341,9 @@ END $$;
 --
 -- Agrega a historial_produccion:
 --   - fila_actual, columna_actual, pasada_actual: posición exacta de la
---     producción en curso (mismo significado que curRow/curCol/curPass
---     del frontend).
+--     producción en curso (en ese momento, el mismo significado que
+--     curRow/curCol/curPass del frontend; hoy solo avanza fila_actual y las
+--     otras dos quedan en 0, ver schema.sql).
 --   - vueltas_completadas: cuántas veces se tejió el patrón entero de
 --     punta a punta (no hay "completado", el tejido es infinito).
 --

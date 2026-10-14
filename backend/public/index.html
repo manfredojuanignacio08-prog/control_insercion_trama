@@ -1102,8 +1102,6 @@ let repFilas = [];
 let grupos = [];
 // Cuántas pasadas de la fila actual faltan durante la reproducción.
 let repRestantes = 0;
-let curCol = -1;
-let curPass = 0;
 let isPlaying = false;
 let playTimer = null;
 let newDrawCounter = 1; // Contador para nuevas inserciones
@@ -1219,10 +1217,10 @@ async function actualizarEstadoTelar() {
       // servidor y, si nadie más lleva la cuenta, la toma. Antes la web decía "Tejiendo" pero ninguna
       // pantalla contaba, y el conteo estimado quedaba congelado con la máquina andando.
       if (Number.isInteger(telar.fila_actual) && telar.fila_actual >= 0 && telar.fila_actual < nR) {
-        curRow = telar.fila_actual; curCol = 0; curPass = 0;
+        curRow = telar.fila_actual;
         repRestantes = restantesDesde(curRow, telar.repeticion_en_fila);
       } else if (curRow < 0 || curRow >= nR) {
-        curRow = 0; curCol = 0; curPass = 0; repRestantes = largoFila(0) || 1;
+        curRow = 0; repRestantes = largoFila(0) || 1;
       }
       isPlaying = true;
       seguidor = true;
@@ -1260,7 +1258,7 @@ async function actualizarEstadoTelar() {
     // Lo mismo si otra pantalla está llevando el tejido (esta es seguidora).
     if ((sensorManda || seguidor) && String(editId) === String(telar.patron_actual_id) &&
         telar.fila_actual !== null && telar.fila_actual !== undefined && telar.fila_actual < nR) {
-      curRow = telar.fila_actual; curCol = 0; curPass = 0;
+      curRow = telar.fila_actual;
       // El backend también lleva cuántas pasadas de la fila ya se tejieron: sin
       // tomarlo, cada sincronización reiniciaría la fila y las repeticiones se
       // volverían a contar desde el principio.
@@ -1349,8 +1347,6 @@ function resetEditorForNew() {
   
   // 3. Resetear variables de posición
   curRow = -1;
-  curCol = -1;
-  curPass = 0;
   
   // 4. VACIAR MATRIZ COMPLETAMENTE
   grid = Array.from({length: nR}, () => Array(nC).fill(0));
@@ -1725,7 +1721,7 @@ async function restaurarTrabajoEnCurso() {
 
     loadDrawInEditor(d.id, true);
     const fila = Number.isInteger(telar.fila_actual) && telar.fila_actual >= 0 && telar.fila_actual < nR ? telar.fila_actual : 0;
-    curRow = fila; curCol = 0; curPass = 0;
+    curRow = fila;
     repRestantes = restantesDesde(fila, telar.repeticion_en_fila);   // la pasada exacta dentro de la fila
     sensorManda = sensorLleva(telar);
 
@@ -1770,7 +1766,7 @@ function terminarTrabajo() {
       try {
         await apiFetch(`/telares/${telarPorDefectoId}/detener`, { method: 'POST', body: JSON.stringify({}) });
         trabajoEnCursoPatronId = null;
-        curRow = -1; curCol = -1; curPass = 0;
+        curRow = -1;
         updPlayUI(); renderGrid();
         toast('Trabajo terminado');
       } catch (e) {
@@ -1832,7 +1828,7 @@ async function arrancarPlay() {
           method: 'POST',
           body: JSON.stringify({ patron_id: Number(editId) }),
         });
-        curRow = 0; curCol = 0; curPass = 0; // arranca de cero, igual que en el backend
+        curRow = 0; // arranca de cero, igual que en el backend
         repRestantes = largoFila(0) || 1;      // y con las pasadas de la primera fila completas
         trabajoEnCursoPatronId = String(editId);
       } else {
@@ -1841,7 +1837,7 @@ async function arrancarPlay() {
         // fila del BACKEND (que es la verdadera): si la página se recargó, la fila local
         // estaba en 0 y el dibujo se veía empezar de nuevo aunque el telar no.
         if (telar.historial_actual_id && Number.isInteger(telar.fila_actual) && telar.fila_actual < nR) {
-          curRow = telar.fila_actual; curCol = 0; curPass = 0;
+          curRow = telar.fila_actual;
           repRestantes = restantesDesde(curRow, telar.repeticion_en_fila);
         }
         try {
@@ -1854,7 +1850,7 @@ async function arrancarPlay() {
             method: 'POST',
             body: JSON.stringify({ patron_id: Number(editId) }),
           });
-          curRow = 0; curCol = 0; curPass = 0;
+          curRow = 0;
           repRestantes = largoFila(0) || 1;
         }
         trabajoEnCursoPatronId = String(editId);
@@ -1871,7 +1867,7 @@ async function arrancarPlay() {
     }
   }
 
-  if (curRow < 0) { curRow = 0; curCol = 0; curPass = 0; }
+  if (curRow < 0) { curRow = 0; }
   if (curRow >= nR) { toast('¡Tejido ya completado!'); return; }
   seguidor = false;
   isPlaying = true;
@@ -1914,13 +1910,13 @@ function frenarPorEstadoDelTelar(t) {
   generacionPlay++;
   if (!t) {
     trabajoEnCursoPatronId = null;
-    curRow = -1; curCol = -1; curPass = 0;
+    curRow = -1;
     updPlayUI(); renderGrid();
     toast('El trabajo se terminó desde otra pantalla');
     return;
   }
   if (Number.isInteger(t.fila_actual) && t.fila_actual >= 0 && t.fila_actual < nR) {
-    curRow = t.fila_actual; curCol = 0; curPass = 0;
+    curRow = t.fila_actual;
     repRestantes = restantesDesde(curRow, t.repeticion_en_fila);
   }
   updPlayUI(); renderGrid();
@@ -1962,7 +1958,7 @@ async function intentarConducir() {
     });
     seguidor = false;
     if (r && Number.isInteger(r.fila_actual) && r.fila_actual < nR) {
-      curRow = r.fila_actual; curCol = 0; curPass = 0;
+      curRow = r.fila_actual;
       repRestantes = restantesDesde(curRow, r.repeticion_en_fila);
       updPlayUI(); renderGrid();
     }
@@ -2022,8 +2018,6 @@ function doTick() {
       } while (largoFila(curRow) === 0);
       repRestantes = largoFila(curRow) || 1;
     }
-    curPass = 0;
-    curCol = 0; // la columna no avanza: lo que avanza es la fila
 
     updPlayUI(); renderGrid();
     if (telarPorDefectoId) {
@@ -2069,7 +2063,7 @@ async function pausePlay(pedirAlTelar = false) {
   seguidor = false;
   generacionPlay++;
   clearTimeout(playTimer);
-  // OJO: NO se resetea curRow/curCol/curPass. Pausa es pausa: la posición
+  // OJO: NO se resetea curRow. Pausa es pausa: la posición
   // se conserva para que ▶ retome exactamente donde quedó.
   updPlayUI(); renderGrid();
   if (!pedirAlTelar) return;
@@ -2134,8 +2128,6 @@ async function ejecutarRetroceso() {
     if (r && Number.isInteger(r.fila_actual) && r.fila_actual < nR &&
         (!trabajoEnCursoPatronId || String(editId) === trabajoEnCursoPatronId)) {
       curRow = r.fila_actual;
-      curCol = 0;
-      curPass = 0;
       repRestantes = restantesDesde(curRow, r.repeticion_en_fila);
     }
   } catch (e) {
@@ -2153,8 +2145,6 @@ async function ejecutarRetroceso() {
         do { curRow = curRow > 0 ? curRow - 1 : nR - 1; } while (largoFila(curRow) === 0);
         repRestantes = 1;
       }
-      curPass = 0;
-      curCol = 0;
     }
   }
   updPlayUI(); renderGrid();

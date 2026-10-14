@@ -278,7 +278,7 @@ crear una base nueva en Render (solo conectar el backend a esa).
 2. Elegí **Build and deploy from a Git repository** y conectá tu cuenta de GitHub si te lo pide.
 3. Seleccioná el repositorio `control-trama` que creaste en el Paso 1.
 4. Completá la configuración:
-   - **Name**: `control-trama` (esto define la URL final, algo como `control-trama.onrender.com`)
+   - **Name**: `control-trama-backend` (esto define la URL final: `control-trama-backend.onrender.com`)
    - **Root Directory**: `backend`  ⚠️ **muy importante**, el código está dentro de la carpeta `backend`, no en la raíz del repositorio.
    - **Runtime**: `Node`
    - **Build Command**: `npm install`
@@ -302,7 +302,7 @@ crear una base nueva en Render (solo conectar el backend a esa).
    | `SESSION_SECRET` | una clave larga al azar *(sin ella el servidor no arranca)* |
    | `RECOVERY_SECRET` | otra clave larga al azar, distinta *(sin ella el servidor no arranca)* |
    | `ESP32_DEVICE_KEY` | otra clave larga al azar, distinta (la misma va en `DEVICE_KEY` del firmware) |
-   | `WEBAUTHN_RP_ID` | el dominio de Render, sin `https://` (ej. `control-trama.onrender.com`) |
+   | `WEBAUTHN_RP_ID` | el dominio de Render, sin `https://` (ej. `control-trama-backend.onrender.com`) |
    | `WEBAUTHN_ORIGIN` | el mismo, con `https://` |
    | `CORS_ORIGIN` | (dejarlo vacío: la web se sirve desde el mismo servidor) |
 
@@ -326,13 +326,13 @@ Servidor escuchando en http://localhost:10000 (NODE_ENV=production)
 
 Render te va a dar una URL pública (arriba del dashboard del servicio), algo como:
 ```
-https://control-trama.onrender.com
+https://control-trama-backend.onrender.com
 ```
 
 Para confirmar que el backend
 responde, abrí en otra pestaña:
 ```
-https://control-trama.onrender.com/api/health
+https://control-trama-backend.onrender.com/api/health
 ```
 Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 
@@ -377,7 +377,7 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 | `ESP32_DEVICE_KEY` | Clave del dispositivo: igual a `DEVICE_KEY` del firmware. Sin ella ningún ESP32 se conecta | *(clave al azar)* |
 | `REGISTRO_LIBRE_MAX` | Cuántos usuarios se registran sin invitación | `3` |
 | `AUTH_INTENTOS_MAX` / `AUTH_HUELLA_MAX` | Intentos por IP cada 15 minutos con el código de recuperación / con la huella | `20` / `300` |
-| `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | Dominio real del sitio para el ingreso con huella (en producción) | `control-trama.onrender.com` / `https://control-trama.onrender.com` |
+| `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | Dominio real del sitio para el ingreso con huella (en producción) | `control-trama-backend.onrender.com` / `https://control-trama-backend.onrender.com` |
 
 ---
 

@@ -5,7 +5,7 @@ equipo** ("Documentación Eléctrica Telar - ESP32"): el ESP32 actúa como
 **gateway de control remoto** sobre un telar automático ya operativo. No
 reemplaza la lógica de la máquina (le "aprieta los botones").
 
-**Cómo:** tres relés optoacoplados conectados **en paralelo** con los
+**Cómo:** tres relés conectados **en paralelo** con los
 botones físicos de **Marcha** (GPIO 25 → IN1), **Pausa** (GPIO 26 → IN2)
 y **Retroceder** (GPIO 27 → S del módulo individual). Un pulso breve del relé equivale a una
 pulsación manual, y la botonera física sigue funcionando exactamente
@@ -129,11 +129,11 @@ El telar tiene, en la práctica, dos "máquinas": la de **accionamiento**
 (arranca/para) y la **lectora de secuencia** (el dobby con cinta de papel
 perforada, que dicta el dibujo pasada por pasada).
 
-- **Nivel 1, Arranque y parada (lo que hace el ESP32 hoy):** darle Play y
-  Pausa al telar con los relés. Resuelto, sin inconvenientes de fondo.
+- **Nivel 1, Arranque y parada (lo que hace el ESP32 hoy):** darle Marcha, Pausa
+  y Retroceder al telar con los relés. Instalado y probado en el telar el 19/09/2026.
 - **Nivel 2, Dictar el dibujo (en desarrollo):** contar las pasadas con un sensor inductivo
-  y reemplazar la cinta de papel perforada del dobby con cuatro relés LCA110 sobre los lectores
-  ópticos. Lo hace el mismo firmware, con `NIVEL2_INSTALADO` en `true`.
+  y reemplazar la cinta de papel perforada del dobby con cuatro relés LCA110 en el lugar de los
+  lectores ópticos. Lo hace el mismo firmware, con `NIVEL2_INSTALADO` en `true`.
   La medición de los lectores y la conexión de los relés, paso a paso, están en
   `documentacion/PASO_A_PASO_RELES_LCA110.md`.
 

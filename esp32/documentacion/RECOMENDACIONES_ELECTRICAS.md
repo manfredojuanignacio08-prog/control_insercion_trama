@@ -110,9 +110,9 @@ sin que haya ninguna falla real.
   de relés) a un mismo punto físico, no encadenados uno tras otro.
 - **El jumper JD-VCC/VCC del módulo de relés va PUESTO:** con una sola
   fuente de 5 V alimentando todo, el jumper une ambas líneas y no hace
-  falta una alimentación separada para las bobinas. El aislamiento entre la
-  señal del ESP32 y el contacto que toca el telar lo da el optoacoplador
-  interno del módulo, que sigue cumpliendo su función igual.
+  falta una alimentación separada para las bobinas. El aislamiento entre el
+  ESP32 y el contacto que toca el telar lo da el propio relé: su contacto no
+  tiene conexión eléctrica con la bobina.
 
 ## 6. Etapa de potencia del Nivel 2 (bobinas de selección)
 

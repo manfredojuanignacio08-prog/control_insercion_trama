@@ -48,7 +48,7 @@ indique su fila (o alternándose, en un intercalado), que se repite en bucle.
    └───────────┘               └───────────────────────┘
                                           │
                                           ▼
-                   lectores → plaquetas → bobinas de selección
+                   plaquetas (donde iban los lectores) → bobinas de selección
 ```
 
 ## El hardware necesario
@@ -118,7 +118,7 @@ Encaja naturalmente con el sistema actual:
   matriz es *"qué bobina se activa"*, con cuántas pasadas seguidas se teje, y no solo
   una simulación visual.
 - El **backend** ya guarda y entrega esa secuencia por la API. No hay que
-  rediseñarlo: el ESP32 pediría la secuencia igual que hoy pide el estado.
+  rediseñarlo: el ESP32 pide la secuencia igual que pide el estado.
 - El **firmware** del ESP32 pasa de accionar 3 relés (Marcha/Pausa/Retroceder) a
   accionar además los 4 relés LCA110 de los lectores, siguiendo la secuencia (el mismo programa,
   `esp32/control_trama_esp32/`, con `NIVEL2_INSTALADO` en `true`).
@@ -131,7 +131,7 @@ es la parte física (un relé por lector óptico), que ahora es chica.**
 Con esto, el Nivel 2 deja de ser "evolución lejana" y pasa a ser **el próximo
 paso concreto y demostrable**:
 
-- **Nivel 1 (ya):** el ESP32 arranca y para el telar.
+- **Nivel 1 (ya):** el ESP32 arranca, pausa y retrocede el telar (instalado el 19/09/2026).
 - **Nivel 2 (alcanzable como prototipo):** el ESP32 comanda las bobinas de selección
   de un telar dobby según la secuencia que le manda el backend, tejiendo un patrón
   repetitivo real. **Las cuatro bobinas del C 201 ya prueban el concepto

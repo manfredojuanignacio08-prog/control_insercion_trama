@@ -8,8 +8,11 @@
 > del dibujo vale 0 o 1 y las pasadas de cada fila van aparte, en `repeticiones_por_fila` (migración
 > 014); cada fila lleva una sola bobina (en cada pasada entra una sola trama) y, para alternar
 > bobinas, las filas se agrupan en intercalados (`grupos_intercalados`, migración 022); la API exige
-> sesión o clave de dispositivo; los límites son de 1 a 300 filas y de 1 a 8 columnas. El estado
-> actual está en `backend/README.md` y en `database/01_base_de_datos_completa.sql`.
+> sesión o clave de dispositivo; los límites son de 1 a 300 filas y de 1 a 8 columnas; de la
+> posición solo avanza `fila_actual` (`columna_actual` y `pasada_actual` quedan en 0, y la web ya no
+> tiene `curCol` ni `curPass`); `/avanzar` lo llama solo la web de un operario, y el ESP32 manda las
+> pasadas del sensor por `POST /api/telares/:id/pasadas`. El estado actual está en
+> `backend/README.md` y en `database/01_base_de_datos_completa.sql`.
 
 ## 0. Decisiones confirmadas
 

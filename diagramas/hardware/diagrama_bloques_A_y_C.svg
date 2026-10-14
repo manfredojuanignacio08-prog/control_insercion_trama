@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 880" font-family="IBM Plex Sans, system-ui, sans-serif">
 <rect width="1240" height="880" fill="#F6F8FA"/>
-<text x="620.0" y="34" text-anchor="middle" font-size="18" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Bloques A y C · Sistema completo del Nivel 1</text>
+<text x="620.0" y="34" text-anchor="middle" font-size="18" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Bloques A y C · Nivel 1 y sensor de pasada</text>
 <text x="620.0" y="54" text-anchor="middle" font-size="10.5" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">CONTROL DE LA BOTONERA · SENSADO · CONTEO DE PASADAS</text>
 <rect x="300" y="76" width="640" height="720" rx="10" fill="none" stroke="#CDD8E0" stroke-width="1.5" stroke-dasharray="7 5"/>
 <text x="316" y="96" font-size="10" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">GABINETE IP65</text>
@@ -41,9 +41,9 @@
 <text x="805.0" y="431" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">CANAL DEL SENSOR</text>
 <text x="805.0" y="448" text-anchor="middle" font-size="9" fill="#6B7684">1,2 kΩ · PC817</text>
 <text x="805.0" y="462" text-anchor="middle" font-size="9" fill="#6B7684">10 kΩ a 3,3 V</text>
-<path d="M490 290 C 450 290, 440 400, 552 440" fill="none" stroke="#3D6B96" stroke-width="2"/>
-<path d="M490 320 C 440 320, 430 520, 552 552" fill="none" stroke="#3D6B96" stroke-width="2"/>
-<path d="M760 320 C 800 320, 810 400, 800 410" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<path d="M520 370 L520 410" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<path d="M575 370 L575 571 L552 571" fill="none" stroke="#3D6B96" stroke-width="2"/>
+<path d="M730 370 L730 410" fill="none" stroke="#3D6B96" stroke-width="2"/>
 <line x1="437" y1="200" x2="437" y2="410" stroke="#1E3A5F" stroke-width="2"/>
 <line x1="437" y1="626" x2="437" y2="770" stroke="#6B7684" stroke-width="2"/>
 <line x1="805" y1="520" x2="805" y2="770" stroke="#6B7684" stroke-width="2"/>
@@ -66,8 +66,8 @@
 <text x="153.0" y="328" text-anchor="middle" font-size="9" fill="#6B7684">LJ12A3-4-Z/BX</text>
 <text x="153.0" y="342" text-anchor="middle" font-size="9" fill="#6B7684">Un pulso por pasada</text>
 <line x1="153" y1="270" x2="153" y2="290" stroke="#1F2937" stroke-width="2.2"/>
-<path d="M258 330 C 400 330, 600 360, 690 430" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
-<text x="470" y="352" text-anchor="middle" font-size="8.5" fill="#9C5C0A">señal del sensor, dos hilos</text>
+<path d="M258 333 L289 333 L289 222 L900 222 L900 410" fill="none" stroke="#9C5C0A" stroke-width="2.2"/>
+<text x="770" y="216" text-anchor="middle" font-size="8.5" fill="#9C5C0A">señal del sensor, dos hilos</text>
 <rect x="962" y="76" width="250" height="720" rx="10" fill="#EDF1F5" stroke="#3D6B96" stroke-width="1.5" stroke-dasharray="7 5"/>
 <text x="1087" y="96" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E3A5F" font-family="IBM Plex Mono, ui-monospace, monospace">QUÉ HACE CADA BLOQUE</text>
 <text x="982" y="130" font-size="11" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Bloque A · control</text>

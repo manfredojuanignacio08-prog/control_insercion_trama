@@ -204,7 +204,10 @@ src/
 │   ├── ligamento.js        Deriva matriz_ligamento desde matriz_pasadas
 │   ├── posicion.js         Lógica pura de avanzar/retroceder (espejo 1:1 de doTick() y ejecutarRetroceso() del frontend)
 │   └── validacion.js       Validación de patrones
-├── middleware/errorHandler.js  Manejo centralizado de errores (404/400/409/500)
+├── middleware/
+│   ├── auth.js             Sesión (cookie firmada), modo invitado y clave del dispositivo
+│   └── errorHandler.js     Manejo centralizado de errores (404/400/409/500)
+├── nivel2/                  Endpoints del Nivel 2 (patron-actual y pasadas) y su README
 ├── controllers/             Lógica de negocio por entidad
 └── routes/                  Definición de rutas Express
 ```

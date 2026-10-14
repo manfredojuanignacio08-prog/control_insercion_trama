@@ -168,8 +168,9 @@ un código válido, del 4º usuario en adelante no se puede registrar nadie.
 | `POST /api/auth/invitacion` | Un usuario registrado genera un código de invitación para sumar a alguien. |
 
 Cambios en la base: columnas `recovery_hash` / `recovery_usado` en `usuarios`, y la
-tabla nueva `invitaciones`. Ver `src/db/migracion_004_recupero_usuarios.sql`. El
-cifrado actual del código se documenta en `migracion_016_recovery_cifrado.sql`.
+tabla nueva `invitaciones` (ver `src/db/migracion_004_recupero_usuarios.sql`); después, la
+columna `recovery_code`, donde se guarda el código (`migracion_005_codigo_recuperacion_fijo.sql`).
+El cifrado actual del código se documenta en `migracion_016_recovery_cifrado.sql`.
 
 ## Sesión (cookie) y protección de la API
 
