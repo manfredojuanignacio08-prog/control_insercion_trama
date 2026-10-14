@@ -38,16 +38,17 @@ chk("GPIO 25 (Marcha) coincide en firmware+diagrama+doc", ino_marcha and svg_g25
 chk("GPIO 26 (Pausa) coincide en firmware+diagrama+doc", ino_pausa and svg_g26 and doc_g26,
     f"ino={ino_pausa} svg={svg_g26} doc={doc_g26}")
 
-# ── 2. Mapeo GPIO→IN correcto (25→IN1, 26→IN2) ──
+# ── 2. Mapeo GPIO→entrada del módulo correcto (25→IN1, 26→IN2, 27→S del módulo de Retroceder) ──
 # firmware: GPIO25 = IN1 (comentario), diagrama: "GPIO 25" ... "IN1", doc: "GPIO 25 ... IN1"
 ino_25_in1 = bool(re.search(r'PIN_RELE_MARCHA\s*=\s*25.*IN1', cfg))
 doc_25_in1 = bool(re.search(r'GPIO 25.*IN1', doc))
 svg_in1 = 'IN1' in svg and 'IN2' in svg
-svg_in3 = 'IN3' in svg
-ino_27 = bool(re.search(r'PIN_RELE_RETROCEDER\s*=\s*27', cfg))
-chk("GPIO25→IN1, GPIO26→IN2 y GPIO27→IN3 (mapeo consistente)",
-    ino_25_in1 and doc_25_in1 and svg_in1 and svg_in3 and ino_27,
-    f"ino_25→IN1={ino_25_in1} doc_25→IN1={doc_25_in1} svg_IN1/IN2={svg_in1} svg_IN3={svg_in3} ino_27={ino_27}")
+svg_s = 'S → Retroceder' in svg and 'IN3' not in svg
+ino_27 = bool(re.search(r'PIN_RELE_RETROCEDER\s*=\s*27.*S del módulo', cfg))
+doc_27_s = bool(re.search(r'GPIO 27 → S\b', doc)) and 'IN3' not in doc
+chk("GPIO25→IN1, GPIO26→IN2 y GPIO27→S (mapeo consistente)",
+    ino_25_in1 and doc_25_in1 and svg_in1 and svg_s and ino_27 and doc_27_s,
+    f"ino_25→IN1={ino_25_in1} doc_25→IN1={doc_25_in1} svg_IN1/IN2={svg_in1} svg_S={svg_s} ino_27={ino_27} doc_27→S={doc_27_s}")
 
 # ── 2b. Sensado de los 3 botones (GPIO32/33/34, solo lectura) ──
 ino_sens = all(bool(re.search(rf'PIN_BOTON_{n}\s*=\s*{p}', cfg))
@@ -106,11 +107,11 @@ chk("Firmware maneja polaridad del relé (activo-bajo configurable)", rab)
 pulso = 'pulsarRele' in ino and ('delay' in ino or 'DURACION_PULSO' in ino or 'PULSO' in ino.upper())
 chk("Firmware: pulso momentáneo del relé (simula apretar el botón)", pulso)
 
-# ── 5b. Resistencias de las entradas del módulo: pull-up a 3,3 V en IN1 e IN2 (activo-bajo) y
-# pull-down a GND en IN3 (el módulo de Retroceder es activo-alto: con pull-up arrancaría pegado).
+# ── 5b. Resistencias de las entradas de los módulos: pull-up a 3,3 V en IN1 e IN2 (activo-bajo) y
+# pull-down a GND en S (el módulo de Retroceder es activo-alto: con pull-up arrancaría pegado).
 # Ninguna a 5 V: esas líneas van a pines del ESP32, que no toleran 5 V.
-svg_in3 = '10 kΩ a GND' in svg and 'IN3 con pull-down a GND' in svg and 'IN1, IN2 e IN3 a 3' not in svg
-doc_in3 = 'IN3 con pull-down de 10 kΩ a GND' in doc
+svg_in3 = '10 kΩ a GND' in svg and 'S con pull-down a GND' in svg and 'IN1, IN2 e IN3 a 3' not in svg
+doc_in3 = 'S con pull-down de 10 kΩ a GND' in doc
 guia_a = ''
 try:
     from docx import Document
@@ -119,7 +120,7 @@ try:
 except Exception:
     pass
 sin_5v = '3,3V/5V' not in guia_a and 'nunca a 5 V' in guia_a
-chk("Pull-up a 3,3 V en IN1/IN2 y pull-down a GND en IN3, ninguno a 5 V (diagrama, doc y guía)",
+chk("Pull-up a 3,3 V en IN1/IN2 y pull-down a GND en S, ninguno a 5 V (diagrama, doc y guía)",
     svg_in3 and doc_in3 and sin_5v, f"svg={svg_in3} doc={doc_in3} guía={sin_5v}")
 
 # ── 12. Límite de filas: el mismo en la web, el servidor, el firmware y la base ──

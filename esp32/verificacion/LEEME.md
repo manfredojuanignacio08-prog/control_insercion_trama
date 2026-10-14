@@ -23,7 +23,8 @@ archivos, `verif_coherencia.py`, los busca a partir de su propia ubicación).
   al azar adelante y atrás contra el mismo modelo del backend), la de
   `../control_trama_esp32/seleccion_dibujo.h` (un agujero por pasada, cuánto dura y cuándo se
   suelta), el Bloque A del firmware (arranque seguro, orden de Pausa y Retroceder, un pulso por
-  cada retroceso pedido, eco del propio relé), el patrón del sketch de prueba de
+  cada retroceso pedido, eco del propio relé, y los canales que bajan juntos cuando se prende el
+  telar, que no se avisan), el patrón del sketch de prueba de
   mesa de un relé (`../pruebas/prueba_rele_lca110`), y comprueba que el firmware compila en sus dos modos (`NIVEL2_INSTALADO` en `false` y en `true`) contra stubs
   mínimos de Arduino. Es un chequeo de lógica y de sintaxis: no reemplaza compilar
   con el core ESP32 real.
