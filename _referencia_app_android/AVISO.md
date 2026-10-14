@@ -18,7 +18,7 @@ Este código Android:
 
 Si estás evaluando o usando el proyecto ahora, **podés ignorar esta carpeta
 por completo.** Todo lo que importa está en `backend/`, `esp32/`,
-`database/`, `docs/` y `diagramas/`.
+`database/`, `docs/`, `diagramas/` y `documentacion_proyecto/`.
 
 ## Qué tendría que cambiar antes de retomarla
 

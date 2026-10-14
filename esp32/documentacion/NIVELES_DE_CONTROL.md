@@ -1,7 +1,7 @@
 # Niveles de control del telar, alcance del ESP32
 
 Este documento aclara **qué parte del telar controla el sistema hoy** y qué
-quedaría como evolución futura. Es importante para entender el alcance real
+queda como evolución. Es importante para entender el alcance real
 del proyecto y para explicarlo bien en la presentación.
 
 > **Estado actual (relevamiento confirmado).** El telar de implementación es el Vamatex C 201:
@@ -38,55 +38,53 @@ distinta dificultad y conviene ser honesto sobre cada uno.
 
 ### 🟢 Nivel 1, Arranque y parada (lo que hace el ESP32 HOY)
 
-El ESP32 acciona la **máquina de accionamiento**: darle Play (Marcha) y Pausa
-al telar, mediante los tres relés (Marcha/Pausa/Retroceder) en paralelo con la botonera, como describe el
+El ESP32 acciona la **máquina de accionamiento**: darle Marcha, Pausa y Retroceder
+al telar, mediante los tres relés en paralelo con la botonera, como describe el
 resto de esta documentación.
 
-- **Estado:** resuelto en el diseño y probado a nivel de código.
+- **Estado:** instalado y probado en el telar el 19/09/2026.
 - **Dificultad:** baja. No invade la electrónica del telar; solo "aprieta los
   botones" a distancia, y la botonera manual sigue funcionando igual.
-- **Qué permite:** manejar el telar desde la web, darle play, pausarlo -
-  sin estar físicamente frente a la máquina.
+- **Qué permite:** manejar el telar desde la web (arrancarlo, pausarlo,
+  retrocederlo) sin estar físicamente frente a la máquina.
 
-**Este nivel es el alcance actual del proyecto y no tiene inconvenientes de
+**Este nivel ya está instalado en el telar y no tiene inconvenientes de
 fondo.**
 
 ### 🟡 Nivel 2, Dictar la secuencia del patrón (en desarrollo: ver el final)
 
 Reemplazar **por completo** a la máquina lectora significa que el sistema no
-solo dé Play, sino que le entregue al telar la **secuencia completa del
-dibujo** (qué hacer en cada pasada), ocupando el lugar de las tarjetas
-perforadas del Jacquard.
+solo dé Marcha, sino que le entregue al telar la **secuencia completa del
+dibujo** (qué bobina se activa en cada pasada), ocupando el lugar de las
+tarjetas perforadas (en este telar, la cinta de papel).
 
-- **Estado:** fuera del alcance de esta etapa. Es la meta a la que apunta el
-  proyecto, pero requiere un paso de estudio previo.
-- **El punto a resolver:** hay que averiguar **cómo la máquina lectora le
-  dicta hoy la secuencia a la de accionamiento**. En este telar la lectura es
-  un **mecanismo Jacquard por tarjetas perforadas físicas** (no digitalizado):
-  es un sistema mecánico, no una señal eléctrica simple. Por eso reemplazarlo
-  no es tan directo como el Nivel 1.
-- **Camino probable:** llegar al Nivel 2 implicaría un **retrofit del
-  Jacquard**, es decir, un Jacquard electrónico (o un mecanismo que
-  seleccione los hilos por electroimanes/actuadores) que reciba la secuencia
-  desde el backend en lugar de leerla de las tarjetas. Eso es un proyecto de
-  hardware en sí mismo, sobre la mecánica del telar, y excede la etapa actual.
+- **Estado:** en desarrollo. El sensor de pasada y el relé de selección se
+  probaron en protoboard el 10/10/2026, y se está armando la plaqueta para
+  probarlo en la máquina.
+- **El punto a resolver:** había que averiguar **cómo la máquina lectora le
+  dicta la secuencia a la de accionamiento**. Al principio se suponía un
+  **mecanismo Jacquard por tarjetas perforadas físicas**, un sistema mecánico
+  y no una señal eléctrica simple. El relevamiento mostró que en este telar la
+  lee un lector óptico sobre una cinta de papel, que da una señal eléctrica
+  por bobina, y eso simplifica el reemplazo.
+- **Camino elegido:** un relé LCA110 en el lugar de cada lector óptico,
+  comandado por el ESP32 con la secuencia que recibe del backend, y un sensor
+  inductivo que cuenta las pasadas. Es un proyecto de hardware en sí mismo,
+  pero no toca la mecánica del telar.
 
 ## Cómo plantearlo (resumen para la presentación)
 
 - **Ya cubierto y demostrable:** el sistema **define y guarda los patrones**
   (reemplaza la *función* de la máquina lectora a nivel de diseño y datos), y
-  el **ESP32 controla el arranque y la parada** del telar (Nivel 1). Con esto,
-  darle Play en la web y que el telar arranque es viable y sin inconvenientes
-  de fondo.
-- **Como evolución (Nivel 2):** que el ESP32 (o un Jacquard electrónico de
-  retrofit) le **dicte la secuencia completa** al telar, reemplazando
-  físicamente a las tarjetas perforadas. Depende de intervenir el mecanismo
-  Jacquard, y queda planteado como el siguiente paso una vez validado el
-  prototipo en un único telar.
+  el **ESP32 controla el arranque, la pausa y el retroceso** del telar (Nivel 1),
+  instalado y probado en la máquina.
+- **En desarrollo (Nivel 2):** que el ESP32 le **dicte la secuencia completa**
+  al telar, reemplazando a la cinta perforada, con un relé LCA110 en el lugar
+  de cada lector óptico.
 
 En una frase: **hoy el sistema decide y guarda el "qué tejer", y el ESP32
-puede arrancar y parar el telar; que además le dicte físicamente cada pasada,
-ocupando el lugar de las tarjetas del Jacquard, es la evolución que sigue.**
+arranca, pausa y retrocede el telar; que además le dicte cada pasada, ocupando
+el lugar de la cinta perforada, es lo que se está desarrollando.**
 
 ---
 

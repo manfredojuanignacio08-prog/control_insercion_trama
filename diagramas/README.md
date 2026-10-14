@@ -77,8 +77,8 @@ solo el lado del telar. En los casos 2A y 2B cada canal usa el + y el − de su 
 propia resistencia de 10 kΩ ½ W y su resistencia de protección.
 
 ### `diagrama_nivel2_marcos.svg`
-Vista de conjunto del Nivel 2: cómo el microcontrolador comanda los cuatro
-lectores ópticos que hoy lee la cinta de papel.
+Vista de conjunto del Nivel 2: cómo el microcontrolador, con un relé LCA110 en el lugar de cada
+lector óptico, activa en cada pasada la bobina de selección de la fila del dibujo.
 
 ## `sistema/`, cómo funciona
 
@@ -89,6 +89,15 @@ aplicación hasta que el relé cierra el contacto en la máquina.
 ### `arbol_problemas_soluciones.svg`
 El árbol de causas y efectos del problema que resuelve el proyecto, con las
 soluciones propuestas para cada causa.
+
+### `ERD.svg`, `DER_Negocio.svg` y `DER_Autenticacion.svg`
+El modelo de la base de datos: el diagrama completo con las nueve tablas, y sus dos bloques por
+separado (los dibujos, los telares y su producción; y el ingreso con huella, los desafíos y las
+invitaciones), con las columnas de todas las migraciones.
+
+### `gantt.svg`, `estimacion.svg` y `organigrama.svg`
+Las figuras de la Documentación de Proyecto: el cronograma en ocho etapas, la estructura de costos
+con el servicio de mantenimiento, y el equipo con sus roles.
 
 ## Cómo regenerar los PNG
 

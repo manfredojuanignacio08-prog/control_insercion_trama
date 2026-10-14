@@ -33,7 +33,7 @@ conectada al backend y guarda todo en la base de datos (no usa
 ## 2. Qué incluye este paquete
 
 ```
-control_insercion_trama_completo/
+control_insercion_trama/
 ├── backend/                       El núcleo: API REST + PostgreSQL
 │   ├── src/
 │   │   ├── server.js              Servidor Express (punto de entrada)
@@ -41,8 +41,9 @@ control_insercion_trama_completo/
 │   │   ├── db/schema.sql          Esquema de la base de datos
 │   │   ├── db/init.js             Crea las tablas (correr una vez)
 │   │   ├── utils/                 Lógica pura (ligamento, posición, validación)
-│   │   ├── middleware/            Manejo de errores
+│   │   ├── middleware/            Autenticación y manejo de errores
 │   │   ├── controllers/           Lógica de negocio
+│   │   ├── nivel2/                Endpoints que usa el firmware con el sensor (Nivel 2)
 │   │   └── routes/                Rutas de la API
 │   ├── public/                    La PÁGINA WEB (el producto), servida por el backend
 │   │   ├── index.html             la web, ya conectada al backend
@@ -63,7 +64,7 @@ control_insercion_trama_completo/
 │   ├── hardware/                  Conexionado (diagrama_conexion_electrica, bloques, canales)
 │   └── sistema/                   Arquitectura, base de datos y árbol de problemas
 ├── docs/
-│   ├── guias/                     Este manual y Como_Crear_La_Base_De_Datos.md
+│   ├── guias/                     Este manual, Como_Crear_La_Base_De_Datos.md y el paso a paso de conexión
 │   └── analisis/                  Análisis técnico y árbol de problemas
 ├── documentacion_proyecto/        Documentos de la Carpeta del Proyecto (Word y Excel)
 └── _referencia_app_android/       ⚠️ Base de app Android, NO funcional, solo referencia
@@ -235,7 +236,7 @@ Render necesita leer el código desde un repositorio de Git (no se sube el `.zip
 
 1. Creá una cuenta gratis en [github.com](https://github.com) si no tenés.
 2. Creá un repositorio nuevo (botón **New repository**), por ejemplo `control-trama`. Dejalo vacío (sin README).
-3. En tu computadora, dentro de la carpeta `Proyecto_Control_Insercion_Trama`:
+3. En tu computadora, dentro de la carpeta del proyecto (`control_insercion_trama`):
    ```bash
    git init
    git add .
@@ -286,7 +287,8 @@ crear una base nueva en Render (solo conectar el backend a esa).
      `init.js` usa `CREATE TABLE IF NOT EXISTS` y `migrate.js` aplica solo las
      migraciones que falten, una vez cada una, sin borrar ningún dato existente.
      El servidor además aplica las pendientes al arrancar. Así la base de Neon
-     queda igual de completa que la que usa el backend en desarrollo.)*
+     queda igual de completa que la que usa el backend en desarrollo. Si la base ya tiene
+     las tablas, alcanza con `npm start`, que es lo que usa `DESPLIEGUE_RENDER.md`.)*
    - **Plan**: el que diga **Free**
 
 5. Antes de crear el servicio, bajá hasta **Environment Variables** y agregá estas:
@@ -347,8 +349,8 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 - Cada vez que se actualice el código y se vuelva a desplegar, el `Start Command`
   va a volver a correr `init-db` automáticamente, no rompe nada si las tablas
   ya existen (el script usa `CREATE TABLE IF NOT EXISTS`).
-- Esto es válido para la **etapa de pruebas actual** (un solo telar, sin
-  hardware real conectado). Cuando se conecte el ESP32 de verdad, conviene
+- Esto es válido para la **etapa de pruebas actual** (un solo telar, con el
+  Bloque A conectado desde el 19/09/2026). Para la producción real conviene
   revisar la recomendación de la sección 8 sobre alojarlo dentro de la red de
   la planta en lugar de depender de un hosting gratuito en internet.
 
@@ -362,7 +364,7 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 | `PGSSL` | Cifra la conexión y verifica el certificado del servidor. **Dejarlo en `true` con Neon.** Si la URL trae `?sslmode=`, manda la URL (para Neon, `verify-full`). | `true` |
 | `PGSSL_VERIFICAR` | Solo en `false` como salida de emergencia, para una base con certificado propio que no se pueda verificar. Con Neon no hace falta. | *(sin definir)* |
 | `PG_POOL_MAX` | Máximo de conexiones simultáneas a la base. No conviene subirlo sin necesidad (Neon free tiene un límite compartido entre todo el equipo). | `10` |
-| `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Datos de conexión sueltos, **solo para una base local de desarrollo** (se ignoran si `DATABASE_URL` tiene un valor) | `localhost` / `5432` / `postgres` /, / `control_trama` |
+| `PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE` | Datos de conexión sueltos, **solo para una base local de desarrollo** (se ignoran si `DATABASE_URL` tiene un valor) | `localhost` / `5432` / `postgres` / *(tu clave)* / `control_trama` |
 | `PORT` | Puerto del servidor web | `3000` |
 | `NODE_ENV` | Modo de ejecución (`development` o `production`) | `production` |
 | `CORS_ORIGIN` | Dominios de OTRO origen que pueden llamar a la API, separados por coma. Vacío: en producción ninguno (la web se sirve desde el mismo servidor y no lo necesita); en desarrollo, cualquiera. | `https://miapp.com` |
@@ -413,7 +415,7 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
 
 - **Nombre, filas y columnas**: definen el patrón y el tamaño de la
   cuadrícula. Si el nombre ya existe, el sistema lo avisa.
-- **Cuadrícula**: cada fila es una pasada y tocar una celda marca la bobina
+- **Cuadrícula**: cada fila lleva una bobina y tocar una celda marca la bobina
   que se activa en ella; el número a la derecha de la fila (columna ×) dice
   cuántas pasadas seguidas se teje esa fila. Cada fila lleva una sola bobina
   (una trama por pasada): al marcar otra, la anterior se desmarca. En el
@@ -442,8 +444,8 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
 
 ### Biblioteca
 Lista todos los patrones guardados, con buscador por nombre. Permite cargar
-un patrón en el editor o eliminarlo (si tiene historial asociado, no lo deja
-borrar, para no perder el historial).
+un patrón en el editor, ver sus estadísticas de producción o eliminarlo (si tiene
+historial asociado, no lo deja borrar, para no perder el historial).
 
 Cada acción llega al backend y se guarda en la base al instante: la posición
 no se pierde si se cierra el navegador o se corta la conexión, porque el
@@ -466,7 +468,7 @@ estado vive en la base de datos, no en el dispositivo.
 | Modo claro / oscuro de la web | ✅ Funcionando |
 | Exportar ficha del patrón a PDF real | ✅ Funcionando |
 | Selector visual de telar (para cuando haya más de uno) | ⏳ Pendiente |
-| Firmware ESP32 (un solo programa: Bloque A hoy, Nivel 2 con `NIVEL2_INSTALADO`) | ✅ Bloque A instalado y probado en el telar (19/09/2026); Nivel 2 escrito y simulado |
+| Firmware ESP32 (un solo programa: Bloque A hoy, Nivel 2 con `NIVEL2_INSTALADO`) | ✅ Bloque A instalado y probado en el telar (19/09/2026); Nivel 2 escrito, simulado y probado en protoboard (10/10/2026) |
 | Conexión física al telar real | ✅ Bloque A (Marcha, Pausa, Retroceder y sensado) · ⏳ sensor de pasada y relés LCA110 (Nivel 2) |
 | App Android nativa | ⏳ A futuro (hay una base de referencia, no funcional) |
 
@@ -517,7 +519,7 @@ las protecciones eléctricas recomendadas y el diagrama del circuito están en
 | `npm run migrate` no agrega `matriz_ligamento` a patrones viejos | Revisar que el patrón tenga `matriz_pasadas` válida; el backfill solo corre sobre filas con `matriz_ligamento IS NULL`. |
 | La biblioteca aparece vacía | Es normal si es la primera vez. Crear un dibujo desde el Editor. |
 | Error al guardar: "Ya existe un dibujo con ese nombre" | Los nombres son únicos en la base. Cambiar el nombre o borrar el anterior. |
-| Error al eliminar: "No se puede completar la operación" | El patrón tiene historial de producción. No se puede borrar para preservar el historial. |
+| Al eliminar aparece "No se puede eliminar" | El patrón tiene historial de producción. No se puede borrar para preservar el historial. |
 | `docker compose up` falla con "port already in use" | El puerto 3000 o 5432 está ocupado. Cambiarlo en `docker-compose.yml` o liberar el puerto. |
 | La web no trae datos | Verificar que el backend esté corriendo, que `http://localhost:3000/api/health` responda y que se haya iniciado sesión (sin sesión la API responde 401 y la web vuelve al ingreso). |
 | No se ven las tipografías de la app (IBM Plex Sans, Questrial) | Se cargan desde Google Fonts. Sin internet, la app usa las fuentes del sistema del dispositivo y funciona igual. |

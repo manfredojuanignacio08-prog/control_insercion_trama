@@ -64,8 +64,8 @@ que elegir nada, simplemente correrlo.
    datos de antes, no se borró nada, el mismo script lo detecta y solo
    completa lo que faltaba.
 
-> Si en algún paso aparece un error, copialo y pegámelo, lo más probable
-> es que sea algo chico (por ejemplo, un permiso) y se resuelve rápido.
+> Si en algún paso aparece un error, copiá el mensaje completo y consultalo con el equipo:
+> lo más probable es que sea algo chico (por ejemplo, un permiso) y se resuelve rápido.
 
 ---
 
@@ -78,7 +78,8 @@ que elegir nada, simplemente correrlo.
 3. Click en `patrones` y fijate que tenga estas columnas: `id`, `nombre`,
    `filas`, `columnas`, `matriz_pasadas`, `matriz_ligamento`, `colores_filas`,
    `metadata`, `creado_at`, `modificado_at`, `repeticiones_por_fila`,
-   `metros_por_pasada` y `creado_por_invitado` (trece en total).
+   `grupos_intercalados`, `metros_por_pasada`, `creado_por_invitado`, `hilado_peso_kg`,
+   `hilado_metros_max` y `hilado_pasadas_base` (diecisiete en total).
 
 ---
 
@@ -96,7 +97,8 @@ Esto es lo que el backend necesita para hablar con esta base.
    Neon la da terminada en `?sslmode=require` (a veces con `&channel_binding=require`): cambiá
    solo `sslmode=require` por `sslmode=verify-full`. Así la conexión verifica que del otro lado
    esté de verdad la base de Neon, y lo va a seguir haciendo con las próximas versiones de la librería.
-5. Reemplazá `[YOUR-PASSWORD]` por la contraseña que elegiste en el Paso 2.
+5. La cadena ya trae la contraseña de la base (Neon la genera al crear el proyecto). Si aparece
+   oculta con asteriscos, mostrala antes de copiar: tiene que quedar la contraseña real.
    Guardá esta cadena completa (es tu `DATABASE_URL`).
 
 ---
@@ -130,6 +132,7 @@ acabás de crear, todo hecho desde el navegador.
 ## ¿Y si en el futuro hay que actualizar la base otra vez?
 
 Si más adelante el backend necesita una columna o tabla nueva, el mismo
-procedimiento sirve: te paso el `.sql` actualizado, lo pegás en el SQL
-Editor de Neon, le das **Run**, y listo, no hace falta repetir todo
-desde cero, el script siempre detecta qué ya existe y solo agrega lo nuevo.
+procedimiento sirve: se regenera el `.sql` (desde `backend/`, `npm run generar-sql`), se pega en
+el SQL Editor de Neon, se le da **Run**, y listo: no hace falta repetir todo desde cero, el script
+detecta qué ya existe y solo agrega lo nuevo. Además, el servidor aplica solo las migraciones
+pendientes cada vez que arranca.

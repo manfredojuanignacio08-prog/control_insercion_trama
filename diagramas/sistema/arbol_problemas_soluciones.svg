@@ -128,7 +128,7 @@
 
     <rect x="960" y="384" width="180" height="42" rx="6" fill="#fff" stroke="#2E6E4A" stroke-width="1"/>
     <text x="1050" y="401" text-anchor="middle">Firmware ESP32 (gateway</text>
-    <text x="1050" y="415" text-anchor="middle">relés Marcha/Pausa)</text>
+    <text x="1050" y="415" text-anchor="middle">relés de la botonera)</text>
 
     <rect x="1150" y="384" width="210" height="42" rx="6" fill="#fff" stroke="#2E6E4A" stroke-width="1"/>
     <text x="1255" y="401" text-anchor="middle">Historial de producción</text>
@@ -183,7 +183,7 @@
     <text x="962" y="526" font-size="11.5" font-weight="bold" fill="#1e3a5f">Conectar el telar</text>
     <text x="932" y="548" fill="#3d2020" font-size="10.5">→ ESP32 gateway: consulta</text>
     <text x="932" y="562" fill="#3d2020" font-size="10.5">al backend y acciona los</text>
-    <text x="932" y="576" fill="#3d2020" font-size="10.5">relés Marcha/Pausa, con</text>
+    <text x="932" y="576" fill="#3d2020" font-size="10.5">relés de la botonera, con</text>
     <text x="932" y="590" fill="#3d2020" font-size="10.5">fail-safe ante fallas.</text>
 
     <!-- Paso 6 -->

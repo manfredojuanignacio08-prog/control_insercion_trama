@@ -13,7 +13,7 @@ Hoy se usa el **Nivel 1**: Marcha, Pausa y Retroceder por relé, y el sensado de
 - La plaqueta de la fuente lleva **220 V**: se arma con el cable desenchufado, sin conectores dupont, con los empalmes aislados, y la primera vez se prueba con el profesor o el técnico.
 - El **GND del ESP32 nunca se une con nada del telar** (botonera, sensor, lectores): esa separación es la que protege al ESP32.
 - Para programar el ESP32 por USB, **primero se desenchufa la fuente de 220 V**.
-- En toda prueba con la máquina, alguien al lado de la **parada de emergencia** del telar.
+- En toda prueba con la máquina, alguien al lado del botón **Stop** del telar (la máquina no tiene una parada de emergencia aparte).
 - Si algo se calienta, huele raro o hace un ruido anormal: cortar la alimentación y revisar antes de seguir.
 
 ## 2. Qué se necesita
@@ -144,7 +144,7 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 4. Del botón a la bornera **B1** del gabinete, con el cable de 6 conductores (un par por botón), sin cortar ni soldar sobre los cables del telar. No correrlo pegado al cable del motor.
 5. En la plaqueta de sensado, cada bornera B1 lleva el par de su botón a **NO y COM de su relé** (en paralelo con el botón), por su otro par, y a la **entrada de su canal de sensado** (las patas ~ del puente).
 6. Antes de encender el gabinete, encender el telar y comprobar que **la botonera a mano funciona igual que siempre**.
-7. Encender el gabinete. Desde la web: ▶ arranca la máquina, ⏸ la pausa y ⏪ la hace retroceder una pasada. Con alguien al lado de la parada de emergencia.
+7. Encender el gabinete. Desde la web: ▶ arranca la máquina, ⏸ la pausa y ⏪ la hace retroceder una pasada. Con alguien al lado del botón Stop del telar.
 8. Apretar los botones a mano, al menos medio segundo cada uno: al soltarlos, la web lo refleja (sección 10).
 
 ## 9. Conectar el Nivel 2 (sensor y relés de selección)

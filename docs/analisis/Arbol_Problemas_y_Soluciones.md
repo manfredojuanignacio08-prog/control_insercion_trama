@@ -32,6 +32,8 @@ o consecuencias.
    el caché, se perdía todo.
 5. **No hay trazabilidad de la producción.** No queda registro de qué se
    tejió, cuándo, ni cuánto avanzó cada trabajo.
+6. **No hay control de acceso al sistema.** Cualquiera puede usar la interfaz;
+   no hay forma de identificar de manera segura quién opera o hace cambios.
 
 ### 🍂 Efectos (las ramas, qué consecuencias trae)
 
@@ -43,6 +45,8 @@ o consecuencias.
 4. **No hay historial** para analizar la producción ni para auditar qué pasó.
 5. **El conocimiento depende de la persona**, no del sistema: si esa persona
    no está, se complica.
+6. **El acceso al sistema no es seguro ni personalizado:** no se sabe quién
+   hizo cada acción.
 
 ---
 
@@ -75,6 +79,9 @@ efecto negativo se convierte en un **fin** (un beneficio logrado).
    backend, y avisando cuando alguien usa la botonera a mano. → ataca la causa 3.
 6. **Se registró el historial de producción y un log de errores** en la base
    de datos. → ataca la causa 5.
+7. **Se agregó un login por huella dactilar** (estándar WebAuthn), para que el
+   acceso sea seguro y personal. La huella nunca se guarda en el servidor: solo
+   se almacena una clave pública. → ataca la causa 6.
 
 ### 🍎 Fines (los beneficios que se obtienen)
 
@@ -86,6 +93,8 @@ efecto negativo se convierte en un **fin** (un beneficio logrado).
 4. **Queda trazabilidad completa:** el historial registra qué, cuándo y
    cuánto.
 5. **El conocimiento vive en el sistema**, no en una sola persona.
+6. **El acceso es seguro y trazable:** cada operario entra con su huella, sin
+   contraseñas que se puedan compartir o perder.
 
 ---
 
@@ -133,4 +142,4 @@ ejecuta en el telar real mediante el ESP32.
 ---
 
 *Ver también el diagrama visual de este mismo contenido:*
-`arbol_problemas_soluciones.svg` / `.png` en la carpeta `diagramas/`.
+`arbol_problemas_soluciones.svg` / `.png` en la carpeta `diagramas/sistema/`.

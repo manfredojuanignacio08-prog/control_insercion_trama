@@ -6,8 +6,10 @@
 > **Documento histórico (junio de 2026).** Describe el frontend y el plan de backend de ese
 > momento. Desde entonces cambiaron cosas que este análisis no refleja; las principales: cada celda
 > del dibujo vale 0 o 1 y las pasadas de cada fila van aparte, en `repeticiones_por_fila` (migración
-> 014); la API exige sesión o clave de dispositivo; los límites son de 1 a 300 filas y de 1 a 8
-> columnas. El estado actual está en `backend/README.md` y en `database/01_base_de_datos_completa.sql`.
+> 014); cada fila lleva una sola bobina (en cada pasada entra una sola trama) y, para alternar
+> bobinas, las filas se agrupan en intercalados (`grupos_intercalados`, migración 022); la API exige
+> sesión o clave de dispositivo; los límites son de 1 a 300 filas y de 1 a 8 columnas. El estado
+> actual está en `backend/README.md` y en `database/01_base_de_datos_completa.sql`.
 
 ## 0. Decisiones confirmadas
 
@@ -304,10 +306,10 @@ if (pasada >= repeticiones) {
 ```
 
 `columna_actual` se conserva en la base y en las firmas por compatibilidad,
-pero **ya no marca posición** (siempre vale 0): dentro de una pasada todas
-las columnas son simultáneas. Para saber qué bobinas se activan en la fila
-actual está `marcosActivosDeFila()`. El ESP32 del Nivel 2 no la usa: baja la matriz
-entera (`GET /api/telares/:id/patron-actual`) y toma como activa cada celda mayor que cero.
+pero **ya no marca posición** (siempre vale 0): lo que avanza es la fila (hoy, con una sola
+bobina por fila). El ESP32 del Nivel 2 baja la matriz entera
+(`GET /api/telares/:id/patron-actual`) y toma como activa cada celda mayor que cero. (Había
+una función auxiliar, `marcosActivosDeFila()`, que se quitó porque nadie la usaba.)
 
 La cantidad de filas y columnas **no está fija en ningún lado**: el editor admite de 1 a 300 (filas) y 1 a 8 (columnas) en cada dimensión, y el backend guarda la matriz con las
 dimensiones que reciba. Si el telar suma bobinas, alcanza con cambiar las

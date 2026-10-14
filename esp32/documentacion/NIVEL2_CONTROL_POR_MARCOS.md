@@ -77,8 +77,8 @@ lugar del lector óptico de la cinta de papel.
   horas, cuando la vida típica de un relé mecánico con carga ronda las 100.000:
   se gastaría en una jornada. El LCA110 no tiene partes móviles,
   conmuta en unos pocos milisegundos y no se desgasta.
-- **Por qué el LCA110 y no un SSR de potencia.** Como corta la señal del lector
-  (unos pocos mA, menos de 24 V) y no la corriente de la bobina, alcanza con un
+- **Por qué el LCA110 y no un SSR de potencia.** Como maneja la señal del lector
+  (unos pocos mA, menos de 30 V) y no la corriente de la bobina, alcanza con un
   relé de señal. Su salida son dos MOSFET en antiserie: conduce en los dos
   sentidos, así que sirve con continua y con alterna (hasta 350 V y 120 mA). Se
   comanda directo desde un pin del ESP32 y aísla los dos lados. La conexión final,

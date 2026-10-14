@@ -95,8 +95,8 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       funcionando igual.
 - [ ] Antes de energizar, verificá que **la botonera manual del telar sigue
       andando** (apretá los botones a mano).
-- [ ] Recién ahí probá el arranque/pausa desde la web, con alguien al lado
-      del botón de parada de emergencia del telar por las dudas.
+- [ ] Recién ahí probá el arranque, la pausa y el retroceso desde la web, con alguien al lado
+      del botón Stop del telar por las dudas (la máquina no tiene una parada de emergencia aparte).
 - [ ] Con el telar encendido y sin tocar nada, GPIO 32, 33 y 34 dan **0 V**. Apretá cada botón
       a mano (al menos medio segundo): al soltarlo, el monitor muestra «Botonera: alguien apretó …»
       una vez.
@@ -108,8 +108,8 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 
 ## Notas de seguridad
 
-- El telar es una máquina industrial: probá siempre con la **parada de
-  emergencia accesible**.
+- El telar es una máquina industrial: probá siempre con el **botón Stop del telar
+  al alcance** (no tiene una parada de emergencia aparte).
 - Nunca conectes/desconectes cables con el circuito energizado.
 - Si algo se calienta, huele raro o hace un ruido anormal: cortá la
   alimentación y revisá antes de seguir.
