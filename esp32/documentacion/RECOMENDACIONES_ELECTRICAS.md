@@ -32,7 +32,7 @@ no un detalle.
    al revés hace que el relé arranque PEGADO:
    - **IN1 (Marcha) e IN2 (Pausa)** (módulo de 2 canales, activo-bajo): **pull-up**
      de 10 kΩ a 3.3V. Lo mantiene suelto.
-   - **IN3 (Retroceder)** (módulo individual, activo-alto): **pull-down** de 10 kΩ
+   - **S (Retroceder)** (módulo individual, activo-alto): **pull-down** de 10 kΩ
      a **GND**, NO a 3.3V. Con pull-up este relé arranca pegado.
    - **Sensado, GPIO 32, 33 y 34** (los tres botones): **pull-up** de 10 kΩ a 3.3V,
      una por canal. El GPIO 34 es solo de entrada y no tiene pull-up interna:
@@ -104,7 +104,7 @@ sin que haya ninguna falla real.
   COM1 trenzados entre sí; ídem canales 2 y 3) y **lejos de los cables de los
   motores** del telar. El ruido inductivo de los motores es la causa nº1
   de cuelgues de WiFi y reinicios en este tipo de montaje.
-- **Cables cortos en la etapa lógica** (3.3 V, IN1, IN2, IN3 y las tres
+- **Cables cortos en la etapa lógica** (3.3 V, IN1, IN2, S y las tres
   entradas de sensado): cuanto más largos, más antena para el ruido.
 - **Tierra en estrella:** todos los GND (salida de la fuente, ESP32, módulo
   de relés) a un mismo punto físico, no encadenados uno tras otro.
@@ -157,19 +157,20 @@ relés):
 | Anti-doble-pulso (2 s mínimos entre comandos) | Doble pulsación por lecturas repetidas del backend |
 | Watchdog por hardware (15 s) | Cuelgues por ruido eléctrico: el ESP32 se reinicia solo, con relés en reposo |
 | Fail-safe sin red | Si se cae el WiFi o el backend, el ESP32 no actúa y la botonera física sigue mandando |
+| Avisos de la botonera descartados cuando dos o más canales bajan dentro de 150 ms | Que prender el telar con el gabinete encendido (o que vuelva su tensión) se lea como Marcha, Pausa y Retroceder, con la posición una pasada atrás |
 | Polaridad configurable **por relé** (`RELE_*_ACTIVO_BAJO`) | Permite mezclar módulos activo-bajo y activo-alto en el mismo equipo. Ojo: la resistencia de cada canal depende de esto (pull-up a 3,3 V para activo-bajo, pull-down a GND para activo-alto) |
 
 ## 8. Resumen de compras/cambios (protecciones del Bloque A y relés del Nivel 2)
 
 | Ítem | Cantidad | Para qué |
 |---|---|---|
-| Resistencia 10 kΩ | 6 | Polarización de IN1/IN2/IN3 (3 relés) y de los 3 canales de sensado (punto 1). La del canal de Retroceder va a GND, no a 3V3. |
+| Resistencia 10 kΩ | 6 | Polarización de IN1, IN2 y S (3 relés) y de los 3 canales de sensado (punto 1). La del canal de Retroceder va a GND, no a 3V3. |
 | Relé LCA110 (OptoMOS, DIP-6) + 330 Ω + 10 kΩ | 4 de cada uno (+1 LCA110 de repuesto) | Dan la señal en lugar de cada lector óptico en el Nivel 2 (punto 6). Un relé mecánico se gastaría en una jornada por la frecuencia de conmutación. |
 | Resistencia de protección (220 Ω 2 W hasta 15 V; 470 Ω 3 W de 15 a 30 V) + 10 kΩ ½ W | 4 de cada una | Lado del telar de cada relé, en la conexión final (punto 6): la de protección del + del conector del lector a la pata 4, y la de 10 kΩ de la señal al −. |
 | Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
 | Capacitor cerámico 100 nF | 3 | Desacople: uno junto al ESP32 y uno junto a cada módulo de relé (punto 4) |
 | Optoacoplador PC817 + puente DB157 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |
-| Capacitor electrolítico 22–47 µF 50 V | 3 | En paralelo a la salida del puente, antes de la resistencia. Aplana el AC rectificado: sin él el LED del optoacoplador pulsa 100 veces por segundo y el firmware lee varias pulsaciones donde hubo una sola. Es crítico en el canal de Retroceder, donde cada evento repetido retrocede una pasada de más. TIENE POLARIDAD. |
+| Capacitor electrolítico 22 µF 50 V | 3 | En paralelo a la salida del puente, antes de la resistencia. Mantiene encendido el LED del optoacoplador entre los semiciclos: sin él, el LED se apaga 100 veces por segundo y el firmware mandaría avisos solos, sin que nadie apriete nada, cada uno con su efecto (en Retroceder, una pasada atrás). El valor fija cuánto hay que mantener apretado el botón para que se registre: con 22 µF, entre 0,15 y 0,25 s; con 47 µF, entre 0,3 y 0,5 s, y un toque rápido se perdería. TIENE POLARIDAD. |
 
 Total estimado: unos pocos dólares. La mejora de fiabilidad es enorme en
 relación al costo, especialmente los pull-ups del punto 1, que son la

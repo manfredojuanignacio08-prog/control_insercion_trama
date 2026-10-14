@@ -15,7 +15,7 @@ la **señal**, con una **resistencia de protección** en serie y una de **10 kΩ
 |---|---|---|---|
 | El ESP32 pide la bobina | cerrado | +V, como con agujero | activa |
 | No la pide, o el ESP32 está apagado, arrancando o sin red | abierto | 0 V (la 10 kΩ), como con papel | en reposo |
-| Falla de cableado (la señal o la pata 4 tocan el −) | cualquiera | la resistencia de protección limita la corriente (unos 50 mA) | no se daña nada |
+| Falla de cableado (la señal o la pata 4 tocan el −) | cualquiera | la resistencia de protección limita la corriente a menos de 70 mA (68 mA a 15 V con 220 Ω; 64 mA a 30 V con 470 Ω), por debajo de los 120 mA del relé | no se daña nada |
 
 Por qué es la más segura: el relé solo toca la señal del lector (pocos mA), nunca las bobinas ni su
 alimentación; el ESP32 y el telar quedan aislados (3.750 V); el LCA110 es normalmente abierto, así que
@@ -211,7 +211,7 @@ En cada canal:
 - Pata 2 → GND del ESP32 (las cuatro patas 2 van al mismo GND).
 - Resistencia de 10 kΩ del GPIO a GND, **pegada al pin**, antes de la de 330 Ω. Así el relé queda
   abierto mientras el ESP32 arranca.
-- Patas 4 y 6 → bornera de salida del canal (rotular `R1`, `R2`, `R3`, `R4`).
+- Patas 4 y 6 → bornera de salida del canal (rotular canal 1 a 4: con «R1» se confundiría con las resistencias).
 
 **3.4 Probar con el firmware, todavía en el banco.**
 
