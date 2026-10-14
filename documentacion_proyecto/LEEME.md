@@ -16,7 +16,7 @@ el repositorio para que el código y la documentación viajen juntos.
 
 | Archivo | Qué contiene |
 |---|---|
-| `Guia_Conexion_y_Puesta_en_Marcha.docx` | **El paso a paso de todo:** las cuatro plaquetas, cómo se conectan entre sí y al telar, cómo levantar el servidor, la web y el ESP32, y qué muestra la web cuando se usa la botonera. |
+| `Guia_Conexion_y_Puesta_en_Marcha.docx` | **El paso a paso de todo:** las cinco plaquetas, cómo se conectan entre sí y al telar, cómo levantar el servidor, la web y el ESP32, y qué muestra la web cuando se usa la botonera. |
 | `Guia_Conexion_Reles_LCA110.docx` | Los relés de selección: mediciones, la conexión final (la más segura), pruebas y problemas frecuentes. |
 | `Guia_Mediciones_y_Verificaciones.docx` | Todas las mediciones y pruebas, en orden, con la planilla para anotar. |
 | `Conexionado_Nivel2.docx` | El paso a paso del sensor de pasada y los relés, con sus diagramas. |
@@ -42,6 +42,7 @@ el repositorio para que el código y la documentación viajen juntos.
 ## Otros
 
 `Manual Telar Fabrica.docx` y `Manual_Pagina_Web_Telar.docx` son los manuales de
-uso. `Arbol de problemas y soluciones.docx` es el análisis causa-efecto.
+uso. Sus versiones web, y la de la Documentación de Proyecto, están en
+`docs/sitios/`: cuando cambia uno de estos Word, hay que pasar el cambio al sitio. `Arbol de problemas y soluciones.docx` es el análisis causa-efecto.
 `Parado_Automatico_Ideas.docx` recoge las ideas surgidas de las conversaciones
 con el dueño, ordenadas por prioridad.
