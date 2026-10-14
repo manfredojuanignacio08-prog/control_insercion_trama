@@ -28,18 +28,18 @@ bucle" es exactamente lo que el sistema ya hace hoy con la matriz de pasadas.
 
 ## Cómo funciona
 
-En cada pasada del telar, algunos marcos suben y otros bajan; esa combinación
-forma el cruce de los hilos que da el dibujo. Cada pasada se reduce entonces a indicar **cuáles se activan**. En este
-telar son 4 bobinas de selección, confirmado por el dueño el 19/09/26 (el relevamiento del
-28/08/26 había estimado seis). El patrón repetitivo es una lista corta
-de esas combinaciones, que se repite.
+El telar lee el dibujo pasada por pasada, y en cada pasada entra **una sola trama**: lo que
+decide la selección es **qué bobina se activa** en esa pasada. En este telar son 4 bobinas de
+selección, confirmado por el dueño el 19/09/26 (el relevamiento del 28/08/26 había estimado
+seis). El patrón repetitivo es una lista corta de bobinas, cada una tantas pasadas seguidas como
+indique su fila (o alternándose, en un intercalado), que se repite en bucle.
 
 ```
-   Secuencia (se repite):     Bobinas activas en cada pasada
-   ┌───────────┐              Pasada 1 → 1,3
-   │  backend  │  ──────────▶ Pasada 2 → 2,4
-   │ (patrón)  │              Pasada 3 → 1,3
-   └───────────┘              Pasada 4 → 2,4   (y vuelve a empezar)
+   Secuencia (se repite):     Bobina activa en cada pasada
+   ┌───────────┐              Pasada 1 → 1
+   │  backend  │  ──────────▶ Pasada 2 → 3
+   │ (patrón)  │              Pasada 3 → 1
+   └───────────┘              Pasada 4 → 3   (y vuelve a empezar)
         │
         ▼
    ┌───────────┐  en lugar del ┌───────────────────────┐
@@ -48,7 +48,7 @@ de esas combinaciones, que se repite.
    └───────────┘               └───────────────────────┘
                                           │
                                           ▼
-                   lectores → plaquetas → bobinas → marcos suben/bajan
+                   lectores → plaquetas → bobinas de selección
 ```
 
 ## El hardware necesario
@@ -85,8 +85,8 @@ lugar del lector óptico de la cinta de papel.
   la más segura, pone el relé en lugar del lector (con agujero el lector da la señal +V; ahora la
   da el relé), con una resistencia de protección: `diagramas/hardware/conexion_final_rele.png` y
   `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
-- El **ESP32** recibe del backend la secuencia y, en cada pasada, activa las
-  bobinas que corresponden a esa fila.
+- El **ESP32** recibe del backend la secuencia y, en cada pasada, activa la
+  bobina que corresponde a esa fila (una sola: una trama por pasada).
 - **Los LCA110 se conectan directo a los GPIO del ESP32** (18, 19, 21 y 22, con
   330 Ω en serie y 10 kΩ a GND). Un diseño anterior
   contemplaba un registro de desplazamiento 74HC595 para manejar ocho salidas
@@ -114,9 +114,9 @@ Esto es **de escala de prototipo**, no de proyecto industrial.
 
 Encaja naturalmente con el sistema actual:
 
-- El **editor** ya define una matriz de pasadas que se repite. Solo hay que
-  interpretar cada fila de esa matriz como *"qué marcos suben en esta
-  pasada"*, en vez de (o además de) la simulación visual.
+- El **editor** ya define una matriz de pasadas que se repite. Cada fila de esa
+  matriz es *"qué bobina se activa"*, con cuántas pasadas seguidas se teje, y no solo
+  una simulación visual.
 - El **backend** ya guarda y entrega esa secuencia por la API. No hay que
   rediseñarlo: el ESP32 pediría la secuencia igual que hoy pide el estado.
 - El **firmware** del ESP32 pasa de accionar 3 relés (Marcha/Pausa/Retroceder) a
@@ -124,7 +124,7 @@ Encaja naturalmente con el sistema actual:
   `esp32/control_trama_esp32/`, con `NIVEL2_INSTALADO` en `true`).
 
 En otras palabras: **la parte de software ya está casi lista; lo que se suma
-es la parte física de los marcos, que ahora es chica.**
+es la parte física (un relé por lector óptico), que ahora es chica.**
 
 ## Cómo plantear el Nivel 2 (replanteo)
 
@@ -132,8 +132,8 @@ Con esto, el Nivel 2 deja de ser "evolución lejana" y pasa a ser **el próximo
 paso concreto y demostrable**:
 
 - **Nivel 1 (ya):** el ESP32 arranca y para el telar.
-- **Nivel 2 (alcanzable como prototipo):** el ESP32 controla los marcos de un
-  telar dobby según la secuencia que le manda el backend, tejiendo un patrón
+- **Nivel 2 (alcanzable como prototipo):** el ESP32 comanda las bobinas de selección
+  de un telar dobby según la secuencia que le manda el backend, tejiendo un patrón
   repetitivo real. **Las cuatro bobinas del C 201 ya prueban el concepto
   completo**, sin necesidad de escalar a los cientos de hilos de un Jacquard.
 

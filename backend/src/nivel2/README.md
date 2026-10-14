@@ -1,9 +1,10 @@
 # Backend del Nivel 2
 
 Endpoints que usa el firmware con el Nivel 2 instalado (conteo real de pasadas y selección del
-dibujo). Ya están **montados** en `server.js` bajo `/api/telares`. Los que escriben
-exigen la clave de dispositivo (header `X-Device-Key`, valor de `ESP32_DEVICE_KEY` en
-el `.env`); `patron-actual` también se puede leer con una sesión de la web.
+dibujo). Ya están **montados** en `server.js` bajo `/api/telares`. Los que manda el
+hardware exigen la clave de dispositivo (header `X-Device-Key`, valor de `ESP32_DEVICE_KEY`
+en el `.env`); `patron-actual` también se puede leer con una sesión de la web, y
+`validar-conteo` lo usa el operario desde la web.
 
 | Endpoint | Quién | Para qué |
 |---|---|---|
@@ -22,7 +23,7 @@ Mientras el sensor no esté instalado, `pasadas_totales` sale del **reloj de la 
   poder compararlos durante la jornada de validación);
 - `telares.ultimo_reporte_sensor` se actualiza en cada reporte **y en cada consulta
   del nodo** (`GET /telares/:id?origen=nivel2`, cada 2,5 s, aunque el telar esté
-  quieto), y mientras sea reciente (30 s) `POST /avanzar` responde
+  quieto), y mientras sea reciente (30 s) `POST /avanzar` y `POST /retroceder` responden
   `409 SENSOR_ACTIVO`: la web deja de avanzar por reloj y sigue la posición que
   informa el sensor. Lo mismo si la producción ya tiene pasadas medidas
   (`pasadas_sensor > 0`), aunque el nodo esté sin red un rato: si el reloj la

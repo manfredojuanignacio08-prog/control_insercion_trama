@@ -11,7 +11,7 @@ import { requerirDispositivo } from '../middleware/auth.js';
 const router = Router();
 
 // Los ids de la URL tienen que ser enteros positivos que entren en un INTEGER de
-// PostgreSQL. Así un /patrones/abc responde 400 con un mensaje claro en vez de
+// PostgreSQL. Así un /telares/abc/pasadas responde 400 con un mensaje claro en vez de
 // llegar a la base y volver como error del servidor.
 router.param('id', (req, res, next, id) => {
   if (!/^\d{1,9}$/.test(id) || Number(id) < 1) {

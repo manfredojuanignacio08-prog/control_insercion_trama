@@ -86,8 +86,9 @@ static const int PIN_LED               = 2;    // LED de la placa: encendido = c
 #define RELE_RETROCEDER_ACTIVO_BAJO  false
 
 // ------------------------------------------------------------ Modo de prueba
-// Solo tiene efecto con NIVEL2_INSTALADO en true. En true el programa NO usa el sensor real: con el telar en "tejiendo" genera pulsos por su
-// cuenta cada 200 ms, sin ninguna relación con lo que hace la máquina. Es solo para verificar
+// Solo tiene efecto con NIVEL2_INSTALADO en true. En true el programa NO usa el sensor real:
+// con el telar en "tejiendo" genera pulsos por su cuenta cada 200 ms, sin ninguna relación
+// con lo que hace la máquina. Es solo para verificar
 // la lógica en el banco de trabajo. Los relés del Bloque A siguen funcionando: en el banco no
 // tienen que estar conectados a la botonera (▶ en la web pulsa Marcha).
 //
@@ -183,8 +184,9 @@ static const int DESPLAZAMIENTO_FILAS = 0;
 // (cuando abre la calada), y el pulso del sensor llega en otro. Este retardo hace esperar
 // esos microsegundos entre el pulso y la aplicación de la fila. Solo se puede medir con un
 // osciloscopio (pulso del sensor → ventana de lectura del lector óptico); sin él, queda en 0 y
-// el desfase de filas enteras se corrige con DESPLAZAMIENTO_FILAS tejiendo una prueba. Debe ser mucho menor que los
-// 200 ms de una pasada (máximo permitido: 50 ms). Cero = se aplica apenas llega el pulso.
+// el desfase de filas enteras se corrige con DESPLAZAMIENTO_FILAS tejiendo una prueba. Debe ser
+// mucho menor que los 200 ms de una pasada (máximo permitido: 50 ms). Cero = se aplica apenas
+// llega el pulso.
 //
 // Ojo con la otra dirección: si la ventana de lectura llega ANTES de que el pulso más la
 // latencia del relé LCA110 (unos pocos ms) y del ESP32 alcancen a aplicar la fila, no se corrige

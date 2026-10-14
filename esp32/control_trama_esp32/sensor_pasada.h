@@ -46,8 +46,9 @@ volatile bool esperandoReposo = false;
 // pasadas por cada retroceso.
 //
 // La corrección aprovecha algo que el sistema ya tiene: el Bloque A sensa el
-// botón Retroceder. Al detectarlo se marca esta bandera y el pulso siguiente se
-// descuenta en lugar de sumarse.
+// botón Retroceder y el backend cuenta cada retroceso (retrocesos_contados). Por
+// cada uno que se entera la tarea de red se suma un aviso acá, y el pulso siguiente
+// se descuenta en lugar de sumarse.
 //
 // Es un CONTADOR y no una bandera: si el operario mantiene apretado Retroceder o se
 // acumulan varios avisos entre dos consultas al backend, cada uno tiene que descontar

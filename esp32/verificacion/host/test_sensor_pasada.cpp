@@ -9,28 +9,28 @@ int main(){
   // --- #13: tres retrocesos acumulados descuentan tres pasadas (antes: una)
   g_ms=1000; for(int i=0;i<10;i++) pulso();
   assert(sensorPasadaTotal()==10);
-  sensorPasadaAvisarRetroceso(3, true);           // maquina en marcha: no reclasifica, queda pendiente
+  sensorPasadaAvisarRetroceso(3, true);           // máquina en marcha: no reclasifica, queda pendiente
   bool r; pulso(); assert(sensorPasadaHuboPulso(&r) && r); assert(sensorPasadaTotal()==9);
   pulso(); sensorPasadaHuboPulso(&r); assert(r && sensorPasadaTotal()==8);
   pulso(); sensorPasadaHuboPulso(&r); assert(r && sensorPasadaTotal()==7);
   pulso(); sensorPasadaHuboPulso(&r); assert(!r && sensorPasadaTotal()==8);   // el cuarto ya es hacia adelante
-  // --- retroceso que el sensor vio ANTES del aviso, con la maquina en pausa: se reclasifica
+  // --- retroceso que el sensor vio ANTES del aviso, con la máquina en pausa: se reclasifica
   sensorPasadaFijarTotal(50);
   pulso(); sensorPasadaHuboPulso(&r); assert(!r && sensorPasadaTotal()==51);  // contado como +1
-  g_ms+=1500; sensorPasadaAvisarRetroceso(1, false);                          // llega el aviso 1,5 s despues
+  g_ms+=1500; sensorPasadaAvisarRetroceso(1, false);                          // llega el aviso 1,5 s después
   assert(sensorPasadaTotal()==49);                                            // 51 -> 49 (era un -1, no un +1)
   assert(sensorPasadaTomarReclasificados()==1 && sensorPasadaTomarReclasificados()==0);
   pulso(); sensorPasadaHuboPulso(&r); assert(!r && sensorPasadaTotal()==50);  // el siguiente pulso NO se descuenta
-  // aviso tardio fuera de ventana: no reclasifica, queda pendiente
+  // aviso tardío fuera de ventana: no reclasifica, queda pendiente
   g_ms+=10000; sensorPasadaAvisarRetroceso(1,false); assert(sensorPasadaTotal()==50);
   pulso(); sensorPasadaHuboPulso(&r); assert(r && sensorPasadaTotal()==49);
-  // --- #14: periodo de gracia
+  // --- #14: período de gracia
   g_ms=100000; sensorPasadaFijarTotal(0);
-  ultimoPulsoMs = 0;                                  // como recien encendido
+  ultimoPulsoMs = 0;                                  // como recién encendido
   sensorPasadaMarcarArranque();                       // pasa a "tejiendo"
   assert(!sensorPasadaSinSenal());                    // antes: true al instante
-  g_ms+=10000; assert(!sensorPasadaSinSenal());       // 10 s sin pulso: todavia en gracia (15 s)
-  g_ms+=6000;  assert(sensorPasadaSinSenal());        // 16 s: sin senal
+  g_ms+=10000; assert(!sensorPasadaSinSenal());       // 10 s sin pulso: todavía en gracia (15 s)
+  g_ms+=6000;  assert(sensorPasadaSinSenal());        // 16 s: sin señal
   sensorPasadaMarcarArranque(); g_ms+=1000; pulso(); pulso();
   assert(!sensorPasadaSinSenal());                    // con pulsos rige el timeout de 3 s
   g_ms+=2900; assert(!sensorPasadaSinSenal());
@@ -39,14 +39,14 @@ int main(){
   sensorPasadaMarcarArranque(); g_ms+=5000; assert(!sensorPasadaSinSenal());
   // contador en cero + retroceso: no queda negativo
   sensorPasadaFijarTotal(0); sensorPasadaAvisarRetroceso(1,true); pulso(); sensorPasadaHuboPulso(&r); assert(sensorPasadaTotal()==0);
-  // --- aviso de retroceso que nunca se consumio: caduca a los 30 s y no descuenta un pulso posterior
+  // --- aviso de retroceso que nunca se consumió: caduca a los 30 s y no descuenta un pulso posterior
   g_ms=500000; sensorPasadaFijarTotal(20); sensorPasadaAvisarRetroceso(1, true);
   g_ms+=31000; sensorPasadaActualizar(); pulso(); sensorPasadaHuboPulso(&r); assert(!r && sensorPasadaTotal()==21);
   // --- y se descarta al arrancar el tejido
   sensorPasadaAvisarRetroceso(2, true); sensorPasadaMarcarArranque(); pulso(); sensorPasadaHuboPulso(&r); assert(!r && sensorPasadaTotal()==22);
-  // --- un aviso vigente (menos de 30 s) si se consume
+  // --- un aviso vigente (menos de 30 s) sí se consume
   sensorPasadaAvisarRetroceso(1, true); g_ms+=5000; sensorPasadaActualizar(); pulso(); sensorPasadaHuboPulso(&r); assert(r && sensorPasadaTotal()==21);
-  // --- al readoptar conteo y posicion del backend (FijarTotal), un pulso anterior ya no se reclasifica
+  // --- al readoptar conteo y posición del backend (FijarTotal), un pulso anterior ya no se reclasifica
   g_ms=900000; sensorPasadaFijarTotal(30); pulso(); sensorPasadaHuboPulso(&r);      // +1 en pausa: 31
   sensorPasadaFijarTotal(40);                                                        // se baja el dibujo de nuevo
   g_ms+=1000; sensorPasadaAvisarRetroceso(1, false);                                 // el aviso queda pendiente

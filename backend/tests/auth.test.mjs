@@ -10,7 +10,7 @@ assert.deepEqual(m.leerSesion({headers:{cookie}}), {usuario:'mia', nombre:'Mia'}
 const mala = cookie.replace(/=(.)/, '=X');
 assert.equal(m.leerSesion({headers:{cookie:mala}}), null);
 // firma inválida con cuerpo cambiado
-const [c1,f1] = decodeURIComponent(cookie.split('=')[1]).split('.');
+const [,f1] = decodeURIComponent(cookie.split('=')[1]).split('.');
 const forjado = Buffer.from(JSON.stringify({u:'admin',n:'admin',exp:Date.now()+1e9})).toString('base64url')+'.'+f1;
 assert.equal(m.leerSesion({headers:{cookie:'trama_sesion='+encodeURIComponent(forjado)}}), null);
 assert.equal(m.leerSesion({headers:{}}), null);

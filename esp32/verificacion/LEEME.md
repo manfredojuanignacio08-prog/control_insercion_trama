@@ -7,9 +7,9 @@ Estos scripts verifican el diseño del sistema por software (sin hardware):
   conexiones coincidan entre los tres (19 chequeos).
 - **`sim_flujo.py`**, simula el flujo lógico del Nivel 1 (Marcha/Pausa):
   arranque seguro, arranque/detención, sin doble-pulso (6 verificaciones).
-- **`sim_nivel2.py`**, simula el flujo lógico del Nivel 2 (marcos/dobby):
-  traducción de la matriz de pasadas a la secuencia de marcos y su repetición
-  (6 verificaciones).
+- **`sim_nivel2.py`**, simula el flujo lógico del Nivel 2 (selección de las bobinas):
+  traducción del dibujo a la bobina de cada pasada, una sola por pasada, con las
+  repeticiones de cada fila, los intercalados y el bucle (6 verificaciones).
 - **`sim_nivel2_firmware.py`**, simula el firmware del Nivel 2 con el sensor de pasada:
   conteo, vueltas, repeticiones por fila, retrocesos, retomar tras un reinicio y
   selección de las bobinas en cada pasada (29 verificaciones).
@@ -19,7 +19,7 @@ archivos, `verif_coherencia.py`, los busca a partir de su propia ubicación).
 
 - **`host/correr.sh`**, prueba la lógica REAL de `../control_trama_esp32/sensor_pasada.h` (retrocesos
   acumulados, reclasificación del pulso de retroceso, período de gracia del sensor)
-  con un reloj simulado, la de `../control_trama_esp32/posicion_dibujo.h` (1,2 millones de pasadas
+  con un reloj simulado, la de `../control_trama_esp32/posicion_dibujo.h` (2,4 millones de pasadas
   al azar adelante y atrás contra el mismo modelo del backend), la de
   `../control_trama_esp32/seleccion_dibujo.h` (un agujero por pasada, cuánto dura y cuándo se
   suelta), el Bloque A del firmware (arranque seguro, orden de Pausa y Retroceder, un pulso por

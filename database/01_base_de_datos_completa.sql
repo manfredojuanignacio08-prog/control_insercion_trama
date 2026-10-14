@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS patrones (
   nombre            TEXT NOT NULL UNIQUE,
   filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 300),
   columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 1 AND 8),
-  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por pasada, con una bobina como máximo): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
+  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por tramo de pasadas, con una bobina como máximo): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
   matriz_ligamento  JSONB,            -- array de arrays binarios (0/1), derivado de matriz_pasadas si no se manda
   colores_filas     JSONB,            -- array de colores hex, uno por fila
   metadata          JSONB,            -- ej: {"tipo": "Tafetán"}
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS historial_produccion (
   pasadas_totales      INTEGER DEFAULT 0,
   alertas_disparadas   INTEGER DEFAULT 0,
   fila_actual          INTEGER DEFAULT 0,           -- índice (0-based) de la fila que se está tejiendo ahora
-  columna_actual       INTEGER DEFAULT 0,           -- vestigial: siempre 0 (las columnas de una fila son simultáneas)
+  columna_actual       INTEGER DEFAULT 0,           -- vestigial: siempre 0 (la fila lleva una sola bobina: lo que avanza es la fila)
   -- migración 015: cuántas pasadas de la fila actual ya se tejieron. Con las
   -- repeticiones del dibujo define la posición exacta dentro de la producción.
   repeticion_en_fila   INTEGER NOT NULL DEFAULT 0 CHECK (repeticion_en_fila >= 0),
@@ -376,8 +376,8 @@ ALTER TABLE historial_produccion ADD COLUMN IF NOT EXISTS vueltas_completadas IN
 -- Migración 003: Login biométrico (huella dactilar) con WebAuthn
 --
 -- El login biométrico se implementa con el estándar WebAuthn / FIDO2.
--- Punto CLAVE de seguridad: la huella dactilar NUNCA se guardan en la
--- base de datos ni viajan al servidor. El sensor biométrico del dispositivo
+-- Punto CLAVE de seguridad: la huella dactilar NUNCA se guarda en la
+-- base de datos ni viaja al servidor. El sensor biométrico del dispositivo
 -- (celular / notebook) valida localmente y solo genera una PRUEBA
 -- criptográfica (una firma con una clave privada que nunca sale del
 -- dispositivo). El servidor guarda únicamente la CLAVE PÚBLICA para
@@ -414,7 +414,7 @@ CREATE TABLE IF NOT EXISTS credenciales_biometricas (
   -- Contador anti-clonación: WebAuthn lo incrementa en cada uso; si llegara
   -- un valor menor al guardado, es señal de credencial clonada.
   counter        BIGINT NOT NULL DEFAULT 0,
-  -- Tipo de autenticador, informativo: "platform" (huella dactilar integrado
+  -- Tipo de autenticador, informativo: "platform" (lector de huella integrado
   -- en el dispositivo) o "cross-platform" (llave física USB, etc.).
   tipo_dispositivo TEXT,
   apodo          TEXT,                           -- ej: "iPhone de Juan"
@@ -636,11 +636,11 @@ COMMENT ON COLUMN telares.elementos_seleccion IS
   'Cantidad de elementos de selección (bobinas) que tiene la máquina. Un dibujo con más columnas que este número no puede ejecutarse completo: las columnas que sobran no tienen a qué accionar.';
 
 -- columna_actual quedó del modelo conceptual anterior, cuando se creía que el
--- tejido avanzaba celda por celda dentro de cada fila. En el modelo correcto una
--- fila es una pasada completa y sus columnas son simultáneas, así que este campo
--- permanece siempre en cero. Se conserva para no romper el historial existente.
+-- tejido avanzaba celda por celda dentro de cada fila. En el modelo correcto lo que
+-- avanza es la fila (cada fila lleva una sola bobina), así que este campo permanece
+-- siempre en cero. Se conserva para no romper el historial existente.
 COMMENT ON COLUMN historial_produccion.columna_actual IS
-  'Vestigial: permanece siempre en 0. Una fila del dibujo es una pasada completa y sus columnas se activan simultáneamente, por lo que no existe avance por columna. Se conserva por compatibilidad con el historial ya registrado.';
+  'Vestigial: permanece siempre en 0. Lo que avanza es la fila del dibujo (cada fila lleva una sola bobina), por lo que no existe avance por columna. Se conserva por compatibilidad con el historial ya registrado.';
 
 
 -- ============================================================

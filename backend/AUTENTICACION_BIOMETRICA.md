@@ -167,8 +167,8 @@ un código válido, del 4º usuario en adelante no se puede registrar nadie.
 | `POST /api/auth/recuperacion/ver` | Muestra el código de recuperación del usuario, previa verificación de su huella (mismo desafío que el login). |
 | `POST /api/auth/invitacion` | Un usuario registrado genera un código de invitación para sumar a alguien. |
 
-Tablas nuevas: columnas `recovery_hash` / `recovery_usado` en `usuarios`, y la
-tabla `invitaciones`. Ver `src/db/migracion_004_recupero_usuarios.sql`. El
+Cambios en la base: columnas `recovery_hash` / `recovery_usado` en `usuarios`, y la
+tabla nueva `invitaciones`. Ver `src/db/migracion_004_recupero_usuarios.sql`. El
 cifrado actual del código se documenta en `migracion_016_recovery_cifrado.sql`.
 
 ## Sesión (cookie) y protección de la API

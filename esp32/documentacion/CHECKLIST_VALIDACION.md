@@ -131,12 +131,13 @@ firmware, el diagrama eléctrico y el documento de conexiones.
 
 **Simulación del flujo lógico Nivel 1 (6/6):** el arranque seguro (el telar
 no arranca solo), el arranque con "tejiendo", la ausencia de doble-pulso
-(no re-arranca si el estado no cambia), la detención con "pausado"/
-"finalizado", y que los relés no se quedan pegados.
+(no re-arranca si el estado no cambia), la detención con "pausado" y con
+"apagado" (al terminar el trabajo), y que los relés no se quedan pegados.
 
-**Simulación del flujo lógico Nivel 2 (6/6):** la traducción de la matriz de
-pasadas a la secuencia de marcos, la repetición idéntica del patrón en bucle,
-y que nunca se activan más marcos que los físicos.
+**Simulación del flujo lógico Nivel 2 (6/6):** la traducción del dibujo a la bobina de
+cada pasada (una sola: una trama por pasada), las repeticiones de cada fila, los
+intercalados, la repetición idéntica del patrón en bucle, y que los canales no superan
+los físicos ni pisan otros pines.
 
 **Simulación del firmware del Nivel 2 (29/29):** conteo, vueltas, repeticiones por fila,
 retrocesos, retomar tras un reinicio y la selección de las bobinas en cada pasada. Además,

@@ -444,8 +444,8 @@ void botoneraDespacharAvisos() {
 // ============================================================================
 //  Traer el dibujo asignado al telar  (SOLO la tarea de red)
 //
-//  El backend devuelve la matriz tal como la guardó la aplicación. Una fila es
-//  una pasada y cada celda es binaria: el canal se activa o no.
+//  El backend devuelve la matriz tal como la guardó la aplicación. Cada fila se teje tantas
+//  pasadas como sus repeticiones y cada celda es binaria: el canal se activa o no.
 //
 //  Junto con la matriz trae la posición de la producción abierta (fila y conteo). El nodo
 //  SIEMPRE la adopta: el backend es la fuente de verdad. Si el dibujo es nuevo, la producción

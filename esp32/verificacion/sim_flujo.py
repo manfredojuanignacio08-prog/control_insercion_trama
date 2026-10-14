@@ -69,9 +69,11 @@ esp = ESP32Simulado(telar)
 print("="*66)
 print("  SIMULACIÓN DEL FLUJO LÓGICO, Nivel 1 (Marcha/Pausa)")
 print("="*66)
-print(f"\n  Arranque seguro: pin_marcha={esp.pin_marcha}, pin_pausa={esp.pin_pausa} (ambos INACTIVOS ✓)\n")
+arranque_seguro = (esp.pin_marcha == NIVEL_INACTIVO and esp.pin_pausa == NIVEL_INACTIVO)
+print(f"\n  Arranque seguro: pin_marcha={esp.pin_marcha}, pin_pausa={esp.pin_pausa} (los dos INACTIVOS)\n")
 
-# secuencia realista de lo que el backend va devolviendo (sondeo cada ~2.5s)
+# secuencia realista de lo que el backend va devolviendo (sondeo cada 2,5 s); son los estados
+# del telar en la base: apagado, tejiendo, pausado o error
 secuencia = [
     'apagado',    # arranca el sistema, telar parado
     'apagado',    # sigue parado (no debe pulsar)
@@ -81,14 +83,14 @@ secuencia = [
     'pausado',    # se pausa desde la web
     'pausado',    # sigue pausado (no repite)
     'tejiendo',   # se reanuda
-    'finalizado', # se detiene al terminar
+    'apagado',    # se termina el trabajo (⏹): el telar queda apagado
 ]
 
-errores = []
 for i, estado in enumerate(secuencia):
     antes = telar.andando
     esp.procesar_estado_backend(estado)
-    ev = telar.eventos[-1] if telar.eventos and telar.andando != antes else "   (telar sin cambios)"
+    if i == 0:
+        arranque_seguro = arranque_seguro and not telar.andando   # el primer ciclo solo sincroniza
     print(f"  ciclo {i+1}: {esp.log[-1]}")
     if telar.eventos and (telar.andando != antes):
         print(f"           {telar.eventos[-1]}")
@@ -101,18 +103,18 @@ print("="*66 + "\n")
 v = []
 # 1. Al arrancar, los relés están inactivos (no arranca el telar solo)
 v.append(("Arranque seguro: el telar NO arranca solo al energizar el ESP32",
-          True))  # ya validado arriba: ambos pines inactivos, estado_previo sincroniza
+          arranque_seguro))  # los dos pines inactivos y el primer ciclo sin pulso
 # 2. 'tejiendo' hace arrancar
 v.append(("El estado 'tejiendo' hace arrancar el telar", telar.eventos.count("→ TELAR ARRANCÓ") >= 1))
 # 3. no hay doble-pulso: tejiendo repetido no genera múltiples arranques
 arranques = telar.eventos.count("→ TELAR ARRANCÓ")
 v.append(("No hay doble-pulso: 'tejiendo' repetido NO re-arranca (evita pulso fantasma)",
           arranques == 2))  # arranca 1 vez al inicio + 1 vez tras reanudar = 2
-# 4. pausado/finalizado detienen
-v.append(("'pausado' y 'finalizado' detienen el telar",
+# 4. pausado/apagado detienen
+v.append(("'pausado' y 'apagado' detienen el telar",
           telar.eventos.count("→ TELAR SE DETUVO") >= 2))
-# 5. estado final coherente (finalizado → parado)
-v.append(("Estado final coherente (tras 'finalizado' el telar queda parado)",
+# 5. estado final coherente (terminar el trabajo → parado)
+v.append(("Estado final coherente (al terminar el trabajo el telar queda parado)",
           telar.andando == False))
 # 6. los pines quedan inactivos tras cada pulso (no se queda pegado)
 v.append(("Los relés quedan INACTIVOS tras cada pulso (no se pegan)",

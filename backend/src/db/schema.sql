@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS patrones (
   nombre            TEXT NOT NULL UNIQUE,
   filas             INTEGER NOT NULL CHECK (filas BETWEEN 1 AND 300),
   columnas          INTEGER NOT NULL CHECK (columnas BETWEEN 1 AND 8),
-  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por pasada, con una bobina como máximo): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
+  matriz_pasadas    JSONB NOT NULL,   -- array de arrays (una fila por tramo de pasadas, con una bobina como máximo): mayor que 0 = la bobina se activa (la web guarda 0 y 1)
   matriz_ligamento  JSONB,            -- array de arrays binarios (0/1), derivado de matriz_pasadas si no se manda
   colores_filas     JSONB,            -- array de colores hex, uno por fila
   metadata          JSONB,            -- ej: {"tipo": "Tafetán"}
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS historial_produccion (
   pasadas_totales      INTEGER DEFAULT 0,
   alertas_disparadas   INTEGER DEFAULT 0,
   fila_actual          INTEGER DEFAULT 0,           -- índice (0-based) de la fila que se está tejiendo ahora
-  columna_actual       INTEGER DEFAULT 0,           -- vestigial: siempre 0 (las columnas de una fila son simultáneas)
+  columna_actual       INTEGER DEFAULT 0,           -- vestigial: siempre 0 (la fila lleva una sola bobina: lo que avanza es la fila)
   -- migración 015: cuántas pasadas de la fila actual ya se tejieron. Con las
   -- repeticiones del dibujo define la posición exacta dentro de la producción.
   repeticion_en_fila   INTEGER NOT NULL DEFAULT 0 CHECK (repeticion_en_fila >= 0),

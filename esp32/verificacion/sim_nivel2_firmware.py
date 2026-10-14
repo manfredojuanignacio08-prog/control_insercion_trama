@@ -96,21 +96,21 @@ class Nivel2Simulado:
 
 
 def verificar():
-    # Un dibujo de prueba: 4 pasadas, 4 canales.
+    # Un dibujo de prueba: 4 filas, 4 canales, una bobina por fila (una trama por pasada).
     dibujo = [
-        [1, 0, 1, 0],
-        [0, 1, 0, 1],
-        [1, 1, 0, 0],
-        [0, 0, 0, 0],   # una pasada sin ningún canal activo también es válida
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 0],   # una fila sin bobina marcada también es válida: no se activa nada
     ]
     v = []
 
     s = Nivel2Simulado(dibujo)
     s.pulso_del_sensor()
-    v.append(("La primera pasada aplica la fila 1", s.canales == [True, False, True, False]))
+    v.append(("La primera pasada aplica la fila 1", s.canales == [True, False, False, False]))
 
     s.pulso_del_sensor()
-    v.append(("La segunda pasada aplica la fila 2", s.canales == [False, True, False, True]))
+    v.append(("La segunda pasada aplica la fila 2", s.canales == [False, True, False, False]))
 
     s.pulso_del_sensor()
     s.pulso_del_sensor()
@@ -146,19 +146,19 @@ def verificar():
     s4.apagar_todo()
     v.append(("Apagar todo deja los cuatro canales en reposo", s4.canales == [False] * 4))
 
-    dibujo_corto = [[1, 1], [0, 1]]
+    dibujo_corto = [[0, 1], [1, 0]]
     s5 = Nivel2Simulado(dibujo_corto)
     s5.pulso_del_sensor()
     v.append(("Un dibujo con menos columnas que canales deja el resto en reposo",
-              s5.canales == [True, True, False, False]))
+              s5.canales == [False, True, False, False]))
 
-    v.append(("Las columnas de una fila se aplican juntas, no de a una",
-              len(s.historial[0]) == N_CANALES))
+    v.append(("Cada pasada fija los cuatro canales a la vez: el de su bobina activo y los demás en reposo",
+              len(s.historial[0]) == N_CANALES and sum(s.historial[0]) == 1))
 
     s6 = Nivel2Simulado(dibujo, desplazamiento=1)
     s6.pulso_del_sensor()
     v.append(("Con desplazamiento 1 se aplica la fila siguiente",
-              s6.canales == [False, True, False, True]))
+              s6.canales == [False, True, False, False]))
 
     s7 = Nivel2Simulado(dibujo, desplazamiento=-1)
     s7.pulso_del_sensor()
@@ -201,11 +201,11 @@ def verificar():
     s13 = Nivel2Simulado(dibujo)
     for _ in range(3):
         s13.pulso_del_sensor()
-    otro = [[0, 0, 1, 1], [1, 1, 0, 0]]
+    otro = [[0, 0, 1, 0], [1, 0, 0, 0]]
     s14 = Nivel2Simulado(otro)          # equivale a recargar con el dibujo nuevo
     s14.pulso_del_sensor()
     v.append(("Un dibujo nuevo empieza por su primera fila",
-              s14.canales == [False, False, True, True]))
+              s14.canales == [False, False, True, False]))
 
     # Reinicio del nodo a mitad de una pieza: retoma fila y conteo del backend.
     s15 = Nivel2Simulado(dibujo)
@@ -271,15 +271,16 @@ def verificar():
     v.append(("Un retroceso con el contador en cero no lo deja negativo",
               s11.pasadas == 0))
 
-    # En cada pasada la selección se aplica y se suelta antes de la siguiente, como el papel
-    # (entre dos agujeros seguidos de la misma columna hay papel). La lógica real, con los
-    # tiempos, se prueba con el reloj simulado en host/test_seleccion.cpp.
-    s8 = Nivel2Simulado(dibujo)
+    # Con PORCENTAJE_SELECCION en 0 (como viene en config.h) la selección se mantiene hasta el pulso
+    # siguiente: en una racha de la misma bobina el canal no se suelta. La lógica real, con los
+    # tiempos (y con un porcentaje, que la suelta en cada pasada como el papel), se prueba con el
+    # reloj simulado en host/test_seleccion_mantener.cpp y host/test_seleccion.cpp.
+    s8 = Nivel2Simulado(dibujo, repeticiones=[3, 1, 1, 1])
     s8.pulso_del_sensor()
-    aplicada = list(s8.canales)
-    s8.apagar_todo()                     # pasado el porcentaje de la pasada, se suelta
-    v.append(("En cada pasada la selección se aplica y después se suelta, antes de la pasada siguiente",
-              any(aplicada) and not any(s8.canales)))
+    primera = list(s8.canales)
+    s8.pulso_del_sensor()
+    v.append(("Con la misma bobina en pasadas seguidas, su canal sigue activo (selección mantenida)",
+              primera == [True, False, False, False] and s8.canales == primera))
 
     print("\n  VERIFICACIÓN DEL FIRMWARE DEL NIVEL 2\n")
     for texto, ok in v:

@@ -22,8 +22,8 @@ COMMENT ON COLUMN telares.elementos_seleccion IS
   'Cantidad de elementos de selección (bobinas) que tiene la máquina. Un dibujo con más columnas que este número no puede ejecutarse completo: las columnas que sobran no tienen a qué accionar.';
 
 -- columna_actual quedó del modelo conceptual anterior, cuando se creía que el
--- tejido avanzaba celda por celda dentro de cada fila. En el modelo correcto una
--- fila es una pasada completa y sus columnas son simultáneas, así que este campo
--- permanece siempre en cero. Se conserva para no romper el historial existente.
+-- tejido avanzaba celda por celda dentro de cada fila. En el modelo correcto lo que
+-- avanza es la fila (cada fila lleva una sola bobina), así que este campo permanece
+-- siempre en cero. Se conserva para no romper el historial existente.
 COMMENT ON COLUMN historial_produccion.columna_actual IS
-  'Vestigial: permanece siempre en 0. Una fila del dibujo es una pasada completa y sus columnas se activan simultáneamente, por lo que no existe avance por columna. Se conserva por compatibilidad con el historial ya registrado.';
+  'Vestigial: permanece siempre en 0. Lo que avanza es la fila del dibujo (cada fila lleva una sola bobina), por lo que no existe avance por columna. Se conserva por compatibilidad con el historial ya registrado.';

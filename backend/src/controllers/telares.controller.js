@@ -64,14 +64,14 @@ export async function listarTelares(req, res, next) {
 }
 
 // GET /api/telares/:id
-// El ESP32 (Nivel 1) llama este mismo endpoint cada ~2,5s para sondear el estado
-// deseado, agregando ?origen=esp32. Eso, MÁS la clave de dispositivo válida
-// (X-Device-Key), es lo que deja un "heartbeat" real del dispositivo. Antes alcanzaba
-// con el parámetro en la URL, y cualquiera podía falsear el "ESP32 conectado".
+// El ESP32 llama este mismo endpoint cada 2,5 s para sondear el estado deseado: con
+// ?origen=esp32 si solo está el Bloque A (NIVEL2_INSTALADO en false) y con ?origen=nivel2 si
+// además está el sensor. El parámetro, MÁS la clave de dispositivo válida (X-Device-Key), es lo
+// que deja un "heartbeat" real del dispositivo. Antes alcanzaba con el parámetro en la URL, y
+// cualquiera podía falsear el "ESP32 conectado".
 //
-// El firmware consulta este mismo endpoint cada 2,5 s: con ?origen=esp32 si solo está el Bloque A
-// (NIVEL2_INSTALADO en false) y con ?origen=nivel2 si además está el sensor. Esta última consulta
-// es la señal de vida de la placa y también la del sensor: mientras el nodo esté conectado, la posición y el conteo los lleva
+// La consulta con ?origen=nivel2 es la señal de vida de la placa y también la del sensor:
+// mientras el nodo esté conectado, la posición y el conteo los lleva
 // él (sensor_activo), aunque el telar esté quieto y no tenga pasadas que reportar. Antes solo
 // contaban los reportes de pasadas, que no se mandan con la máquina detenida: tras una pausa de
 // más de 30 s, al tocar ▶ la web volvía a avanzar la posición por reloj mientras la máquina
@@ -504,7 +504,7 @@ export async function retrocederFisico(req, res, next) {
   }
 }
 
-// POST /api/telares/:id/evento-fisico  { tipo: 'marcha' | 'pausa' | 'retroceder' | 'sin_senal' }
+// POST /api/telares/:id/evento-fisico  { tipo: 'marcha' | 'pausa' | 'retroceder' | 'reinicio' | 'sin_senal' }
 // Solo con clave de dispositivo. Lo llama el ESP32 cuando SENSA algo que pasó en la
 // máquina (no cuando acciona). Sirve para que la web refleje lo que realmente pasa:
 // sin esto, alguien podía arrancar el telar con el botón físico y la web seguía
@@ -521,8 +521,9 @@ export async function retrocederFisico(req, res, next) {
 //                deja un registro en el log de errores. Sin esto la web mostraba
 //                "tejiendo" indefinidamente con la máquina parada.
 //
-// El ESP32 descarta el eco de sus propios pulsos antes de llamar acá, así
-// que un evento que llega es siempre una acción humana sobre la máquina.
+// El ESP32 descarta el eco de sus propios pulsos (y los flancos de los canales que bajan juntos
+// al prenderse el telar) antes de llamar acá, así que un marcha, pausa o retroceder que llega es
+// siempre una acción humana sobre la máquina. reinicio y sin_senal los genera el propio equipo.
 export async function eventoFisico(req, res, next) {
   const client = await pool.connect();
   try {
@@ -744,8 +745,8 @@ export async function validarConteo(req, res, next) {
 // El "volver atrás" de la posición: retrocede el cursor de fila del dibujo sin
 // reconstruir nada. Es el espejo exacto de /avanzar: una pasada atrás descuenta una
 // repetición de la fila, y solo al agotarlas vuelve a la fila anterior (ver
-// utils/posicion.js). Desde la fila 0 se vuelve a la última, porque el dibujo es un lazo. También descuenta la pasada del conteo y, si cruzó el inicio,
-// una vuelta completa.
+// utils/posicion.js). Desde la fila 0 se vuelve a la última, porque el dibujo es un lazo.
+// También descuenta la pasada del conteo y, si cruzó el inicio, una vuelta completa.
 export async function retrocederTelar(req, res, next) {
   const client = await pool.connect();
   try {

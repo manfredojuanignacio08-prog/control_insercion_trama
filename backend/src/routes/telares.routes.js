@@ -6,7 +6,7 @@ import { requerirSesion, requerirOperario, requerirDispositivo } from '../middle
 const router = express.Router();
 
 // Los ids de la URL tienen que ser enteros positivos que entren en un INTEGER de
-// PostgreSQL. Así un /patrones/abc responde 400 con un mensaje claro en vez de
+// PostgreSQL. Así un /telares/abc responde 400 con un mensaje claro en vez de
 // llegar a la base y volver como error del servidor.
 router.param('id', (req, res, next, id) => {
   if (!/^\d{1,9}$/.test(id) || Number(id) < 1) {
@@ -15,12 +15,11 @@ router.param('id', (req, res, next, id) => {
   next();
 });
 
-// avanzar/retroceder se llaman en CADA paso de la animación de tejido
+// Como avanzar/retroceder se llaman en CADA paso de la animación de tejido
 // (cada 200 ms mientras Play está activo, el ritmo de la máquina), el límite general
-// de la API (900 cada 15 min, pensado para uso normal) se agota en un par de minutos
-// con eso. Estas dos rutas tienen su propio límite, mucho más generoso
-// (hasta ~20 solicitudes por segundo sostenidas), pensado específicamente
-// para esa frecuencia.
+// de la API (900 cada 15 min, pensado para uso normal) se agotaría en un par de minutos.
+// Estas dos rutas tienen su propio límite, mucho más generoso (hasta ~20 solicitudes
+// por segundo sostenidas), pensado específicamente para esa frecuencia.
 const playbackLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 1200,

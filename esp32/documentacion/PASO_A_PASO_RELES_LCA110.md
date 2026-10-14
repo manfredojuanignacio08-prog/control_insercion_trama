@@ -48,7 +48,7 @@ Diagramas que acompañan esta guía (en `diagramas/hardware/`):
 - Solo para los casos 2A y 2B, del lado del telar: 4 resistencias de 10 kΩ **½ W** y 4 resistencias de
   protección: **220 Ω 2 W** si el lector se alimenta con hasta 15 V, o **470 Ω 3 W** de 15 a 30 V.
 - Borneras, placa perforada, termocontraíble y cable fino.
-- Para la prueba en el banco: una pila de 9 V, un LED y una resistencia de 1 kΩ.
+- Para la prueba en el banco: una pila de 9 V, un LED y una resistencia de 680 Ω (con dos pilas AA, 100 Ω).
 
 **Reglas de seguridad (todas las etapas)**
 
@@ -216,8 +216,8 @@ En cada canal:
 **3.4 Probar con el firmware, todavía en el banco.**
 
 1. En `config.h`, poner `NIVEL2_INSTALADO` y `MODO_BANCO` en `true`.
-2. Entre las patas 4 y 6 de cada relé, conectar la pila de 9 V, la resistencia de 1 kΩ y el LED,
-   en serie.
+2. Entre las patas 4 y 6 de cada relé, conectar la pila de 9 V, la resistencia de 680 Ω y el LED,
+   en serie (el LED con su pata larga hacia el + de la pila).
 3. Cargar un dibujo en la web y ponerlo a tejer: el LED de cada canal tiene que encenderse según
    su columna. Con `PORCENTAJE_SELECCION` en 0 (como viene) queda encendido fijo mientras la misma
    bobina se repite y cambia cuando cambia la bobina; con un porcentaje (por ejemplo 50) parpadea

@@ -136,7 +136,7 @@ Una sesión de **invitado** puede crear dibujos y cambiar o borrar solo los que 
 | Método | Ruta | Body | Descripción |
 |---|---|---|---|
 | GET | `/api/telares` | sin cuerpo | Lista con nombre del patrón actual |
-| GET | `/api/telares/:id` | sin cuerpo | Detalle. Con la clave de dispositivo, `?origen=esp32` (Nivel 1) renueva `ultimo_ping_esp32` y `?origen=nivel2` renueva `ultimo_reporte_sensor` (el nodo del Nivel 2 conectado lleva la posición). Incluye `segundos_desde_ping` (calculado con el reloj del servidor: la web lo usa para el indicador "ESP32 conectado" sin depender de la hora de la PC) |
+| GET | `/api/telares/:id` | sin cuerpo | Detalle. Con la clave de dispositivo, `?origen=esp32` (Nivel 1) renueva `ultimo_ping_esp32` y `?origen=nivel2` renueva además `ultimo_reporte_sensor` (el nodo del Nivel 2 conectado lleva la posición). Incluye `segundos_desde_ping` (calculado con el reloj del servidor: la web lo usa para el indicador "ESP32 conectado" sin depender de la hora de la PC) |
 | POST | `/api/telares` | `{codigo, nombre?}` | Crea un telar nuevo |
 | POST | `/api/telares/:id/asignar-patron` | `{patron_id, reiniciar?}` | Asigna patrón y abre una producción nueva en la fila 0. Si el telar **ya tiene abierta una producción de ese mismo dibujo**, la **reanuda** (`200`, `reanudado: true`) en vez de reiniciarla, salvo que se mande `reiniciar: true`. Si tenía una de otro dibujo, la cierra como `detenido_manual` |
 | POST | `/api/telares/:id/detener` | `{pasadas_totales?, alertas_disparadas?}` | Cierra la producción en curso (409 si no había ninguna). Si no se manda `pasadas_totales`, conserva el contador ya acumulado por `/avanzar` |
@@ -202,7 +202,7 @@ src/
 │   └── generar_base_completa.js Regenera database/01_base_de_datos_completa.sql (npm run generar-sql)
 ├── utils/
 │   ├── ligamento.js        Deriva matriz_ligamento desde matriz_pasadas
-│   ├── posicion.js         Lógica pura de avanzar/retroceder (espejo 1:1 de doTick()/rollback() del frontend)
+│   ├── posicion.js         Lógica pura de avanzar/retroceder (espejo 1:1 de doTick() y ejecutarRetroceso() del frontend)
 │   └── validacion.js       Validación de patrones
 ├── middleware/errorHandler.js  Manejo centralizado de errores (404/400/409/500)
 ├── controllers/             Lógica de negocio por entidad
@@ -212,10 +212,10 @@ src/
 ## 7. Decisiones de diseño aplicadas (ver documento de análisis)
 
 - `matriz_pasadas` (enteros) y `matriz_ligamento` (binario) son **campos separados**.
-- **Una FILA es una COMBINACIÓN de bobinas**, que se teje tantas pasadas seguidas como indiquen sus repeticiones. En cada pasada, la fila del patrón define qué
-  marcos suben: cada columna es una bobina/electroimán del dobby. Las
-  columnas NO se recorren una por una, son simultáneas dentro de la misma
-  pasada. Lo que avanza es la fila.
+- **Una FILA lleva UNA bobina** (en cada pasada entra una sola trama) y se teje tantas
+  pasadas seguidas como indiquen sus repeticiones. Cada columna es una bobina de selección.
+  Las columnas NO se recorren una por una: lo que avanza es la fila. Para alternar bobinas,
+  varias filas seguidas forman un grupo intercalado (`grupos_intercalados`).
 - La repetición es **de fila entera** y va en `repeticiones_por_fila` (migración 014): un
   número por fila, cuántas pasadas seguidas se teje esa fila antes de pasar a la
   siguiente. Las celdas de `matriz_pasadas` dicen si la bobina se activa (mayor que cero) o
@@ -243,8 +243,8 @@ src/
    (`asignar-patron`, `avanzar`, `retroceder`) ya está lista para trabajar
    con cualquier id de telar, no hay que tocar el backend para eso.
 2. **Pantalla de historial de producción**: la base ya tiene los datos
-   (`historial_produccion` con posición, vueltas completadas, etc.) pero no
-   hay ninguna pantalla en la web que los muestre todavía.
+   (`historial_produccion` con posición, vueltas completadas, etc.). La web muestra los
+   acumulados de cada dibujo (ficha y PDF), pero todavía no una lista de las producciones.
 3. Instalar el Nivel 2: el firmware ya reporta las pasadas medidas por el sensor inductivo
    (`POST /pasadas`, que se guardan en `pasadas_sensor`, aparte de la estimación por reloj) y
    la web deja de estimar mientras el sensor esté conectado. Falta el hardware y validar el

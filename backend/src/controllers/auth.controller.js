@@ -217,7 +217,7 @@ async function consumirInvitacion(cliente, codigo) {
   return { ok: true, id: rows[0].id };
 }
 
-// Limpia desafíos vencidos (se llama de vez en cuando, no en cada request)
+// Limpia desafíos vencidos (se llama cada vez que se toma un desafío, ver tomarDesafio)
 async function limpiarDesafiosVencidos() {
   await pool.query('DELETE FROM desafios_webauthn WHERE expira_at < now()');
 }
@@ -227,13 +227,13 @@ async function limpiarDesafiosVencidos() {
 // ══════════════════════════════════════════════════════════════════════
 
 /**
- * POST /api/auth/registro/iniciar   body: { usuario, nombre? }
+ * POST /api/auth/registro/iniciar   body: { usuario, nombre?, invitacion? }
  * Crea el usuario si no existe y devuelve las "opciones" que el navegador
  * necesita para pedirle la huella dactilar al usuario.
  */
 export async function iniciarRegistro(req, res, next) {
   try {
-    const { rpID, origin } = datosRP(req);
+    const { rpID } = datosRP(req);
     const { usuario, nombre, invitacion } = req.body || {};
     // Sin máximo, el registro aceptaba nombres de cientos de caracteres.
     if (!usuario || typeof usuario !== 'string' || usuario.trim().length < 3 || usuario.trim().length > 40 || /[\u0000-\u001f\u007f]/.test(usuario)) {
@@ -465,7 +465,7 @@ export async function verificarRegistro(req, res, next) {
  */
 export async function iniciarLogin(req, res, next) {
   try {
-    const { rpID, origin } = datosRP(req);
+    const { rpID } = datosRP(req);
     const { usuario } = req.body || {};
     if (!usuario) return res.status(400).json({ error: 'Falta el usuario.' });
 

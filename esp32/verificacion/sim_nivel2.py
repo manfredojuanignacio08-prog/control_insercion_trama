@@ -1,97 +1,105 @@
-# Simulación del FLUJO LÓGICO del Nivel 2 (control por marcos / dobby)
-# Verifica que un patrón repetitivo se traduzca correctamente en la secuencia
-# de marcos que suben en cada pasada, y que el ESP32 (vía el registro de
-# directas del ESP32) los comande.
+# Simulación del FLUJO LÓGICO del Nivel 2 (selección de las bobinas)
+# Verifica que un dibujo se traduzca correctamente en la secuencia de bobinas que se activan
+# en cada pasada: una sola por pasada (en cada pasada entra una sola trama), cada fila tantas
+# pasadas como sus repeticiones, los intercalados alternando sus filas en orden, y el dibujo en
+# bucle. Cada bobina es un canal del ESP32 que comanda un relé LCA110 sobre su lector óptico.
+# El modelo del firmware con el sensor de pasada (conteo, retrocesos, reinicios) está en
+# sim_nivel2_firmware.py.
 
-N_GPIO_DISPONIBLES = 13  # GPIO libres del ESP32 para salidas de control
+N_CANALES = 4                      # bobinas de selección del C 201 (confirmado por el dueño)
+PINES_CANAL = [18, 19, 21, 22]     # config.h: PIN_CANAL
+PINES_OCUPADOS = {25, 26, 27, 32, 33, 34, 35, 2}   # relés y sensado del Bloque A, sensor, LED
+PINES_SOLO_ENTRADA = {34, 35, 36, 39}              # el ESP32 no puede usarlos como salida
 
-class SalidasDirectasSimuladas:
-    """Simula las salidas del ESP32. Cada una comanda un relé de estado sólido,
-    y cada SSR acciona una bobina de selección del telar."""
-    def __init__(self, n_marcos):
-        self.n = n_marcos
-        self.salidas = [0]*N_GPIO_DISPONIBLES   # 0=abajo, 1=arriba
-    def set_marcos(self, marcos_arriba):
-        self.salidas = [0]*N_GPIO_DISPONIBLES
-        for m in marcos_arriba:
-            if 0 <= m < self.n:
-                self.salidas[m] = 1
-        return [self.salidas[i] for i in range(self.n)]
 
-def patron_a_secuencia_marcos(matriz, n_marcos):
-    """
-    Traduce una matriz de pasadas (lo que ya define el editor) a la secuencia
-    de 'qué marcos suben en cada pasada'. Cada fila de la matriz = una pasada.
-    Convención simple: en la pasada i, sube el marco (valor % n_marcos).
-    (En un dobby real, cada columna de la matriz mapea a un marco; acá se
-    simula la lógica de traducción, que es lo que se quiere verificar.)
-    """
-    secuencia = []
-    for fila in matriz:
-        marcos = set()
-        for col, val in enumerate(fila):
-            if val:  # celda activa → ese marco sube en esta pasada
-                marcos.add(col % n_marcos)
-        secuencia.append(sorted(marcos))
-    return secuencia
+def bobina_de_fila(fila):
+    """La bobina de una fila (desde 0), o None si la fila no tiene ninguna marcada."""
+    marcadas = [c for c, v in enumerate(fila) if v]
+    assert len(marcadas) <= 1, "una fila lleva como máximo una bobina"
+    return marcadas[0] if marcadas else None
 
-print("="*66)
-print("  SIMULACIÓN DEL FLUJO LÓGICO, Nivel 2 (marcos / dobby)")
-print("="*66)
 
-# Patrón de ejemplo: una RAYA repetitiva (como las telas de las fotos).
-# El telar de destino tiene 4 bobinas de selección (confirmado por el equipo),
-# así que el patrón trabaja con 4 marcos.
-# Cada FILA de la matriz es una PASADA, y cada columna una bobina:
-#   [1,1,1] -> suben los tres marcos ; [0,1,0] -> sube solo el del medio
-N_MARCOS = 4
-patron_raya = [
-    [1,0,1],  # pasada 1: suben el 1 y el 3
-    [0,1,0],  # pasada 2: sube el del medio
-    [1,0,1],  # pasada 3: como la 1
-    [0,1,0],  # pasada 4: como la 2
+def secuencia_de_bobinas(matriz, repeticiones, grupos=()):
+    """Qué bobina se activa en cada pasada de una vuelta del dibujo. Un intercalado
+    {desde, hasta, pasadas} recorre sus filas en orden, cada una sus repeticiones, hasta
+    completar sus pasadas (como posicion.js en el backend)."""
+    grupos = sorted(grupos, key=lambda g: g["desde"])
+    salida, f = [], 0
+    while f < len(matriz):
+        g = next((g for g in grupos if g["desde"] == f), None)
+        if g:
+            ciclo = [bobina_de_fila(matriz[i])
+                     for i in range(g["desde"], g["hasta"] + 1)
+                     for _ in range(repeticiones[i])]
+            salida += [ciclo[k % len(ciclo)] for k in range(g["pasadas"])]
+            f = g["hasta"] + 1
+        else:
+            salida += [bobina_de_fila(matriz[f])] * repeticiones[f]
+            f += 1
+    return salida
+
+
+def canales(bobina):
+    """El estado de los canales en una pasada: solo el de la bobina activa."""
+    return tuple(1 if c == bobina else 0 for c in range(N_CANALES))
+
+
+print("=" * 66)
+print("  SIMULACIÓN DEL FLUJO LÓGICO, Nivel 2 (selección de las bobinas)")
+print("=" * 66)
+
+# Dibujo de ejemplo: una raya (bobina 1 tres pasadas, bobina 3 dos) y después un intercalado
+# de las filas 3 a 6 (bobinas 1, 3, 4 y 2, una pasada cada una) durante 8 pasadas.
+matriz = [
+    [1, 0, 0, 0],   # fila 1: bobina 1
+    [0, 0, 1, 0],   # fila 2: bobina 3
+    [1, 0, 0, 0],   # fila 3: bobina 1  ┐
+    [0, 0, 1, 0],   # fila 4: bobina 3  │ intercalado
+    [0, 0, 0, 1],   # fila 5: bobina 4  │ de 8 pasadas
+    [0, 1, 0, 0],   # fila 6: bobina 2  ┘
 ]
+repeticiones = [3, 2, 1, 1, 1, 1]
+grupos = [{"desde": 2, "hasta": 5, "pasadas": 8}]
 
-salidas_esp32 = SalidasDirectasSimuladas(N_MARCOS)
-secuencia = patron_a_secuencia_marcos(patron_raya, N_MARCOS)
-
-print(f"\n  Telar de {N_MARCOS} marcos (bobinas instaladas). Patrón de {len(patron_raya)} pasadas.\n")
-print("  Simulando 2 repeticiones completas del patrón (8 pasadas):\n")
+vuelta = secuencia_de_bobinas(matriz, repeticiones, grupos)
+print(f"\n  Telar de {N_CANALES} bobinas. Dibujo de {len(matriz)} filas = {len(vuelta)} pasadas por vuelta.")
+print("  Simulando 2 vueltas completas del dibujo:\n")
 
 historial = []
-for rep in range(2):
-    for i, marcos in enumerate(secuencia):
-        estado_bobinas = salidas_esp32.set_marcos(marcos)
-        historial.append(tuple(estado_bobinas))
-        arriba = ','.join(str(m+1) for m in marcos) if marcos else 'ninguno'
-        print(f"  rep{rep+1} pasada {i+1}: marcos arriba = [{arriba}]   bobinas={estado_bobinas}")
-    print()
+for v in range(2):
+    texto = []
+    for b in vuelta:
+        historial.append(canales(b))
+        texto.append(f"B{b + 1}" if b is not None else "-")
+    print(f"  vuelta {v + 1}: {' '.join(texto)}")
+print()
 
 # ── VERIFICACIONES ──
-print("="*66)
+print("=" * 66)
 print("  VERIFICACIONES")
-print("="*66 + "\n")
+print("=" * 66 + "\n")
 
+pasadas_vuelta = len(vuelta)
 v = []
-# 1. Cada pasada activa exactamente los marcos correctos
-v.append(("La pasada 1 sube los marcos 1 y 3",
-          secuencia[0] == [0,2]))
-v.append(("La pasada 2 sube solo el marco 2",
-          secuencia[1] == [1]))
-# 2. El patrón se repite idéntico (bucle correcto)
-prim_rep = historial[0:4]
-seg_rep  = historial[4:8]
-v.append(("El patrón se repite idéntico en cada vuelta (bucle correcto)",
-          prim_rep == seg_rep))
-# 3. Nunca se activan más marcos que los que tiene el telar
-v.append((f"Nunca se activan más marcos que los físicos ({N_MARCOS})",
-          all(sum(h) <= N_MARCOS for h in historial)))
-# 4. En cada pasada, complementariedad (los que no suben, bajan)
-v.append(("En cada pasada, cada marco está definido (arriba O abajo)",
-          all(len(h) == N_MARCOS for h in historial)))
-# 5. Los GPIO del ESP32 alcanzan sin componentes intermedios
-v.append((f"Los GPIO del ESP32 alcanzan de sobra ({N_MARCOS} canales, {N_GPIO_DISPONIBLES} libres)",
-          N_MARCOS <= N_GPIO_DISPONIBLES))
+# 1. Una sola bobina por pasada
+v.append(("En cada pasada se activa una sola bobina (una trama por pasada)",
+          all(sum(h) == 1 for h in historial)))
+# 2. Cada fila dura sus repeticiones
+v.append(("La fila 1 dura sus 3 pasadas (B1) y la fila 2 sus 2 (B3)",
+          vuelta[:5] == [0, 0, 0, 2, 2]))
+# 3. El intercalado alterna sus filas en orden
+v.append(("El intercalado alterna en orden: B1, B3, B4, B2, B1, B3, B4, B2",
+          vuelta[5:] == [0, 2, 3, 1, 0, 2, 3, 1]))
+# 4. El dibujo se repite idéntico (bucle)
+v.append(("El dibujo se repite idéntico en cada vuelta (bucle correcto)",
+          historial[:pasadas_vuelta] == historial[pasadas_vuelta:]))
+# 5. Nunca más canales que los físicos
+v.append((f"Nunca se activan más canales que los físicos ({N_CANALES})",
+          all(len(h) == N_CANALES and sum(h) <= N_CANALES for h in historial)))
+# 6. Los pines de los canales son salidas libres
+v.append((f"Los {N_CANALES} canales usan pines de salida que no pisan a otros ({PINES_CANAL})",
+          len(PINES_CANAL) == N_CANALES and not set(PINES_CANAL) & PINES_OCUPADOS
+          and not set(PINES_CANAL) & PINES_SOLO_ENTRADA))
 
 okc = 0
 for nombre, cond in v:

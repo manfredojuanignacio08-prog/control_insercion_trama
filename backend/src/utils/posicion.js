@@ -25,12 +25,6 @@
  * siempre en 0.
  */
 
-/** Qué marcos suben en una fila: devuelve los índices con valor mayor a 0. */
-export function marcosActivosDeFila(fila) {
-  if (!Array.isArray(fila)) return [];
-  return fila.reduce((acc, v, i) => ((Number(v) || 0) > 0 ? [...acc, i] : acc), []);
-}
-
 /**
  * Normaliza las repeticiones a un array de un elemento por fila. Si no vienen, o
  * vienen incompletas, se asume 1: una pasada por fila, el comportamiento anterior.

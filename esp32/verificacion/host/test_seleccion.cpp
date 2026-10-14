@@ -13,8 +13,8 @@ int main() {
   g_ms = 1000; seleccionIniciar();
   chequear(cuantosActivos() == 0, "al iniciar, todos los canales en reposo");
 
-  const bool fila1[4] = { true, false, true, false };   // bobinas 1 y 3
-  const bool fila2[4] = { false, true, true, false };   // bobinas 2 y 3
+  const bool fila1[4] = { true, false, false, false };  // bobina 1 (una sola por fila: una trama por pasada)
+  const bool fila2[4] = { false, false, true, false };  // bobina 3
   int activaciones1 = 0, activaciones3 = 0, sueltasEntrePasadas = 0;
   bool ant1 = false, ant3 = false;
 
@@ -30,7 +30,7 @@ int main() {
       if (a1 && !ant1) activaciones1++;
       if (a3 && !ant3) activaciones3++;
       ant1 = a1; ant3 = a3;
-      if (t == 99) chequear(cuantosActivos() == 2, "justo antes de soltar (99 ms), la fila sigue aplicada");
+      if (t == 99) chequear(cuantosActivos() == 1, "justo antes de soltar (99 ms), la fila sigue aplicada");
       if (t == 100) {
         chequear(cuantosActivos() == 0, "pasada la duración, se sueltan todos los canales");
         if (cuantosActivos() == 0) sueltasEntrePasadas++;
@@ -39,14 +39,14 @@ int main() {
     g_ms = inicio + PASADA;
   }
   chequear(activaciones1 == 25, "la bobina 1 se activa 25 veces separadas (una por pasada), no una sola larga");
-  chequear(activaciones3 == 35, "la bobina 3 se activa en cada una de las 35 pasadas, también al cambiar de fila");
+  chequear(activaciones3 == 10, "la bobina 3 se activa 10 veces separadas, una por cada pasada de la fila 2");
   chequear(sueltasEntrePasadas == 35, "entre cada pasada y la siguiente los canales quedan sueltos");
 
   // telar más lento: una pasada de 400 ms. La selección se alarga sola al 50 %: 200 ms
   seleccionAplicarFila(fila1, 4); unsigned long t0 = g_ms;
   g_ms = t0 + 400; seleccionSoltarSiCorresponde(); seleccionAplicarFila(fila1, 4); t0 = g_ms;
   g_ms = t0 + 150; seleccionSoltarSiCorresponde();
-  chequear(cuantosActivos() == 2, "con pasadas de 400 ms, a los 150 ms la selección sigue aplicada");
+  chequear(cuantosActivos() == 1, "con pasadas de 400 ms, a los 150 ms la selección sigue aplicada");
   g_ms = t0 + 200; seleccionSoltarSiCorresponde();
   chequear(cuantosActivos() == 0, "con pasadas de 400 ms, se suelta a los 200 ms (la mitad)");
 
@@ -55,9 +55,9 @@ int main() {
   g_ms = t0 + 100; seleccionSoltarSiCorresponde();
   chequear(cuantosActivos() == 0, "tras una parada, la primera pasada usa la duración inicial (100 ms)");
 
-  // la fila 2 activa la bobina 2 y ya no la 1
+  // la fila 2 activa la bobina 3 y ya no la 1
   seleccionAplicarFila(fila2, 4);
-  chequear(!activo(0) && activo(1) && activo(2), "la fila 2 activa las bobinas 2 y 3, y no la 1");
+  chequear(!activo(0) && activo(2) && cuantosActivos() == 1, "la fila 2 activa la bobina 3, y no la 1");
 
   // apagar todo cancela la suelta pendiente y deja todo en reposo
   seleccionApagarTodo();
