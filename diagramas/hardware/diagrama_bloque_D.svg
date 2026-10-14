@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1236" font-family="IBM Plex Sans, system-ui, sans-serif">
 <rect width="1200" height="1236" fill="#F6F8FA"/>
 <text x="600.0" y="32" font-size="18" font-weight="bold" fill="#1E3A5F" text-anchor="middle" font-family="Questrial, IBM Plex Sans, sans-serif">Bloque D · Conexión completa de los cuatro relés LCA110</text>
-<text x="600.0" y="52" font-size="10.5" font-weight="normal" fill="#6B7684" text-anchor="middle">Un relé por lector óptico. Del lado del ESP32 los cuatro comparten el GND; del lado del telar cada uno toca solo los dos cables de señal de su canal.</text>
+<text x="600.0" y="54" font-size="12" font-weight="bold" fill="#B4423C" text-anchor="middle">DESCARTADO · queda como referencia. La conexión que se usa es la de conexion_final_rele: el relé en lugar del lector.</text>
 <rect x="16" y="72" width="384" height="548" rx="9" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.6" stroke-dasharray="6 4"/>
 <text x="208" y="92" font-size="11.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LADO ESP32 · 3,3 V del gabinete</text>
 <rect x="636" y="72" width="548" height="548" rx="9" fill="#FBF1E3" stroke="#9C5C0A" stroke-width="1.6" stroke-dasharray="6 4"/>
@@ -221,7 +221,7 @@
 <text x="46" y="1056" font-size="11" fill="#1F2937">Pin en alto → relé cerrado → agujero:</text>
 <text x="46" y="1078" font-size="11" fill="#1F2937"><tspan font-weight="bold" fill="#2E6E4A">CANAL_ACTIVO_EN_ALTO  true</tspan></text>
 <text x="46" y="1100" font-size="11" fill="#1F2937">Si el ESP32 se apaga, el relé queda abierto y la máquina</text>
-<text x="46" y="1122" font-size="11" fill="#1F2937">vuelve a depender del lector, como hoy. Es la opción más segura.</text>
+<text x="46" y="1122" font-size="11" fill="#1F2937">vuelve a depender del lector, como hoy. Era la más segura de estas dos.</text>
 <rect x="612" y="704" width="572" height="468" rx="10" fill="#FFFFFF" stroke="#8B1F1F" stroke-width="2"/>
 <text x="898" y="730" font-size="14" font-weight="bold" fill="#8B1F1F" text-anchor="middle">EN SERIE: el relé se intercala cortando un cable</text>
 <rect x="636" y="774" width="90" height="158" rx="5" fill="#FFFFFF" stroke="#9C5C0A" stroke-width="1.6"/>
@@ -250,4 +250,5 @@
 <text x="642" y="1122" font-size="11" fill="#1F2937">como agujero: con este cableado no se teje con el Nivel 2 apagado.</text>
 <text x="600.0" y="1196" font-size="11" font-weight="bold" fill="#1F2937" text-anchor="middle">No alcanza con cambiar true/false: el cable se conecta distinto, y el valor de config.h tiene que coincidir con esa conexión.</text>
 <text x="600.0" y="1216" font-size="10" font-weight="normal" fill="#6B7684" text-anchor="middle">Antes de conectar: medir un canal (tensión con papel y con agujero, y corriente: de 5 a 20 mA). Todo el cableado, con el telar apagado y desenchufado.</text>
+<g pointer-events="none"><text x="600" y="640" text-anchor="middle" font-size="170" font-weight="bold" fill="#B4423C" fill-opacity="0.10" letter-spacing="8" transform="rotate(-20 600 640)">DESCARTADO</text></g>
 </svg>

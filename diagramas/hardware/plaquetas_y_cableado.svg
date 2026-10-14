@@ -44,7 +44,7 @@
 <text x="384" y="308" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Arranque seguro de los relés (10 kΩ):</text>
 <text x="398" y="327" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">GPIO 25 y 26 a 3,3 V · GPIO 27 a GND</text>
 <text x="384" y="346" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Sensado de la botonera, 3 canales iguales:</text>
-<text x="398" y="365" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">puente DB157 + capacitor de 22 a 47 µF 50 V</text>
+<text x="398" y="365" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">puente DB157 + capacitor de 22 µF 50 V</text>
 <text x="398" y="384" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">+ 2,2 kΩ 1 W → LED del PC817</text>
 <text x="398" y="403" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">salida del PC817 con 10 kΩ a 3,3 V →</text>
 <text x="398" y="422" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">GPIO 32 Marcha · 33 Pausa · 34 Retroceder</text>

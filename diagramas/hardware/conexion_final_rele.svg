@@ -97,7 +97,7 @@
 <rect x="940" y="518" width="440" height="112" rx="8" fill="#FDF3F2" stroke="#B4423C" stroke-width="1.6"/>
 <text x="954" y="540" font-size="11" font-weight="bold" fill="#B4423C" text-anchor="start">Una falla de cableado</text>
 <text x="954" y="560" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">Si la señal o la pata 4 tocan el −, la resistencia</text>
-<text x="954" y="577" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">de protección limita la corriente (unos 50 mA):</text>
+<text x="954" y="577" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">de protección limita la corriente (menos de 70 mA):</text>
 <text x="954" y="594" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">no se daña ni el relé (aguanta 120 mA) ni la</text>
 <text x="954" y="611" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">alimentación del lector.</text>
 <rect x="20" y="652" width="660" height="190" rx="8" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
@@ -152,6 +152,6 @@
 <text x="1000" y="1028" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">22</text>
 <text x="1080" y="1028" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">lector 4 · bobina 4</text>
 <text x="916" y="1060" font-size="9.5" font-weight="normal" fill="#6B7684" text-anchor="start">El orden de los relés tiene que coincidir con el de las</text>
-<text x="916" y="1075" font-size="9.5" font-weight="normal" fill="#6B7684" text-anchor="start">columnas del dibujo (B1 a B4). Rotular cada bornera.</text>
+<text x="916" y="1075" font-size="9.5" font-weight="normal" fill="#6B7684" text-anchor="start">columnas del dibujo (bobinas 1 a 4). Rotular cada bornera.</text>
 <text x="916" y="1096" font-size="9.5" font-weight="bold" fill="#B4423C" text-anchor="start">Las señales de los canales nunca se unen entre sí.</text>
 </svg>

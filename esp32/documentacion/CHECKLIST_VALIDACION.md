@@ -59,20 +59,26 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 
 ## Etapa 3b, Sensado de los botones (banco, sin telar)
 
-- [ ] Armá un canal de sensado: puente rectificador (DB157) + capacitor 22-47 µF + R 2,2 kΩ 1W
+- [ ] Armá un canal de sensado: puente rectificador (DB157) + capacitor 22 µF 50 V + R 2,2 kΩ 1W
       → LED del PC817; del otro lado, colector con pull-up de 10 kΩ a 3.3V
       → GPIO 32 (Marcha). Repetí para GPIO 33 (Pausa) y GPIO 34 (Retroceder).
-- [ ] Con el multímetro, confirmá que **en reposo el GPIO lee 3.3V** (alto).
-- [ ] Simulá el botón: aplicá una fuente de 24V AC (o el propio telar, más
-      adelante) a la entrada del puente. El GPIO debe caer a **0V** (bajo)
-      mientras dure la pulsación.
-- [ ] En el monitor de serie debe aparecer el mensaje de sensado ("Botonera: alguien apretó ...").
+- [ ] Sin tensión en la entrada del puente, el GPIO lee **3,3 V** (alto).
+- [ ] Aplicá 24 V de alterna (o de 12 a 24 V de continua) a la entrada del puente: el GPIO cae a
+      **0 V**. Ese es el **reposo** en el telar: en el par NA de un botón hay 24 V mientras nadie
+      lo aprieta.
+- [ ] Apretar el botón es sacar esa tensión: el GPIO vuelve a 3,3 V después de 0,15 a 0,25 s (lo
+      que tarda en descargarse el capacitor). Cada vez que la volvés a aplicar (en el telar, al
+      soltar el botón), el GPIO cae y el monitor serie muestra «Botonera: alguien apretó ...».
       Simulando **Marcha** o **Retroceder** sin un trabajo abierto en la web, la barra de estado
       del editor muestra **"Posición incierta"** (con un trabajo abierto, Marcha pasa la web a
       "Tejiendo" y Pausa a "Pausado").
 - [ ] Apretá **Confirmar** en la web: el aviso debe desaparecer.
-- [ ] **Anti-rebote:** una pulsación sola no debe generar más de un aviso
-      (el firmware filtra con 400 ms de debounce).
+- [ ] **Anti-rebote:** cada vez que se aplica la tensión tiene que salir un solo aviso
+      (el firmware filtra con 400 ms de debounce). Si salen avisos solos con la tensión aplicada,
+      sin tocar nada, falta el capacitor de ese canal o está invertido.
+- [ ] **Encendido del telar:** aplicá la tensión a dos o tres canales a la vez (como cuando se
+      prende el telar con el gabinete encendido): el monitor muestra «Botonera: N canales bajaron
+      juntos ...» y no sale ningún aviso.
 
 ## Etapa 4, Conexión al telar (recién ahora)
 
@@ -81,6 +87,8 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       como para el sensado). Si un botón tiene 3 o 4 terminales, con el multímetro en
       continuidad elegí el par **NA** (el que NO pita en reposo y SÍ al
       apretar); el par NC no se usa.
+- [ ] Con el telar **encendido** y sin tejer, medí en alterna cada par NA: unos **24 V sin apretar
+      y 0 V apretando**. Si da 0 V sin apretar, ese no es el par NA: no conectes.
 - [ ] Conectá **en paralelo** NO1/COM1 a las chapas del botón de Marcha,
       NO2/COM2 a las del botón de Pausa, y NO3/COM3 a las del botón de
       Retroceder. En paralelo = la botonera manual tiene que seguir
@@ -89,6 +97,14 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       andando** (apretá los botones a mano).
 - [ ] Recién ahí probá el arranque/pausa desde la web, con alguien al lado
       del botón de parada de emergencia del telar por las dudas.
+- [ ] Con el telar encendido y sin tocar nada, GPIO 32, 33 y 34 dan **0 V**. Apretá cada botón
+      a mano (al menos medio segundo): al soltarlo, el monitor muestra «Botonera: alguien apretó …»
+      una vez.
+- [ ] Con el telar tejiendo, medí en el gabinete el GPIO 32 (Marcha) contra GND: tiene que seguir
+      en 0 V. Si da 3,3 V, avisá: el telar puentea el botón de Marcha mientras anda y, cuando pare
+      solo, el sensado lo tomaría como un Marcha.
+- [ ] Con el gabinete encendido, apagá y prendé el telar: el monitor muestra «Botonera: 3 canales
+      bajaron juntos …» y la web no cambia.
 
 ## Notas de seguridad
 
@@ -109,7 +125,7 @@ pines (GPIO 25→IN1 Marcha, GPIO 26→IN2 Pausa), la cadena de voltajes
 (220V→5V→3,3V, con la fuente HLK-5M05), el jumper JD-VCC puesto (todo el módulo a 5V, sin llevar 3.3V al VCC), la conexión en paralelo, y la etapa de protección coinciden entre el
 firmware, el diagrama eléctrico y el documento de conexiones.
 
-> **Estado actual:** `verif_coherencia.py` da 19/19 (incluye que haya un solo firmware para la placa, que sus pines no se pisen, que `NIVEL2_INSTALADO` venga en `false` y que la cantidad de bobinas sea la misma en la web, el firmware y la base). Ya incluye el tercer relé (GPIO 27 → IN3), que
+> **Estado actual:** `verif_coherencia.py` da 19/19 (incluye que haya un solo firmware para la placa, que sus pines no se pisen, que `NIVEL2_INSTALADO` venga en `false` y que la cantidad de bobinas sea la misma en la web, el firmware y la base). Ya incluye el tercer relé (GPIO 27 → S del módulo de Retroceder), que
 > el diagrama muestra, y además compara los límites de filas y columnas entre la web, el servidor,
 > el firmware y la base, y los pines de las bobinas del Nivel 2 con su diagrama.
 

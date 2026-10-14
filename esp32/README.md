@@ -7,7 +7,7 @@ reemplaza la lógica de la máquina (le "aprieta los botones").
 
 **Cómo:** tres relés optoacoplados conectados **en paralelo** con los
 botones físicos de **Marcha** (GPIO 25 → IN1), **Pausa** (GPIO 26 → IN2)
-y **Retroceder** (GPIO 27 → IN3). Un pulso breve del relé equivale a una
+y **Retroceder** (GPIO 27 → S del módulo individual). Un pulso breve del relé equivale a una
 pulsación manual, y la botonera física sigue funcionando exactamente
 igual.
 
@@ -73,9 +73,9 @@ El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
 |---|---|
 | Potencia | 220V pared → fusible 1A lento → módulo HLK-5M05 → 5V (fuente propia, no toca el telar) |
 | 5V | HLK-5M05 OUT → ESP32 VIN **y** VCC del módulo relé (jumper JD-VCC/VCC puesto) |
-| Lógica | GPIO 25 → IN1; GPIO 26 → IN2; GPIO 27 → IN3. IN1 e IN2 con pull-up de 10 kΩ a 3.3V (módulo de 2 canales, activo-bajo); IN3 con pull-down de 10 kΩ a GND (el módulo de Retroceder es activo-alto: con pull-up arrancaría pegado). Todo por el conector de las señales (GND · IN · VCC): el VCC de ese conector va a **5V**, nunca a los 3.3V del ESP32 (con el jumper puesto, unirían 5V y 3.3V). El conector del jumper (JD-VCC · VCC · GND) no se usa |
+| Lógica | GPIO 25 → IN1; GPIO 26 → IN2; GPIO 27 → S (módulo individual de Retroceder). IN1 e IN2 con pull-up de 10 kΩ a 3.3V (módulo de 2 canales, activo-bajo); S con pull-down de 10 kΩ a GND (el módulo de Retroceder es activo-alto: con pull-up arrancaría pegado). Todo por el conector de las señales (GND · IN · VCC): el VCC de ese conector va a **5V**, nunca a los 3.3V del ESP32 (con el jumper puesto, unirían 5V y 3.3V). El conector del jumper (JD-VCC · VCC · GND) no se usa |
 | Telar | NO1+COM1 en paralelo al botón de Marcha; NO2+COM2 al de Pausa; NO3+COM3 al de Retroceder |
-| Sensado | Los mismos 3 botones (Marcha/Pausa/Retroceder) → puente rectificador DB157 → capacitor 22–47 µF → R 2,2 kΩ → PC817 → GPIO 32 / 33 / 34 (pull-up 10 kΩ a 3.3V) |
+| Sensado | Los mismos 3 botones (Marcha/Pausa/Retroceder) → puente rectificador DB157 → capacitor 22 µF 50 V → R 2,2 kΩ → PC817 → GPIO 32 / 33 / 34 (pull-up 10 kΩ a 3.3V) |
 | Filtrado | Capacitores de 100 nF de desacople junto al ESP32 y junto a cada módulo de relé |
 
 ### Sensado de los botones del telar (solo lectura)
@@ -83,8 +83,12 @@ El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
 Los mismos tres botones que tienen relé (Marcha, Pausa y Retroceder) se **escuchan** además,
 con un optoacoplador PC817 por canal que aísla los 24 V AC de la botonera del micro. Si un
 operario los aprieta a mano, el ESP32 avisa al backend (`POST /evento-fisico`) y la web refleja
-lo que pasa en la máquina: arrancada, pausada o una pasada atrás. El firmware descarta el eco de
-sus propios pulsos (el relé cierra el mismo circuito que el botón). Si alguien arranca o retrocede
+lo que pasa en la máquina: arrancada, pausada o una pasada atrás. En el par NA de cada botón hay
+24 V mientras nadie lo aprieta (el pin queda en bajo): al apretar el pin sube, y el aviso sale al
+**soltar** el botón. Con el capacitor de 22 µF hay que mantenerlo apretado entre 0,15 y 0,25 s para
+que se registre. El firmware descarta el eco de sus propios pulsos (el relé cierra el mismo circuito
+que el botón) y los canales que bajan juntos cuando se prende el telar con el gabinete encendido
+(dos o más dentro de 150 ms: no es un botón). Si alguien arranca o retrocede
 a mano sin un trabajo abierto, la web marca la posición como incierta hasta que se confirme
 (`POST /confirmar-posicion`).
 

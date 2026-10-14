@@ -57,8 +57,8 @@ El gabinete lleva cuatro plaquetas de placa perforada, con las conexiones soldad
 
 1. Soldar las tiras de pines hembra del ESP32 (todavía sin el ESP32), el conector J1 con el capacitor de **470 µF** (pata larga al +5 V) y un capacitor de **100 nF** junto al ESP32.
 2. Arranque seguro de los relés: **10 kΩ de GPIO 25 a 3,3 V**, **10 kΩ de GPIO 26 a 3,3 V** y **10 kΩ de GPIO 27 a GND** (el módulo de Retroceder se activa con nivel alto).
-3. Los tres canales de sensado, iguales: el puente **DB157** con sus patas ~ a la bornera del botón; un capacitor de **22 a 47 µF de 50 V** entre el + y el − del puente (pata larga al +; la botonera rectificada llega a unos 34 V de pico); **2,2 kΩ 1 W** del + del puente a la pata 1 del **PC817**; el − del puente a la pata 2; la pata 3 al GND del ESP32; la pata 4 al GPIO, con **10 kΩ a 3,3 V**: GPIO **32** Marcha, **33** Pausa, **34** Retroceder.
-4. Sin alimentar, con el multímetro en continuidad: entre el GND del ESP32 y cualquier borne de la botonera **no tiene que pitar**; entre +5 V y GND tampoco.
+3. Los tres canales de sensado, iguales: el puente **DB157** con sus patas ~ a la bornera del botón; un capacitor de **22 µF de 50 V** entre el + y el − del puente (pata larga al +; la botonera rectificada llega a unos 34 V de pico); **2,2 kΩ 1 W** del + del puente a la pata 1 del **PC817**; el − del puente a la pata 2; la pata 3 al GND del ESP32; la pata 4 al GPIO, con **10 kΩ a 3,3 V**: GPIO **32** Marcha, **33** Pausa, **34** Retroceder.
+4. Sin alimentar, con el multímetro en continuidad: entre el GND del ESP32 y cualquier borne de la botonera **no tiene que pitar**; entre +5 V y GND tampoco (un pitido corto al principio es normal: es el capacitor de 470 µF que se carga; si pita sin parar, hay un corto).
 5. Conectar J1 a la fuente, enchufar y medir **5 V** entre los pines VIN y GND de la tira. Desenchufar, poner el ESP32 (orientado según la serigrafía) y volver a medir: **3,3 V** en el pin 3V3.
 
 ### 4.3 Plaqueta 3 · Módulos de relé
@@ -70,7 +70,7 @@ El gabinete lleva cuatro plaquetas de placa perforada, con las conexiones soldad
 ### 4.4 Plaqueta 4 · Nivel 2 (cuando se arme)
 
 1. Canal del sensor: el borne «+ del telar» de B2 → **1,2 kΩ** → pata 1 de un PC817; el borne «negro del sensor» → pata 2; la pata 3 al GND del ESP32; la pata 4 al **GPIO 35** con **10 kΩ a 3,3 V** (el GPIO 35 no tiene resistencia interna). Si el telar diera 24 V en lugar de 12 a 14 V, la resistencia es de 2,2 kΩ ½ W.
-2. Los cuatro **zócalos DIP-6**, con la muesca del lado de la pata 1. Por canal: GPIO → **330 Ω** → pata 1; pata 2 al GND; **10 kΩ del GPIO al GND**, pegada al pin; las **patas 4 y 6** a su par de B3 (rotular R1 a R4); las patas 3 y 5 libres. Canales: GPIO **18, 19, 21 y 22**.
+2. Los cuatro **zócalos DIP-6**, con la muesca del lado de la pata 1. Por canal: GPIO → **330 Ω** → pata 1; pata 2 al GND; **10 kΩ del GPIO al GND**, pegada al pin; las **patas 4 y 6** a su par de B3 (rotular canal 1 a 4); las patas 3 y 5 libres. Canales: GPIO **18, 19, 21 y 22**.
 3. J3 a la principal (3,3 V, GND, 35, 18, 19, 21 y 22). Poner los LCA110 en los zócalos, con la muesca del lado de la pata 1.
 4. Con el multímetro en continuidad: los bornes de B2 y B3 **no pitan** contra el GND del ESP32.
 
@@ -113,14 +113,15 @@ Todo el sistema se puede levantar en una PC con Docker: el archivo `backend/.env
 | 401: DEVICE_KEY no coincide… | `DEVICE_KEY` distinta de `ESP32_DEVICE_KEY` de Render. |
 | Error consultando estado: HTTP 404 | `TELAR_ID` no existe: revisar el id en `/api/telares`. |
 | El telar no tiene un dibujo asignado | Normal hasta tocar ▶ en la web. |
-| Botonera: alguien apretó MARCHA (o PAUSA, RETROCEDER) | El sensado vio un botón apretado a mano y se lo avisa al servidor. |
+| Botonera: alguien apretó MARCHA (o PAUSA, RETROCEDER) | El sensado vio un botón usado a mano (el aviso sale al soltarlo) y se lo avisa al servidor. |
+| Botonera: N canales bajaron juntos… | Se prendió el telar con el gabinete encendido, o volvió su tensión: no es un botón y no se avisa nada. Es normal. |
 
 ## 7. Probar todo en el banco (sin el telar)
 
 1. Las plaquetas conectadas entre sí (J1, J2 y J3) y alimentadas con la fuente; el ESP32 con el firmware, ya sin el USB.
 2. Reiniciar el ESP32: **ningún relé se dispara solo**. Si alguno se dispara, revisar las resistencias de arranque seguro.
 3. En la web, abrir un dibujo y tocar **▶**: clic del relé de Marcha (un pulso, no queda pegado). **⏸**: clic de Pausa. **⏪** (con confirmación): clic de Retroceder.
-4. Sensado: aplicar 24 V de alterna (o 12 a 24 V de continua) a la entrada de cada canal. El monitor serie dice «Botonera: alguien apretó …» y la web lo muestra (sección 10).
+4. Sensado: aplicar 24 V de alterna (o de 12 a 24 V de continua) a la entrada de cada canal: el GPIO cae a 0 V y el monitor serie dice «Botonera: alguien apretó …», y la web lo muestra (sección 10). En el telar ese momento es cuando se suelta el botón: en reposo, el par NA tiene 24 V. Con la tensión aplicada a dos o tres canales a la vez, el monitor dice que bajaron juntos y no avisa nada.
 5. Nivel 2 (si está armado): con `NIVEL2_INSTALADO` y `MODO_BANCO` en true, un LED con su resistencia y una pila entre las patas 4 y 6 de cada relé. Al tejer desde la web, cada LED se enciende según su columna del dibujo. Después, `MODO_BANCO` vuelve a **false**.
 
 La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHECKLIST_VALIDACION.md` y en la Guía de mediciones y verificaciones.
@@ -129,11 +130,12 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 
 1. Telar apagado y desenchufado; gabinete desenchufado.
 2. Ubicar los dos cables de cada botón (Marcha, Pausa y Retroceder). Si un botón tiene más terminales, con el multímetro en continuidad elegir el par **NA**: no pita en reposo y sí al apretar.
-3. Del botón a la bornera **B1** del gabinete, con el cable de 6 conductores (un par por botón), sin cortar ni soldar sobre los cables del telar. No correrlo pegado al cable del motor.
-4. En B1, cada par va a **NO y COM de su relé** (en paralelo con el botón) y a la **entrada de su canal de sensado** (las patas ~ del puente).
-5. Antes de encender el gabinete, encender el telar y comprobar que **la botonera a mano funciona igual que siempre**.
-6. Encender el gabinete. Desde la web: ▶ arranca la máquina, ⏸ la pausa y ⏪ la hace retroceder una pasada. Con alguien al lado de la parada de emergencia.
-7. Apretar los botones a mano: la web lo refleja (sección 10).
+3. Encender el telar y, sin tejer, medir en alterna cada par NA: unos **24 V sin apretar y 0 V apretando**. Si da 0 V sin apretar, ese no es el par NA: no conectarlo. Apagar y desenchufar el telar.
+4. Del botón a la bornera **B1** del gabinete, con el cable de 6 conductores (un par por botón), sin cortar ni soldar sobre los cables del telar. No correrlo pegado al cable del motor.
+5. En B1, cada par va a **NO y COM de su relé** (en paralelo con el botón) y a la **entrada de su canal de sensado** (las patas ~ del puente).
+6. Antes de encender el gabinete, encender el telar y comprobar que **la botonera a mano funciona igual que siempre**.
+7. Encender el gabinete. Desde la web: ▶ arranca la máquina, ⏸ la pausa y ⏪ la hace retroceder una pasada. Con alguien al lado de la parada de emergencia.
+8. Apretar los botones a mano, al menos medio segundo cada uno: al soltarlos, la web lo refleja (sección 10).
 
 ## 9. Conectar el Nivel 2 (sensor y relés de selección)
 
@@ -151,7 +153,7 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 1. Antes, medir cada lector (Guía de conexión de los relés LCA110, sección 5): la alimentación, la señal con papel y con agujero, y la corriente con la resistencia de protección en serie (menos de **20 mA**).
 2. Con el telar desenchufado, en el conector de cada lector: desconectar los 4 cables del lector, **marcarlos** en las dos puntas y aislarlos en su bornera.
 3. En la bornera de 4 vías del conector: el **+** → **resistencia de protección** (220 Ω 2 W hasta 15 V; 470 Ω 3 W de 15 a 30 V) → hilo a la **pata 4**; la **señal** → hilo a la **pata 6**; **10 kΩ ½ W** de la señal al −; la referencia al −.
-4. Los 2 hilos de cada canal a su par de **B3**: canal 1 = GPIO 18 = lector y bobina 1; canal 2 = GPIO 19; canal 3 = GPIO 21; canal 4 = GPIO 22. El orden tiene que coincidir con las columnas del dibujo (B1 a B4).
+4. Los 2 hilos de cada canal a su par de **B3**: canal 1 = GPIO 18 = lector y bobina 1; canal 2 = GPIO 19; canal 3 = GPIO 21; canal 4 = GPIO 22. El orden tiene que coincidir con las columnas del dibujo (bobinas 1 a 4).
 5. Primero **un solo canal** (el lector 1) y probarlo. Recién después, los otros tres.
 
 ### 9.3 Firmware y primera prueba de tejido
@@ -164,7 +166,7 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 
 ### Encender
 
-1. Enchufar el gabinete. El LED azul del ESP32 se enciende cuando se conecta a la red.
+1. Enchufar el gabinete. El LED azul del ESP32 se enciende cuando se conecta a la red. Da lo mismo si el telar ya está prendido o se prende después: al prenderse el telar, los tres canales de la botonera bajan juntos y el ESP32 lo descarta, porque no es un botón.
 2. Abrir la web e iniciar sesión: junto al estado del telar tiene que decir **«ESP32 conectado»**. Si el servidor estaba dormido, esperar a que cargue.
 
 ### Tejer un dibujo
@@ -174,7 +176,7 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 
 ### Si se aprieta un botón del telar, ¿se ve en la web?
 
-**Sí.** El sensado de la botonera avisa al servidor en el momento, y la web lo muestra en pocos segundos (consulta el estado cada 4 s):
+**Sí.** El sensado de la botonera avisa al servidor cuando se suelta el botón, y la web lo muestra en pocos segundos (consulta el estado cada 4 s). Un toque muy corto, de menos de un cuarto de segundo, puede no registrarse:
 
 | Situación | Qué muestra la web |
 |---|---|
@@ -196,7 +198,8 @@ Tocar ⏸ (o ⏹ si se terminó el trabajo) y después desenchufar el gabinete. 
 | La web dice «Sin datos del ESP32» o «Sin conexión» | El WiFi (monitor serie), `TELAR_ID`, y que el servidor esté despierto. |
 | El monitor serie muestra «401» | `DEVICE_KEY` distinta de `ESP32_DEVICE_KEY` de Render. |
 | Un relé se dispara solo al encender | Las resistencias de arranque: 10 kΩ a 3,3 V en GPIO 25 y 26, a GND en GPIO 27. |
-| La web no muestra un botón apretado a mano | El canal de sensado (con 24 V en la entrada, el GPIO cae a 0 V) y la red del ESP32. |
+| La web no muestra un botón apretado a mano | Que se haya mantenido apretado al menos un cuarto de segundo; el canal de sensado (con el telar encendido y sin tocar nada, el GPIO da 0 V) y la red del ESP32. |
+| Avisos de la botonera sin que nadie apriete nada | Falta el capacitor de 22 µF de ese canal o está invertido. |
 | La web dice «Posición incierta» | Se usó la botonera sin un trabajo abierto, o el equipo se reinició: mirar el telar y tocar Confirmar. |
 | El ESP32 se reinicia al enganchar un relé | El capacitor de 470 µF en la entrada de 5 V y los de 100 nF junto a cada módulo. |
 | «Pausado: sin señal del sensor» (Nivel 2) | La máquina se frenó o el sensor perdió el blanco (distancia, cable). |
