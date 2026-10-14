@@ -6,10 +6,10 @@ insertarlo en documentos.
 ## `hardware/`, cómo se conecta
 
 ### `plaquetas_y_cableado.svg`
-**Las cuatro plaquetas del gabinete y todo el cableado.** Qué va en cada una (la fuente de 220 V, la
-principal con el ESP32 y el sensado, los módulos de relé y la del Nivel 2 con el sensor y los LCA110),
-los conectores entre ellas (J1, J2 y J3, con sus hilos y GPIO) y las borneras que van al telar (B1 la
-botonera, B2 el sensor, B3 los lectores, con la resistencia de protección y la de 10 kΩ ½ W junto a
+**Las cinco plaquetas del gabinete y todo el cableado.** Qué va en cada una (la fuente de 220 V, la
+principal con el ESP32, la del sensado de la botonera, los módulos de relé y la del Nivel 2 con el sensor y
+los LCA110), los conectores entre ellas (J1 a J4, con sus hilos y GPIO) y las borneras que van al telar (B1
+la botonera, doble por botón para llevar cada par también a su relé, B2 el sensor, B3 los lectores, con la resistencia de protección y la de 10 kΩ ½ W junto a
 cada conector). Es el que acompaña al paso a paso de conexión y puesta en marcha.
 
 ### `diagrama_conexion_electrica.svg`
@@ -39,16 +39,17 @@ recalcular la resistencia según la tensión que se mida.
 ### `canal_rele.svg`
 Un canal de la selección del dibujo del Bloque D: el relé LCA110 (OptoMOS, salida MOSFET) con
 las cuatro patas que se usan (1 y 2 del lado del ESP32, 4 y 6 de la salida), las dos resistencias y las dos formas que se evaluaron
-primero, con el lector conectado (en serie o en paralelo). Queda como referencia: la conexión que se usa es la de
-`conexion_final_rele.svg`.
+primero, con el lector conectado (en serie o en paralelo). **Descartado** (lo dice en la imagen): queda como
+referencia, y la conexión que se usa es la de `conexion_final_rele.svg`.
 
 ### `diagrama_bloque_D.svg`
 El Bloque D completo: los cuatro relés LCA110 con sus pines (18, 19, 21 y 22), las resistencias de
 330 Ω y 10 kΩ y el GND común del lado del ESP32; del lado del telar, cada relé conectado solo al par de
 señal (A y B) de su lector, y los dos cables de alimentación de los lectores, que no van a ningún relé.
 Abajo compara las dos conexiones que se evaluaron primero, con el lector conectado: en paralelo
-(puente entre A y B, sin cortar nada) y en serie (se corta el cable A). **Quedan como referencia: la
-conexión que se usa es la de `conexion_final_rele.svg`**, con el relé en lugar del lector.
+(puente entre A y B, sin cortar nada) y en serie (se corta el cable A). **Descartado** (lo dice en la
+imagen): queda como referencia, y la conexión que se usa es la de `conexion_final_rele.svg`, con el relé
+en lugar del lector.
 
 ### `conexion_final_rele.svg`
 **La conexión final de los relés LCA110, la más segura.** Un canal completo: el relé ocupa el lugar
