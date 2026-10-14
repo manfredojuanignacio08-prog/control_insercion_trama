@@ -1208,3 +1208,13 @@ filas del Checklist que cortaban el texto.
 Pruebas: firmware en la PC (`correr.sh`, todo bien en sus dos modos), `verif_coherencia.py` 19/19,
 los 9 Word modificados validados y revisados en PDF, las planillas revisadas en PDF, los 7 diagramas
 regenerados y revisados, y los dos sitios en Chromium sin imágenes ni enlaces rotos.
+
+## Vigesimoctava revisión: la plaqueta de sensado aparte
+
+El sensado de la botonera se armó en su propia plaqueta impresa (diseñada en Proteus), unida a la
+principal por un conector de 5 hilos. La documentación lo tenía en la plaqueta principal.
+
+| Dónde | Qué cambió |
+|---|---|
+| Guía paso a paso (md y Word) y `plaquetas_y_cableado` (también dentro del Word) | Cinco plaquetas: la 5 es la de sensado. Conector nuevo **J4** (3,3 V del pin 3V3, GND y GPIO 32, 33 y 34). **B1** pasa a la plaqueta de sensado, doble por botón: un par de la botonera y otro que va a NO y COM de su relé. Sección nueva 4.3 con el armado y las pruebas de esa plaqueta (los dos lados separados, sin pistas por debajo de los PC817, el + de cada capacitor marcado a mano y la continuidad entre B1 y J4). Las secciones de los relés y del Nivel 2 pasan a 4.4 y 4.5. |
+| Índice de documentos, `diagramas/README.md`, Guía de armado del Bloque A y Componentes en placa | Las cinco plaquetas, J4 y las borneras de B1 (8 en total). |

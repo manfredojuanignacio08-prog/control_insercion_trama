@@ -2,7 +2,7 @@
 
 *Control de Inserción de Trama · 7mo Informática B, Instituto Leonardo Murialdo*
 
-Esta guía junta en un solo lugar cómo armar las **cuatro plaquetas** del gabinete, cómo conectarlas entre sí y al telar, y cómo **levantar el sistema** (el servidor, la web y el ESP32) hasta tejer un dibujo. Se sigue en orden: cada parte se prueba antes de pasar a la siguiente. El detalle de cada bloque está en su propia guía (la lista está al final).
+Esta guía junta en un solo lugar cómo armar las **cinco plaquetas** del gabinete, cómo conectarlas entre sí y al telar, y cómo **levantar el sistema** (el servidor, la web y el ESP32) hasta tejer un dibujo. Se sigue en orden: cada parte se prueba antes de pasar a la siguiente. El detalle de cada bloque está en su propia guía (la lista está al final).
 
 Hoy se usa el **Nivel 1**: Marcha, Pausa y Retroceder por relé, y el sensado de la botonera. El **Nivel 2** (el sensor de pasada y los relés de selección del dibujo) se suma después. Las partes que son solo del Nivel 2 están marcadas.
 
@@ -27,11 +27,11 @@ Hoy se usa el **Nivel 1**: Marcha, Pausa y Retroceder por relé, y el sensado de
 
 ## 3. Las plaquetas y cómo se conectan
 
-El gabinete lleva cuatro plaquetas de placa perforada, con las conexiones soldadas (la protoboard sirve para probar, pero la vibración del telar afloja sus contactos). Cada cable entra a su plaqueta por un **conector de tira de pines** o por una **bornera de tornillo**, así todo se desconecta sin desoldar. Del lado de 220 V y del lado del telar, **siempre bornera**.
+El gabinete lleva cinco plaquetas con las conexiones soldadas: cuatro de placa perforada y la del sensado de la botonera, impresa (la protoboard sirve para probar, pero la vibración del telar afloja sus contactos). Cada cable entra a su plaqueta por un **conector de tira de pines** o por una **bornera de tornillo**, así todo se desconecta sin desoldar. Del lado de 220 V y del lado del telar, **siempre bornera**.
 
-![Las cuatro plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).](../../diagramas/hardware/plaquetas_y_cableado.png)
+![Las cinco plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).](../../diagramas/hardware/plaquetas_y_cableado.png)
 
-*Las cuatro plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).*
+*Las cinco plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).*
 
 | Conector | De → a | Hilos | Tipo |
 |---|---|---|---|
@@ -39,11 +39,12 @@ El gabinete lleva cuatro plaquetas de placa perforada, con las conexiones soldad
 | J1 | Plaqueta 1 (fuente) → plaqueta 2 | +5 V y GND | Bornera o tira de pines |
 | J2 | Plaqueta 2 → plaqueta 3 (relés) | 5 V, GND, IN1 (GPIO 25), IN2 (GPIO 26), S (GPIO 27) | Tira de pines |
 | J3 | Plaqueta 2 → plaqueta 4 (Nivel 2) | 3,3 V, GND, GPIO 35, 18, 19, 21 y 22 | Tira de pines |
-| B1 | Botonera del telar → plaquetas 3 y 2 | 3 pares: Marcha, Pausa y Retroceder | Bornera de tornillo |
+| J4 | Plaqueta 2 → plaqueta 5 (sensado) | 3,3 V, GND, GPIO 32, 33 y 34 | Tira de pines |
+| B1 | Botonera del telar → plaqueta 5 (sensado), y de ahí a la 3 (relés) | 3 pares: Marcha, Pausa y Retroceder | Bornera de tornillo doble por botón: un par de la botonera y otro a NO y COM de su relé |
 | B2 | Sensor de pasada → plaqueta 4 | El + del telar y el negro del sensor | Bornera de tornillo |
 | B3 | Bornera de cada lector → plaqueta 4 | Pata 4 y pata 6 de cada relé (8 hilos) | Bornera de tornillo |
 
-> **Nota:** Rotular cada conector y cada bornera antes de cerrar el gabinete (J1, J2, J3; B1 Marcha, Pausa y Retroceder; B2; B3 canal 1 a 4). Si el Nivel 2 se arma en la misma placa principal, J3 no hace falta: los mismos 7 hilos van soldados.
+> **Nota:** Rotular cada conector y cada bornera antes de cerrar el gabinete (J1 a J4; B1 Marcha, Pausa y Retroceder; B2; B3 canal 1 a 4). Si el Nivel 2 se arma en la misma placa principal, J3 no hace falta: los mismos 7 hilos van soldados. Lo mismo con el sensado: armado en la principal, J4 no hace falta.
 
 ## 4. Armar y probar cada plaqueta en el banco (sin el telar)
 
@@ -53,21 +54,30 @@ El gabinete lleva cuatro plaquetas de placa perforada, con las conexiones soldad
 2. **+Vo** y **−Vo** del módulo a la bornera de salida (+5 V y GND). Estas **sí** tienen polaridad: invertirlas quema el ESP32.
 3. Sin nada conectado a la salida, enchufar y medir en continua: **entre 4,75 y 5,25 V**. Desenchufar.
 
-### 4.2 Plaqueta 2 · Principal (ESP32 y sensado de la botonera)
+### 4.2 Plaqueta 2 · Principal (ESP32)
 
-1. Soldar las tiras de pines hembra del ESP32 (todavía sin el ESP32), el conector J1 con el capacitor de **470 µF** (pata larga al +5 V) y un capacitor de **100 nF** junto al ESP32.
+1. Soldar las tiras de pines hembra del ESP32 (todavía sin el ESP32), el conector J1 con el capacitor de **470 µF** (pata larga al +5 V) y un capacitor de **100 nF** junto al ESP32, y el conector **J4** hacia la plaqueta de sensado (3,3 V del pin 3V3, GND y GPIO 32, 33 y 34).
 2. Arranque seguro de los relés: **10 kΩ de GPIO 25 a 3,3 V**, **10 kΩ de GPIO 26 a 3,3 V** y **10 kΩ de GPIO 27 a GND** (el módulo de Retroceder se activa con nivel alto).
-3. Los tres canales de sensado, iguales: el puente **DB157** con sus patas ~ a la bornera del botón; un capacitor de **22 µF de 50 V** entre el + y el − del puente (pata larga al +; la botonera rectificada llega a unos 34 V de pico); **2,2 kΩ 1 W** del + del puente a la pata 1 del **PC817**; el − del puente a la pata 2; la pata 3 al GND del ESP32; la pata 4 al GPIO, con **10 kΩ a 3,3 V**: GPIO **32** Marcha, **33** Pausa, **34** Retroceder.
-4. Sin alimentar, con el multímetro en continuidad: entre el GND del ESP32 y cualquier borne de la botonera **no tiene que pitar**; entre +5 V y GND tampoco (un pitido corto al principio es normal: es el capacitor de 470 µF que se carga; si pita sin parar, hay un corto).
-5. Conectar J1 a la fuente, enchufar y medir **5 V** entre los pines VIN y GND de la tira. Desenchufar, poner el ESP32 (orientado según la serigrafía) y volver a medir: **3,3 V** en el pin 3V3.
+3. Sin alimentar, con el multímetro en continuidad: entre +5 V y GND **no tiene que pitar** (un pitido corto al principio es normal: es el capacitor de 470 µF que se carga; si pita sin parar, hay un corto).
+4. Conectar J1 a la fuente, enchufar y medir **5 V** entre los pines VIN y GND de la tira. Desenchufar, poner el ESP32 (orientado según la serigrafía) y volver a medir: **3,3 V** en el pin 3V3.
 
-### 4.3 Plaqueta 3 · Módulos de relé
+### 4.3 Plaqueta 5 · Sensado de la botonera
+
+Es una plaqueta impresa aparte, unida a la principal por J4.
+
+1. Por canal, los tres iguales: el puente **DB157** con sus patas ~ a la bornera **B1** del botón; un capacitor de **22 µF de 50 V** entre el + y el − del puente (pata larga al +; la botonera rectificada llega a unos 34 V de pico); **2,2 kΩ 1 W** del + del puente a la pata 1 del **PC817**; el − del puente a la pata 2; la pata 3 al GND de J4; la pata 4 al GPIO de J4, con **10 kΩ a 3,3 V**: GPIO **32** Marcha, **33** Pausa, **34** Retroceder.
+2. **B1**, una bornera doble por botón: un par para el cable de la botonera y otro para el cable que va a **NO y COM de su relé** (plaqueta 3), los dos unidos en la plaqueta a las patas ~ del puente.
+3. **J4** a la principal, 5 hilos: 3,3 V (del pin 3V3 del ESP32), GND y GPIO 32, 33 y 34.
+4. Lo de 24 V (B1, puentes, capacitores, 2,2 kΩ y las patas 1 y 2 de cada PC817) de un lado, y lo del ESP32 (patas 3 y 4, las 10 kΩ y J4) del otro, **sin pistas por debajo de los PC817**. Marcar a mano el + de cada capacitor y la pata 1 de cada PC817 y puente: en la plaqueta impresa no sale la serigrafía. Un capacitor invertido puede quedar en corto, y un canal en corto es como dejar el botón apretado.
+5. Sin alimentar, con el multímetro en continuidad: entre cualquier borne de B1 y cualquier pin de J4 **no tiene que pitar**.
+
+### 4.4 Plaqueta 3 · Módulos de relé
 
 1. Fijar los dos módulos con separadores o tornillos. En el módulo de 2 canales, el **jumper JD-VCC puesto**.
 2. J2: 5 V al VCC de los dos módulos y GND común; **IN1 ← GPIO 25** (Marcha), **IN2 ← GPIO 26** (Pausa) y **S ← GPIO 27** (Retroceder). Un capacitor de 100 nF junto a cada módulo.
-3. Las salidas **NO y COM** de los tres relés quedan para la bornera B1. Todavía no se conectan al telar.
+3. Las salidas **NO y COM** de cada relé, al par de su bornera B1 en la plaqueta de sensado. La botonera todavía no se conecta.
 
-### 4.4 Plaqueta 4 · Nivel 2 (cuando se arme)
+### 4.5 Plaqueta 4 · Nivel 2 (cuando se arme)
 
 1. Canal del sensor: el borne «+ del telar» de B2 → **1,2 kΩ** → pata 1 de un PC817; el borne «negro del sensor» → pata 2; la pata 3 al GND del ESP32; la pata 4 al **GPIO 35** con **10 kΩ a 3,3 V** (el GPIO 35 no tiene resistencia interna). Si el telar diera 24 V en lugar de 12 a 14 V, la resistencia es de 2,2 kΩ ½ W.
 2. Los cuatro **zócalos DIP-6**, con la muesca del lado de la pata 1. Por canal: GPIO → **330 Ω** → pata 1; pata 2 al GND; **10 kΩ del GPIO al GND**, pegada al pin; las **patas 4 y 6** a su par de B3 (rotular canal 1 a 4); las patas 3 y 5 libres. Canales: GPIO **18, 19, 21 y 22**.
@@ -118,7 +128,7 @@ Todo el sistema se puede levantar en una PC con Docker: el archivo `backend/.env
 
 ## 7. Probar todo en el banco (sin el telar)
 
-1. Las plaquetas conectadas entre sí (J1, J2 y J3) y alimentadas con la fuente; el ESP32 con el firmware, ya sin el USB.
+1. Las plaquetas conectadas entre sí (J1 a J4) y alimentadas con la fuente; el ESP32 con el firmware, ya sin el USB.
 2. Reiniciar el ESP32: **ningún relé se dispara solo**. Si alguno se dispara, revisar las resistencias de arranque seguro.
 3. En la web, abrir un dibujo y tocar **▶**: clic del relé de Marcha (un pulso, no queda pegado). **⏸**: clic de Pausa. **⏪** (con confirmación): clic de Retroceder.
 4. Sensado: aplicar 24 V de alterna (o de 12 a 24 V de continua) a la entrada de cada canal: el GPIO cae a 0 V y el monitor serie dice «Botonera: alguien apretó …», y la web lo muestra (sección 10). En el telar ese momento es cuando se suelta el botón: en reposo, el par NA tiene 24 V. Con la tensión aplicada a dos o tres canales a la vez, el monitor dice que bajaron juntos y no avisa nada.
@@ -132,7 +142,7 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 2. Ubicar los dos cables de cada botón (Marcha, Pausa y Retroceder). Si un botón tiene más terminales, con el multímetro en continuidad elegir el par **NA**: no pita en reposo y sí al apretar.
 3. Encender el telar y, sin tejer, medir en alterna cada par NA: unos **24 V sin apretar y 0 V apretando**. Si da 0 V sin apretar, ese no es el par NA: no conectarlo. Apagar y desenchufar el telar.
 4. Del botón a la bornera **B1** del gabinete, con el cable de 6 conductores (un par por botón), sin cortar ni soldar sobre los cables del telar. No correrlo pegado al cable del motor.
-5. En B1, cada par va a **NO y COM de su relé** (en paralelo con el botón) y a la **entrada de su canal de sensado** (las patas ~ del puente).
+5. En la plaqueta de sensado, cada bornera B1 lleva el par de su botón a **NO y COM de su relé** (en paralelo con el botón), por su otro par, y a la **entrada de su canal de sensado** (las patas ~ del puente).
 6. Antes de encender el gabinete, encender el telar y comprobar que **la botonera a mano funciona igual que siempre**.
 7. Encender el gabinete. Desde la web: ▶ arranca la máquina, ⏸ la pausa y ⏪ la hace retroceder una pasada. Con alguien al lado de la parada de emergencia.
 8. Apretar los botones a mano, al menos medio segundo cada uno: al soltarlos, la web lo refleja (sección 10).

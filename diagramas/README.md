@@ -6,10 +6,10 @@ insertarlo en documentos.
 ## `hardware/`, cómo se conecta
 
 ### `plaquetas_y_cableado.svg`
-**Las cuatro plaquetas del gabinete y todo el cableado.** Qué va en cada una (la fuente de 220 V, la
-principal con el ESP32 y el sensado, los módulos de relé y la del Nivel 2 con el sensor y los LCA110),
-los conectores entre ellas (J1, J2 y J3, con sus hilos y GPIO) y las borneras que van al telar (B1 la
-botonera, B2 el sensor, B3 los lectores, con la resistencia de protección y la de 10 kΩ ½ W junto a
+**Las cinco plaquetas del gabinete y todo el cableado.** Qué va en cada una (la fuente de 220 V, la
+principal con el ESP32, la del sensado de la botonera, los módulos de relé y la del Nivel 2 con el sensor y
+los LCA110), los conectores entre ellas (J1 a J4, con sus hilos y GPIO) y las borneras que van al telar (B1
+la botonera, doble por botón para llevar cada par también a su relé, B2 el sensor, B3 los lectores, con la resistencia de protección y la de 10 kΩ ½ W junto a
 cada conector). Es el que acompaña al paso a paso de conexión y puesta en marcha.
 
 ### `diagrama_conexion_electrica.svg`
