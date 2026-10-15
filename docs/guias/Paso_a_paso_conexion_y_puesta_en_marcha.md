@@ -132,7 +132,7 @@ Todo el sistema se puede levantar en una PC con Docker: el archivo `backend/.env
 2. Reiniciar el ESP32: **ningún relé se dispara solo**. Si alguno se dispara, revisar las resistencias de arranque seguro.
 3. En la web, abrir un dibujo y tocar **▶**: clic del relé de Marcha (un pulso, no queda pegado). **⏸**: clic de Pausa. **⏪** (con confirmación): clic de Retroceder.
 4. Sensado: aplicar 24 V de alterna (o de 12 a 24 V de continua) a la entrada de cada canal: el GPIO cae a 0 V y el monitor serie dice «Botonera: alguien apretó …», y la web lo muestra (sección 10). En el telar ese momento es cuando se suelta el botón: en reposo, el par NA tiene 24 V. Con la tensión aplicada a dos o tres canales a la vez, el monitor dice que bajaron juntos y no avisa nada.
-5. Nivel 2 (si está armado): con `NIVEL2_INSTALADO` y `MODO_BANCO` en true, un LED con su resistencia y una pila entre las patas 4 y 6 de cada relé. Al tejer desde la web, cada LED se enciende según su columna del dibujo. Después, `MODO_BANCO` vuelve a **false**.
+5. Nivel 2 (si está armado): con `NIVEL2_INSTALADO` y `MODO_BANCO` en true, un LED con su resistencia y una pila entre las patas 4 y 6 de cada relé. Al tejer desde la web, cada LED se enciende según su columna del dibujo. Después, `MODO_BANCO` vuelve a **false**, y `NIVEL2_INSTALADO` también, hasta conectar el sensor (sección 9).
 
 La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHECKLIST_VALIDACION.md` y en la Guía de mediciones y verificaciones.
 

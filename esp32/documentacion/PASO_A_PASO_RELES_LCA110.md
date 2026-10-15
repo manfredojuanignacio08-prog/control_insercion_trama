@@ -224,7 +224,9 @@ En cada canal:
    una vez por pasada.
 4. Con el ESP32 apagado, los cuatro LED quedan apagados (los relés abiertos).
 
-Al terminar, **volver `MODO_BANCO` a `false`.** Con `true` no se instala nunca en la máquina.
+Al terminar, **volver `MODO_BANCO` a `false`**, y `NIVEL2_INSTALADO` también si el sensor de pasada todavía
+no está conectado: sin sus pulsos, a los 15 s de tejer el firmware avisa «sin señal» y el telar se pausa. Con
+`MODO_BANCO` en `true` no se instala nunca en la máquina.
 
 ---
 

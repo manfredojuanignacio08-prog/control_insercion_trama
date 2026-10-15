@@ -1289,3 +1289,31 @@ hoy:
 
 La Lista de componentes y la Estimación dicen que la caja es Roker. La medida coincide con un
 modelo de Roker, pero en la foto la tapa dice GENROD: falta confirmar la marca.
+
+## Trigésima primera revisión: otra vuelta completa
+
+Se repitió la revisión completa: las pruebas (`npm test`, la integración contra PostgreSQL, el firmware
+en la PC, las simulaciones y la coherencia 19/19), los Markdown, los Word, las planillas, los
+diagramas, los dos sitios y el modelo 3D. Lo que apareció:
+
+| Dónde | Qué cambió |
+|---|---|
+| Estimación de costos (4.2 y conclusión) | Decía que la modalidad de inversión era una propuesta «a definir por el equipo» y la contaba entre las decisiones abiertas. El equipo ya eligió la mixta (documento de Modalidad de inversión): ahora lo dice, y quedan tres decisiones abiertas, no cuatro. |
+| Parada automática: Ideas de parado, Manual del telar (y su sitio), Documentación de Proyecto 9.5 (y su sitio) y Estado del proyecto | Decían que la parada automática es «una condición en el firmware y un campo en la base de datos». El campo ya está en la base (`pasadas_objetivo`, migración 012): faltan la condición en el firmware y el campo en la web. Las Ideas de parado se contradecían entre el punto 1 y el 2.2. |
+| Prueba en el banco del Nivel 2: `PASO_A_PASO_RELES_LCA110.md` y el paso a paso de conexión (Markdown y Word) | Después de probar con `NIVEL2_INSTALADO` y `MODO_BANCO` en `true`, decían que solo `MODO_BANCO` vuelve a `false`. Si `NIVEL2_INSTALADO` queda en `true` sin el sensor, a los 15 s de dar Marcha el firmware avisa «sin señal» y el telar se pausa. Ahora vuelve también, hasta conectar el sensor (la guía de los relés en Word ya lo decía). |
+| «Marcha lenta»: Guía de mediciones, guía de los relés, guía de los Bloques C y D y Conexionado del Nivel 2 | Pedían contar las vueltas del eje o probar la selección «con el telar andando lento». El C 201 no tiene cómo: Impulso, el botón que avanza de a poco, está desconectado. Ahora el eje se gira a mano, despacio (como en la prueba del sensor), y la selección se prueba tejiendo con el dibujo de la mesa: 25 pasadas con la bobina 1 y 25 sin ella, unos 5 s activa y 5 s en reposo. La guía de los relés pide además `NIVEL2_INSTALADO` en `true`, con el sensor ya instalado, antes de probar en la máquina. |
+| `Manual_Instalacion_y_Funcionamiento.md` | Render tardaba «entre 30 y 50 segundos» en despertar, y el paso a paso dice «cerca de un minuto» (el código de la web, «hasta un minuto»): queda «hasta un minuto». A las tipografías les faltaba IBM Plex Mono. |
+| Los dos sitios, al pie | «Última revisión: septiembre de 2026»: el contenido es de octubre. |
+
+Se volvieron a exportar los PDF de los diez Word que cambiaron. Con esto corregido se hizo una vuelta
+más, que salió limpia:
+
+- las pruebas, todas en verde;
+- un barrido de los datos en todos los textos (tiempos, valores de los componentes, pines,
+  cantidades y fechas);
+- los Word nuevos validados y revisados en PDF;
+- las planillas y los diagramas;
+- los dos sitios en Chromium, sin errores ni enlaces rotos.
+
+Sigue pendiente confirmar la marca de la caja (la foto dice GENROD; la Lista y la Estimación,
+Roker).

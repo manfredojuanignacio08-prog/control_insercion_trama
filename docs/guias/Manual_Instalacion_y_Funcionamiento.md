@@ -339,7 +339,7 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 #### Cosas a tener en cuenta con el plan gratuito de Render
 
 - **Se "duerme" tras 15 minutos sin uso.** La primera visita después de eso tarda
-  entre 30 y 50 segundos en responder mientras el servidor arranca de nuevo. Las
+  hasta un minuto en responder mientras el servidor arranca de nuevo. Las
   siguientes son normales hasta que vuelva a quedar inactivo.
 - **La base de datos es la de Neon del equipo, no una de Render**, eso es
   bueno: no se borra ni expira si el servicio de Render se reinicia o se duerme,
@@ -522,4 +522,4 @@ las protecciones eléctricas recomendadas y el diagrama del circuito están en
 | Al eliminar aparece "No se puede eliminar" | El patrón tiene historial de producción. No se puede borrar para preservar el historial. |
 | `docker compose up` falla con "port already in use" | El puerto 3000 o 5432 está ocupado. Cambiarlo en `docker-compose.yml` o liberar el puerto. |
 | La web no trae datos | Verificar que el backend esté corriendo, que `http://localhost:3000/api/health` responda y que se haya iniciado sesión (sin sesión la API responde 401 y la web vuelve al ingreso). |
-| No se ven las tipografías de la app (IBM Plex Sans, Questrial) | Se cargan desde Google Fonts. Sin internet, la app usa las fuentes del sistema del dispositivo y funciona igual. |
+| No se ven las tipografías de la app (IBM Plex Sans, IBM Plex Mono y Questrial) | Se cargan desde Google Fonts. Sin internet, la app usa las fuentes del sistema del dispositivo y funciona igual. |
