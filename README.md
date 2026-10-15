@@ -7,7 +7,7 @@ web pensada para el celular**; un **backend** guarda y coordina todo en una
 **telar físico**.
 
 
-> **Para conectar todo y levantar el sistema, seguir [`docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`](docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md)** (también en Word: `documentacion_proyecto/Guia_Conexion_y_Puesta_en_Marcha.docx`): las cuatro plaquetas, el telar, el servidor, la web y el ESP32, en orden.
+> **Para conectar todo y levantar el sistema, seguir [`docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`](docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md)** (también en Word: `documentacion_proyecto/Guia_Conexion_y_Puesta_en_Marcha.docx`): las cinco plaquetas, el telar, el servidor, la web y el ESP32, en orden.
 >
 > **Antes de instalar en el telar (Vamatex C 201, cuatro bobinas), leer [`PUESTA_EN_MARCHA.md`](PUESTA_EN_MARCHA.md)**: claves del sistema, ajuste de la sincronización, validación del conteo y lista de primera puesta en marcha. Los cambios de la última revisión están en [`CAMBIOS_REVISION.md`](CAMBIOS_REVISION.md).
 
@@ -142,8 +142,8 @@ mejoras eléctricas en `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md`.
 ### `diagramas/`
 Cada diagrama en SVG (editable) y PNG. El detalle está en `diagramas/README.md`.
 - `diagramas/hardware/`, cómo se conecta: el cableado del nodo de control
-  (`diagrama_conexion_electrica`), los bloques A y C, un canal del sensor, un
-  canal de relé LCA110 y la vista del Nivel 2.
+  (`diagrama_conexion_electrica`), las cinco plaquetas y su cableado, los bloques A, C y D,
+  un canal del sensor, la conexión final del relé LCA110 y la vista del Nivel 2.
 - `diagramas/sistema/`, cómo funciona: la arquitectura (`diagrama_logico_arquitectura`),
   los diagramas de la base de datos, el árbol de problemas y soluciones, el Gantt,
   la estimación y el organigrama.
@@ -151,7 +151,8 @@ Cada diagrama en SVG (editable) y PNG. El detalle está en `diagramas/README.md`
 ### `database/` y `docs/`
 Material de referencia: el script SQL completo de la base, `docs/guias/`
 (instalación y funcionamiento, cómo crear la base) y `docs/analisis/`
-(análisis del frontend, árbol de problemas, componentes).
+(análisis del frontend, árbol de problemas, componentes). Las versiones web de la
+Documentación de Proyecto y del manual de uso están en sus propios repositorios, no en este.
 
 ### `_referencia_app_android/`
 ⚠️ Base de una eventual app Android, guardada solo como referencia para el
@@ -171,7 +172,7 @@ esquema multi-telar, historial y log de errores, firmware ESP32 gateway
 **Instalado en el telar:** el Bloque A (relés de Marcha, Pausa y Retroceder y sensado de
 la botonera), probado en la máquina el 19/09/2026.
 
-**Siguiente fase:** el Nivel 2 (sensor de pasada y relés LCA110 sobre los lectores
+**Siguiente fase:** el Nivel 2 (sensor de pasada y relés LCA110 en el lugar de los lectores
 ópticos). El 10/10/2026 se probó todo en protoboard y funcionó; se está haciendo la plaqueta
 para probarlo en la máquina. Las mediciones que faltan están en
 `esp32/control_trama_esp32/README.md` y `PUESTA_EN_MARCHA.md`.

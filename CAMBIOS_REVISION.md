@@ -1170,3 +1170,175 @@ Pruebas: `npm test` (9 bloques), Chromium (editor, intercalados, tejido y el PDF
 | Pedido | Qué se hizo |
 |---|---|
 | ¿Están todos los documentos actualizados? | Se revisaron los Word, las planillas y los Markdown contra los últimos cambios (la conexión final del relé, la ficha en PDF y el paso a paso). Quedaban tres cosas: la Bitácora no tenía lo del 11/10 (agregado), el Estado del proyecto describía la ficha sin la vista previa nueva (al día) y el índice de documentos decía que el Registro de Entrevistas tenía seis reuniones y la séptima pendiente, cuando ya tiene siete (la última, del 10/10) y la octava pendiente (corregido). Los PDF de los 16 Word se volvieron a generar. |
+
+## Vigesimosexta revisión: los sitios web de la documentación y de los manuales
+
+| Pedido | Qué se hizo |
+|---|---|
+| ¿El proyecto con el que trabajamos es el mismo de los sitios? | Sí. Los dos sitios (documentación y manuales) son las versiones web de los Word de esta carpeta, armadas con el contenido del 5/10. Se compararon por programa, párrafo por párrafo, contra los Word actuales. |
+| Actualizar los sitios | Quedan en `docs/sitios/` (`web_doc/` y `manuales/`), con su diseño, y al día con los Word. **Documentación:** unos 45 textos que habían cambiado (una bobina por fila, intercalados, hilado, ficha en PDF, sensor en GPIO 35, la plaqueta del 10/10 y otros), el esquema SQL y el ejemplo JSON nuevos, el párrafo de las tres vistas y la referencia de la cátedra que faltaban, la sección 6.1 rearmada (le faltaban los títulos de las etapas, de los hitos y la Etapa 04), las capturas de inicio, biblioteca (nueva en el sitio) y editor, y la demostración de la grilla, que dejaba marcar varias bobinas en una fila: ahora usa 4 bobinas y una sola por fila. **Manuales:** el punto 2.4 (modo invitado) con su entrada en el índice, una bobina por fila, Intercalar, la ficha del dibujo, el celular, Nuevo, los tres botones de la biblioteca, el indicador rojo, la ficha técnica, la pregunta de los tramos intercalados, el 3.1 del manual de fábrica con Retroceder y el estado del Nivel 2 al 10/10. Las 16 capturas del manual web se reemplazaron por las de los Word. En la guía rápida había dos párrafos del punto 7 metidos en el paso «Guardar»: volvieron a su pregunta. |
+| Errores encontrados al comparar | El ejemplo JSON de la Documentación de Proyecto tenía dos bobinas por fila (lo que el servidor rechaza): ahora alterna las bobinas 1 y 2. Los diagramas `ERD` y `DER_Negocio` llegaban a la migración 019: les faltaban `grupos_intercalados` y las tres columnas del hilado (020 y 022); se agregaron y se regeneraron los PNG, también dentro del Word. La tabla de interfaces de software decía «la web, la app y el ESP32»: no hay app. El manual web decía que Inicio muestra el dibujo «asignado al telar» (muestra el dibujo en edición) y no explicaba el modo invitado en la tarjeta de sesión; el manual de fábrica decía que el estado del telar se ve en Inicio (se ve en el Editor). La guía rápida del sitio decía que un dibujo se puede «duplicar» (no hay esa función). |
+
+Pruebas: los dos sitios en Chromium (escritorio y celular de 390 px): sin errores de JavaScript, sin imágenes rotas, sin enlaces internos rotos y sin desborde horizontal; la demostración de la grilla probada (una bobina por fila y la secuencia 1, 3, 4, 2). Los Word modificados pasan la validación y se revisaron en PDF.
+
+## Vigesimoséptima revisión: las conexiones de los documentos, revisadas aparte
+
+Se revisó por separado todo lo que describe conexiones: guías, planillas, diagramas, los documentos
+del ESP32, `config.h` y los dos sitios. Las conexiones (pines, resistencias, patas) estaban bien y
+coincidían en todos lados. Los errores estaban en cómo se explicaba y verificaba el sensado.
+
+| Error | Corrección |
+|---|---|
+| **La tensión del botón estaba explicada al revés.** La Guía de mediciones (fila 21 y el registro), el Checklist (fila 11), el Estado del proyecto, el Manual de fábrica (y su sitio) y `CHECKLIST_VALIDACION.md` decían que lo normal es 0 V en reposo y 24 V al apretar, y que si daba al revés había que cambiar el flanco del firmware. En el par NA hay 24 V en reposo y 0 V al apretar (así es el C 201): el pin queda en bajo, sube al apretar y baja al soltar, y el firmware avisa al soltar. Quien siguiera esos textos cambiaba el firmware sin motivo. | En reposo 24 V y al apretar 0 V; si da 0 V en reposo, ese no es el par NA y no se conecta. Se suma la prueba de que, con el telar encendido y sin tocar nada, GPIO 32, 33 y 34 dan 0 V. La prueba de banco de `CHECKLIST_VALIDACION.md` se reescribió con el modelo correcto. |
+| **Para qué está el capacitor del sensado, mal explicado.** Varios documentos decían que sin él «se leen varias pulsaciones donde hubo una sola». Calculado con el modelo del canal: sin el capacitor, el LED se apaga 100 veces por segundo en reposo y el ESP32 mandaría avisos solos cada 0,4 s, sin que nadie toque nada. | Explicación y síntoma corregidos en la Guía de mediciones, el Checklist, `RECOMENDACIONES_ELECTRICAS.md`, las dos planillas, la Documentación de Proyecto (y su sitio), el Estado y la guía paso a paso. |
+| **El capacitor figuraba como «22 a 47 µF», y en el Estado como «indistinto».** Con 47 µF hay que mantener apretado el botón entre 0,3 y 0,5 s para que se registre; con 22 µF, entre 0,15 y 0,25 s. | 22 µF 50 V en todos los documentos, planillas, diagramas y sitios. Se aclara que el aviso sale al soltar el botón y que un toque de menos de un cuarto de segundo puede no registrarse. En Componentes en placa: el de 47 µF que quedó en la protoboard (canal de Retroceder) va de 22 µF en la plaqueta. |
+| **Prender el telar con el gabinete encendido.** Los tres canales bajan juntos y el firmware avisaba Marcha, Pausa y Retroceder: la web quedaba en Pausado y, con un trabajo abierto, una pasada atrás. | **Firmware:** `botoneraFiltrarSimultaneos()` espera 150 ms desde cada flanco y, si dos o más canales bajaron dentro de esa ventana, descarta esos avisos y lo anota en el monitor serie. Los ecos del propio relé no cuentan. Prueba nueva en `test_botonera.cpp` (encendido, un botón solo, dos botones separados, dos juntos y eco con un botón real); falla si se saca el filtro. Las guías, los checklists y el Estado lo explican y lo verifican. |
+| «La resistencia de protección limita la corriente a unos 50 mA» | En el peor caso son 68 mA (15 V con 220 Ω) o 64 mA (30 V con 470 Ω): menos de 70 mA, por debajo de los 120 mA del LCA110. Corregido en el paso a paso de los relés, `conexion_final_rele` (y su imagen dentro de los Word), la Guía de los relés, la de los Bloques C y D y el Conexionado del Nivel 2. |
+| Nombres que se pisaban: «columnas del dibujo (B1 a B4)» (B1 es la bornera de la botonera), «rotular R1 a R4» (R1 es la resistencia del sensor) e «IN3» para el relé de Retroceder (su entrada se llama S) | «bobinas 1 a 4», «canal 1 a 4» y «S» en todos lados, incluido `config.h`, el diagrama eléctrico y `verif_coherencia.py`. |
+| Continuidad entre +5 V y GND: «no pita» | Con el capacitor de 470 µF se oye un pitido corto mientras se carga, y es normal; un corto pita sin parar. |
+| Guía de mediciones, fila 48: medir 0 V en GPIO 18 a 22 no detecta si falta la 10 kΩ (el firmware ya los pone en bajo) | Se mide en ohms, sin el ESP32 ni los LCA110 en sus zócalos: unos 10 kΩ. |
+| Conexionado del Nivel 2: «con 24 V, la de 1,2 kΩ daña el LED» | Pasan 19 mA y el PC817 aguanta 50: lo que se quema es la resistencia de ¼ W (0,43 W). |
+| `canal_rele` y `diagrama_bloque_D` mostraban las conexiones en paralelo y en serie sin decir que estaban descartadas, y una decía «Es la opción más segura» | Marcados «DESCARTADO» en la imagen, con la referencia a `conexion_final_rele`. |
+| Documentación de Proyecto (tabla 12 y alcance, y su sitio): al Nivel 2 le faltaban la resistencia de protección, la de 10 kΩ ½ W y los zócalos | Agregados. |
+| Una medición que ningún documento pedía | Con el telar tejiendo, GPIO 32 tiene que seguir en 0 V: si sube, el telar puentea el botón de Marcha mientras anda y, cuando pare solo, el sensado lo tomaría como un Marcha. Agregada en las guías y los checklists, medida en el gabinete (no en la botonera, que solo se mide sin tejer). |
+
+Además: la alternativa de 1,2 kΩ para una botonera de 12 a 18 V figura de 1 W, y se agrandaron las
+filas del Checklist que cortaban el texto.
+
+Pruebas: firmware en la PC (`correr.sh`, todo bien en sus dos modos), `verif_coherencia.py` 19/19,
+los 9 Word modificados validados y revisados en PDF, las planillas revisadas en PDF, los 7 diagramas
+regenerados y revisados, y los dos sitios en Chromium sin imágenes ni enlaces rotos.
+
+## Vigesimoctava revisión: la plaqueta de sensado aparte
+
+El sensado de la botonera se armó en su propia plaqueta impresa (diseñada en Proteus), unida a la
+principal por un conector de 5 hilos. La documentación lo tenía en la plaqueta principal.
+
+| Dónde | Qué cambió |
+|---|---|
+| Guía paso a paso (md y Word) y `plaquetas_y_cableado` (también dentro del Word) | Cinco plaquetas: la 5 es la de sensado. Conector nuevo **J4** (3,3 V del pin 3V3, GND y GPIO 32, 33 y 34). **B1** pasa a la plaqueta de sensado, doble por botón: un par de la botonera y otro que va a NO y COM de su relé. Sección nueva 4.3 con el armado y las pruebas de esa plaqueta (los dos lados separados, sin pistas por debajo de los PC817, el + de cada capacitor marcado a mano y la continuidad entre B1 y J4). Las secciones de los relés y del Nivel 2 pasan a 4.4 y 4.5. |
+| Índice de documentos, `diagramas/README.md`, Guía de armado del Bloque A y Componentes en placa | Las cinco plaquetas, J4 y las borneras de B1 (8 en total). |
+
+## Vigesimonovena revisión: todo el proyecto, repetida hasta una vuelta sin errores
+
+Se revisó todo el proyecto, archivo por archivo: el backend, la web, la base, el firmware y sus
+pruebas, los Markdown, los Word, las planillas y los diagramas. Cada vez que apareció un error se
+corrigió y se volvió a empezar. Hicieron falta seis vueltas: las cinco primeras encontraron
+errores (cada vez menos) y la sexta salió limpia. Los sitios de la documentación y de los
+manuales ya no están en este repositorio (tienen el suyo cada uno): se revisaron y corrigieron
+con los mismos cambios y se entregan aparte.
+
+| Dónde | Qué cambió |
+|---|---|
+| Documentación de Proyecto (y su sitio) | El degradado de la cabecera es de `#1E3A5F` a `#3D6B96`, pasando por `#2E5680`, y está solo en la de Inicio (decía hasta `#7FA8C9`). La planta tiene 11 telares de tres modelos Vamatex (C 201, C 301 y C 401) y el sistema va en el C 201 (decía «6 operando»). La Fase 3 y el Nivel 3 de la sección 9.3 hablaban de reemplazar la cinta por una selección electrónica de marcos, que es justo lo que hace el Nivel 2: el paso siguiente es la selección Jacquard hilo por hilo, para logos o figuras, con un cabezal propio. La pantalla de Inicio muestra la sesión, el dibujo en edición y los accesos (el estado del telar está en el Editor). No hay botón Detener aparte: Terminar trabajo cierra la producción y para el telar con el relé de Pausa. Los controles miden 40 px y las celdas de 28 a 42 px (decía 44 y «al menos 40», y que se operaba con guantes: la huella se lee con el dedo descubierto). El contraste AAA vale para el texto principal y el acento; el texto tenue cumple la AA. Los prensacables son PG11 (no PG9). En las tablas de la Etapa 03 figuraba la de usuarios, que se sumó en la Etapa 04 con el login biométrico. La limitación del Nivel 2 figura «En desarrollo (Etapa 05)», no como lineamiento futuro. Los LCA110 son uno por lector, sin repuestos en el presupuesto. El soporte del sensor ya está construido y montado (10/09/2026). |
+| Árbol de problemas (los dos), Bitácora, `NIVEL2_CONTROL_POR_MARCOS.md` | El ESP32 compara el estado deseado con el de la consulta anterior (no lee el estado real de la máquina). Ya no se pide «confirmar si el telar es por marcos»: el relevamiento lo confirmó (dobby con cinta perforada y cuatro bobinas). El LCA110 da la señal en el lugar de su lector, que se desconecta (decía que la «cortaba»), también en `README.md`, `NIVELES_DE_CONTROL.md`, `RECOMENDACIONES_ELECTRICAS.md`, el `.ino` y `seleccion_dibujo.h`. En la Bitácora faltaba el punto de Retroceder. |
+| Estado, Guía de los Bloques C y D, Componentes completos | El TLP3021 no es una alternativa al LCA110: es un fototriac, con el mismo problema de corriente mínima que llevó a descartar el SSR. Quedan el AQY212GH y el G3VM-61A1. |
+| Guía de los Bloques C y D y Conexionado del Nivel 2 | El soporte del sensor figuraba «a fabricar» y «lo que falta comprar»: ya se construyó y se montó el 10/09/2026. El Bloque D depende del C (cada fila se aplica con el pulso del sensor); decía que eran independientes. |
+| Guía de los relés LCA110 | La foto de las patas cita la hoja de datos de IXYS (hoy Littelfuse). La fila de cantidades dice «4 + 1»: uno por canal y uno de repuesto recomendado, que el presupuesto no cuenta. |
+| Manual de fábrica (y su sitio) | El gabinete no tiene una luz que avise que está conectado: la app dice «ESP32 conectado». El C 201 admite hasta 8 marcos y tiene 4 bobinas instaladas (decía «8 puntos de control»). |
+| Manual de la página web (y su sitio) | Además de Pausa, también Retroceder telar y Terminar trabajo paran la máquina antes de hacer lo suyo. |
+| Modalidad de inversión | La división entre hardware y software no salía de los subtotales de cada rol de la Estimación de costos. Recalculada: hardware $13.020.735 (43,9 %, precio $16.275.919) y software $16.622.168 (56,1 %, precio $20.777.710); los roles compartidos se prorratean 43,7 / 56,3, la proporción del personal asignado directamente. El total no cambia ($29.642.903 de costo y $37.053.629 de precio). |
+| Ideas de parado automático | La base ya tiene `pasadas_objetivo`: falta mostrarlo en la web. El acceso multiusuario ya está resuelto; lo que queda para después es el acceso remoto. |
+| Registro de entrevistas, planillas (Lista de componentes, Componentes en placa, Checklist, Gantt) | Espacios de más al principio o al final de los textos y entre los dos enlaces de compra. En la Lista: el módulo de 2 canales es el optoacoplado (el de 1 no), y el capacitor «sostiene los 5 V» ante un consumo brusco. |
+| Diagramas | Eléctrico: los cables de la botonera van de a pares en el cable de 6 conductores, lejos del cable del motor (no hace falta trenzarlos), como dice ahora `RECOMENDACIONES_ELECTRICAS.md`. Arquitectura: las 9 tablas son 4 de producción, 4 de acceso y 1 de migraciones (decía 5 de acceso). |
+| Backend | Los dos generadores del código de recuperación armaban el texto partiéndolo y volviéndolo a unir sin cambiarlo; un `let` que no cambia pasa a `const`; comentarios con paréntesis anidados. `/retroceder` mueve la posición guardada del dibujo (no un «cursor de la web»), en el controlador y en `backend/README.md`, que además dice cuántos casos al azar prueba de verdad la lógica de posición (20.000). Se borró `backend/src/nivel2/migracion_nivel2.sql`, que estaba vacío: sus columnas están en la migración 012. |
+| Web (`index.html`) | Sangría con tabulaciones mezcladas en `renderGrid` y `loadDrawInEditor`, espacios al final de línea, un mensaje que decía «patrón», una búsqueda repetida en la ficha y el comentario de cuándo se bloquea la edición (le faltaba el caso del trabajo abierto del mismo dibujo). |
+| Markdown | El manual de instalación dice «Descargar ficha técnica», como el botón. `PASO_A_PASO_RELES_LCA110.md` ya no habla de la cinta para la prueba de tejido. `README_tecnico.md` de la app Android avisa que es el documento original y remite a `AVISO.md`. El análisis del frontend tenía tres frases con paréntesis rotos. `LEEME.md` explica la carpeta `PDF/`. |
+| `documentacion_proyecto/PDF/` | Un PDF por cada Word, con el mismo nombre: se agregaron los 8 que faltaban y se volvieron a exportar los que cambiaron. También el de Componentes completos. |
+
+Pruebas de la última vuelta: `npm test` (todas bien), la integración contra PostgreSQL, el firmware
+en la PC (83/83, 6/6, 2.400.000 pasos, el Bloque A y los dos modos de compilación), las
+simulaciones (6/6, 6/6 y 29/29), `verif_coherencia.py` 19/19, la web en Chromium sin errores, los
+16 Word validados y revisados en PDF, las planillas y los diagramas revisados, y los dos sitios en
+Chromium sin errores ni enlaces rotos.
+
+## Trigésima revisión: una vuelta más y el gabinete 3D
+
+Se repitió la revisión completa. Todas las pruebas dieron bien:
+
+- `npm test` y la integración contra PostgreSQL;
+- el firmware en la PC y las simulaciones;
+- `verif_coherencia.py` (19/19);
+- la web en Chromium.
+
+Se volvieron a comparar, párrafo por párrafo, los Word con los dos sitios. Lo que apareció:
+
+| Dónde | Qué cambió |
+|---|---|
+| Documentación de Proyecto, 4.3.2 (y su sitio) | Decía que «en lugar de un modelado tridimensional» se documentaba el equipo real. Ahora hay un modelo 3D interactivo del gabinete, publicado en `https://manfredojuanignacio08-prog.github.io/Modelado3D_CIT/`, y el texto lo nombra. |
+| Sitio de la Documentación, tabla 14 | Las borneras figuraban como «Phoenix Contact/Wago Serie 236, de resorte para riel DIN»; en el Word (y en el gabinete) son genéricas, de tornillo para placa. |
+| Manual de la página web (y su sitio) | El indicador rojo se llama «Sin conexión»: los segundos desde la última señal aparecen al lado (decía «Sin conexión (hace X s) (indicador rojo)»). En el sitio, el verde decía «Conectado»; la web dice «ESP32 conectado». |
+| Sitio de los manuales, guía rápida del hardware | El gabinete ya no tiene todo «sobre la placa»: son cinco plaquetas. |
+| Bitácora, 05/09 | Decía «los tres módulos de relé»: son dos módulos (el de dos canales y el de Retroceder), con tres relés en total. |
+| Componentes completos, 2.1 | El título decía «sobre los lectores ópticos»: el relé va en el lugar del lector. |
+| `Manual_Instalacion_y_Funcionamiento.md` | Un espacio doble. |
+
+Los PDF de los cuatro Word se volvieron a exportar. Con esto corregido se hizo una vuelta más, que
+salió limpia.
+
+**El gabinete 3D**, en su propio repositorio (`Modelado3D_CIT`), se puso al día con el hardware de
+hoy:
+
+- las cinco plaquetas, con la del sensado impresa, como el diseño en Proteus;
+- los conectores J1 a J4 con sus cables;
+- B1 doble por botón, y B2 y B3 en la plaqueta del Nivel 2;
+- los LCA110 en zócalos y los capacitores de 22 µF;
+- los pasivos en su plaqueta;
+- el LED azul del ESP32 encendido;
+- la tapa con la marca y el sello de la foto (GENROD, IP65).
+
+La Lista de componentes y la Estimación dicen que la caja es Roker. La medida coincide con un
+modelo de Roker, pero en la foto la tapa dice GENROD: falta confirmar la marca.
+
+## Trigésima primera revisión: otra vuelta completa
+
+Se repitió la revisión completa: las pruebas (`npm test`, la integración contra PostgreSQL, el firmware
+en la PC, las simulaciones y la coherencia 19/19), los Markdown, los Word, las planillas, los
+diagramas, los dos sitios y el modelo 3D. Lo que apareció:
+
+| Dónde | Qué cambió |
+|---|---|
+| Estimación de costos (4.2 y conclusión) | Decía que la modalidad de inversión era una propuesta «a definir por el equipo» y la contaba entre las decisiones abiertas. El equipo ya eligió la mixta (documento de Modalidad de inversión): ahora lo dice, y quedan tres decisiones abiertas, no cuatro. |
+| Parada automática: Ideas de parado, Manual del telar (y su sitio), Documentación de Proyecto 9.5 (y su sitio) y Estado del proyecto | Decían que la parada automática es «una condición en el firmware y un campo en la base de datos». El campo ya está en la base (`pasadas_objetivo`, migración 012): faltan la condición en el firmware y el campo en la web. Las Ideas de parado se contradecían entre el punto 1 y el 2.2. |
+| Prueba en el banco del Nivel 2: `PASO_A_PASO_RELES_LCA110.md` y el paso a paso de conexión (Markdown y Word) | Después de probar con `NIVEL2_INSTALADO` y `MODO_BANCO` en `true`, decían que solo `MODO_BANCO` vuelve a `false`. Si `NIVEL2_INSTALADO` queda en `true` sin el sensor, a los 15 s de dar Marcha el firmware avisa «sin señal» y el telar se pausa. Ahora vuelve también, hasta conectar el sensor (la guía de los relés en Word ya lo decía). |
+| «Marcha lenta»: Guía de mediciones, guía de los relés, guía de los Bloques C y D y Conexionado del Nivel 2 | Pedían contar las vueltas del eje o probar la selección «con el telar andando lento». El C 201 no tiene cómo: Impulso, el botón que avanza de a poco, está desconectado. Ahora el eje se gira a mano, despacio (como en la prueba del sensor), y la selección se prueba tejiendo con el dibujo de la mesa: 25 pasadas con la bobina 1 y 25 sin ella, unos 5 s activa y 5 s en reposo. La guía de los relés pide además `NIVEL2_INSTALADO` en `true`, con el sensor ya instalado, antes de probar en la máquina. |
+| `Manual_Instalacion_y_Funcionamiento.md` | Render tardaba «entre 30 y 50 segundos» en despertar, y el paso a paso dice «cerca de un minuto» (el código de la web, «hasta un minuto»): queda «hasta un minuto». A las tipografías les faltaba IBM Plex Mono. |
+| Los dos sitios, al pie | «Última revisión: septiembre de 2026»: el contenido es de octubre. |
+
+Se volvieron a exportar los PDF de los diez Word que cambiaron. Con esto corregido se hizo una vuelta
+más, que salió limpia:
+
+- las pruebas, todas en verde;
+- un barrido de los datos en todos los textos (tiempos, valores de los componentes, pines,
+  cantidades y fechas);
+- los Word nuevos validados y revisados en PDF;
+- las planillas y los diagramas;
+- los dos sitios en Chromium, sin errores ni enlaces rotos.
+
+Sigue pendiente confirmar la marca de la caja (la foto dice GENROD; la Lista y la Estimación,
+Roker).
+
+## Trigésima segunda revisión: los manuales, con el intercalado, la ficha en PDF y nuestro hardware
+
+Los dos manuales (Word, PDF y su sitio) tienen tres secciones nuevas, con capturas tomadas de la
+aplicación de hoy:
+
+| Dónde | Qué se agregó |
+|---|---|
+| Manual de la página web, 4.8 | **Intercalar filas, paso a paso**: armar una fila por bobina, abrir la ventana con el «+» de la columna ⇄ o con el botón Intercalar, completar las filas y las pasadas, leer el resumen (el orden de las bobinas y cuántas veces entra la secuencia) y aplicar. Cómo se cambia o se quita, lo que la ventana no deja hacer (una sola fila, filas compartidas, más de 32 pasadas por vuelta del grupo, menos de 1 o más de 9999 pasadas) y qué muestra la barra mientras se teje. Con la captura de la ventana y la grilla de ejemplo con sus dos intercalados. |
+| Manual de la página web, 4.9 | **La ficha técnica en PDF**: qué cargar antes (los metros por pasada y el hilado, en la ficha del dibujo), cómo se descarga y qué tiene cada parte: datos del dibujo, producción, hilado, colores, la matriz con los intercalados y la vista previa con el telar, las bobinas, la llave de cada vuelta y la regla. Con la captura de la ficha del dibujo y la página del PDF. |
+| Manual de la página web, 4.5 | Los ítems de Intercalar y de la ficha técnica eran un párrafo largo cada uno: ahora lo resumen y remiten a 4.8 y 4.9. |
+| Manual del telar en fábrica, 3.3 | **Nuestro hardware: el gabinete de control**: la caja IP65 y dónde va, las cinco plaquetas y qué hace cada una, los prensacables y los cables, lo que tiene que saber el operario (no se toca, se mira «ESP32 conectado» en la aplicación, si se apaga el telar sigue con la botonera, la tapa solo con el gabinete desenchufado) y el enlace al modelo 3D. Con la imagen del gabinete abierto. |
+
+Las secciones son nuevas al final de la 4 y de la 3, para no cambiar la numeración que citan otros
+documentos (por ejemplo, «el manual de la página web, punto 4.6»).
+
+Al sacar las capturas apareció un error de la web:
+
+| Dónde | Qué pasaba |
+|---|---|
+| `backend/public/index.html` (editor) | Tocar una celda movía `curRow`, que es la posición del tejido, para que el simulador de color propusiera esa fila. Un dibujo nuevo, sin tejer, quedaba en «En pausa · Fila 7 / 7» después de marcar sus celdas; y sin un telar en la base, ▶ arrancaba desde la fila tocada. Ahora la fila tocada va aparte (`filaElegida`): la siguen proponiendo el simulador de color e Intercalar, y la barra dice «Detenido · Fila - / 7». Prueba nueva en `tests/frontend.test.mjs`, que falla sin el cambio. |
+
+Pruebas: `npm test`, la coherencia 19/19 y las pruebas en Chromium (editor completo, botonera,
+confirmaciones e intercalados) en verde; los dos Word validados y revisados en PDF; el sitio de los
+manuales en Chromium (escritorio y celular), con las 31 imágenes, sin anclas rotas ni desbordes.
