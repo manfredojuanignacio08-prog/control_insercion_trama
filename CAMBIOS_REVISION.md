@@ -1242,7 +1242,7 @@ con los mismos cambios y se entregan aparte.
 | Registro de entrevistas, planillas (Lista de componentes, Componentes en placa, Checklist, Gantt) | Espacios de más al principio o al final de los textos y entre los dos enlaces de compra. En la Lista: el módulo de 2 canales es el optoacoplado (el de 1 no), y el capacitor «sostiene los 5 V» ante un consumo brusco. |
 | Diagramas | Eléctrico: los cables de la botonera van de a pares en el cable de 6 conductores, lejos del cable del motor (no hace falta trenzarlos), como dice ahora `RECOMENDACIONES_ELECTRICAS.md`. Arquitectura: las 9 tablas son 4 de producción, 4 de acceso y 1 de migraciones (decía 5 de acceso). |
 | Backend | Los dos generadores del código de recuperación armaban el texto partiéndolo y volviéndolo a unir sin cambiarlo; un `let` que no cambia pasa a `const`; comentarios con paréntesis anidados. `/retroceder` mueve la posición guardada del dibujo (no un «cursor de la web»), en el controlador y en `backend/README.md`, que además dice cuántos casos al azar prueba de verdad la lógica de posición (20.000). Se borró `backend/src/nivel2/migracion_nivel2.sql`, que estaba vacío: sus columnas están en la migración 012. |
-| Web (`index.html`) | Sangría con tabulaciones mezcladas en `renderGrid` y `loadDrawInEditor`, espacios al final de línea, un mensaje que decía «patrón», una búsqueda repetida en la ficha y el comentario de cuándo se bloquea la edición (falta el caso del trabajo abierto del mismo dibujo). |
+| Web (`index.html`) | Sangría con tabulaciones mezcladas en `renderGrid` y `loadDrawInEditor`, espacios al final de línea, un mensaje que decía «patrón», una búsqueda repetida en la ficha y el comentario de cuándo se bloquea la edición (le faltaba el caso del trabajo abierto del mismo dibujo). |
 | Markdown | El manual de instalación dice «Descargar ficha técnica», como el botón. `PASO_A_PASO_RELES_LCA110.md` ya no habla de la cinta para la prueba de tejido. `README_tecnico.md` de la app Android avisa que es el documento original y remite a `AVISO.md`. El análisis del frontend tenía tres frases con paréntesis rotos. `LEEME.md` explica la carpeta `PDF/`. |
 | `documentacion_proyecto/PDF/` | Un PDF por cada Word, con el mismo nombre: se agregaron los 8 que faltaban y se volvieron a exportar los que cambiaron. También el de Componentes completos. |
 
@@ -1251,3 +1251,41 @@ en la PC (83/83, 6/6, 2.400.000 pasos, el Bloque A y los dos modos de compilaci�
 simulaciones (6/6, 6/6 y 29/29), `verif_coherencia.py` 19/19, la web en Chromium sin errores, los
 16 Word validados y revisados en PDF, las planillas y los diagramas revisados, y los dos sitios en
 Chromium sin errores ni enlaces rotos.
+
+## Trigésima revisión: una vuelta más y el gabinete 3D
+
+Se repitió la revisión completa. Todas las pruebas dieron bien:
+
+- `npm test` y la integración contra PostgreSQL;
+- el firmware en la PC y las simulaciones;
+- `verif_coherencia.py` (19/19);
+- la web en Chromium.
+
+Se volvieron a comparar, párrafo por párrafo, los Word con los dos sitios. Lo que apareció:
+
+| Dónde | Qué cambió |
+|---|---|
+| Documentación de Proyecto, 4.3.2 (y su sitio) | Decía que «en lugar de un modelado tridimensional» se documentaba el equipo real. Ahora hay un modelo 3D interactivo del gabinete, publicado en `https://manfredojuanignacio08-prog.github.io/Modelado3D_CIT/`, y el texto lo nombra. |
+| Sitio de la Documentación, tabla 14 | Las borneras figuraban como «Phoenix Contact/Wago Serie 236, de resorte para riel DIN»; en el Word (y en el gabinete) son genéricas, de tornillo para placa. |
+| Manual de la página web (y su sitio) | El indicador rojo se llama «Sin conexión»: los segundos desde la última señal aparecen al lado (decía «Sin conexión (hace X s) (indicador rojo)»). En el sitio, el verde decía «Conectado»; la web dice «ESP32 conectado». |
+| Sitio de los manuales, guía rápida del hardware | El gabinete ya no tiene todo «sobre la placa»: son cinco plaquetas. |
+| Bitácora, 05/09 | Decía «los tres módulos de relé»: son dos módulos (el de dos canales y el de Retroceder), con tres relés en total. |
+| Componentes completos, 2.1 | El título decía «sobre los lectores ópticos»: el relé va en el lugar del lector. |
+| `Manual_Instalacion_y_Funcionamiento.md` | Un espacio doble. |
+
+Los PDF de los cuatro Word se volvieron a exportar. Con esto corregido se hizo una vuelta más, que
+salió limpia.
+
+**El gabinete 3D**, en su propio repositorio (`Modelado3D_CIT`), se puso al día con el hardware de
+hoy:
+
+- las cinco plaquetas, con la del sensado impresa, como el diseño en Proteus;
+- los conectores J1 a J4 con sus cables;
+- B1 doble por botón, y B2 y B3 en la plaqueta del Nivel 2;
+- los LCA110 en zócalos y los capacitores de 22 µF;
+- los pasivos en su plaqueta;
+- el LED azul del ESP32 encendido;
+- la tapa con la marca y el sello de la foto (GENROD, IP65).
+
+La Lista de componentes y la Estimación dicen que la caja es Roker. La medida coincide con un
+modelo de Roker, pero en la foto la tapa dice GENROD: falta confirmar la marca.

@@ -279,7 +279,7 @@ crear una base nueva en Render (solo conectar el backend a esa).
 3. Seleccioná el repositorio `control-trama` que creaste en el Paso 1.
 4. Completá la configuración:
    - **Name**: `control-trama-backend` (esto define la URL final: `control-trama-backend.onrender.com`)
-   - **Root Directory**: `backend`  ⚠️ **muy importante**, el código está dentro de la carpeta `backend`, no en la raíz del repositorio.
+   - **Root Directory**: `backend` ⚠️ **muy importante**, el código está dentro de la carpeta `backend`, no en la raíz del repositorio.
    - **Runtime**: `Node`
    - **Build Command**: `npm install`
    - **Start Command**: `node src/db/init.js && node src/db/migrate.js && node src/server.js`
