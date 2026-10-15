@@ -196,7 +196,7 @@ function generarCodigo(prefijo) {
   let s = '';
   const bytes = crypto.randomBytes(6);
   for (let i = 0; i < 6; i++) s += chars[bytes[i] % chars.length];
-  return `${prefijo}-${s.slice(0, 3)}${s.slice(3)}`;
+  return `${prefijo}-${s}`;
 }
 
 // Consume un código de invitación. Devuelve {ok, id?, motivo?}.

@@ -344,7 +344,7 @@ dónde se quedó *cada* producción pasada (diagnóstico/trazabilidad útil en p
   celda se retoma desde 0). Devuelve `al_inicio: true` si ya no se puede
   retroceder más.
 - La lógica de avance/retroceso es pura y está aislada en
-  `backend/src/utils/posicion.js` (sin tocar la base) (es un puerto 1):1 de
+  `backend/src/utils/posicion.js` (sin tocar la base): es un puerto 1:1 de
   `doTick()`/`rollback()` del frontend a Node.js, para que el comportamiento
   sea idéntico en los dos lados.
 
@@ -384,7 +384,7 @@ agregar el selector visual, no la lógica de conexión.
 Se agregó `sincronizarPatron()`, que hace `POST` (si el patrón es nuevo, sin
 id todavía) o `PUT` (si ya existe) contra `/api/patrones`. Se llama
 automáticamente, sin mostrar ningún diálogo de confirmación, a diferencia
-del botón "Guardar" explícito (desde):
+del botón "Guardar" explícito. Se llama desde:
 - Tocar una celda y poner sus pasadas (`openRepsModal`)
 - Borrar una celda (botón "Eliminar" del modal de la celda)
 - Cambiar el tamaño de la grilla (`applySize`)
@@ -440,7 +440,7 @@ límite y consistencia. Lo que se verificó y/o corrigió:
 
 - **Cruce frontend ↔ backend:** se confirmó que cada endpoint que el frontend
   invoca existe en el backend (patrones, telares, asignar/avanzar/retroceder/
-  detener, errores) (no hay llamadas a rutas inexistentes).
+  detener, errores): no hay llamadas a rutas inexistentes.
 - **Condición de carrera al crear (corregida):** si se tocaban dos celdas muy
   rápido en un patrón nuevo, la segunda llamada chocaba por nombre duplicado y
   ese cambio se perdía en silencio. Ahora, si hay una creación en curso, la

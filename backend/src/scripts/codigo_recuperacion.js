@@ -65,7 +65,7 @@ function generarCodigo(prefijo) {
   let s = '';
   const bytes = crypto.randomBytes(6);
   for (let i = 0; i < 6; i++) s += chars[bytes[i] % chars.length];
-  return `${prefijo}-${s.slice(0, 3)}${s.slice(3)}`;
+  return `${prefijo}-${s}`;
 }
 
 async function main() {
@@ -92,7 +92,7 @@ async function main() {
 
   let codigo = null;
   let creado = false;
-  let rotado = process.argv.includes('--rotar');
+  const rotado = process.argv.includes('--rotar');
   const dec = user.recovery_code ? descifrarCodigo(user.recovery_code) : null;
   if (dec === undefined && !rotado) {
     console.error('\n  El código guardado de este usuario está cifrado con otra RECOVERY_SECRET (se cambió la clave),');

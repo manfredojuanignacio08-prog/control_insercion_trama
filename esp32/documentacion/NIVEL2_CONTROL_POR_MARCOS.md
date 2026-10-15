@@ -99,7 +99,7 @@ planteaban MOSFET IRLZ44N con diodos flyback sobre las bobinas. Eso vale para
 bobinas de corriente continua, pero no para estas: un MOSFET suelto conduce en un
 solo sentido y su diodo interno deja pasar el otro semiciclo, con lo que la bobina
 quedaría siempre parcialmente energizada. (El LCA110 no tiene ese problema: lleva
-dos MOSFET enfrentados y además no actúa sobre la bobina sino sobre el lector.)
+dos MOSFET enfrentados y además no actúa sobre la bobina: da la señal en el lugar del lector.)
 
 **Dato que falta medir en la máquina:** la tensión y la corriente en la salida
 de un lector óptico, que confirman que el LCA110 alcanza (hasta 350 V y 120 mA) y
@@ -144,10 +144,10 @@ telar puntual es un Jacquard puro de tarjetas, para patrones repetitivos se
 puede usar igualmente una **fracción chica de los ganchos** y repetir el
 módulo; pero lo natural y limpio es el enfoque dobby descrito acá.
 
-Conviene confirmar un dato del telar real: **¿levanta los hilos por marcos
-(unos pocos cuadros que suben y bajan) o cada hilo va por separado con las
-tarjetas?** La respuesta define si el retrofit es directo (por marcos) o si
-conviene hacer un demostrador a escala reducida.
+El dato que lo decidía era si el telar real levanta los hilos por marcos (unos
+pocos cuadros que suben y bajan) o cada hilo por separado con tarjetas. El
+relevamiento lo respondió: el C 201 es un dobby que lee una cinta de papel
+perforada y selecciona con cuatro bobinas, así que el retrofit es directo.
 
 En cualquier caso, para el tipo de tejido de esta planta (repetitivo), el
 control por marcos es la vía correcta y **está al alcance de un prototipo con

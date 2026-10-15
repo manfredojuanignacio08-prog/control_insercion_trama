@@ -281,8 +281,8 @@ plaqueta tiene que ver **papel**: la bobina 1 en reposo.
   (Con `false`, ver la nota del final.)
 
 **4.4 Prueba con el ESP32.** Encender el ESP32. Mientras arranca y sin trabajo en curso, la bobina
-1 sigue en reposo. La prueba tejiendo se hace con el sensor de pasada instalado y una cinta o
-dibujo de prueba, como dice `PUESTA_EN_MARCHA.md` (sincronización y prueba de tejido).
+1 sigue en reposo. La prueba tejiendo se hace con el sensor de pasada instalado y un dibujo de
+prueba, como dice `PUESTA_EN_MARCHA.md` (sincronización y prueba de tejido).
 
 **4.5 Los otros tres.** Con el canal 1 funcionando, repetir las etapas 1, 2 y 4 con los lectores 2,
 3 y 4 (la etapa 3 ya está hecha para los cuatro). Lector 2 → relé 2 (GPIO 19), lector 3 → relé 3

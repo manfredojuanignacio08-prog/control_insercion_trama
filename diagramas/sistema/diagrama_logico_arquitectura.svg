@@ -60,8 +60,8 @@
   <text font-family="Questrial, IBM Plex Sans, sans-serif" x="969" y="282" text-anchor="middle" font-size="15" font-weight="bold" fill="#3D6B96">BASE DE DATOS</text>
   <text x="969" y="303" text-anchor="middle" font-size="11.5">PostgreSQL</text>
   <text x="969" y="320" text-anchor="middle" font-size="11.5">alojada en Neon (nube)</text>
-  <text x="969" y="340" text-anchor="middle" font-size="10.5" fill="#3D6B96">9 tablas: 4 de producción</text>
-  <text x="969" y="353" text-anchor="middle" font-size="10.5" fill="#3D6B96">y 5 de usuarios y acceso</text>
+  <text x="969" y="340" text-anchor="middle" font-size="10.5" fill="#3D6B96">9 tablas: 4 de producción,</text>
+  <text x="969" y="353" text-anchor="middle" font-size="10.5" fill="#3D6B96">4 de acceso y 1 de migraciones</text>
 
   <!-- ════════ NIVEL 3: ESP32 ════════ -->
   <line x1="575" y1="362" x2="575" y2="410" stroke="#b45309" stroke-width="2.5" marker-end="url(#flechaAmbar)"/>

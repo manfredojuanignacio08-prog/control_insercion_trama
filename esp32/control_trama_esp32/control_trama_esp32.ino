@@ -8,7 +8,7 @@
 //   - Bloque A, siempre: relés en paralelo con Marcha, Pausa y Retroceder, y sensado de esos
 //     tres botones para saber cuándo alguien los usa a mano.
 //   - Bloques C y D, con NIVEL2_INSTALADO en true: conteo real de pasadas con el sensor
-//     inductivo y selección del dibujo con los relés LCA110 sobre los lectores ópticos.
+//     inductivo y selección del dibujo con los relés LCA110 en el lugar de los lectores ópticos.
 //
 //  HOY va con NIVEL2_INSTALADO en false: solo el Bloque A está conectado a la máquina.
 //
@@ -476,8 +476,9 @@ bool descargarDibujo() {
 
   // ArduinoJson 7: el documento vive en el heap (no en la pila, que en esta tarea es finita:
   // 8 KB en la pila de loopTask desbordaban y reiniciaban la placa).
-  // Límite explícito: un dibujo de 300 filas × 4 canales, con sus repeticiones, ocupa ~5 KB en JSON; 32 KB deja
-  // margen de sobra y evita que un payload anómalo agote el heap (OOM) al parsear.
+  // Límite explícito: un dibujo de 300 filas × 4 canales, con sus repeticiones, ocupa ~5 KB en JSON (con 8
+  // columnas y la secuencia de cada intercalado, menos de 20 KB); 32 KB deja margen y evita que un payload
+  // anómalo agote el heap (OOM) al parsear.
   static const size_t MAX_DIBUJO_BYTES = 32768;
   // Si el servidor anuncia más de lo permitido, se rechaza sin ni siquiera traer el cuerpo.
   const int tamAnunciado = http.getSize();

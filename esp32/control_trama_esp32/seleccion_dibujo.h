@@ -10,9 +10,9 @@
 //  las comanda un lector óptico que lee la cinta de papel perforada: donde hay
 //  agujero, el haz pasa.
 //
-//  El sistema no toca las bobinas ni las plaquetas del telar. Lo que hace es
-//  cortar la señal de cada lector con un relé de estado sólido LCA110, de modo que sea el
-//  microcontrolador el que decida qué "agujero" hay en cada pasada.
+//  El sistema no toca las bobinas ni las plaquetas del telar. Lo que hace es dar
+//  la señal en el lugar de cada lector (que se desconecta) con un relé de estado sólido
+//  LCA110, de modo que sea el microcontrolador el que decida qué "agujero" hay en cada pasada.
 //
 //  Una fila del dibujo lleva una bobina (una trama por pasada) y se teje durante
 //  tantas pasadas como diga su cantidad de repeticiones. Un grupo de filas intercaladas

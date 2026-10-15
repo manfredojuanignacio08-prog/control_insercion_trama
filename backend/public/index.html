@@ -1339,15 +1339,15 @@ async function confirmarPosicionTelar() {
 function resetEditorForNew() {
   // 1. Parar tejido
   pausePlay();
-  
+
   // 2. Limpiar IDs de edición (esto es lo que evita que se sobreescriba el anterior)
   editId = null;
   versionDibujo = null;
   currentDrawId = null;
-  
+
   // 3. Resetear variables de posición
   curRow = -1;
-  
+
   // 4. VACIAR MATRIZ COMPLETAMENTE
   grid = Array.from({length: nR}, () => Array(nC).fill(0));
   rowColors = Array(nR).fill(null);
@@ -1356,7 +1356,7 @@ function resetEditorForNew() {
   repFilas = Array(nR).fill(1);
   grupos = [];
   repRestantes = 1;
-  
+
   // 5. GENERAR NOMBRE ÚNICO SIN REPETICIÓN
   let maxN = 0;
   draws.forEach(d => {
@@ -1367,16 +1367,16 @@ function resetEditorForNew() {
     }
   });
   newDrawCounter = maxN + 1;
-  
+
   let finalName = `Nuevo Dibujo ${newDrawCounter}`;
   while (draws.some(d => d.nombre.toLowerCase() === finalName.toLowerCase())) {
     newDrawCounter++;
     finalName = `Nuevo Dibujo ${newDrawCounter}`;
   }
-  
+
   const nameInput = document.getElementById('insercion-name');
   if (nameInput) nameInput.value = finalName;
-  
+
   // 6. REFRESCO TOTAL DE UI
   setStatus('Nuevo', false);
   fichaAlCambiarDibujo();
@@ -1428,85 +1428,85 @@ function mkGrid(r, c, keep = false) {
 }
 
 function renderGrid() {
-	  const wrap = document.getElementById('grid-container');
-	  if (!wrap) return;
-	  // Tamaño de celda según el ancho disponible: con 8 columnas en un celular, a 42 px la grilla no
-	  // entraba y la columna 8 quedaba fuera de la pantalla, tapada por la casilla de repeticiones. Se
-	  // achica lo justo (mínimo 30 px, que se sigue tocando bien con el dedo); con pocas columnas no cambia.
-	  const area = document.getElementById('grid-area');
-	  const anchoArea = area && area.clientWidth ? area.clientWidth : 0;
-	  if (anchoArea > 0) {
-	    const libre = anchoArea - 24 - 30 - 62 - 30;   // relleno, número de fila, casilla de repeticiones e intercalado
-	    const cel = Math.max(30, Math.min(42, Math.floor(libre / Math.max(1, nC)) - 2));
-	    wrap.style.setProperty('--cel', cel + 'px');
-	  }
-	  let h = '<div class="grid-head">';
-	  for (let c = 0; c < nC; c++)
-	    h += `<div class="g-col-n">${c+1}</div>`;
-	  h += '<div class="g-col-n g-rep-h" title="Cuántas pasadas seguidas se teje cada fila">×</div>';
-	  h += '<div class="g-col-n g-int-h" title="Intercalado: filas que se alternan">⇄</div>';
-	  h += '</div>';
-	  for (let r = 0; r < nR; r++) {
-	    let cls = 'grid-row';
-	    if (filaVisible() === r) cls += ' active-row';
-	    // Solo un color #RRGGBB entra en el atributo: un valor viejo de la base con otro formato
-	    // (o con comillas) rompería el HTML de la grilla.
-	    const colorOk = typeof rowColors[r] === 'string' && /^#[0-9a-fA-F]{6}$/.test(rowColors[r]);
-	    // El texto encima del color del hilo ("1" de la celda) tiene que leerse: oscuro sobre un hilo
-	    // claro (crudo) y claro sobre uno oscuro (bordó). Antes iba siempre el del tema, y en modo
-	    // oscuro quedaba azul oscuro sobre bordó.
-	    const rowStyle = colorOk ? `style="--acc: ${rowColors[r]}; --rose: ${rowColors[r]}; --on-rose: ${textoSobre(rowColors[r])};"` : '';
-	    const g = grupoDeFila(r);
-	    if (g) cls += ' intercalada';
-	    h += `<div class="${cls}" id="gr${r}" ${rowStyle}>`;
-	    h += `<div class="g-row-n">${r+1}</div>`;
-	    for (let c = 0; c < nC; c++) {
-	      const val = grid[r][c] || 0;
-	      const isOn = val > 0;
-	      // En un intercalado, la bobina de la fila muestra en qué lugar del orden va (1, 2, 3...).
-	      const txt = isOn ? (g ? String(r - g.desde + 1) : '1') : '';
-	      h += `<div class="g-cell${isOn ? ' on' : ''}${g && isOn ? ' orden' : ''}" onclick="tapCell(${r},${c})">${txt}</div>`;
-	    }
-	    // Repeticiones de la fila: cuántas pasadas seguidas se teje esta misma
-	    // bobina antes de pasar a la siguiente.
-	    // Casilla de texto con teclado numérico (no type="number"): en el celular el teclado queda
-	    // abierto al pasar de una fila a otra y no cambia el valor al deslizar el dedo encima.
-	    h += `<input class="g-rep" type="text" data-r="${r}" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next" value="${repFilas[r] || 1}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="teclaRepeticion(event, ${r})" onchange="setRepeticion(${r}, this.value)" aria-label="Pasadas de la fila ${r+1}">`;
-	    // Apartado del intercalado, al costado: una llave que une las filas del grupo, con sus
-	    // pasadas en la primera. Tocarla abre el grupo; en una fila suelta, arma uno desde ahí.
-	    if (g) {
-	      const pos = r === g.desde ? ' ini' : (r === g.hasta ? ' fin' : '');
-	      h += `<button type="button" class="g-int en${pos}" onclick="abrirIntercalar(${g.desde})" aria-label="Intercalado de las filas ${g.desde + 1} a ${g.hasta + 1}, ${g.pasadas} pasadas">${r === g.desde ? `<span>${g.pasadas}</span>` : ''}</button>`;
-	    } else {
-	      h += `<button type="button" class="g-int" onclick="abrirIntercalar(-1, ${r})" aria-label="Intercalar desde la fila ${r + 1}" title="Intercalar desde esta fila"></button>`;
-	    }
-	    h += '</div>';
-	  }
-	  // Si se está escribiendo en una casilla de pasadas, se la vuelve a enfocar con lo que tenía
-	  // escrito: redibujar la grilla (un avance del telar, un guardado) reemplaza la casilla y,
-	  // sin esto, en el celular el teclado se cerraba a mitad del número.
-	  const enfocada = document.activeElement;
-	  const repEnfocada = enfocada && enfocada.classList && enfocada.classList.contains('g-rep') && wrap.contains(enfocada)
-	    ? { r: Number(enfocada.dataset.r), valor: enfocada.value } : null;
-	  wrap.innerHTML = h;
-	  if (repEnfocada && repEnfocada.r < nR) {
-	    const nueva = wrap.querySelector(`.g-rep[data-r="${repEnfocada.r}"]`);
-	    if (nueva) { nueva.value = repEnfocada.valor; nueva.focus({ preventScroll: true }); }
-	  }
-	  // Si con ese tamaño la fila igual no entra (los márgenes reales dependen del navegador), se achica
-	  // lo que falte, hasta 28 px. Cambia solo la variable del CSS: no hace falta volver a dibujar.
-	  if (anchoArea > 0) {
-	    const sobra = wrap.scrollWidth - (anchoArea - 24);
-	    const celActual = parseInt(wrap.style.getPropertyValue('--cel'), 10) || 42;
-	    if (sobra > 0 && celActual > 28) {
-	      wrap.style.setProperty('--cel', Math.max(28, celActual - Math.ceil(sobra / Math.max(1, nC))) + 'px');
-	    }
-	  }
-	  actualizarTotalPasadas();
-	  // La barra de reproducción dice "Fila X / N": con otra cantidad de filas tiene que actualizarse
-	  // (al crear un dibujo nuevo o cambiar el tamaño seguía mostrando la cantidad anterior).
-	  if (typeof updPlayUI === 'function' && document.getElementById('play-row')) updPlayUI();
-	}
+  const wrap = document.getElementById('grid-container');
+  if (!wrap) return;
+  // Tamaño de celda según el ancho disponible: con 8 columnas en un celular, a 42 px la grilla no
+  // entraba y la columna 8 quedaba fuera de la pantalla, tapada por la casilla de repeticiones. Se
+  // achica lo justo (mínimo 30 px, que se sigue tocando bien con el dedo); con pocas columnas no cambia.
+  const area = document.getElementById('grid-area');
+  const anchoArea = area && area.clientWidth ? area.clientWidth : 0;
+  if (anchoArea > 0) {
+    const libre = anchoArea - 24 - 30 - 62 - 30;   // relleno, número de fila, casilla de repeticiones e intercalado
+    const cel = Math.max(30, Math.min(42, Math.floor(libre / Math.max(1, nC)) - 2));
+    wrap.style.setProperty('--cel', cel + 'px');
+  }
+  let h = '<div class="grid-head">';
+  for (let c = 0; c < nC; c++)
+    h += `<div class="g-col-n">${c+1}</div>`;
+  h += '<div class="g-col-n g-rep-h" title="Cuántas pasadas seguidas se teje cada fila">×</div>';
+  h += '<div class="g-col-n g-int-h" title="Intercalado: filas que se alternan">⇄</div>';
+  h += '</div>';
+  for (let r = 0; r < nR; r++) {
+    let cls = 'grid-row';
+    if (filaVisible() === r) cls += ' active-row';
+    // Solo un color #RRGGBB entra en el atributo: un valor viejo de la base con otro formato
+    // (o con comillas) rompería el HTML de la grilla.
+    const colorOk = typeof rowColors[r] === 'string' && /^#[0-9a-fA-F]{6}$/.test(rowColors[r]);
+    // El texto encima del color del hilo ("1" de la celda) tiene que leerse: oscuro sobre un hilo
+    // claro (crudo) y claro sobre uno oscuro (bordó). Antes iba siempre el del tema, y en modo
+    // oscuro quedaba azul oscuro sobre bordó.
+    const rowStyle = colorOk ? `style="--acc: ${rowColors[r]}; --rose: ${rowColors[r]}; --on-rose: ${textoSobre(rowColors[r])};"` : '';
+    const g = grupoDeFila(r);
+    if (g) cls += ' intercalada';
+    h += `<div class="${cls}" id="gr${r}" ${rowStyle}>`;
+    h += `<div class="g-row-n">${r+1}</div>`;
+    for (let c = 0; c < nC; c++) {
+      const val = grid[r][c] || 0;
+      const isOn = val > 0;
+      // En un intercalado, la bobina de la fila muestra en qué lugar del orden va (1, 2, 3...).
+      const txt = isOn ? (g ? String(r - g.desde + 1) : '1') : '';
+      h += `<div class="g-cell${isOn ? ' on' : ''}${g && isOn ? ' orden' : ''}" onclick="tapCell(${r},${c})">${txt}</div>`;
+    }
+    // Repeticiones de la fila: cuántas pasadas seguidas se teje esta misma
+    // bobina antes de pasar a la siguiente.
+    // Casilla de texto con teclado numérico (no type="number"): en el celular el teclado queda
+    // abierto al pasar de una fila a otra y no cambia el valor al deslizar el dedo encima.
+    h += `<input class="g-rep" type="text" data-r="${r}" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="next" value="${repFilas[r] || 1}" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="teclaRepeticion(event, ${r})" onchange="setRepeticion(${r}, this.value)" aria-label="Pasadas de la fila ${r+1}">`;
+    // Apartado del intercalado, al costado: una llave que une las filas del grupo, con sus
+    // pasadas en la primera. Tocarla abre el grupo; en una fila suelta, arma uno desde ahí.
+    if (g) {
+      const pos = r === g.desde ? ' ini' : (r === g.hasta ? ' fin' : '');
+      h += `<button type="button" class="g-int en${pos}" onclick="abrirIntercalar(${g.desde})" aria-label="Intercalado de las filas ${g.desde + 1} a ${g.hasta + 1}, ${g.pasadas} pasadas">${r === g.desde ? `<span>${g.pasadas}</span>` : ''}</button>`;
+    } else {
+      h += `<button type="button" class="g-int" onclick="abrirIntercalar(-1, ${r})" aria-label="Intercalar desde la fila ${r + 1}" title="Intercalar desde esta fila"></button>`;
+    }
+    h += '</div>';
+  }
+  // Si se está escribiendo en una casilla de pasadas, se la vuelve a enfocar con lo que tenía
+  // escrito: redibujar la grilla (un avance del telar, un guardado) reemplaza la casilla y,
+  // sin esto, en el celular el teclado se cerraba a mitad del número.
+  const enfocada = document.activeElement;
+  const repEnfocada = enfocada && enfocada.classList && enfocada.classList.contains('g-rep') && wrap.contains(enfocada)
+    ? { r: Number(enfocada.dataset.r), valor: enfocada.value } : null;
+  wrap.innerHTML = h;
+  if (repEnfocada && repEnfocada.r < nR) {
+    const nueva = wrap.querySelector(`.g-rep[data-r="${repEnfocada.r}"]`);
+    if (nueva) { nueva.value = repEnfocada.valor; nueva.focus({ preventScroll: true }); }
+  }
+  // Si con ese tamaño la fila igual no entra (los márgenes reales dependen del navegador), se achica
+  // lo que falte, hasta 28 px. Cambia solo la variable del CSS: no hace falta volver a dibujar.
+  if (anchoArea > 0) {
+    const sobra = wrap.scrollWidth - (anchoArea - 24);
+    const celActual = parseInt(wrap.style.getPropertyValue('--cel'), 10) || 42;
+    if (sobra > 0 && celActual > 28) {
+      wrap.style.setProperty('--cel', Math.max(28, celActual - Math.ceil(sobra / Math.max(1, nC))) + 'px');
+    }
+  }
+  actualizarTotalPasadas();
+  // La barra de reproducción dice "Fila X / N": con otra cantidad de filas tiene que actualizarse
+  // (al crear un dibujo nuevo o cambiar el tamaño seguía mostrando la cantidad anterior).
+  if (typeof updPlayUI === 'function' && document.getElementById('play-row')) updPlayUI();
+}
 
 // Color de texto legible sobre un color de hilo (#RRGGBB), según su luminancia.
 function textoSobre(hex) {
@@ -1637,7 +1637,7 @@ function updPlayUI() {
     const hechas = Math.max(0, gAct.pasadas - repRestantes);
     info += ` · intercalado ${Math.min(gAct.pasadas, hechas + 1)} de ${gAct.pasadas}`;
   }
-  
+
   // Las columnas no avanzan: no hay celda que mostrar, solo la fila (y en un intercalado, la pasada del grupo).
 
   if (isPlaying)                        { st.textContent = 'Tejiendo...'; setPlayBar('playing'); }
@@ -1651,8 +1651,8 @@ function updPlayUI() {
 // ─── Bloqueo de edición durante la ejecución ──────────────────────────
 // Mientras la matriz se está EJECUTANDO (play/tejiendo) no se permite
 // editarla: ni agregar/quitar pasadas, ni cambiar color, ni tamaño, etc.
-// Solo se puede editar cuando está EN PAUSA o DETENIDA.
-// Devuelve true (y avisa) si la edición está bloqueada ahora mismo.
+// Solo se puede editar cuando está EN PAUSA o DETENIDA, y sin un trabajo abierto de este mismo
+// dibujo (ver abajo). Devuelve true (y avisa) si la edición está bloqueada ahora mismo.
 function edicionBloqueada({ nuevo = false } = {}) {
   if (isPlaying) {
     toast('Pausá o detené la ejecución para poder editar la matriz');
@@ -1860,7 +1860,7 @@ async function arrancarPlay() {
       // No se arranca la animación, porque cada paso volvería a pedir avanzar, a ser
       // rechazado y a mostrar el aviso de nuevo, dos veces por segundo.
       if (e.codigo === 'SOLO_OPERARIO') return;
-      logError('Error al asignar patrón al telar', e.message, 'ASIGNAR_TELAR');
+      logError('Error al asignar el dibujo al telar', e.message, 'ASIGNAR_TELAR');
       // El telar no quedó en marcha: la pantalla no puede mostrar "Tejiendo..." como si lo estuviera.
       toast('No se pudo poner en marcha el telar: ' + e.message);
       return;
@@ -2203,7 +2203,7 @@ function saveDraw() {
   const name = nameInput.value.trim() || 'Sin nombre';
   const mat = JSON.parse(JSON.stringify(grid));
   const colors = JSON.parse(JSON.stringify(rowColors));
-  
+
   // Validar duplicados localmente (nombre igual pero distinto id)
   const isDuplicate = draws.some(d => d.nombre.toLowerCase() === name.toLowerCase() && d.id !== editId);
   if (isDuplicate) {
@@ -2213,17 +2213,17 @@ function saveDraw() {
 
   document.querySelector('.confirm-h').textContent = '¿Guardar el dibujo?';
   document.getElementById('confirm-p').textContent = `Se guardará como "${name}". ¿Qué querés hacer?`;
-  
+
   const btnYes = document.getElementById('confirm-yes');
   const btnNo = document.querySelector('.confirm-no');
-  
+
   alCancelarConfirm = null;   // tocar afuera solo cierra: no guarda de ninguna de las dos formas
   btnYes.textContent = 'Guardar y crear uno nuevo';
   btnNo.textContent = 'Guardar y reemplazar';
   // Ninguna de las dos opciones borra nada: el botón va en el color de acento, no en el
   // rojo de las acciones destructivas (antes la opción segura, crear una copia, iba en rojo).
   btnYes.classList.add('confirm-aviso');
-  
+
   // Guardar y crear uno nuevo
   btnYes.onclick = async () => {
     closeConfirm();
@@ -2259,7 +2259,7 @@ function saveDraw() {
       btnYes.disabled = false;
     }
   };
-  
+
   // Guardar y reemplazar (se sigue editando el mismo dibujo)
   btnNo.onclick = async () => {
     closeConfirm();
@@ -2294,49 +2294,49 @@ function saveDraw() {
       btnNo.disabled = false;
     }
   };
-  
+
   document.getElementById('confirm').classList.add('open');
 }
 
 // `restaurando`: se está recuperando un trabajo en curso al abrir la página. En ese caso NO se
 // pausa el telar ni se avisa "dibujo cargado": es el mismo trabajo que ya estaba andando.
 function loadDrawInEditor(id, restaurando = false) {
-	  const d = draws.find(x => x.id === id);
-	  if (!d) return;
-	  // Cargar otro dibujo con el tejido en marcha frenaba la animación (y antes, el telar).
-	  if (!restaurando && isPlaying && String(id) !== String(editId)) {
-	    toast('Pausá el tejido (⏸) antes de cargar otro dibujo');
-	    return;
-	  }
-	  // El mismo dibujo que se está tejiendo: solo se vuelve al editor. Recargarlo frenaba la
-	  // reproducción de esta pantalla (la estimación se cortaba con el telar andando) y volvía a
-	  // contar las repeticiones de la fila desde el principio.
-	  if (!restaurando && isPlaying) { goTo('sc-editor'); return; }
-	  editId = d.id;
-	  currentDrawId = d.id;
-	  versionDibujo = d.modificadoAt || null;
-	  nR = d.filas; nC = d.columnas;
-	  grid = JSON.parse(JSON.stringify(d.matriz));
-	  rowColors = Array.from({length: nR}, (_, ri) =>
-		    (d.colores && d.colores[ri] !== undefined) ? d.colores[ri] : null
-		  );
-	  repFilas = Array.from({length: nR}, (_, ri) =>
-		    (d.repeticiones && d.repeticiones[ri]) ? d.repeticiones[ri] : 1
-		  );
-	  grupos = (d.grupos || []).map((g) => ({ desde: g.desde, hasta: g.hasta, pasadas: g.pasadas }));
-	  repRestantes = largoFila(0) || 1;
-	  document.getElementById('in-rows').value = nR;
-	  document.getElementById('in-cols').value = nC;
-	  document.getElementById('insercion-name').value = d.nombre;
-	  setStatus('Editando', false);
-	  if (!restaurando) pausePlay();
-	  renderGrid();
-	  goTo('sc-editor');
-	  fichaAlCambiarDibujo();
-	  if (!restaurando) toast(`Dibujo cargado: ${d.nombre}`);
-	  const dobles = filasConVariasBobinas();
-	  if (dobles.length && !restaurando) avisarFilasConVariasBobinas(dobles);
-	}
+  const d = draws.find(x => x.id === id);
+  if (!d) return;
+  // Cargar otro dibujo con el tejido en marcha frenaba la animación (y antes, el telar).
+  if (!restaurando && isPlaying && String(id) !== String(editId)) {
+    toast('Pausá el tejido (⏸) antes de cargar otro dibujo');
+    return;
+  }
+  // El mismo dibujo que se está tejiendo: solo se vuelve al editor. Recargarlo frenaba la
+  // reproducción de esta pantalla (la estimación se cortaba con el telar andando) y volvía a
+  // contar las repeticiones de la fila desde el principio.
+  if (!restaurando && isPlaying) { goTo('sc-editor'); return; }
+  editId = d.id;
+  currentDrawId = d.id;
+  versionDibujo = d.modificadoAt || null;
+  nR = d.filas; nC = d.columnas;
+  grid = JSON.parse(JSON.stringify(d.matriz));
+  rowColors = Array.from({length: nR}, (_, ri) =>
+    (d.colores && d.colores[ri] !== undefined) ? d.colores[ri] : null
+  );
+  repFilas = Array.from({length: nR}, (_, ri) =>
+    (d.repeticiones && d.repeticiones[ri]) ? d.repeticiones[ri] : 1
+  );
+  grupos = (d.grupos || []).map((g) => ({ desde: g.desde, hasta: g.hasta, pasadas: g.pasadas }));
+  repRestantes = largoFila(0) || 1;
+  document.getElementById('in-rows').value = nR;
+  document.getElementById('in-cols').value = nC;
+  document.getElementById('insercion-name').value = d.nombre;
+  setStatus('Editando', false);
+  if (!restaurando) pausePlay();
+  renderGrid();
+  goTo('sc-editor');
+  fichaAlCambiarDibujo();
+  if (!restaurando) toast(`Dibujo cargado: ${d.nombre}`);
+  const dobles = filasConVariasBobinas();
+  if (dobles.length && !restaurando) avisarFilasConVariasBobinas(dobles);
+}
 
 // Filas (índices) con más de una bobina marcada. En cada pasada se inserta una sola trama: los
 // dibujos guardados antes de esta regla pueden tener filas así, y el servidor ya no las acepta.
@@ -2434,7 +2434,7 @@ function updateStats() {
   const nameDisplay = document.getElementById('current-draw-name-display');
   const infoDisplay = document.getElementById('current-draw-info-display');
   const statusLabel = document.getElementById('current-draw-status-label');
-  
+
   // Usa el estado en memoria en lugar de localStorage
   const activeDraw = currentDrawId ? draws.find(d => d.id === currentDrawId) : null;
 
@@ -3589,13 +3589,12 @@ function fichaInicializar() {
       // Este guardado también cambia la fecha de modificación del dibujo: si es el que
       // está abierto en el editor, se toma la versión nueva. Si no, el próximo toque en
       // la grilla se tomaría por un cambio de otra persona.
+      const dm = draws.find((x) => String(x.id) === String(idActual));
       if (r && r.modificado_at) {
         if (String(idActual) === String(editId)) versionDibujo = r.modificado_at;
-        const d = draws.find((x) => String(x.id) === String(idActual));
-        if (d) d.modificadoAt = r.modificado_at;
+        if (dm) dm.modificadoAt = r.modificado_at;
       }
       // La lista en memoria toma el valor nuevo: si se descarga la ficha enseguida, usa este.
-      const dm = draws.find((x) => String(x.id) === String(idActual));
       if (dm) dm.metrosPorPasada = v;
       toast(v === null ? 'Se quitó el dato de metros por pasada.' : 'Metros por pasada guardados.');
       fichaCargar();
@@ -3941,7 +3940,7 @@ document.addEventListener('DOMContentLoaded', () => {
     <div style="background:#1E3A5F;width:100%;height:100px;border-radius:var(--r-md);margin-bottom:16px;border:1px solid var(--bd);" id="color-sample"></div>
     <label for="thread-color" style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Color del Hilo:</label>
     <input type="color" id="thread-color" class="color-hilo" value="#1E3A5F" oninput="updateColorPreview()" onchange="updateColorPreview()">
-    
+
     <label for="row-select" style="display:block;font-weight:600;margin-bottom:8px;color:var(--tx);font-size:14px;">Aplicar a:</label>
     <select id="row-select" style="width:100%;padding:10px;border-radius:var(--r-md);border:1px solid var(--bd);background:var(--srf);color:var(--tx);margin-bottom:16px;font-family:inherit;">
       <option value="all">Toda la matriz</option>

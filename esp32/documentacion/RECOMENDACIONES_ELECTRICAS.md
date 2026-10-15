@@ -100,10 +100,12 @@ sin que haya ninguna falla real.
 
 ## 5. Cableado y ruido (costo cero, mucho efecto)
 
-- **Los cables de los relés a la botonera, trenzados de a pares** (NO1 con
-  COM1 trenzados entre sí; ídem canales 2 y 3) y **lejos de los cables de los
-  motores** del telar. El ruido inductivo de los motores es la causa nº1
-  de cuelgues de WiFi y reinicios en este tipo de montaje.
+- **Los cables de los relés a la botonera, de a pares** (NO1 y COM1 en un par
+  del cable de 6 conductores; ídem canales 2 y 3) y **lejos de los cables de los
+  motores** del telar: no correrlos pegados ni en paralelo al cable del motor.
+  El ruido inductivo de los motores es la causa nº1 de cuelgues de WiFi y
+  reinicios en este tipo de montaje. No hace falta cable mallado ni trenzado:
+  la señal de contacto seco a 24 V tiene inmunidad de sobra.
 - **Cables cortos en la etapa lógica** (3.3 V, IN1, IN2, S y las tres
   entradas de sensado): cuanto más largos, más antena para el ruido.
 - **Tierra en estrella:** todos los GND (salida de la fuente, ESP32, módulo
@@ -132,8 +134,8 @@ usar para comandarlas y qué no.
   activa y se suelta en cada pasada, hasta 180.000 conmutaciones en una jornada de 10 horas, y
   la vida típica de un relé mecánico con carga ronda las 100.000. Los relés mecánicos del Bloque A quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas pocas veces
   por día.
-- **Por qué el LCA110.** Como va sobre la señal del lector (unos pocos mA, menos de 24 V) y no sobre
-  la bobina, no hace falta un SSR de potencia. Su salida son dos MOSFET en antiserie, así que
+- **Por qué el LCA110.** Como maneja la señal del lector (unos pocos mA, menos de 30 V) y no la
+  corriente de la bobina, no hace falta un SSR de potencia. Su salida son dos MOSFET en antiserie, así que
   conduce en los dos sentidos: sirve con continua y con alterna (hasta 350 V y 120 mA). Se comanda
   directo desde un pin del ESP32 (330 Ω en serie, unos 6 mA) y aísla los dos lados (3.750 V).
 - **Lo que no sirve.** Un MOSFET suelto (por ejemplo un IRLZ44N) conduce en un solo sentido y su

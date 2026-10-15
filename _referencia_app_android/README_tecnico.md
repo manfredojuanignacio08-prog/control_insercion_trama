@@ -1,5 +1,8 @@
 # Base de código, App Android (Control de Inserción de Trama)
 
+> Documento original de esta base, de cuando se escribió. Lo que cambió desde entonces en la API (el
+> inicio de sesión, la pausa, quién avanza la posición, los campos nuevos) está en `AVISO.md`.
+
 Esto **no es un proyecto de Android Studio completo** (no incluye el
 wrapper de Gradle, el SDK, ni los íconos), es la **arquitectura y el
 código fuente** que consume la misma API REST que ya usa el frontend web,

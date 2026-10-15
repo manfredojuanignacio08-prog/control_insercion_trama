@@ -172,7 +172,7 @@ esquema multi-telar, historial y log de errores, firmware ESP32 gateway
 **Instalado en el telar:** el Bloque A (relés de Marcha, Pausa y Retroceder y sensado de
 la botonera), probado en la máquina el 19/09/2026.
 
-**Siguiente fase:** el Nivel 2 (sensor de pasada y relés LCA110 sobre los lectores
+**Siguiente fase:** el Nivel 2 (sensor de pasada y relés LCA110 en el lugar de los lectores
 ópticos). El 10/10/2026 se probó todo en protoboard y funcionó; se está haciendo la plaqueta
 para probarlo en la máquina. Las mediciones que faltan están en
 `esp32/control_trama_esp32/README.md` y `PUESTA_EN_MARCHA.md`.

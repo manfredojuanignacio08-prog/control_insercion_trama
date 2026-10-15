@@ -94,7 +94,7 @@
   <line x1="290" y1="814" x2="560" y2="814" stroke="#1f7a3d" stroke-width="2" marker-end="url(#flecha)"/>
   <line x1="290" y1="846" x2="560" y2="846" stroke="#1f7a3d" stroke-width="2" marker-end="url(#flecha)"/>
   <line x1="290" y1="878" x2="560" y2="878" stroke="#1f7a3d" stroke-width="2" marker-end="url(#flecha)"/>
-  <text x="425" y="799" text-anchor="middle" font-size="10.5" fill="#b45309">⚠ par trenzado, lejos de los cables de motor</text>
+  <text x="425" y="799" text-anchor="middle" font-size="10.5" fill="#b45309">⚠ un par por botón, lejos del cable del motor</text>
 
   <rect x="564" y="798" width="250" height="32" rx="8" fill="#fff" stroke="#1f7a3d" stroke-width="1.5"/>
   <text x="689" y="819" text-anchor="middle" font-size="12.5" font-weight="bold">Botón MARCHA (paralelo)</text>

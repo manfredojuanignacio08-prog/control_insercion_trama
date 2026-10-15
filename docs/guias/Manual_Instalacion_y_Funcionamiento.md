@@ -161,7 +161,7 @@ npm run migrate
   completas, con `matriz_ligamento` incluida).
 - `npm run migrate` agrega lo que pueda faltar en una base que ya existía antes
   (por ejemplo, la columna `matriz_ligamento` en la base real del equipo, que se
-  creó sin ella (ver sección 9)).
+  creó sin ella; ver sección 9).
 
 Correr los dos siempre es seguro, sin importar el estado de la base: si algo
 ya existe, cada paso lo detecta y no hace nada. Debería responder
@@ -434,7 +434,7 @@ de datos, no hace falta apretar "Guardar" para que quede registrado:
   patrón y arranca, o retoma donde quedó si es el mismo; ⏸ pausa la máquina
   sin cerrar el trabajo; ⏪ pausa y retrocede una pasada la máquina real (pide
   confirmación); ⏹ termina el trabajo (cierra esa producción en el historial).
-- **Exportar ficha técnica**: descarga un **PDF real** con el nombre, las
+- **Descargar ficha técnica**: descarga un **PDF real** con el nombre, las
   dimensiones, la producción (metros tejidos, pasadas, metros que faltan y
   horas de máquina), el hilado, la grilla coloreada y una vista previa de la
   tela a escala que sale de un telar dibujado arriba (con las bobinas de trama
@@ -466,7 +466,7 @@ estado vive en la base de datos, no en el dispositivo.
 | Log de errores en la base de datos | ✅ Funcionando |
 | Página web (editor, biblioteca, simulación) para el celular | ✅ Funcionando |
 | Modo claro / oscuro de la web | ✅ Funcionando |
-| Exportar ficha del patrón a PDF real | ✅ Funcionando |
+| Descargar la ficha técnica del dibujo en PDF | ✅ Funcionando |
 | Selector visual de telar (para cuando haya más de uno) | ⏳ Pendiente |
 | Firmware ESP32 (un solo programa: Bloque A hoy, Nivel 2 con `NIVEL2_INSTALADO`) | ✅ Bloque A instalado y probado en el telar (19/09/2026); Nivel 2 escrito, simulado y probado en protoboard (10/10/2026) |
 | Conexión física al telar real | ✅ Bloque A (Marcha, Pausa, Retroceder y sensado) · ⏳ sensor de pasada y relés LCA110 (Nivel 2) |

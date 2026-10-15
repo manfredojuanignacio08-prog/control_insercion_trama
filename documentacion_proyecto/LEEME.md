@@ -47,3 +47,6 @@ repositorios: cuando cambia uno de estos Word, hay que pasar el cambio al sitio.
 `Arbol de problemas y soluciones.docx` es el análisis causa-efecto.
 `Parado_Automatico_Ideas.docx` recoge las ideas surgidas de las conversaciones
 con el dueño, ordenadas por prioridad.
+
+La carpeta `PDF/` tiene cada uno de estos Word en PDF, con el mismo nombre, para leerlos o
+imprimirlos sin Word. Si se cambia un Word, hay que volver a exportar su PDF.

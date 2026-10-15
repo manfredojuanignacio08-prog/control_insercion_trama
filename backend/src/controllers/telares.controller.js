@@ -472,8 +472,8 @@ export async function reanudarTelar(req, res, next) {
 // POST /api/telares/:id/retroceder-fisico
 // Pulso del botón FÍSICO "Retroceder" del telar (relé en paralelo al
 // botón real de la máquina, para corregir tras un corte de hilo).
-// OJO: no confundir con /retroceder de acá abajo, que solo mueve el
-// cursor de fila del dibujo en la web, sin ningún efecto sobre el telar real.
+// OJO: no confundir con /retroceder de acá abajo, que solo mueve la
+// posición del dibujo guardada, sin ningún efecto sobre el telar real.
 //
 // No guardamos "el pulso" en sí: incrementamos un contador
 // (retroceder_seq). El ESP32 del Nivel 1 sondea este valor junto con "estado" cada

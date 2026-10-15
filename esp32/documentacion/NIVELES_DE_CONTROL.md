@@ -9,7 +9,7 @@ del proyecto y para explicarlo bien en la presentación.
 > (no un Jacquard por tarjetas, como se suponía al principio; las secciones de abajo conservan ese
 > análisis inicial). El Nivel 2 dejó de ser "evolución futura": está en desarrollo por la vía de
 > control por marcos del final de este documento, con un sensor inductivo y cuatro relés LCA110
-> sobre los lectores ópticos. Todo corre en **un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`).
+> en el lugar de los lectores ópticos. Todo corre en **un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`).
 
 ## El telar tiene, en la práctica, dos "máquinas"
 
