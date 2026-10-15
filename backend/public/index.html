@@ -1095,6 +1095,10 @@ let nR = 8, nC = 8;
 let currentDrawId = null;
 let editId = null;
 let curRow = -1;
+// La última fila tocada en el editor: el simulador de color y Intercalar la proponen. Va aparte
+// de curRow, que es la posición del tejido: si tocar una celda movía curRow, un dibujo sin tejer
+// mostraba «En pausa · Fila 7 / 7» y, sin telar en la base, ▶ arrancaba desde esa fila.
+let filaElegida = -1;
 // Cuántas pasadas seguidas se teje cada fila del dibujo.
 let repFilas = [];
 // Intercalados: grupos de filas seguidas que se tejen alternándose, [{desde, hasta, pasadas}]
@@ -1347,6 +1351,7 @@ function resetEditorForNew() {
 
   // 3. Resetear variables de posición
   curRow = -1;
+  filaElegida = -1;
 
   // 4. VACIAR MATRIZ COMPLETAMENTE
   grid = Array.from({length: nR}, () => Array(nC).fill(0));
@@ -1424,6 +1429,7 @@ function mkGrid(r, c, keep = false) {
   );
   nR = r; nC = c;
   curRow = -1;
+  filaElegida = -1;
   renderGrid();
 }
 
@@ -1523,7 +1529,7 @@ function tapCell(r, c) {
   // grilla vieja (por ejemplo un doble toque mientras se redibuja al cambiar de
   // tamaño), escribir ahí estiraría la fila y cada guardado siguiente fallaría.
   if (!Number.isInteger(r) || !Number.isInteger(c) || r < 0 || r >= nR || c < 0 || c >= nC) return;
-  curRow = r; // fila activa, para el color
+  filaElegida = r; // la fila que proponen el simulador de color e Intercalar
   // Una celda es binaria: el elemento del telar se activa o no se activa. Cada
   // FILA es una pasada; para repetirla se usan las repeticiones de la fila.
   // En cada pasada se inserta UNA sola trama, así que una fila lleva como máximo una bobina:
@@ -2054,7 +2060,7 @@ function doTick() {
 // como en hardware (ESP32 → relé de Pausa).
 // `pedirAlTelar`: true solo desde el botón ⏸. Esta función también la usan acciones del
 // editor (dibujo nuevo, cambiar el tamaño, limpiar) para frenar la animación en pantalla, y
-// antes además pausaba el TELAR REAL: con solo haber tocado una celda (eso mueve curRow),
+// antes además pausaba el TELAR REAL: con solo haber tocado una celda (que entonces movía curRow),
 // crear un dibujo nuevo en un celular frenaba la máquina que otra persona estaba tejiendo.
 // Ahora solo el botón (o quien estaba llevando el tejido) le avisa al telar.
 async function pausePlay(pedirAlTelar = false) {
@@ -2316,6 +2322,7 @@ function loadDrawInEditor(id, restaurando = false) {
   currentDrawId = d.id;
   versionDibujo = d.modificadoAt || null;
   nR = d.filas; nC = d.columnas;
+  filaElegida = -1;
   grid = JSON.parse(JSON.stringify(d.matriz));
   rowColors = Array.from({length: nR}, (_, ri) =>
     (d.colores && d.colores[ri] !== undefined) ? d.colores[ri] : null
@@ -2567,7 +2574,7 @@ function openColorSimulator() {
     const opt = document.createElement('option');
     opt.value = i;
     opt.textContent = `Fila ${i + 1}`;
-    if (curRow === i) opt.selected = true;
+    if ((filaElegida >= 0 ? filaElegida : curRow) === i) opt.selected = true;
     sel.appendChild(opt);
   }
   document.getElementById('modal-color').style.display = 'flex';
@@ -3816,7 +3823,8 @@ function abrirIntercalar(desde, filaInicio) {
     titulo.textContent = `Intercalado de las filas ${g.desde + 1} a ${g.hasta + 1}`;
     quitar.hidden = false;
   } else {
-    let ini = Number.isInteger(filaInicio) ? filaInicio : (curRow >= 0 && curRow < nR ? curRow : 0);
+    const propuesta = filaElegida >= 0 ? filaElegida : curRow;
+    let ini = Number.isInteger(filaInicio) ? filaInicio : (propuesta >= 0 && propuesta < nR ? propuesta : 0);
     if (grupoDeFila(ini)) ini = 0;
     if (ini >= nR - 1) ini = Math.max(0, nR - 2);   // desde la última fila no se puede: hacen falta dos
     document.getElementById('int-desde').value = String(ini + 1);

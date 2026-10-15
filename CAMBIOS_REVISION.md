@@ -1317,3 +1317,28 @@ más, que salió limpia:
 
 Sigue pendiente confirmar la marca de la caja (la foto dice GENROD; la Lista y la Estimación,
 Roker).
+
+## Trigésima segunda revisión: los manuales, con el intercalado, la ficha en PDF y nuestro hardware
+
+Los dos manuales (Word, PDF y su sitio) tienen tres secciones nuevas, con capturas tomadas de la
+aplicación de hoy:
+
+| Dónde | Qué se agregó |
+|---|---|
+| Manual de la página web, 4.8 | **Intercalar filas, paso a paso**: armar una fila por bobina, abrir la ventana con el «+» de la columna ⇄ o con el botón Intercalar, completar las filas y las pasadas, leer el resumen (el orden de las bobinas y cuántas veces entra la secuencia) y aplicar. Cómo se cambia o se quita, lo que la ventana no deja hacer (una sola fila, filas compartidas, más de 32 pasadas por vuelta del grupo, menos de 1 o más de 9999 pasadas) y qué muestra la barra mientras se teje. Con la captura de la ventana y la grilla de ejemplo con sus dos intercalados. |
+| Manual de la página web, 4.9 | **La ficha técnica en PDF**: qué cargar antes (los metros por pasada y el hilado, en la ficha del dibujo), cómo se descarga y qué tiene cada parte: datos del dibujo, producción, hilado, colores, la matriz con los intercalados y la vista previa con el telar, las bobinas, la llave de cada vuelta y la regla. Con la captura de la ficha del dibujo y la página del PDF. |
+| Manual de la página web, 4.5 | Los ítems de Intercalar y de la ficha técnica eran un párrafo largo cada uno: ahora lo resumen y remiten a 4.8 y 4.9. |
+| Manual del telar en fábrica, 3.3 | **Nuestro hardware: el gabinete de control**: la caja IP65 y dónde va, las cinco plaquetas y qué hace cada una, los prensacables y los cables, lo que tiene que saber el operario (no se toca, se mira «ESP32 conectado» en la aplicación, si se apaga el telar sigue con la botonera, la tapa solo con el gabinete desenchufado) y el enlace al modelo 3D. Con la imagen del gabinete abierto. |
+
+Las secciones son nuevas al final de la 4 y de la 3, para no cambiar la numeración que citan otros
+documentos (por ejemplo, «el manual de la página web, punto 4.6»).
+
+Al sacar las capturas apareció un error de la web:
+
+| Dónde | Qué pasaba |
+|---|---|
+| `backend/public/index.html` (editor) | Tocar una celda movía `curRow`, que es la posición del tejido, para que el simulador de color propusiera esa fila. Un dibujo nuevo, sin tejer, quedaba en «En pausa · Fila 7 / 7» después de marcar sus celdas; y sin un telar en la base, ▶ arrancaba desde la fila tocada. Ahora la fila tocada va aparte (`filaElegida`): la siguen proponiendo el simulador de color e Intercalar, y la barra dice «Detenido · Fila - / 7». Prueba nueva en `tests/frontend.test.mjs`, que falla sin el cambio. |
+
+Pruebas: `npm test`, la coherencia 19/19 y las pruebas en Chromium (editor completo, botonera,
+confirmaciones e intercalados) en verde; los dos Word validados y revisados en PDF; el sitio de los
+manuales en Chromium (escritorio y celular), con las 31 imágenes, sin anclas rotas ni desbordes.

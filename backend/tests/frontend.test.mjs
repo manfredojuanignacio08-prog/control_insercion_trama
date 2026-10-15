@@ -346,4 +346,17 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   assert.equal(f.run("leerCantidad('1.000')"), 1000); assert.equal(f.run("leerCantidad('52,5')"), 52.5);
   assert.equal(f.run("leerCantidad('1.250,5')"), 1250.5); assert.equal(f.run("leerCantidad('52.5')"), 52.5); }
 
+// ── tocar una celda no mueve la posición del tejido: un dibujo sin tejer seguía diciendo
+// «En pausa · Fila 2 / 3», y sin telar en la base ▶ arrancaba desde la fila tocada.
+// El simulador de color e Intercalar proponen igual la fila tocada.
+{ f = boot(routes); await f.run('iniciarApp()'); f.run("newDraw()"); await settle();
+  f.run('nR=3; nC=4; grid=[[0,0,0,0],[0,0,0,0],[0,0,0,0]]; repFilas=[1,1,1]; rowColors=[null,null,null]; grupos=[]; editId=null; trabajoEnCursoPatronId=null; isPlaying=false; curRow=-1');
+  f.run('tapCell(1,2)');
+  assert.equal(f.run('curRow'), -1, 'tocar una celda no mueve la posición del tejido');
+  assert.equal(f.els['play-status'].textContent, 'Detenido');
+  assert.equal(f.run('filaElegida'), 1);
+  f.run('abrirIntercalar()'); assert.equal(f.els['int-desde'].value, '2', 'Intercalar propone la fila tocada');
+  f.run('cerrarIntercalar()');
+  f.run("loadDrawInEditor('4')"); assert.equal(f.run('filaElegida'), -1, 'al cargar otro dibujo no queda la fila del anterior'); }
+
 console.log('frontend OK');
