@@ -36,8 +36,8 @@
 // la copia local antes de subir el programa y NO se suben con valores reales (igual que
 // DEVICE_KEY). La clave real de la fábrica estuvo escrita acá y quedó en el historial del
 // repositorio: conviene cambiarla en el router.
-#define WIFI_SSID          "Claro4347"
-#define WIFI_PASSWORD      "11335577"
+#define WIFI_SSID          "NOMBRE_DE_LA_RED"
+#define WIFI_PASSWORD      "CLAVE_DE_LA_RED"
 // Red de respaldo (punto de acceso del celular). Vacía = se reintenta la principal.
 #define WIFI_SSID_ALT      ""
 #define WIFI_PASSWORD_ALT  ""
@@ -56,7 +56,7 @@
 
 // Clave del dispositivo: va en el header X-Device-Key de cada pedido. Tiene que ser IGUAL a
 // ESP32_DEVICE_KEY del backend. Si no coincide, el monitor serie muestra "401".
-#define DEVICE_KEY         "cc1ce04d-f582-4150-be55-dc06a0d1faf33e97df76-6c70-407d-963b-518b3a931f7c"
+#define DEVICE_KEY         "CAMBIAR_POR_LA_CLAVE_DE_ESP32_DEVICE_KEY"
 
 // Verificación del certificado HTTPS (opcional). Sin esto el nodo cifra el tráfico pero no
 // comprueba con quién habla. Para verificarlo, pegar el certificado raíz (PEM) y descomentar:
