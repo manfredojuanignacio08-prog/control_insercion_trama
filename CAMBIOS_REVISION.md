@@ -1381,3 +1381,23 @@ Queda una decisión abierta del equipo, no un error de documento: en la pestaña
 Costos» de la planilla, cada renglón toma las horas de un rol distinto del que dice su nombre, y no
 cuenta las horas de Multimedios ni de Electrónica, que no tienen valor por hora en la tabla de roles.
 Arreglarlo cambia el precio de venta, así que lo define el equipo.
+
+## Trigésima quinta revisión: valor por hora de Electrónica y Multimedios
+
+El equipo fijó el valor por hora que faltaba: **Electrónica (ELE) 30 USD** y **Multimedios (MUL)
+27 USD**. Con eso se cerró la decisión abierta de la revisión anterior.
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Planilla del Gantt (Google Sheets y `Gantt_2026 - Automatizacion de Telar Industrial.xlsx`), tabla de roles | ELE y MUL sin valor por hora | ELE `=30*$O$1` y MUL `=27*$O$1` |
+| Planilla, pestaña «Estimación de Costos» | Ocho renglones que tomaban las horas de un rol distinto del de su nombre; sin Multimedios ni Electrónica; el subtotal de horas no sumaba un renglón | Diez renglones, uno por rol, cada uno con sus horas y su valor por hora: 1545 h, personal USD 50.421,00, total USD 50.483,60, precio de venta USD 63.104,49 |
+| Planilla, pestaña «Cashflow» | Cada rol se multiplicaba por el valor del Project Manager | Cada rol por su propio valor |
+| Estimación de Costos (Word y PDF) | ELE y MUL a 32 USD con asterisco; personal $29.411.089, costo $29.642.903, presupuesto $37.053.629 | ELE 30 y MUL 27 USD; personal $31.325.190 (633 horas, las del Gantt actual), costo $31.557.004, ganancia $7.889.251, **presupuesto $39.446.255**. Visita de mantenimiento $228.750; unos $2.013.000 al año con el abono |
+| Modalidad de inversión (Word y PDF) | Hardware $13.020.735 / software $16.622.168 (43,7 / 56,3 en los roles compartidos) | Hardware $14.357.101 (45,5 %, precio $17.946.376) y software $17.199.903 (54,5 %, precio $21.499.879); roles compartidos 45,3 / 54,7. Suman el costo y el precio nuevos |
+| `diagramas/sistema/estimacion.svg` y `.png` (Figura 13) | Valores de agosto | Valores de octubre (99,3 % personal, 0,4 % componentes, 0,3 % gastos) |
+| Documentación de Proyecto (Word, PDF y sitio), sección 8 | Montos viejos, 99,2 % / 0,8 %, visita $240.188, revisión del 28/08/2026; el pie de la Figura 13 nombraba un esquema de mantenimiento que la figura no tiene | Montos nuevos, 99,3 % / 0,7 %, visita $228.750, revisión del 19/10/2026; pie «Estructura de costos del proyecto.» |
+| Bitácora (Word y PDF) | — | Nota en el 19/10 |
+
+La planilla (en dólares, con las horas totales de cada rol) y los Word (en pesos, con las horas del
+Gantt repartidas entre los responsables de cada tarea) miden cosas distintas, por eso sus totales no
+se comparan uno a uno; los dos usan los mismos valores por hora.
