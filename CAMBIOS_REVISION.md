@@ -1342,3 +1342,18 @@ Al sacar las capturas apareció un error de la web:
 Pruebas: `npm test`, la coherencia 19/19 y las pruebas en Chromium (editor completo, botonera,
 confirmaciones e intercalados) en verde; los dos Word validados y revisados en PDF; el sitio de los
 manuales en Chromium (escritorio y celular), con las 31 imágenes, sin anclas rotas ni desbordes.
+
+## Trigésima tercera revisión: la pasada dentro de la fila
+
+La barra de abajo del editor decía en qué fila iba el telar, pero no en qué pasada de esa fila
+(una fila con 120 repeticiones se teje 120 pasadas seguidas). Ahora lo dice:
+
+| Antes | Ahora |
+|---|---|
+| «Fila 2 / 7» | «Fila 2 / 7 · pasada 45 de 120» |
+| «Fila 3 / 7 · intercalado 57 de 120» | «Fila 3 / 7 · pasada 57 de 120 del intercalado» |
+
+Una fila de una sola pasada sigue diciendo solo «Fila 1 / 7». El dato sale de la misma posición
+que guarda el servidor (fila y pasada en la fila), así que coincide con lo que teje la máquina.
+El manual de la página web (Word, PDF y sitio) lo explica en el punto de Iniciar (▶) y en 4.8.
+La prueba nueva de `tests/frontend.test.mjs` revisa los cuatro casos.
