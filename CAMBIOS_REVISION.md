@@ -1357,3 +1357,27 @@ Una fila de una sola pasada sigue diciendo solo «Fila 1 / 7». El dato sale de 
 que guarda el servidor (fila y pasada en la fila), así que coincide con lo que teje la máquina.
 El manual de la página web (Word, PDF y sitio) lo explica en el punto de Iniciar (▶) y en 4.8.
 La prueba nueva de `tests/frontend.test.mjs` revisa los cuatro casos.
+
+## Trigésima cuarta revisión: el cronograma reorganizado en todos los documentos
+
+Revisión completa (pruebas, firmware, base real, navegador, todos los documentos y los dos sitios).
+Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Barra del editor, en un celular | «pasada 13 de 120» se cortaba en dos líneas («pasada» arriba, «13 de 120» abajo) | Se corta antes del «·»: «Fila 2 / 8» arriba y «· pasada 13 de 120» abajo. Probado en Chromium a 360 px, con una fila de 120 y con un intercalado |
+| `diagramas/sistema/gantt.svg` y `.png` (Figura 11) | Decía 160 tareas y las etapas viejas («Integración electrónica», «Instalación y pruebas»…), con las barras de antes de reorganizar el Gantt. El texto decía que la figura mostraba las tareas y las fechas de cada etapa, y no las mostraba | 166 tareas, los nombres y las fechas reales de cada etapa (con la cantidad de tareas debajo del nombre) y una leyenda de completada / en curso |
+| Documentación de Proyecto (Word, PDF y sitio), 6.1 y 10.3 | 160 tareas; «Etapa 04, en curso»; hito 3 hasta el 18/10; Nivel 1 hasta el 18/10 y Nivel 2 hasta el 15/10; la limitación LIM01 «en desarrollo (Etapa 05)» | 166 tareas; etapas 04 a 06 completadas (06/07 al 16/10) y 07 y 08 en curso, con lo que lleva cada una; hitos 3, 4 y 5 con sus fechas; el Nivel 1 hasta el 24/09, el Nivel 2 en banco hasta el 16/10 y su instalación del 10/10 al 05/11; LIM01 en la Etapa 07. La presentación a los profesores (04/11) figura en la Etapa 08 y en el hito 5 |
+| Estado completo del proyecto (Word y PDF) | 160 tareas; no tenía la presentación a los profesores ni el resumen de conexiones en su lista de documentos | 166 tareas, la fecha 04/11 entre las fechas del proyecto y el documento en la lista |
+| `documentacion_proyecto/LEEME.md` | 160 tareas; no nombraba `Conexiones_de_las_plaquetas.docx` | 166 tareas y el documento en las guías |
+| `Conexiones_de_las_plaquetas.pdf` | Estaba suelto en `documentacion_proyecto/` | En `documentacion_proyecto/PDF/`, como los demás |
+| Bitácora (Word y PDF) | Terminaba el 14/10 | Entradas del 16/10 (resumen de conexiones, las seis correcciones al diseño en Proteus y el Gantt reorganizado) y del 19/10 (la pasada en la barra) |
+
+Pruebas: `npm test`, integración contra PostgreSQL real, firmware en la PC (los dos modos),
+simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, Chromium (editor, botonera, confirmaciones,
+intercalados, la pasada en la barra) y los dos sitios sin imágenes ni anclas rotas.
+
+Queda una decisión abierta del equipo, no un error de documento: en la pestaña «Estimación de
+Costos» de la planilla, cada renglón toma las horas de un rol distinto del que dice su nombre, y no
+cuenta las horas de Multimedios ni de Electrónica, que no tienen valor por hora en la tabla de roles.
+Arreglarlo cambia el precio de venta, así que lo define el equipo.
