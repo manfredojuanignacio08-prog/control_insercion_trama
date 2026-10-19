@@ -1631,17 +1631,28 @@ function setPlayBar(state) {
   if (state === 'done')    bar.classList.add('done');
 }
 
+// Espacios que no cortan línea: en un celular angosto «pasada 13 de 120» baja entero a la línea
+// de abajo, en vez de quedar «pasada» arriba y «13 de 120» abajo.
+function sinCorte(t) { return t.replace(/ /g, '\u00a0'); }
+
 function updPlayUI() {
   const st = document.getElementById('play-status');
   const rw = document.getElementById('play-row');
   const r  = curRow >= 0 ? curRow + 1 : '-';
   let info = `Fila ${r} / ${nR}`;
-  // En un intercalado: qué fila del grupo va y cuántas pasadas del grupo se tejieron.
+  // En qué pasada de la fila va (una fila se teje tantas pasadas como sus repeticiones). En un
+  // intercalado: qué fila del grupo va y en qué pasada del grupo.
   const gAct = curRow >= 0 && curRow < nR ? grupoQueEmpieza(curRow) : null;
   if (gAct) {
     info = `Fila ${filaVisible() + 1} / ${nR}`;
     const hechas = Math.max(0, gAct.pasadas - repRestantes);
-    info += ` · intercalado ${Math.min(gAct.pasadas, hechas + 1)} de ${gAct.pasadas}`;
+    info += ` ${sinCorte(`· pasada ${Math.min(gAct.pasadas, hechas + 1)} de ${gAct.pasadas}`)} del intercalado`;
+  } else if (curRow >= 0 && curRow < nR) {
+    const total = largoFila(curRow) || 1;
+    if (total > 1) {
+      const hechas = Math.max(0, total - repRestantes);
+      info += ` ${sinCorte(`· pasada ${Math.min(total, hechas + 1)} de ${total}`)}`;
+    }
   }
 
   // Las columnas no avanzan: no hay celda que mostrar, solo la fila (y en un intercalado, la pasada del grupo).

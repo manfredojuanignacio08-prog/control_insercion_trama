@@ -359,4 +359,18 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   f.run('cerrarIntercalar()');
   f.run("loadDrawInEditor('4')"); assert.equal(f.run('filaElegida'), -1, 'al cargar otro dibujo no queda la fila del anterior'); }
 
+// ── la barra muestra en qué pasada de la fila va (una fila de 120 repeticiones se teje 120 pasadas)
+{ f = boot(routes); await f.run('iniciarApp()'); f.run("newDraw()"); await settle();
+  f.run('nR=3; nC=4; grid=[[1,0,0,0],[0,1,0,0],[0,0,1,0]]; repFilas=[1,120,1]; rowColors=[null,null,null]; grupos=[]; isPlaying=false');
+  const barra = () => f.els['play-row'].textContent.replace(/\u00a0/g, ' ');
+  f.run('curRow=1; repRestantes=120; updPlayUI()');
+  assert.equal(barra(), 'Fila 2 / 3 · pasada 1 de 120');
+  assert.match(f.els['play-row'].textContent, /pasada\u00a01\u00a0de\u00a0120/, 'la pasada no se corta en dos líneas');
+  f.run('repRestantes=76; updPlayUI()');
+  assert.equal(barra(), 'Fila 2 / 3 · pasada 45 de 120');
+  f.run('curRow=0; repRestantes=1; updPlayUI()');
+  assert.equal(f.els['play-row'].textContent, 'Fila 1 / 3', 'una fila de una sola pasada no repite «pasada 1 de 1»');
+  f.run('curRow=-1; updPlayUI()');
+  assert.equal(f.els['play-row'].textContent, 'Fila - / 3'); }
+
 console.log('frontend OK');
