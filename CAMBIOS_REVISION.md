@@ -1397,7 +1397,15 @@ El equipo fijó el valor por hora que faltaba: **Electrónica (ELE) 30 USD** y *
 | `diagramas/sistema/estimacion.svg` y `.png` (Figura 13) | Valores de agosto | Valores de octubre (99,3 % personal, 0,4 % componentes, 0,3 % gastos) |
 | Documentación de Proyecto (Word, PDF y sitio), sección 8 | Montos viejos, 99,2 % / 0,8 %, visita $240.188, revisión del 28/08/2026; el pie de la Figura 13 nombraba un esquema de mantenimiento que la figura no tiene | Montos nuevos, 99,3 % / 0,7 %, visita $228.750, revisión del 19/10/2026; pie «Estructura de costos del proyecto.» |
 | Bitácora (Word y PDF) | — | Nota en el 19/10 |
+| Estimación de Costos, plan de mantenimiento (6.3) | La visita probaba «los 3 relés y el sensado»: dejaba afuera los 4 relés de selección y el sensor de pasada del Nivel 2. Los repuestos no nombraban ni el LCA110 ni el sensor | La visita prueba los 3 relés de la botonera, los 4 LCA110, el sensor de pasada y el sensado; los repuestos suman el LCA110 ($6.034) y el sensor inductivo ($7.000), con los precios de la lista de componentes |
 
 La planilla (en dólares, con las horas totales de cada rol) y los Word (en pesos, con las horas del
 Gantt repartidas entre los responsables de cada tarea) miden cosas distintas, por eso sus totales no
 se comparan uno a uno; los dos usan los mismos valores por hora.
+
+Pruebas después del cambio: `npm test`, integración contra PostgreSQL real, firmware en la PC (los
+dos modos, 83/83), simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, Chromium (editor, botonera,
+confirmaciones, intercalados, la pasada en la barra) y los dos sitios sin errores, imágenes ni
+anclas rotas. En el Excel del Gantt quedan tres nombres definidos de la plantilla original (`Type`,
+`ScheduleStart`, `Interval`) que apuntan a `#REF!`; no los usa ninguna fórmula ni se ven en ninguna
+celda, y vienen así desde la primera versión.
