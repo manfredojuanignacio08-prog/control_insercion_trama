@@ -1342,3 +1342,70 @@ Al sacar las capturas apareció un error de la web:
 Pruebas: `npm test`, la coherencia 19/19 y las pruebas en Chromium (editor completo, botonera,
 confirmaciones e intercalados) en verde; los dos Word validados y revisados en PDF; el sitio de los
 manuales en Chromium (escritorio y celular), con las 31 imágenes, sin anclas rotas ni desbordes.
+
+## Trigésima tercera revisión: la pasada dentro de la fila
+
+La barra de abajo del editor decía en qué fila iba el telar, pero no en qué pasada de esa fila
+(una fila con 120 repeticiones se teje 120 pasadas seguidas). Ahora lo dice:
+
+| Antes | Ahora |
+|---|---|
+| «Fila 2 / 7» | «Fila 2 / 7 · pasada 45 de 120» |
+| «Fila 3 / 7 · intercalado 57 de 120» | «Fila 3 / 7 · pasada 57 de 120 del intercalado» |
+
+Una fila de una sola pasada sigue diciendo solo «Fila 1 / 7». El dato sale de la misma posición
+que guarda el servidor (fila y pasada en la fila), así que coincide con lo que teje la máquina.
+El manual de la página web (Word, PDF y sitio) lo explica en el punto de Iniciar (▶) y en 4.8.
+La prueba nueva de `tests/frontend.test.mjs` revisa los cuatro casos.
+
+## Trigésima cuarta revisión: el cronograma reorganizado en todos los documentos
+
+Revisión completa (pruebas, firmware, base real, navegador, todos los documentos y los dos sitios).
+Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Barra del editor, en un celular | «pasada 13 de 120» se cortaba en dos líneas («pasada» arriba, «13 de 120» abajo) | Se corta antes del «·»: «Fila 2 / 8» arriba y «· pasada 13 de 120» abajo. Probado en Chromium a 360 px, con una fila de 120 y con un intercalado |
+| `diagramas/sistema/gantt.svg` y `.png` (Figura 11) | Decía 160 tareas y las etapas viejas («Integración electrónica», «Instalación y pruebas»…), con las barras de antes de reorganizar el Gantt. El texto decía que la figura mostraba las tareas y las fechas de cada etapa, y no las mostraba | 166 tareas, los nombres y las fechas reales de cada etapa (con la cantidad de tareas debajo del nombre) y una leyenda de completada / en curso |
+| Documentación de Proyecto (Word, PDF y sitio), 6.1 y 10.3 | 160 tareas; «Etapa 04, en curso»; hito 3 hasta el 18/10; Nivel 1 hasta el 18/10 y Nivel 2 hasta el 15/10; la limitación LIM01 «en desarrollo (Etapa 05)» | 166 tareas; etapas 04 a 06 completadas (06/07 al 16/10) y 07 y 08 en curso, con lo que lleva cada una; hitos 3, 4 y 5 con sus fechas; el Nivel 1 hasta el 24/09, el Nivel 2 en banco hasta el 16/10 y su instalación del 10/10 al 05/11; LIM01 en la Etapa 07. La presentación a los profesores (04/11) figura en la Etapa 08 y en el hito 5 |
+| Estado completo del proyecto (Word y PDF) | 160 tareas; no tenía la presentación a los profesores ni el resumen de conexiones en su lista de documentos | 166 tareas, la fecha 04/11 entre las fechas del proyecto y el documento en la lista |
+| `documentacion_proyecto/LEEME.md` | 160 tareas; no nombraba `Conexiones_de_las_plaquetas.docx` | 166 tareas y el documento en las guías |
+| `Conexiones_de_las_plaquetas.pdf` | Estaba suelto en `documentacion_proyecto/` | En `documentacion_proyecto/PDF/`, como los demás |
+| Bitácora (Word y PDF) | Terminaba el 14/10 | Entradas del 16/10 (resumen de conexiones, las seis correcciones al diseño en Proteus y el Gantt reorganizado) y del 19/10 (la pasada en la barra) |
+
+Pruebas: `npm test`, integración contra PostgreSQL real, firmware en la PC (los dos modos),
+simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, Chromium (editor, botonera, confirmaciones,
+intercalados, la pasada en la barra) y los dos sitios sin imágenes ni anclas rotas.
+
+Queda una decisión abierta del equipo, no un error de documento: en la pestaña «Estimación de
+Costos» de la planilla, cada renglón toma las horas de un rol distinto del que dice su nombre, y no
+cuenta las horas de Multimedios ni de Electrónica, que no tienen valor por hora en la tabla de roles.
+Arreglarlo cambia el precio de venta, así que lo define el equipo.
+
+## Trigésima quinta revisión: valor por hora de Electrónica y Multimedios
+
+El equipo fijó el valor por hora que faltaba: **Electrónica (ELE) 30 USD** y **Multimedios (MUL)
+27 USD**. Con eso se cerró la decisión abierta de la revisión anterior.
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Planilla del Gantt (Google Sheets y `Gantt_2026 - Automatizacion de Telar Industrial.xlsx`), tabla de roles | ELE y MUL sin valor por hora | ELE `=30*$O$1` y MUL `=27*$O$1` |
+| Planilla, pestaña «Estimación de Costos» | Ocho renglones que tomaban las horas de un rol distinto del de su nombre; sin Multimedios ni Electrónica; el subtotal de horas no sumaba un renglón | Diez renglones, uno por rol, cada uno con sus horas y su valor por hora: 1545 h, personal USD 50.421,00, total USD 50.483,60, precio de venta USD 63.104,49 |
+| Planilla, pestaña «Cashflow» | Cada rol se multiplicaba por el valor del Project Manager | Cada rol por su propio valor |
+| Estimación de Costos (Word y PDF) | ELE y MUL a 32 USD con asterisco; personal $29.411.089, costo $29.642.903, presupuesto $37.053.629 | ELE 30 y MUL 27 USD; personal $31.325.190 (633 horas, las del Gantt actual), costo $31.557.004, ganancia $7.889.251, **presupuesto $39.446.255**. Visita de mantenimiento $228.750; unos $2.013.000 al año con el abono |
+| Modalidad de inversión (Word y PDF) | Hardware $13.020.735 / software $16.622.168 (43,7 / 56,3 en los roles compartidos) | Hardware $14.357.101 (45,5 %, precio $17.946.376) y software $17.199.903 (54,5 %, precio $21.499.879); roles compartidos 45,3 / 54,7. Suman el costo y el precio nuevos |
+| `diagramas/sistema/estimacion.svg` y `.png` (Figura 13) | Valores de agosto | Valores de octubre (99,3 % personal, 0,4 % componentes, 0,3 % gastos) |
+| Documentación de Proyecto (Word, PDF y sitio), sección 8 | Montos viejos, 99,2 % / 0,8 %, visita $240.188, revisión del 28/08/2026; el pie de la Figura 13 nombraba un esquema de mantenimiento que la figura no tiene | Montos nuevos, 99,3 % / 0,7 %, visita $228.750, revisión del 19/10/2026; pie «Estructura de costos del proyecto.» |
+| Bitácora (Word y PDF) | — | Nota en el 19/10 |
+| Estimación de Costos, plan de mantenimiento (6.3) | La visita probaba «los 3 relés y el sensado»: dejaba afuera los 4 relés de selección y el sensor de pasada del Nivel 2. Los repuestos no nombraban ni el LCA110 ni el sensor | La visita prueba los 3 relés de la botonera, los 4 LCA110, el sensor de pasada y el sensado; los repuestos suman el LCA110 ($6.034) y el sensor inductivo ($7.000), con los precios de la lista de componentes |
+
+La planilla (en dólares, con las horas totales de cada rol) y los Word (en pesos, con las horas del
+Gantt repartidas entre los responsables de cada tarea) miden cosas distintas, por eso sus totales no
+se comparan uno a uno; los dos usan los mismos valores por hora.
+
+Pruebas después del cambio: `npm test`, integración contra PostgreSQL real, firmware en la PC (los
+dos modos, 83/83), simulaciones 6/6, 6/6 y 29/29, coherencia 19/19, Chromium (editor, botonera,
+confirmaciones, intercalados, la pasada en la barra) y los dos sitios sin errores, imágenes ni
+anclas rotas. En el Excel del Gantt quedan tres nombres definidos de la plantilla original (`Type`,
+`ScheduleStart`, `Interval`) que apuntan a `#REF!`; no los usa ninguna fórmula ni se ven en ninguna
+celda, y vienen así desde la primera versión.
