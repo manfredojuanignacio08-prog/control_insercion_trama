@@ -1678,3 +1678,23 @@ los controles de los 18 Word y sus PDF, el texto de todo el proyecto, los enlace
 **Sin errores.** Quedan, revisados y a propósito: el orden de lectura de las tablas al pasar el PDF a
 texto, las tablas del Registro de entrevistas corridas hacia el margen (así es el original) y las
 columnas de descripción de los requerimientos, que ya tienen el ancho que les deja el resto.
+
+## Trigésima octava revisión: las plaquetas terminadas
+
+El equipo confirmó que la tarea 7,2 del Gantt («Pasar el armado de protoboard a las 5 plaquetas
+soldadas») está al 100 %: las cinco plaquetas ya están soldadas. Lo que sigue es instalar el gabinete
+en la planta y cablearlo hasta la botonera (7,3), conectar los otros tres canales y las pruebas finales
+(7,7 a 7,11). Las entradas de la Bitácora y del Registro del 10/10 y del 17/10 quedan como estaban,
+porque cuentan lo que pasaba esos días.
+
+| Dónde | Decía | Ahora dice |
+|---|---|---|
+| Documentación de Proyecto (Nivel 2 en 2.2, 4.7, 6.1 y el HITO 3) y el sitio de la documentación | «se están haciendo las plaquetas», «Faltan los otros tres canales, las plaquetas soldadas y la instalación del gabinete» | Las plaquetas ya están soldadas (20/10/2026); faltan los otros tres canales y la instalación del gabinete en la planta |
+| Documentación de Proyecto, control de cambios 5.1 (y el sitio) | — | Suma que quedan terminadas las cinco plaquetas soldadas del gabinete |
+| Estado completo (Bloques C y D, gabinete, lo que falta) | «Falta pasarlo a la plaqueta», «Faltan la plaqueta y los otros tres canales», «Pasar el circuito a las plaquetas soldadas» | La plaqueta ya está soldada; falta instalarla en la planta, conectar los otros tres canales y validar el conteo. En lo que falta: «Hecho al 20/10/2026, las plaquetas soldadas» |
+| Bitácora | «se están armando las plaquetas» (niveles de control) | Al 20/10/2026 quedaron soldadas; la entrada del 20/10 lo suma |
+| Árbol de problemas (las dos copias), Guía de los relés, Manual del telar (y su sitio), Parado automático | «Se están armando / haciendo las plaquetas», «falta pasarlo a la plaqueta» | Ya están soldadas; la Guía de los relés pasa a «Estado al 20/10/2026» |
+| Lista de componentes (planilla), notas de la plaqueta del Nivel 2 y del orden de compra | «se está haciendo la plaqueta» | «Ya está soldada (20/10/2026)»; «Estado al 20/10/2026» |
+| `README.md`, `esp32/control_trama_esp32/README.md`, `esp32/documentacion/NIVELES_DE_CONTROL.md`, `docs/guias/Manual_Instalacion_y_Funcionamiento.md` | Lo mismo | Lo mismo |
+
+El diagrama del Gantt no cambia: muestra el estado por etapa, y la Etapa 07 sigue en curso.

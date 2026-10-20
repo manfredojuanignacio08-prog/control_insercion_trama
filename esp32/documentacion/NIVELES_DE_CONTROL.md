@@ -60,8 +60,8 @@ tarjetas perforadas (en este telar, la cinta de papel).
 
 - **Estado:** en desarrollo. El sensor de pasada y el relé de selección se
   probaron en protoboard el 10/10/2026, y el 17/10/2026 en la máquina, todavía en
-  protoboard: el sensor cuenta las pasadas y el primer canal seleccionó bien. Se
-  están armando las plaquetas para instalar los cuatro canales.
+  protoboard: el sensor cuenta las pasadas y el primer canal seleccionó bien. Las
+  plaquetas para instalar los cuatro canales ya están soldadas (20/10/2026).
 - **El punto a resolver:** había que averiguar **cómo la máquina lectora le
   dicta la secuencia a la de accionamiento**. Al principio se suponía un
   **mecanismo Jacquard por tarjetas perforadas físicas**, un sistema mecánico

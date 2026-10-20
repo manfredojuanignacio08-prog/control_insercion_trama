@@ -150,9 +150,9 @@ aunque en la documentación aparezcan como bloques separados.
 **El Nivel 2 no está instalado en la máquina.** El 10/10/2026 se probó todo en protoboard (el
 sensor de pasada y el relé LCA110 con el ESP32) y funcionó, y el 17/10/2026 se probó en el telar,
 todavía en protoboard: el sensor de pasada quedó conectado y calibrado, y el primer canal, con el
-relé en el lugar del lector, seleccionó bien. Ahora se están haciendo las plaquetas para instalarlo
-de manera correcta, con los cuatro canales. Hasta entonces la placa corre este mismo programa
-con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
+relé en el lugar del lector, seleccionó bien. Las plaquetas para instalarlo de manera correcta, con
+los cuatro canales, ya están soldadas (20/10/2026). Hasta que se instalen, la placa corre este
+mismo programa con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
 
 ## Qué falta antes de poder usarlo
 

@@ -182,7 +182,8 @@ la botonera), probado en la máquina el 19/09/2026.
 ópticos). El 10/10/2026 se probó todo en protoboard y funcionó, y el 17/10/2026 se probó en la
 máquina, todavía en protoboard: el lector se alimenta con 15 a 30 V (lleva la resistencia de
 protección de 470 Ω 3 W), el sensor de pasada quedó conectado y calibrado, y el primer canal
-seleccionó bien. Faltan los otros tres canales, las plaquetas soldadas y el gabinete en la planta.
+seleccionó bien. Las cinco plaquetas soldadas ya están terminadas (20/10/2026); faltan los otros
+tres canales y el gabinete en la planta.
 Las mediciones que faltan están en `esp32/control_trama_esp32/README.md` y `PUESTA_EN_MARCHA.md`.
 
 
