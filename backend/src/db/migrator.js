@@ -60,6 +60,12 @@ export async function aplicarMigraciones({ log = console.log } = {}) {
       `⚠ ${fallidas.length} migración(es) sin aplicar: ${fallidas.join(', ')}. ` +
       'Se reintentan en el próximo arranque, o a mano con: npm run migrate'
     );
+    // En una base nueva (vacía) fallan porque todavía no están las tablas base: las
+    // migraciones las modifican, no las crean. Eso lo hace schema.sql, una sola vez.
+    const { rows: base } = await pool.query("SELECT to_regclass('public.patrones') AS patrones");
+    if (!base[0].patrones) {
+      console.error('⚠ La base no tiene las tablas base (patrones, telares...). Crealas una sola vez con: npm run init-db, y volvé a arrancar el servidor.');
+    }
   } else {
     log(nuevas ? `Migraciones al día (${nuevas} nueva/s).` : 'Migraciones al día (nada pendiente).');
   }

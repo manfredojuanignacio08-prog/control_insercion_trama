@@ -291,7 +291,7 @@ Además: el registro es libre solo para los primeros `REGISTRO_LIBRE_MAX` usuari
 
 ## Migraciones
 
-Cada `db/migracion_NNN_*.sql` se aplica **una sola vez**, dentro de una transacción; el registro está en la tabla `migraciones_aplicadas`. Corre sola al arrancar el servidor o a mano con `npm run migrate`. Si una falla, queda un error visible en el log y se reintenta en el próximo arranque. La 009 ya no borra dibujos.
+Cada `db/migracion_NNN_*.sql` se aplica **una sola vez**, dentro de una transacción; el registro está en la tabla `migraciones_aplicadas`. Corre sola al arrancar el servidor o a mano con `npm run migrate`. Si una falla, queda un error visible en el log y se reintenta en el próximo arranque; si fallan porque la base está vacía (sin las tablas base), el aviso pide correr antes `npm run init-db`. La 009 ya no borra dibujos.
 
 ## Pruebas
 

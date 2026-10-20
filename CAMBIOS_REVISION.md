@@ -1652,3 +1652,20 @@ Al bajar el Gantt se vio, además, que en el Drive la tarea 7,2 («Pasar el arma
 plaquetas soldadas») pasó de 8 a 12 horas hechas de 12. No cambia el total (643 horas) ni los costos,
 que salen de las horas planificadas; los documentos siguen diciendo que las plaquetas se están armando
 hasta confirmarlo.
+
+**Vuelta 4.** Se repitió todo, esta vez con la integración contra PostgreSQL desde una base vacía, sin
+correr antes `npm run init-db`, para ver qué pasa si alguien despliega contra una base nueva: el
+servidor arranca, pero 20 de las 24 migraciones fallan porque modifican tablas que todavía no existen
+(las crea `schema.sql`). Eso ya estaba documentado («`npm run init-db`, solo la primera vez»), pero el
+aviso del servidor decía «Se reintentan en el próximo arranque, o a mano con: npm run migrate», que en
+ese caso no lo arregla. Lo demás salió bien: `npm test`, ESLint del servidor, la integración completa
+(`init-db` y dos arranques: «Migraciones al día (24 nueva/s)», después «nada pendiente», diez tablas
+con `telares.control_web_activo` y `accesos_cliente`), Chromium (▶ ⏸ con el control prendido; 409 y el
+aviso con «Solo sensado»; la vista del cliente, los 401 y el cambio de clave; y las cinco pruebas de
+navegador anteriores, sin errores), el firmware, los controles de los Word y PDF, el texto, los enlaces
+y las planillas.
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `backend/src/db/migrator.js` | Con una base vacía, el aviso mandaba a `npm run migrate` | Si falta la tabla `patrones`, agrega: «La base no tiene las tablas base (patrones, telares...). Crealas una sola vez con: npm run init-db, y volvé a arrancar el servidor.» |
+| `backend/README.md` | No decía qué pasa en ese caso | Lo dice |
