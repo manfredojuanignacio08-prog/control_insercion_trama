@@ -71,7 +71,7 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       lo aprieta.
 - [ ] Apretar el botón es sacar esa tensión: el GPIO vuelve a 3,3 V después de 0,15 a 0,25 s (lo
       que tarda en descargarse el capacitor). Cada vez que la volvés a aplicar (en el telar, al
-      soltar el botón), el GPIO cae y el monitor serie muestra «Botonera: alguien apretó ...».
+      soltar el botón), el GPIO cae y el monitor serie muestra «Botonera: alguien apretó …».
       Simulando **Marcha** o **Retroceder** sin un trabajo abierto en la web, la barra de estado
       del editor muestra **"Posición incierta"** (con un trabajo abierto, Marcha pasa la web a
       "Tejiendo" y Pausa a "Pausado").
@@ -81,7 +81,7 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       sin tocar nada, falta el capacitor de ese canal o está invertido.
 - [ ] **Encendido del telar:** aplicá la tensión a dos o tres canales a la vez (como cuando se
       prende el telar con el gabinete encendido): el monitor muestra «Botonera: N canales bajaron
-      juntos ...» y no sale ningún aviso.
+      juntos …» y no sale ningún aviso.
 
 ## Etapa 4, Conexión al telar (recién ahora)
 

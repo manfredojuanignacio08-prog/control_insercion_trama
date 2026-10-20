@@ -1607,3 +1607,30 @@ estaba mal:
 | Lista de componentes (planilla) | La nota nueva de la resistencia de protección quedaba cortada (la fila tenía alto fijo), y ya había otras notas cortadas: arriba y abajo (relé LCA110, bobinas, capacitor de 470 µF) o a la derecha, porque no tenían «ajustar texto» (regulador 7824, optoacoplador, borneras, cable) | Las celdas largas con «ajustar texto», las filas con el alto que necesita su texto y centradas en vertical; no cambia ningún valor |
 | Componentes en placa y Checklist (planillas) | Lo mismo en tres filas | Igual |
 | Checklist de verificaciones | Para imprimir salía partida por columnas en 8 hojas | Horizontal, ajustada al ancho y con el encabezado repetido: 2 hojas |
+
+**Vuelta 2.** Además de lo de la vuelta 1, se buscó en todos los PDF: títulos que quedan solos al pie
+de una página, hojas en blanco, filas de tabla partidas, tablas que se salen del margen, columnas
+demasiado angostas para su texto, letras que no son las del proyecto y párrafos con la negrita
+distinta de la de sus vecinos. En los Word se revisaron también la numeración de figuras y tablas,
+las referencias a secciones y los identificadores internos de párrafo. Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Documentación de Proyecto, Tabla 1 (control de cambios) | La columna de la descripción era muy angosta: la tabla ocupaba cinco páginas | Columnas repartidas según el texto: unas dos páginas |
+| Documentación de Proyecto, tablas 2, 4 y 6 a 13 | Columnas angostas que cortaban palabras o estiraban las filas | Anchos según el contenido; el PDF baja de 66 a 57 páginas |
+| Documentación de Proyecto, tablas 11 a 13 y Tabla 12 | Textos de celda sin tamaño de letra (salían más grandes) y la fila de títulos de la Tabla 12 sin el formato de las demás | El tamaño de su fila; la Tabla 12, con fondo azul y letra blanca en negrita |
+| Estado completo (tabla 3), Conexiones de las plaquetas (tabla 8) y Bitácora (tablas 1 a 4) | Lo mismo: columnas que no seguían su contenido | Anchos según el texto |
+| Los 17 Word con títulos | Títulos y frases que presentan una lista («…dos "máquinas":») quedaban solos al pie de una página, con el texto en la siguiente (por ejemplo «7. Oferta Económica», «3.4.5. Protocolos señalados», «Minuta - Reunión 4», «5. Contrato y garantía») | «Conservar con el siguiente» en todos los títulos, también cuando hay un párrafo vacío en el medio |
+| Modalidad de inversión, Guía de armado del Bloque A y Componentes completos | Sin letra definida: salían enteros en Times, distintos del resto | IBM Plex Sans, la de toda la documentación |
+| Conexionado del Nivel 2, Estado completo, Guía de los Bloques C y D, Parado automático | Las viñetas salían en Times | Con la letra del documento |
+| Documentación de Proyecto (Nivel 2 en 2.2, 3.4.8, Respaldo en 3.4.9, Paso 3 en 5.3, Prensacables, PB-4.1, Fabricación de placas, Costos de operación y todos los puntos de 9.5, 9.6 y 9.7) | Diecinueve párrafos enteros en negrita, cuando los de al lado (y el sitio) llevan en negrita solo el rótulo; uno de la sección 8 en negrita sin serlo | Negrita solo en el rótulo; el de la sección 8, en letra común |
+| Estado completo, Guía de los Bloques C y D, Conexionado del Nivel 2, Manual del telar y Guía de los relés | Lo mismo en diez párrafos («Adaptación de la señal», «Sobre el encapsulado», «Cuatro relés OptoMOS LCA110…», tres avisos del conexionado, «Estado de este documento», «Medir un lector óptico…») | Negrita solo en el rótulo |
+| Bitácora, entradas del 16/10 al 20/10 | Enteras en negrita; las demás llevan en negrita solo la fecha | Solo la fecha en negrita |
+| Estimación de costos, 3.7 | «Cable de control» y «Gabinete o caja de protección» no tenían el rótulo en negrita, como los otros dos puntos | En negrita |
+| Componentes completos | Las dos tablas medían más que el ancho de la hoja (se salían del margen derecho) y una hoja quedaba en blanco al pasar a la letra del proyecto | Tablas del ancho del texto, en 9 pt, y los capítulos empiezan en página nueva sin dejar hojas vacías: sigue en 4 páginas |
+| Documentación de Proyecto, Manual del telar, Manual de la página y Registro de entrevistas | 147 párrafos tenían el mismo identificador interno que otro (párrafos copiados); Word puede pedir reparar el archivo | Identificadores únicos |
+| Documentación de Proyecto (PDF) | Terminaba con una hoja en blanco (estaba así en todas las versiones anteriores); el Word termina en las firmas | El PDF termina en la página de las firmas |
+| Documentación de Proyecto (15 tablas), Estimación de costos (2) y Registro de entrevistas (10) | La fila de títulos no se repetía en la hoja siguiente, y la de la Tabla 2 (acrónimos) quedaba sola al pie de la página 8 | Fila de títulos repetida en cada hoja |
+| Tablas de todos los Word | Algunas filas se partían entre dos páginas y dejaban una sola línea arriba de la hoja siguiente (Bitácora, «grilla matricial.») | Las filas cortas ya no se parten (en el Registro, las de hasta 250 letras, para no dejar huecos); las largas sí pueden |
+| Gantt (en el Google Sheet), C12 a C21 | «Analisis del mercado», «Fabrica de tela» sin tilde y espacios dobles en «Armado de entrevista  - Taller CyP» y otras cuatro | Corregidas en el Drive y bajadas otra vez al repositorio; no cambia ninguna fecha ni hora |
+| `esp32/documentacion/CHECKLIST_VALIDACION.md` | Los dos mensajes del monitor serie llevaban tres puntos sueltos («apretó ...», «juntos ...»), y el resto de la documentación usa «…» | «…» |
