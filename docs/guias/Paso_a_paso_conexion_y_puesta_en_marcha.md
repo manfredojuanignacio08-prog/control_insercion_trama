@@ -102,7 +102,8 @@ El servidor (backend) corre en **Render** y usa la base de datos de **Neon**. La
 
 1. Abrir `https://control-trama-backend.onrender.com` desde el celular o la computadora.
 2. Entrar con la **huella** (operario). «Continuar sin iniciar sesión» entra como invitado: mira, pero no comanda el telar.
-3. Con la sesión iniciada, abrir `https://control-trama-backend.onrender.com/api/telares`: la web usa el **primero** de la lista. Su `id` es el que va en `TELAR_ID` del firmware (hoy, **8**).
+3. Para las primeras pruebas con la máquina se puede apagar «Control desde la página», en la barra de estado del editor: en solo sensado la página no acciona los relés y se ve igual todo lo que sensa el ESP32. Se vuelve a prender con el mismo interruptor.
+4. Con la sesión iniciada, abrir `https://control-trama-backend.onrender.com/api/telares`: la web usa el **primero** de la lista. Su `id` es el que va en `TELAR_ID` del firmware (hoy, **8**).
 
 ### 5.3 Sin internet o en la escuela (opcional)
 
@@ -130,7 +131,7 @@ Todo el sistema se puede levantar en una PC con Docker: el archivo `backend/.env
 
 1. Las plaquetas conectadas entre sí (J1 a J4) y alimentadas con la fuente; el ESP32 con el firmware, ya sin el USB.
 2. Reiniciar el ESP32: **ningún relé se dispara solo**. Si alguno se dispara, revisar las resistencias de arranque seguro.
-3. En la web, abrir un dibujo y tocar **▶**: clic del relé de Marcha (un pulso, no queda pegado). **⏸**: clic de Pausa. **⏪** (con confirmación): clic de Retroceder.
+3. En la web, con «Control desde la página» prendido, abrir un dibujo y tocar **▶**: clic del relé de Marcha (un pulso, no queda pegado). **⏸**: clic de Pausa. **⏪** (con confirmación): clic de Retroceder.
 4. Sensado: aplicar 24 V de alterna (o de 12 a 24 V de continua) a la entrada de cada canal: el GPIO cae a 0 V y el monitor serie dice «Botonera: alguien apretó …», y la web lo muestra (sección 10). En el telar ese momento es cuando se suelta el botón: en reposo, el par NA tiene 24 V. Con la tensión aplicada a dos o tres canales a la vez, el monitor dice que bajaron juntos y no avisa nada.
 5. Nivel 2 (si está armado): con `NIVEL2_INSTALADO` y `MODO_BANCO` en true, un LED con su resistencia y una pila entre las patas 4 y 6 de cada relé. Al tejer desde la web, cada LED se enciende según su columna del dibujo. Después, `MODO_BANCO` vuelve a **false**, y `NIVEL2_INSTALADO` también, hasta conectar el sensor (sección 9).
 
@@ -144,7 +145,7 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 4. Del botón a la bornera **B1** del gabinete, con el cable de 6 conductores (un par por botón), sin cortar ni soldar sobre los cables del telar. No correrlo pegado al cable del motor.
 5. En la plaqueta de sensado, cada bornera B1 lleva el par de su botón a **NO y COM de su relé** (en paralelo con el botón), por su otro par, y a la **entrada de su canal de sensado** (las patas ~ del puente).
 6. Antes de encender el gabinete, encender el telar y comprobar que **la botonera a mano funciona igual que siempre**.
-7. Encender el gabinete. Desde la web: ▶ arranca la máquina, ⏸ la pausa y ⏪ la hace retroceder una pasada. Con alguien al lado del botón Stop del telar.
+7. Encender el gabinete. Desde la web, con «Control desde la página» prendido: ▶ arranca la máquina, ⏸ la pausa y ⏪ la hace retroceder una pasada. Con alguien al lado del botón Stop del telar.
 8. Apretar los botones a mano, al menos medio segundo cada uno: al soltarlos, la web lo refleja (sección 10).
 
 ## 9. Conectar el Nivel 2 (sensor y relés de selección)

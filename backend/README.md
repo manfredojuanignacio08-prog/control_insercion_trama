@@ -26,9 +26,9 @@ npm run init-db
 
 Esto ejecuta `backend/src/db/schema.sql`: crea las tablas del telar (`patrones`, `telares`,
 `historial_produccion`, `errores_log`), las del ingreso (`usuarios`, `credenciales_biometricas`,
-`desafios_webauthn`, `invitaciones`), la de las claves de los clientes (`accesos_cliente`), los índices y el trigger de `modificado_at`. Es seguro
-correrlo de nuevo: usa `CREATE TABLE IF NOT EXISTS`. Las migraciones (`npm run migrate`) las
-aplica además el servidor solo al arrancar.
+`desafios_webauthn`, `invitaciones`), la de las claves de los clientes (`accesos_cliente`), los
+índices y el trigger de `modificado_at`. Es seguro correrlo de nuevo: usa `CREATE TABLE IF NOT
+EXISTS`. Las migraciones (`npm run migrate`) las aplica además el servidor solo al arrancar.
 
 ## 3. Levantar el servidor
 

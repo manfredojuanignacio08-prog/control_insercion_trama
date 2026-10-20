@@ -26,11 +26,14 @@ Desde que se escribió, la API cambió. Tal como está, esta app **no funcionar�
 
 - **Inicio de sesión.** Hoy toda la API (salvo `/api/health`, `/api/auth/*` y la vista de los
   clientes, `/api/cliente/*`) exige una sesión (cookie firmada que entrega el ingreso con
-  huella o con el código de recuperación) o la clave del dispositivo. Sin eso cada pedido responde **401**. Habría que sumar el
-  ingreso (WebAuthn en Android, o el código de recuperación con `POST /api/auth/recuperar`)
-  y guardar la cookie (`CookieJar` de OkHttp).
+  huella o con el código de recuperación) o la clave del dispositivo. Sin eso cada pedido
+  responde **401**. Habría que sumar el ingreso (WebAuthn en Android, o el código de
+  recuperación con `POST /api/auth/recuperar`) y guardar la cookie (`CookieJar` de OkHttp).
 - **Pausa y reanudación.** El telar se pausa con `POST /api/telares/:id/pausar` y se retoma
   con `/reanudar`; `/detener` cierra el trabajo. La app solo conoce `/detener`.
+- **Solo sensado.** Si en la página apagaron el control del telar (`control_web_activo` en
+  `false`), pausar, reanudar y retroceder responden **409 `CONTROL_WEB_DESACTIVADO`**, y
+  asignar un dibujo lo deja cargado sin arrancar la máquina. La app tendría que mostrarlo.
 - **Quién avanza la posición.** El sensor del Nivel 2 informa con
   `POST /api/telares/:id/pasadas` (solo con la clave del dispositivo); `/avanzar` es el
   avance estimado por reloj que usa la web, y responde 409 cuando el sensor está activo.

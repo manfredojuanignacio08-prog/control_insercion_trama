@@ -1502,3 +1502,15 @@ tablas), `npm audit` (0), el contraste y el HTML de la página y de los dos siti
 |---|---|---|
 | `documentacion_proyecto/LEEME.md` | Nombraba el Gantt como «`Gantt_2026 - ...xlsx`» | El nombre completo del archivo |
 | Documentación de Proyecto (Word, PDF y sitio), Tabla 4 «Características de los usuarios» | No estaba el cliente de la fábrica, que ahora usa el sistema con la clave de su tejido. Y el dueño «verificaba el avance en la consola de inicio», que no lo muestra (el avance está en el editor y en las estadísticas de la biblioteca) | Fila nueva «Cliente de la fábrica», y el dueño verifica el avance en el editor y en las estadísticas |
+
+**Vuelta 5.** Busqué, en todos los documentos, las listas que tendrían que nombrar lo nuevo (usuarios,
+pantallas, rutas, verificaciones) y comparé la guía de conexión en Markdown con su Word. Lo que
+estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md` | Le faltaba la nota de «Control desde la página» para las primeras pruebas, que su versión en Word sí tenía | La nota, en el mismo lugar (5.2) |
+| La misma guía (Markdown, Word y PDF), secciones 7 y 8 | Las pruebas de los relés desde la web no decían que hace falta el control prendido: después de la nota anterior, alguien podía probar con el control apagado y no escuchar ningún clic | «con «Control desde la página» prendido» en las dos pruebas |
+| Guía de mediciones y verificaciones (Word y PDF) | Las órdenes desde la web (2.3) no tenían la verificación de solo sensado, que el checklist y `CHECKLIST_VALIDACION.md` sí tienen | Verificación 21 «Solo sensado»; las siguientes corren un número (57 en total) |
+| `_referencia_app_android/AVISO.md` | La lista de lo que cambió en la API no tenía el solo sensado (409 `CONTROL_WEB_DESACTIVADO`), y un renglón había quedado largo | El punto nuevo, y el párrafo rearmado |
+| `backend/README.md` | Un renglón del párrafo de `init-db` había quedado largo al sumar `accesos_cliente` | Rearmado como el resto |
