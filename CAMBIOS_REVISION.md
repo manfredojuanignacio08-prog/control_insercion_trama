@@ -1454,3 +1454,22 @@ puntos 4.3 y 4.6; la vista del cliente en 2.5 y 4.10, con capturas nuevas), la D
 completo del proyecto, la Bitácora (20/10), el Manual del telar en la fábrica, la Guía de conexión y
 puesta en marcha (Word y PDF de cada uno), los dos sitios y el checklist de verificaciones (punto 26,
 «Solo sensado»: que con el control apagado ningún relé haga clic, y que la botonera siga avisando).
+
+### Revisión completa después de agregar las dos funciones
+
+Repetí la revisión de todo (código, pruebas, Markdown, Word, PDF, planillas, diagramas y los dos
+sitios), empezando de nuevo cada vez que aparecía un error.
+
+**Vuelta 1.** Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `telares.controller.js` (mensajes de solo sensado) | Al terminar un trabajo con la máquina tejiendo, el servidor decía «…pará la máquina con Pausa y después terminá el trabajo **con la botonera del telar**», y el trabajo se termina desde la página. Los otros decían «arrancalo con Marcha con la botonera» | Cada mensaje dice entero qué hacer: «Paralo con Pausa en la botonera y después terminá el trabajo», «arrancá el telar con Marcha en su botonera», «pausá el telar con su botonera», «retrocedé con la botonera del telar» |
+| Web, editor | En solo sensado, con el telar tejiendo, tocar la grilla decía «Pausá o detené la ejecución», cosa que la página no puede hacer en ese modo | «El telar está tejiendo: pausalo con la botonera para poder editar la matriz». Prueba nueva en `tests/frontend.test.mjs` |
+| `utils/codigos.js` | Un comentario decía «256 no es múltiplo de 32» (sí lo es) | Corregido |
+| `backend/.env.example`, `DESPLIEGUE_RENDER.md`, `PUESTA_EN_MARCHA.md` | Faltaban `CLIENTE_DIAS` y `CLIENTE_INTENTOS_MAX`, y `RECOVERY_SECRET` figuraba solo para los códigos de recuperación | Las dos variables, y que `RECOVERY_SECRET` también cifra las claves de los clientes (si cambia, siguen andando pero hay que generar otra para volver a verlas) |
+| `AUTENTICACION_BIOMETRICA.md`, `_referencia_app_android/AVISO.md` | Decían que las únicas rutas sin sesión son `/api/health` y `/api/auth/*` | Suman `/api/cliente/*`, que verifica la clave o la cookie del cliente |
+| `CHECKLIST_VALIDACION.md`, `esp32/verificacion/LEEME.md` | 19 chequeos de coherencia | 20 (el de solo sensado) |
+| Manual de la página web y Manual del telar (Word, PDF y sitio) | Frases sin la excepción de solo sensado: «Pausa y Retroceder funcionan en cualquier momento», «las dos formas arrancan la máquina», «se puede detener desde la página», «Nuevo: primero hay que pausar (⏸)» | Cada una aclara qué pasa en solo sensado (se hace con la botonera) |
+| Documentación de Proyecto (Word, PDF y sitio), control de cambios | Terminaba en la versión 5.0 (14/10): no figuraban el cronograma reorganizado, los valores por hora nuevos ni las dos funciones | Versión 5.1 (20/10/2026) |
+| Sitio de la documentación (`web_doc/`) | 27 archivos que ninguna página usa, con contenido viejo: el Gantt anterior, la estructura de costos con el presupuesto de $37.053.629, el modelo de datos viejo y capturas con el diseño anterior de la aplicación | Quitados; el `LEEME.md` de los sitios dice qué es cada archivo que queda |

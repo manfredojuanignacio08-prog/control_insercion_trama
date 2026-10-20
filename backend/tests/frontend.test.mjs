@@ -403,6 +403,9 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   // ⏹ con la máquina tejiendo: avisa que primero hay que pararla con la botonera
   f.run('isPlaying=true'); f.run('terminarTrabajo()'); f.run('isPlaying=false');
   assert.deepEqual(pedidos, []); assert.match(f.els['toast'].textContent, /Pausa en la botonera/);
+  // editar con la máquina tejiendo: el aviso manda a la botonera (la página no puede pausarla)
+  f.run('isPlaying=true'); assert.equal(f.run('edicionBloqueada()'), true); f.run('isPlaying=false');
+  assert.match(f.els['toast'].textContent, /pausalo con la botonera/);
   // el interruptor vuelve a prender el control (pide confirmación)
   f.run("showConfirm = function(t,m,yes){ yes(); };");
   await f.run('cambiarControlWeb()'); await new Promise(r => setImmediate(r));

@@ -50,7 +50,7 @@ export function descifrarCodigo(guardado) {
 // Sin I, O, 0 ni 1: no se confunden al dictarlos o anotarlos.
 const LETRAS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function letrasAlAzar(n) {
-  // 256 no es múltiplo de 32, pero 32 sí divide 256: el módulo no introduce sesgo.
+  // 32 divide exacto a 256 (256 = 8 × 32): el módulo no favorece a ninguna letra.
   const bytes = crypto.randomBytes(n);
   let s = '';
   for (let i = 0; i < n; i++) s += LETRAS[bytes[i] % LETRAS.length];

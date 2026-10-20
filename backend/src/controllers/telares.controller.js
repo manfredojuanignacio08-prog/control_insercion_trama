@@ -31,19 +31,19 @@ function leerPasos(pasos) {
 // máquina: esas órdenes se rechazan con 409 CONTROL_WEB_DESACTIVADO, y el ESP32 tampoco pulsa
 // los relés aunque el estado cambie (lo lee en la misma consulta). El sensado sigue igual: la
 // botonera y el sensor de pasada avisan lo que hace la máquina y la página lo muestra.
-function soloSensado(accion) {
+function soloSensado(queHacer) {
   return conflict(
-    `El control desde la página está desactivado (solo sensado): ${accion} con la botonera del telar.`,
+    `El control desde la página está desactivado (solo sensado): ${queHacer}`,
     'CONTROL_WEB_DESACTIVADO'
   );
 }
 
 // Para los UPDATE que filtran por control_web_activo: si no tocaron ninguna fila, dice si fue
 // porque el telar no existe (404) o porque tiene el control apagado (409).
-async function sinFilaPorControl(id, accion) {
+async function sinFilaPorControl(id, queHacer) {
   const { rows } = await pool.query('SELECT control_web_activo FROM telares WHERE id = $1', [id]);
   if (rows.length === 0) return notFound(`No existe el telar con id ${id}.`);
-  return soloSensado(accion);
+  return soloSensado(queHacer);
 }
 
 const COLUMNAS_TELAR = `
@@ -263,7 +263,7 @@ export async function detenerTelar(req, res, next) {
     // Solo sensado: terminar el trabajo con la máquina andando la dejaría tejiendo con la página
     // diciendo "Detenido" (el ESP32 no pulsa Pausa). Primero se la para con la botonera.
     if (telar.rows[0].control_web_activo === false && telar.rows[0].estado === 'tejiendo') {
-      throw soloSensado('el telar está tejiendo; pará la máquina con Pausa y después terminá el trabajo');
+      throw soloSensado('el telar está tejiendo. Paralo con Pausa en la botonera y después terminá el trabajo.');
     }
 
     const enCurso = await client.query(
@@ -456,7 +456,7 @@ export async function pausarTelar(req, res, next) {
        RETURNING id, estado, patron_actual_id`,
       [id]
     );
-    if (rows.length === 0) throw await sinFilaPorControl(id, 'pausalo');
+    if (rows.length === 0) throw await sinFilaPorControl(id, 'pausá el telar con su botonera.');
     res.json(rows[0]);
   } catch (err) {
     next(err);
@@ -478,7 +478,7 @@ export async function reanudarTelar(req, res, next) {
     await client.query('BEGIN');
     const telar = await client.query('SELECT id, control_web_activo FROM telares WHERE id = $1 FOR UPDATE', [id]);
     if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
-    if (telar.rows[0].control_web_activo === false) throw soloSensado('arrancalo con Marcha');
+    if (telar.rows[0].control_web_activo === false) throw soloSensado('arrancá el telar con Marcha en su botonera.');
     const enCurso = await client.query(
       `SELECT id FROM historial_produccion
        WHERE telar_id = $1 AND estado = 'en_curso'`,
@@ -531,7 +531,7 @@ export async function retrocederFisico(req, res, next) {
        RETURNING id, retroceder_seq, retrocesos_contados`,
       [id]
     );
-    if (rows.length === 0) throw await sinFilaPorControl(id, 'retrocedelo');
+    if (rows.length === 0) throw await sinFilaPorControl(id, 'retrocedé con la botonera del telar.');
     res.json(rows[0]);
   } catch (err) {
     next(err);

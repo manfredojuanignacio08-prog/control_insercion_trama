@@ -1784,7 +1784,10 @@ function updPlayUI() {
 // dibujo (ver abajo). Devuelve true (y avisa) si la edición está bloqueada ahora mismo.
 function edicionBloqueada({ nuevo = false } = {}) {
   if (isPlaying) {
-    toast('Pausá o detené la ejecución para poder editar la matriz');
+    // En solo sensado la página no puede parar la máquina: se pausa con la botonera.
+    toast(controlWebActivo
+      ? 'Pausá o detené la ejecución para poder editar la matriz'
+      : 'El telar está tejiendo: pausalo con la botonera para poder editar la matriz');
     return true;
   }
   // Un invitado no puede modificar los dibujos de los operarios (el servidor lo rechaza). Se avisa
