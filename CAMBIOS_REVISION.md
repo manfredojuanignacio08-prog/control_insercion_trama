@@ -1492,3 +1492,13 @@ clave, editor en solo sensado) en los dos temas, sin problemas.
 | `backend/public/index.html` | `html-validate` marcaba los tres menús de abajo (uno por pantalla) sin un nombre propio para los lectores de pantalla, y este registro dice que la página valida sin errores | Cada menú tiene su `aria-label`; la página vuelve a validar sin errores |
 | Sitio de la documentación | 66 encabezados de tabla sin `scope` (`html-validate`, regla de accesibilidad) | `scope="col"` en todos; el sitio valida sin errores, igual que el de los manuales |
 | `main` | Tenía cuatro subidas a mano del 19/10 (el registro, la web, el Gantt, los costos y varios documentos) y el PR no se podía unir | Son copias exactas de versiones de este branch: se unió `main` quedándose con lo del branch, sin cambiar el contenido |
+
+**Vuelta 4.** Todos los PDF de `documentacion_proyecto/PDF/` exportados de nuevo y comparados con
+su Word (los 17 iguales), los enlaces de los Markdown, las referencias «punto N» de los dos
+manuales, el SQL completo contra su generador y contra una base vacía (24 migraciones, diez
+tablas), `npm audit` (0), el contraste y el HTML de la página y de los dos sitios. Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `documentacion_proyecto/LEEME.md` | Nombraba el Gantt como «`Gantt_2026 - ...xlsx`» | El nombre completo del archivo |
+| Documentación de Proyecto (Word, PDF y sitio), Tabla 4 «Características de los usuarios» | No estaba el cliente de la fábrica, que ahora usa el sistema con la clave de su tejido. Y el dueño «verificaba el avance en la consola de inicio», que no lo muestra (el avance está en el editor y en las estadísticas de la biblioteca) | Fila nueva «Cliente de la fábrica», y el dueño verifica el avance en el editor y en las estadísticas |

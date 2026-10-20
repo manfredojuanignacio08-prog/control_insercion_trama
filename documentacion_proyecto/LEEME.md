@@ -31,7 +31,7 @@ el repositorio para que el código y la documentación viajen juntos.
 |---|---|
 | `Lista_de_componentes_Control_Trama.xlsx` | Todos los componentes por bloque, con precios y notas. |
 | `Estimacion_Costos_Ganancia_Contrato_v4.docx` | Costos, márgenes y condiciones del servicio. |
-| `Gantt_2026 - ...xlsx` | El cronograma, con 166 tareas en 8 etapas. |
+| `Gantt_2026 - Automatizacion de Telar Industrial.xlsx` | El cronograma, con 166 tareas en 8 etapas. |
 
 ## Inversión y armado
 
