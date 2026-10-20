@@ -1669,3 +1669,12 @@ y las planillas.
 |---|---|---|
 | `backend/src/db/migrator.js` | Con una base vacía, el aviso mandaba a `npm run migrate` | Si falta la tabla `patrones`, agrega: «La base no tiene las tablas base (patrones, telares...). Crealas una sola vez con: npm run init-db, y volvé a arrancar el servidor.» |
 | `backend/README.md` | No decía qué pasa en ese caso | Lo dice |
+
+**Vuelta 5.** Todo de nuevo, sin cambiar nada en el medio: `npm test`, ESLint, la base desde cero
+(`init-db` y dos arranques: 24 migraciones y después ninguna pendiente, diez tablas), el firmware
+(6/6, 6/6, 29/29, coherencia 20/20 y las pruebas en la PC), `html-validate` de la página y los dos
+sitios, Chromium con un servidor recién arrancado (las dos funciones y las cinco pruebas anteriores),
+los controles de los 18 Word y sus PDF, el texto de todo el proyecto, los enlaces y las planillas.
+**Sin errores.** Quedan, revisados y a propósito: el orden de lectura de las tablas al pasar el PDF a
+texto, las tablas del Registro de entrevistas corridas hacia el margen (así es el original) y las
+columnas de descripción de los requerimientos, que ya tienen el ancho que les deja el resto.
