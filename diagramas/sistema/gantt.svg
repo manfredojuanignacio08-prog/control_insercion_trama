@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400" font-family="IBM Plex Sans, system-ui, sans-serif">
 <rect width="1000" height="400" fill="#F6F8FA"/>
 <text x="40" y="34" font-size="17" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Cronograma del proyecto, 8 etapas</text>
-<text x="40" y="54" font-size="10.5" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">DEL 16/03/2026 AL 14/11/2026 · 243 DÍAS CORRIDOS · 166 TAREAS</text>
+<text x="40" y="54" font-size="10.5" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">DEL 16/03/2026 AL 14/11/2026 · 243 DÍAS CORRIDOS · 169 TAREAS</text>
 <line x1="250" y1="72" x2="250" y2="350" stroke="#CDD8E0" stroke-width="1"/>
 <text x="254" y="66" font-size="9" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">MAR</text>
 <line x1="328" y1="72" x2="328" y2="350" stroke="#CDD8E0" stroke-width="1"/>
@@ -49,7 +49,7 @@
 <rect x="749.4" y="256" width="84.1" height="16" rx="4" fill="#1E3A5F"/>
 <text x="52" y="300" font-size="10" fill="#3D6B96" font-family="IBM Plex Mono, ui-monospace, monospace" font-weight="600">07</text>
 <text x="82" y="300" font-size="11.5" fill="#1F2937">Plaquetas e instalación</text>
-<text x="82" y="312" font-size="9" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">11 TAREAS · 10/10 al 05/11</text>
+<text x="82" y="312" font-size="9" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">14 TAREAS · 10/10 al 05/11</text>
 <rect x="818.2" y="290" width="68.8" height="16" rx="4" fill="#3D6B96"/>
 <rect x="40" y="316" width="920" height="34" fill="#EDF1F5"/>
 <text x="52" y="334" font-size="10" fill="#3D6B96" font-family="IBM Plex Mono, ui-monospace, monospace" font-weight="600">08</text>

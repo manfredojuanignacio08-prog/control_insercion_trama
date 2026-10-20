@@ -153,7 +153,10 @@ static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 //   - Caso 1 (la tensión la pone la plaqueta): true si el agujero une los 2 bornes de señal y
 //     false si los separa.
 // Las conexiones en paralelo o en serie con el lector, que se evaluaron primero, quedan descartadas.
-// A_CONFIRMAR: la medición sobre el lector (documentacion/PASO_A_PASO_RELES_LCA110.md) confirma el caso.
+// Probado el 17/10/2026 en la planta, en protoboard: el primer canal, conectado así y con true,
+// seleccionó bien.
+// A_CONFIRMAR en los otros tres canales, con la medición sobre cada lector
+// (documentacion/PASO_A_PASO_RELES_LCA110.md).
 #define CANAL_ACTIVO_EN_ALTO   true
 
 // Cómo se aplica la selección: en cada pasada se activa el canal de su bobina. Si la pasada

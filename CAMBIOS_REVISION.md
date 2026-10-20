@@ -1526,3 +1526,54 @@ No apareció nada para corregir.
 
 Queda para decidir el equipo: el Gantt no tiene tareas para estas dos funciones. Sumarlas cambia
 las horas (633) y, con ellas, el presupuesto.
+
+## Trigésima séptima revisión: el Gantt con las dos funciones y la prueba del 17/10 en el telar
+
+**El Gantt, desde el Google Sheet.** Se cargaron en la planilla del Drive (la misma que se usa
+siempre) tres tareas nuevas en la Etapa 07, ya hechas: 7,12 «Agregar el modo solo sensado» (3 h),
+7,13 «Agregar la vista para los clientes» (4 h) y 7,14 «Documentar las dos funciones» (3 h). Las
+tareas 7,4 a 7,6 (medir el lector, el sensor de pasada y el primer canal de los relés) pasan a la
+fecha real, 17/10/2026, y 7,4 depende de 5,21. Las sumas de la planilla se ajustaron solas: 169
+tareas, **643 horas** (586 hechas), y la Etapa 07 pasa de 36 a 46 horas. El `.xlsx` del repositorio
+es la exportación de esa planilla.
+
+**Los costos, con las 643 horas.** Mismo método que antes (las horas de cada tarea, repartidas
+entre sus responsables; tarifa en USD × 1.525 × 1,05):
+
+| Valor | Antes (633 h) | Ahora (643 h) |
+|---|---|---|
+| Personal | $31.325.190 | **$31.844.539** |
+| Costo total (más $231.814 de componentes y gastos) | $31.557.004 | **$32.076.353** |
+| Ganancia (25 %) | $7.889.251 | **$8.019.088** |
+| Presupuesto final | $39.446.255 | **$40.095.441** |
+| Hardware / Software (costo) | $14.357.101 / $17.199.903 | **$14.401.855 / $17.674.498** |
+| Hardware / Software (precio) | $17.946.376 / $21.499.879 | **$18.002.318 / $22.093.123** (44,9 % / 55,1 %) |
+
+Cambian las horas de PM (138,65), D01 (54,07), D02 (72,30), IM01 (102,12), BD (17,90) y MUL (29,00);
+el reparto del personal compartido pasa a 44,7 % / 55,3 %, y la suba del 20 % del dólar, a unos
+$38.200.000 de personal y $48.100.000 de presupuesto. Se actualizaron la Estimación de costos, la
+Modalidad de inversión, la Documentación de Proyecto (sección 8, Figura 13 y 6.1, Figura 11), el
+sitio de la documentación, `diagramas/sistema/estimacion.*` y `gantt.*` (169 tareas, 14 en la
+Etapa 07), el Estado completo, el `LEEME.md` y la Bitácora (entrada del 20/10). En la planilla, la
+hoja «Estimación de Costos» (que suma las horas *hechas* de cada persona) pasa de 1545 a 1575 horas.
+
+**La prueba del 17/10/2026 en el telar**, con el armado en protoboard: la alimentación del lector
+óptico dio entre 15 y 30 V, así que la resistencia de protección es la de **470 Ω 3 W**; el sensor
+de pasada quedó conectado y calibrado, y cuenta las pasadas; y el primer canal de los relés LCA110,
+con la conexión final, seleccionó bien. Faltan los otros tres canales, las plaquetas soldadas (7,2,
+al 67 %) y el gabinete en la planta (7,3). No se midió todavía la corriente con la resistencia de
+protección, y queda como pendiente donde estaba.
+
+| Dónde | Qué cambió |
+|---|---|
+| Bitácora (Word y PDF) | Entrada nueva del 17/10/2026 |
+| Documentación de Proyecto (Word, PDF y sitio) | Control de cambios 5.1, el Nivel 2 (2.2 Alcance), LIM01 y LIM02, el estado de la Etapa 07, el HITO 3, la BOM (la resistencia de protección es de 470 Ω 3 W), la Tabla 15 y el orden de compra, y 10.3 Plazos |
+| Estado completo (Word y PDF) | Los Bloques C y D, el armado, 7.3 «Lo que falta medir» y la lista de lo que falta |
+| Guía de mediciones (Word y PDF) | El registro: lector, alimentación, entre 15 y 30 V, 17/10/2026 |
+| Guías de los Bloques C y D, de los relés LCA110, de conexión y puesta en marcha, Conexionado del Nivel 2 y Conexiones de las plaquetas (Word y PDF) | El valor del C 201 junto a la regla general (que sigue sirviendo para otro telar); en el Conexionado, las tablas de lo confirmado, las incógnitas y las mediciones pendientes |
+| Manual del telar (Word, PDF y sitio), Parado automático, Árbol de problemas | El estado del Nivel 2 |
+| Lista de componentes y Componentes en placa (planillas), Componentes completos (Word y PDF) | «Resistencia de protección 470 Ω 3 W»; el precio sigue a completar |
+| `README.md`, `PUESTA_EN_MARCHA.md`, `diagramas/README.md`, `docs/guias/*.md`, `esp32/control_trama_esp32/README.md` y `config.h` (comentario de `CANAL_ACTIVO_EN_ALTO`), `esp32/documentacion/*.md` | Lo mismo, con las mismas palabras |
+
+Los diagramas de hardware siguen mostrando la regla (220 Ω 2 W hasta 15 V, 470 Ω 3 W de 15 a 30 V):
+es correcta, y los documentos dicen cuál va en el C 201.

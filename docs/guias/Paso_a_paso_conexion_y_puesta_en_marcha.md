@@ -161,9 +161,9 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 
 ### 9.2 Relés de selección (la conexión final)
 
-1. Antes, medir cada lector (Guía de conexión de los relés LCA110, sección 5): la alimentación, la señal con papel y con agujero, y la corriente con la resistencia de protección en serie (menos de **20 mA**).
+1. Antes, medir cada lector (Guía de conexión de los relés LCA110, sección 5): la alimentación, la señal con papel y con agujero, y la corriente con la resistencia de protección en serie (menos de **20 mA**). En el C 201 la alimentación dio entre 15 y 30 V (17/10/2026).
 2. Con el telar desenchufado, en el conector de cada lector: desconectar los 4 cables del lector, **marcarlos** en las dos puntas y aislarlos en su bornera.
-3. En la bornera de 4 vías del conector: el **+** → **resistencia de protección** (220 Ω 2 W hasta 15 V; 470 Ω 3 W de 15 a 30 V) → hilo a la **pata 4**; la **señal** → hilo a la **pata 6**; **10 kΩ ½ W** de la señal al −; la referencia al −.
+3. En la bornera de 4 vías del conector: el **+** → **resistencia de protección** (220 Ω 2 W hasta 15 V; 470 Ω 3 W de 15 a 30 V, la del C 201) → hilo a la **pata 4**; la **señal** → hilo a la **pata 6**; **10 kΩ ½ W** de la señal al −; la referencia al −.
 4. Los 2 hilos de cada canal a su par de **B3**: canal 1 = GPIO 18 = lector y bobina 1; canal 2 = GPIO 19; canal 3 = GPIO 21; canal 4 = GPIO 22. El orden tiene que coincidir con las columnas del dibujo (bobinas 1 a 4).
 5. Primero **un solo canal** (el lector 1) y probarlo. Recién después, los otros tres.
 

@@ -101,9 +101,10 @@ solo sentido y su diodo interno deja pasar el otro semiciclo, con lo que la bobi
 quedaría siempre parcialmente energizada. (El LCA110 no tiene ese problema: lleva
 dos MOSFET enfrentados y además no actúa sobre la bobina: da la señal en el lugar del lector.)
 
-**Dato que falta medir en la máquina:** la tensión y la corriente en la salida
-de un lector óptico, que confirman que el LCA110 alcanza (hasta 350 V y 120 mA) y
-el caso de la conexión final (2A si con agujero la señal va a +V). La velocidad ya está
+**Datos de la máquina:** la alimentación del lector se midió el 17/10/2026, entre
+15 y 30 V (muy por debajo de los 350 V del LCA110), y el primer canal, con la
+conexión final, seleccionó bien. Falta anotar la corriente con la resistencia de
+protección (se esperan menos de 20 mA, contra los 120 mA del relé). La velocidad ya está
 confirmada: el telar trabaja a 300 pasadas por minuto, dato que dio el dueño de
 la planta el 06/09/26, lo que equivale a 5 conmutaciones por segundo y hasta
 180.000 por jornada de 10 horas.

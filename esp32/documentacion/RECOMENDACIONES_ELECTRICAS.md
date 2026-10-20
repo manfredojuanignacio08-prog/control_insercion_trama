@@ -144,7 +144,9 @@ usar para comandarlas y qué no.
 - **Antes de conectarlo hay que medir** la tensión y la corriente en la salida de un lector óptico,
   y qué hace la señal con el agujero. La conexión final (la más segura) pone el relé en lugar del
   lector, con una resistencia de protección: `diagramas/hardware/conexion_final_rele.png` y
-  `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
+  `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`. En el C 201 la alimentación del lector se
+  midió el 17/10/2026: entre 15 y 30 V, así que va la resistencia de protección de 470 Ω 3 W, y el
+  primer canal seleccionó bien.
 
 ## 7. Protecciones que ya quedaron aplicadas en el firmware
 
@@ -168,7 +170,7 @@ relés):
 |---|---|---|
 | Resistencia 10 kΩ | 6 | Polarización de IN1, IN2 y S (3 relés) y de los 3 canales de sensado (punto 1). La del canal de Retroceder va a GND, no a 3V3. |
 | Relé LCA110 (OptoMOS, DIP-6) + 330 Ω + 10 kΩ | 4 de cada uno (+1 LCA110 de repuesto) | Dan la señal en lugar de cada lector óptico en el Nivel 2 (punto 6). Un relé mecánico se gastaría en una jornada por la frecuencia de conmutación. |
-| Resistencia de protección (220 Ω 2 W hasta 15 V; 470 Ω 3 W de 15 a 30 V) + 10 kΩ ½ W | 4 de cada una | Lado del telar de cada relé, en la conexión final (punto 6): la de protección del + del conector del lector a la pata 4, y la de 10 kΩ de la señal al −. |
+| Resistencia de protección 470 Ω 3 W + 10 kΩ ½ W | 4 de cada una | Lado del telar de cada relé, en la conexión final (punto 6): la de protección del + del conector del lector a la pata 4, y la de 10 kΩ de la señal al −. Es de 470 Ω 3 W porque el lector del C 201 se alimenta con 15 a 30 V (medido el 17/10/2026); con hasta 15 V sería de 220 Ω 2 W. |
 | Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
 | Capacitor cerámico 100 nF | 3 | Desacople: uno junto al ESP32 y uno junto a cada módulo de relé (punto 4) |
 | Optoacoplador PC817 + puente DB157 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |

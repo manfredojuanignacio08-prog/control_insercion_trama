@@ -55,7 +55,7 @@ en lugar del lector.
 **La conexión final de los relés LCA110, la más segura.** Un canal completo: el relé ocupa el lugar
 del lector óptico (que con agujero daba la señal +V que activa la bobina), con una resistencia de
 protección en serie con la pata 4 (220 Ω 2 W si el lector se alimenta con hasta 15 V; 470 Ω 3 W de 15
-a 30 V) y una de 10 kΩ ½ W que deja la señal en 0 V (papel) con el relé abierto. Explica qué pasa en
+a 30 V, la del C 201, medido el 17/10/2026) y una de 10 kΩ ½ W que deja la señal en 0 V (papel) con el relé abierto. Explica qué pasa en
 cada situación (el ESP32 pide la bobina, no la pide o está apagado, una falla de cableado), por qué es
 la más segura, los valores, `CANAL_ACTIVO_EN_ALTO` en `true`, las comprobaciones antes de dejarlo
 conectado y la tabla de los cuatro canales. Es el que hay que tener a mano al conectar el Bloque D.

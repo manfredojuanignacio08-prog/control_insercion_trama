@@ -60,17 +60,18 @@ clave real va solo en Render y en la copia que se carga a las placas.
 
 ## 5. Revisar el arranque
 
-En **Logs**, la primera vez deberían aparecer las veintidós migraciones aplicadas:
+En **Logs**, la primera vez deberían aparecer las veinticuatro migraciones aplicadas:
 
 ```
 ✅ migracion_001_... aplicada.
 ...
-Migraciones al día (22 nueva/s).
+Migraciones al día (24 nueva/s).
 Servidor escuchando ...
 ```
 
 Si la base ya tenía aplicadas las anteriores (se desplegó una versión previa), solo aparecen las nuevas
-(por ejemplo, `✅ migracion_022_grupos_intercalados.sql aplicada.` y `Migraciones al día (1 nueva/s).`).
+(por ejemplo, `✅ migracion_023_solo_sensado.sql aplicada.`, `✅ migracion_024_acceso_cliente.sql aplicada.`
+y `Migraciones al día (2 nueva/s).`).
 
 Cualquier línea con ❌ indica una migración que falló: no se aplicó, las demás siguen, y se
 reintenta en el próximo arranque. Si aparece, no seguir: revisar el mensaje.

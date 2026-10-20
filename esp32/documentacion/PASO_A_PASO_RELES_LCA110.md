@@ -4,6 +4,11 @@ Cómo reemplazar cada lector óptico por un relé LCA110: qué medir, cómo deci
 casos corresponde, cómo armar los relés y cómo conectarlos al telar. Se hace **primero con un
 solo lector** (el lector 1) y recién cuando ese canal funciona se repite con los otros tres.
 
+**Lo que ya se hizo en el C 201 (17/10/2026, en la planta, todavía en protoboard):** la alimentación
+del lector dio entre 15 y 30 V, así que la resistencia de protección es la de **470 Ω 3 W**, y el
+primer canal, con la conexión final, seleccionó bien. Falta anotar la corriente del paso 2.5 y repetir
+las etapas 1, 2 y 4 con los lectores 2, 3 y 4, ya con las plaquetas soldadas.
+
 ## La conexión final (la más segura)
 
 Con agujero, el lector óptico **da la señal** que activa la bobina. La conexión final hace que esa

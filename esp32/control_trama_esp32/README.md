@@ -48,8 +48,9 @@ relevamiento, la documentación y la implementación son sobre el C 201 (matríc
 Los tres comparten la arquitectura de selección (lectora óptica sobre cinta de
 papel perforada que comanda bobinas), así que el diseño se traslada. En el C 201 ya
 están confirmadas las cuatro bobinas (el dueño, 19/09/2026) y la tensión de la botonera
-(24 V en alterna, medida el 19/08/2026); falta medir la salida del lector óptico. Si se
-instalara en otro modelo, hay que verificar esas tres cosas sobre esa máquina.
+(24 V en alterna, medida el 19/08/2026), y la alimentación del lector óptico se midió el
+17/10/2026: entre 15 y 30 V. Si se instalara en otro modelo, hay que verificar esas tres cosas
+sobre esa máquina.
 
 ## El retroceso y el sentido de giro
 
@@ -147,8 +148,10 @@ aunque en la documentación aparezcan como bloques separados.
 ## Estado del Nivel 2
 
 **El Nivel 2 no está instalado en la máquina.** El 10/10/2026 se probó todo en protoboard (el
-sensor de pasada y el relé LCA110 con el ESP32) y funcionó; ahora se está haciendo la plaqueta
-para probarlo de manera correcta en el telar. Hasta entonces la placa corre este mismo programa
+sensor de pasada y el relé LCA110 con el ESP32) y funcionó, y el 17/10/2026 se probó en el telar,
+todavía en protoboard: el sensor de pasada quedó conectado y calibrado, y el primer canal, con el
+relé en el lugar del lector, seleccionó bien. Ahora se están haciendo las plaquetas para instalarlo
+de manera correcta, con los cuatro canales. Hasta entonces la placa corre este mismo programa
 con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
 
 ## Qué falta antes de poder usarlo
@@ -157,8 +160,8 @@ con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
 |---|---|
 | Tensión continua que entrega el telar al sensor (12 a 14 V), con la máquina en marcha | Confirmar la resistencia del canal del sensor (1,2 kΩ; con 24 V sería de 2,2 kΩ) |
 | Relación de giro del eje elegido | Confirmado el 10/09/2026: una vuelta por pasada |
-| Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado |
-| Si con agujero la señal del lector va a +V (lo que dijeron en la planta: el lector da la señal) | Confirmar la conexión final (el relé en lugar del lector, caso 2A, `diagramas/hardware/conexion_final_rele.png`) y `CANAL_ACTIVO_EN_ALTO` en `true` |
+| Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado. La alimentación se midió el 17/10/2026: entre 15 y 30 V, así que la resistencia de protección es la de 470 Ω 3 W. Falta anotar la corriente |
+| Si con agujero la señal del lector va a +V (lo que dijeron en la planta: el lector da la señal) | Confirmar la conexión final (el relé en lugar del lector, caso 2A, `diagramas/hardware/conexion_final_rele.png`) y `CANAL_ACTIVO_EN_ALTO` en `true`. El 17/10/2026 el primer canal, conectado así, seleccionó bien: falta en los otros tres |
 | Sincronización entre el pulso del sensor y la lectura del telar | Ajustar `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba |
 | Si la plaqueta toma la selección mantenida | `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita y cambia cuando cambia. Si alguna pasada no la toma, probar un porcentaje (50 %): se suelta en cada pasada, como el papel |
 
