@@ -1,5 +1,7 @@
 import express from 'express';
 import * as patronesController from '../controllers/patrones.controller.js';
+import * as clienteController from '../controllers/cliente.controller.js';
+import { requerirOperario } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -21,5 +23,10 @@ router.put('/:id/metros-por-pasada', patronesController.actualizarMetrosPorPasad
 router.put('/:id/hilado', patronesController.actualizarHilado);
 router.get('/:id/estadisticas', patronesController.estadisticasPatron);
 router.delete('/:id', patronesController.eliminarPatron);
+// Clave del cliente para ver su tejido (vista de solo lectura): solo operarios registrados.
+router.get('/:id/acceso-cliente', requerirOperario, clienteController.verAccesoCliente);
+router.post('/:id/acceso-cliente', requerirOperario, clienteController.generarAccesoCliente);
+router.patch('/:id/acceso-cliente', requerirOperario, clienteController.editarAccesoCliente);
+router.delete('/:id/acceso-cliente', requerirOperario, clienteController.quitarAccesoCliente);
 
 export default router;

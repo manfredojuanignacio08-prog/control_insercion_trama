@@ -176,8 +176,10 @@ El cifrado actual del código se documenta en `migracion_016_recovery_cifrado.sq
 
 Desde esta versión el login **sí protege la API**. Al verificar la huella (o el código de
 recuperación) el servidor entrega una cookie de sesión firmada (`HttpOnly`, `SameSite=Lax`,
-`Secure` con HTTPS) y todas las rutas de `/api` (salvo `/api/health` y `/api/auth/*`) exigen
-esa cookie o, en el caso de los ESP32, la clave de dispositivo (`X-Device-Key`). Antes,
+`Secure` con HTTPS) y todas las rutas de `/api` (salvo `/api/health`, `/api/auth/*` y
+`/api/cliente/*`, la vista de los clientes, que verifica en cada pedido la clave o la cookie
+propia del cliente) exigen esa cookie o, en el caso de los ESP32, la clave de dispositivo
+(`X-Device-Key`). Antes,
 `login/verificar` solo devolvía `{ok:true}` y ninguna ruta lo comprobaba.
 
 - `GET /api/auth/sesion`: la web lo consulta al abrir para no pedir el login de nuevo.

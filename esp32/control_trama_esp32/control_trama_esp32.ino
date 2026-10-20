@@ -176,6 +176,9 @@ static const long          MAX_RETROCESOS_PENDIENTES = 3;
 
 int estadoDeseado = -1;           // -1 desconocido | 0 detenido | 1 tejiendo (lo último que ordenó el backend)
 int retrocederSeqConocido = -1;   // -1 desconocido: no se pulsa hasta la primera lectura
+// Solo sensado: con el control desde la página apagado (control_web_activo en false) no se pulsa
+// ningún relé, cambie lo que cambie el estado. El sensado de la botonera sigue avisando igual.
+bool controlWebActivo = true;
 unsigned long ultimoComando = 0;
 
 volatile bool eventoMarchaPendiente     = false;
@@ -335,6 +338,16 @@ void botoneraAplicarEstado(const char* estado, long retrocederSeqAhora, bool lis
     estadoDeseado = deseadoAhora;
     if (retrocederSeqAhora >= 0) retrocederSeqConocido = retrocederSeqAhora;
     log(String("Estado inicial: ") + (deseadoAhora ? "tejiendo" : "detenido") + " (sin actuar)");
+    return;
+  }
+
+  // Solo sensado: lo que cambie en el backend (un dibujo cargado que queda en pausa, un trabajo
+  // terminado con la máquina parada) solo se memoriza. Así, al volver a prender el control, no sale
+  // un pulso de una orden vieja.
+  if (!controlWebActivo) {
+    if (deseadoAhora != estadoDeseado) log("Solo sensado: el estado cambió y no se acciona ningún relé");
+    estadoDeseado = deseadoAhora;
+    if (retrocederSeqAhora >= 0) retrocederSeqConocido = retrocederSeqAhora;
     return;
   }
 
@@ -657,6 +670,7 @@ void consultarEstado() {
     filtro["retrocesos_contados"] = true;
     filtro["historial_actual_id"] = true;
     filtro["retroceder_seq"] = true;
+    filtro["control_web_activo"] = true;
     JsonDocument doc;
     const DeserializationError err = deserializeJson(doc, http.getString(), DeserializationOption::Filter(filtro));
     http.end();
@@ -672,6 +686,13 @@ void consultarEstado() {
 
     const char* estado = doc["estado"] | "apagado";
     bool debeTejer = (strcmp(estado, "tejiendo") == 0);
+    // Sin el campo (un backend anterior a la migración 023), el control queda prendido como siempre.
+    const bool controlAhora = doc["control_web_activo"] | true;
+    if (controlAhora != controlWebActivo) {
+      log(controlAhora ? "Control desde la página prendido: los relés vuelven a responder"
+                       : "Solo sensado: la página no acciona los relés; el sensado sigue");
+      controlWebActivo = controlAhora;
+    }
 
     if (!NIVEL2_INSTALADO) {
       // Solo el Bloque A: Marcha, Pausa y Retroceder según lo que pida el backend.

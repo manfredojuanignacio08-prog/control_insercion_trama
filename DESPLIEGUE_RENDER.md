@@ -21,7 +21,7 @@ que ya está; no pasa nada, el código nuevo todavía no está subido.
 | `PGSSL` | `true` | **El servidor no puede conectarse a Neon** si la URL no trae `sslmode`: Neon exige conexión cifrada. Con este valor se cifra y se verifica el certificado del servidor. En `DATABASE_URL`, usar `?sslmode=verify-full` (Neon la da con `require`) |
 | `TRUST_PROXY` | `true` | Nada: en Render se activa solo. Es necesaria si el servidor corre detrás de otro proxy |
 | `SESSION_SECRET` | Clave larga al azar (ver abajo) | **El servidor no arranca** |
-| `RECOVERY_SECRET` | Otra clave larga al azar, **distinta** | **El servidor no arranca**. Cifra los códigos de recuperación en la base |
+| `RECOVERY_SECRET` | Otra clave larga al azar, **distinta** | **El servidor no arranca**. Cifra los códigos de recuperación y las claves de los clientes en la base |
 | `ESP32_DEVICE_KEY` | Otra clave larga al azar, **distinta** | Ningún ESP32 puede conectarse |
 | `WEBAUTHN_RP_ID` | `control-trama-backend.onrender.com` | El login por huella queda menos protegido |
 | `WEBAUTHN_ORIGIN` | `https://control-trama-backend.onrender.com` | Ídem |

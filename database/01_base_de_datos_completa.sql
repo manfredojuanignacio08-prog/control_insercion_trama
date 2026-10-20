@@ -216,6 +216,28 @@ ALTER TABLE telares ADD COLUMN IF NOT EXISTS motivo_pausa           TEXT;
 DROP INDEX IF EXISTS idx_historial_en_curso;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_historial_en_curso ON historial_produccion (telar_id) WHERE estado = 'en_curso';
 
+-- ============================================================
+-- Migración 023 (ver db/migracion_023_solo_sensado.sql): solo sensado, el control del telar
+-- desde la página se puede apagar. El sensado sigue.
+-- ============================================================
+ALTER TABLE telares ADD COLUMN IF NOT EXISTS control_web_activo BOOLEAN NOT NULL DEFAULT true;
+
+-- ============================================================
+-- Migración 024 (ver db/migracion_024_acceso_cliente.sql): clave de un cliente para ver su
+-- tejido. Se guarda con hash (para buscarla) y cifrada (para que el operario la vuelva a ver).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS accesos_cliente (
+  patron_id      INTEGER PRIMARY KEY REFERENCES patrones(id) ON DELETE CASCADE,
+  cliente_nombre TEXT CHECK (cliente_nombre IS NULL OR char_length(cliente_nombre) BETWEEN 1 AND 80),
+  clave_hash     TEXT NOT NULL UNIQUE,
+  clave_cifrada  TEXT NOT NULL,
+  -- metros que encargó el cliente (opcional): con ellos ve cuánto lleva de su pedido
+  metros_pedidos NUMERIC(12, 2) CHECK (metros_pedidos IS NULL OR (metros_pedidos > 0 AND metros_pedidos <= 10000000)),
+  creada_por     TEXT,
+  creada_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ultimo_acceso  TIMESTAMPTZ
+);
+
 
 -- ============================================================
 -- migracion_001_matriz_ligamento.sql
@@ -973,6 +995,63 @@ COMMENT ON COLUMN patrones.grupos_intercalados IS
 
 
 -- ============================================================
+-- migracion_023_solo_sensado.sql
+-- ============================================================
+-- ============================================================
+-- 023 · Solo sensado: apagar el control del telar desde la página.
+--
+-- Con control_web_activo en false, la página no puede arrancar, pausar ni retroceder la máquina:
+-- el backend rechaza esos pedidos (409 CONTROL_WEB_DESACTIVADO) y el ESP32 no pulsa ningún relé
+-- aunque el estado cambie. Todo lo demás sigue igual: el sensado de la botonera y el sensor de
+-- pasada avisan lo que hace la máquina, el Nivel 2 sigue seleccionando las bobinas del dibujo y
+-- la página muestra la posición y el conteo. Sirve cuando se quiere manejar el telar solo con su
+-- botonera (por ejemplo mientras se prueba el sistema en la fábrica).
+--
+-- Con el control apagado se puede cargar un dibujo (abre la producción sin arrancar la máquina:
+-- arranca cuando alguien toca Marcha en la botonera) y terminar un trabajo con la máquina parada.
+ALTER TABLE telares
+  ADD COLUMN IF NOT EXISTS control_web_activo BOOLEAN NOT NULL DEFAULT true;
+
+COMMENT ON COLUMN telares.control_web_activo IS
+  'false = solo sensado: la página no acciona Marcha, Pausa ni Retroceder (el ESP32 no pulsa los relés); el sensado sigue.';
+
+
+-- ============================================================
+-- migracion_024_acceso_cliente.sql
+-- ============================================================
+-- ============================================================
+-- 024 · Vista para clientes: una clave por tejido.
+--
+-- Cada dibujo (el tejido de un cliente) puede tener UNA clave de acceso. Con ella, el cliente
+-- entra a una vista de solo lectura donde ve únicamente ese tejido: cómo se ve la tela, si se
+-- está tejiendo, cuánto avanzó, los metros tejidos y lo que falta. No ve otros dibujos, ni los
+-- controles del telar, ni los errores, ni quién lo operó.
+--
+-- La clave se guarda dos veces, y ninguna en texto plano:
+--   clave_hash     SHA-256, para encontrar el tejido cuando el cliente la escribe (única).
+--   clave_cifrada  AES-256-GCM con RECOVERY_SECRET, para que el operario la pueda volver a ver
+--                  y mandársela al cliente.
+-- metros_pedidos (opcional) son los metros que encargó el cliente: con los metros por pasada del
+-- dibujo, la vista le muestra cuánto lleva de su pedido.
+-- Generar una clave nueva reemplaza la anterior: la vieja deja de andar, también para quien ya
+-- había entrado con ella. Borrar el acceso hace lo mismo. Si se borra el dibujo, se borra su acceso.
+CREATE TABLE IF NOT EXISTS accesos_cliente (
+  patron_id      INTEGER PRIMARY KEY REFERENCES patrones(id) ON DELETE CASCADE,
+  cliente_nombre TEXT CHECK (cliente_nombre IS NULL OR char_length(cliente_nombre) BETWEEN 1 AND 80),
+  clave_hash     TEXT NOT NULL UNIQUE,
+  clave_cifrada  TEXT NOT NULL,
+  -- metros que encargó el cliente (opcional): con ellos ve cuánto lleva de su pedido
+  metros_pedidos NUMERIC(12, 2) CHECK (metros_pedidos IS NULL OR (metros_pedidos > 0 AND metros_pedidos <= 10000000)),
+  creada_por     TEXT,
+  creada_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ultimo_acceso  TIMESTAMPTZ
+);
+
+COMMENT ON TABLE accesos_cliente IS
+  'Clave de un cliente para ver su tejido (un dibujo) en modo solo lectura. Una por dibujo.';
+
+
+-- ============================================================
 -- Registro de migraciones
 -- ============================================================
 CREATE TABLE IF NOT EXISTS migraciones_aplicadas (
@@ -1002,11 +1081,13 @@ INSERT INTO migraciones_aplicadas (archivo) VALUES
   ('migracion_019_dibujos_de_invitado.sql'),
   ('migracion_020_hilado.sql'),
   ('migracion_021_secuencias_por_fila.sql'),
-  ('migracion_022_grupos_intercalados.sql')
+  ('migracion_022_grupos_intercalados.sql'),
+  ('migracion_023_solo_sensado.sql'),
+  ('migracion_024_acceso_cliente.sql')
 ON CONFLICT (archivo) DO NOTHING;
 
 -- ============================================================
--- Verificación final: lista las tablas creadas (deben ser nueve).
+-- Verificación final: lista las tablas creadas (deben ser diez).
 -- Es el resultado que se ve al terminar de correr este script.
 -- ============================================================
 SELECT table_name AS tablas_creadas

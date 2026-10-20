@@ -83,6 +83,11 @@
       Continuar sin iniciar sesión
     </button>
 
+    <!-- Vista para clientes: entran con la clave de su tejido y solo ven ese tejido -->
+    <button type="button" onclick="mostrarIngresoCliente()" id="link-cliente" class="cli-link-login">
+      Soy cliente: ver mi tejido
+    </button>
+
   </div>
 </div>
 
@@ -147,6 +152,72 @@
       style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">
       Ya lo anoté, entrar
     </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     OVERLAY: INGRESO DEL CLIENTE (con la clave de su tejido)
+════════════════════════════════════════════ -->
+<div id="cliente-ingreso-overlay" class="cli-ov" style="display:none;">
+  <div class="cli-ingreso">
+    <div class="cli-icono" aria-hidden="true">
+      <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
+        <g stroke="var(--acc)" stroke-width="3.4" stroke-linecap="round" opacity=".38">
+          <line x1="13" y1="8" x2="13" y2="40"/><line x1="24" y1="8" x2="24" y2="40"/><line x1="35" y1="8" x2="35" y2="40"/>
+        </g>
+        <g stroke="var(--acc)" stroke-width="3.8" stroke-linecap="round" fill="none">
+          <path d="M7 15 q6 -5 11 0 q6 5 11 0 q6 -5 11 0"/><path d="M7 24 q6 5 11 0 q6 -5 11 0 q6 5 11 0"/><path d="M7 33 q6 -5 11 0 q6 5 11 0 q6 -5 11 0"/>
+        </g>
+      </svg>
+    </div>
+    <h1>Ver mi tejido</h1>
+    <p class="cli-intro">Escribí la clave que te pasó la fábrica. Vas a ver cómo va tu tejido: si se está tejiendo, cuánto avanzó y los metros.</p>
+    <input id="cli-clave" type="text" placeholder="Clave (ej: TEJ-K7QX-4AMP)" aria-label="Clave de tu tejido"
+      autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="40"
+      onkeydown="if(event.key==='Enter')hacerIngresoCliente()">
+    <button type="button" class="cli-btn" id="btn-cli-entrar" onclick="hacerIngresoCliente()">Ver mi tejido</button>
+    <p id="cli-msg" class="cli-msg" role="status"></p>
+    <button type="button" class="cli-volver" onclick="volverDelCliente()">Volver</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     VISTA DEL CLIENTE (solo lectura, sin ningún control del telar)
+════════════════════════════════════════════ -->
+<div id="cliente-overlay" class="cli-vista" style="display:none;">
+  <div class="cli-wrap">
+    <header class="cli-cab">
+      <div class="cli-cab-txt">
+        <div class="cli-sup">Tu tejido</div>
+        <h1 id="cli-titulo">-</h1>
+        <div class="cli-sub" id="cli-sub"></div>
+      </div>
+      <button type="button" class="cli-salir" onclick="salirVistaCliente()">Salir</button>
+    </header>
+    <section class="cli-card" aria-live="polite">
+      <div class="cli-estado"><span class="telar-dot" id="cli-estado-dot"></span><b id="cli-estado-txt">-</b></div>
+      <div class="cli-detalle" id="cli-detalle"></div>
+    </section>
+    <section class="cli-card" id="cli-pedido-card" hidden>
+      <div class="cli-h">Tu pedido</div>
+      <div class="cli-barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="cli-barra-cont"><div class="cli-barra-llena" id="cli-barra"></div></div>
+      <div class="cli-detalle" id="cli-pedido"></div>
+    </section>
+    <section class="cli-card">
+      <div class="cli-h">Resumen</div>
+      <div class="ficha-grid cli-grid" id="cli-datos"></div>
+      <div class="ficha-aviso" id="cli-aviso" hidden></div>
+    </section>
+    <section class="cli-card">
+      <div class="cli-h">Cómo se ve la tela</div>
+      <canvas id="cli-tela" class="cli-tela" role="img" aria-label="Vista previa de una vuelta del dibujo"></canvas>
+      <div class="cli-nota" id="cli-tela-nota"></div>
+    </section>
+    <section class="cli-card">
+      <div class="cli-h">Producción</div>
+      <div id="cli-historial"></div>
+    </section>
+    <div class="cli-pie" id="cli-pie"></div>
   </div>
 </div>
 
@@ -345,6 +416,34 @@
         <div class="ficha-eq" id="hil-res"></div>
       </div>
 
+      <!-- Vista para el cliente: la clave con la que el cliente ve solo este tejido -->
+      <div class="ficha-mpp ficha-hilado" id="cli-acc">
+        <label for="cli-acc-nombre">Vista para el cliente</label>
+        <p class="ficha-ayuda">Con una clave, el cliente ve solo este tejido desde la página («Soy cliente: ver mi tejido»): cómo se ve la tela, si se está tejiendo, cuánto avanzó y los metros. No ve otros dibujos ni puede tocar el telar. El nombre y los metros encargados son opcionales: con los metros, el cliente ve cuánto lleva de su pedido.</p>
+        <div class="ficha-fila ficha-fila-2" id="cli-acc-campos">
+          <div class="ficha-campo">
+            <span>Cliente</span>
+            <input type="text" id="cli-acc-nombre" maxlength="80" autocomplete="off" placeholder="Textil Sur" aria-label="Nombre del cliente">
+          </div>
+          <div class="ficha-campo">
+            <span>Metros encargados</span>
+            <input type="text" id="cli-acc-metros" inputmode="decimal" autocomplete="off" placeholder="500" aria-label="Metros de tela que encargó el cliente">
+          </div>
+        </div>
+        <div class="cli-acc-clave" id="cli-acc-clave" hidden>
+          <span>Clave del cliente</span>
+          <b id="cli-acc-valor">-</b>
+          <button type="button" class="save-btn ficha-guardar" id="cli-acc-copiar">Copiar</button>
+        </div>
+        <div class="ficha-fila ficha-fila-wrap" id="cli-acc-botones">
+          <button type="button" class="save-btn save-primary ficha-guardar" id="cli-acc-generar">Generar clave</button>
+          <button type="button" class="save-btn save-primary ficha-guardar" id="cli-acc-guardar" hidden>Guardar datos</button>
+          <button type="button" class="save-btn ficha-guardar" id="cli-acc-nueva" hidden title="La clave actual deja de andar">Clave nueva</button>
+          <button type="button" class="save-btn ficha-guardar" id="cli-acc-quitar" hidden title="El cliente deja de ver este tejido">Quitar</button>
+        </div>
+        <div class="ficha-eq" id="cli-acc-res"></div>
+      </div>
+
       <div class="ficha-est" id="ficha-est">
         <div class="ficha-cargando">Cargando estadísticas...</div>
       </div>
@@ -358,6 +457,13 @@
       <span class="telar-status-item" id="telar-tejiendo">
         <span class="telar-dot" id="telar-tejiendo-dot"></span>
         <span id="telar-tejiendo-txt">-</span>
+      </span>
+      <!-- Solo sensado: prende o apaga el control del telar desde la página (el sensado sigue) -->
+      <span class="telar-status-item" id="telar-control">
+        <button type="button" class="telar-switch" id="telar-control-btn" role="switch" aria-checked="true" onclick="cambiarControlWeb()" title="Prender o apagar el control del telar desde la página">
+          <span class="telar-switch-pista" aria-hidden="true"></span>
+          <span id="telar-control-txt">Control desde la página</span>
+        </button>
       </span>
       <span class="telar-status-item" id="telar-posicion" style="display:none;">
         <span class="telar-dot warn"></span>
@@ -1233,6 +1339,11 @@ async function actualizarEstadoTelar() {
       doTick();
     }
 
+    // Solo sensado: el interruptor y los botones siguen lo que guarda el backend (otra pantalla
+    // pudo cambiarlo).
+    controlWebActivo = telar.control_web_activo !== false;
+    aplicarControlWebUI();
+
     // Dibujo del trabajo abierto en el telar (null si no hay ninguno).
     trabajoEnCursoPatronId = (telar.historial_actual_id && telar.patron_actual_id) ? String(telar.patron_actual_id) : null;
 
@@ -1274,6 +1385,7 @@ async function actualizarEstadoTelar() {
     let texto = texto0;
     if (telar.estado === 'pausado' && telar.motivo_pausa === 'sin_senal') texto = 'Pausado: sin señal del sensor';
     if (telar.estado === 'pausado' && telar.motivo_pausa === 'reinicio') texto = 'Pausado: el equipo se reinició';
+    if (telar.estado === 'pausado' && telar.motivo_pausa === 'solo_sensado') texto = 'Dibujo cargado: arrancá con Marcha en la botonera';
     // Sin sensor de pasada, "tejiendo" es lo que ORDENÓ el sistema, no algo confirmado
     // por la máquina (los botones se sensan, el estado real de la máquina no).
     if (telar.estado === 'tejiendo' && telar.origen_conteo === 'estimado') texto = 'Tejiendo (sin confirmar por sensor)';
@@ -1733,6 +1845,8 @@ async function restaurarTrabajoEnCurso() {
     const telar = await apiFetch(`/telares/${telarPorDefectoId}`);
     if (!telar.historial_actual_id || !telar.patron_actual_id) { trabajoEnCursoPatronId = null; return; }
     trabajoEnCursoPatronId = String(telar.patron_actual_id);
+    controlWebActivo = telar.control_web_activo !== false;
+    aplicarControlWebUI();
     const d = draws.find(x => String(x.id) === trabajoEnCursoPatronId);
     if (!d) return;
 
@@ -1754,7 +1868,9 @@ async function restaurarTrabajoEnCurso() {
       }
     } else {
       updPlayUI(); renderGrid();
-      toast(`Trabajo recuperado: «${d.nombre}», fila ${fila + 1} de ${nR}. Tocá ▶ para retomar`);
+      toast(controlWebActivo
+        ? `Trabajo recuperado: «${d.nombre}», fila ${fila + 1} de ${nR}. Tocá ▶ para retomar`
+        : `Trabajo recuperado: «${d.nombre}», fila ${fila + 1} de ${nR}. Solo sensado: se retoma con Marcha en la botonera`);
     }
   } catch (e) {
     logError('No se pudo recuperar el trabajo en curso', e.message, 'RESTAURAR');
@@ -1767,9 +1883,73 @@ async function restaurarTrabajoEnCurso() {
 // ⏸, ⏪ y ⏹ mandaban el pedido igual (⏪ después de pedir confirmación) y recién el servidor lo rechazaba.
 const AVISO_INVITADO_TELAR = 'Estás como invitado: para controlar el telar hay que iniciar sesión con tu huella o tu código.';
 
+// ─── Solo sensado ─────────────────────────────────────────────────────
+// Con el control desde la página apagado, la página no mueve la máquina: ▶ solo carga el dibujo en
+// el telar (arranca cuando tocan Marcha en la botonera), y ⏸ y ⏪ no hacen nada. Todo lo demás sigue:
+// la página muestra lo que hace la máquina (botonera y sensor de pasada) y lleva la fila y el conteo.
+// El backend rechaza las órdenes (409 CONTROL_WEB_DESACTIVADO) y el ESP32 no pulsa los relés.
+let controlWebActivo = true;
+const AVISO_SOLO_SENSADO = 'Solo sensado: la página no mueve el telar. Usá la botonera de la máquina o prendé el control desde la página.';
+
+function aplicarControlWebUI() {
+  const btn = document.getElementById('telar-control-btn');
+  const txt = document.getElementById('telar-control-txt');
+  const item = document.getElementById('telar-control');
+  const bar = document.getElementById('play-bar');
+  if (btn) btn.setAttribute('aria-checked', String(controlWebActivo));
+  if (txt) txt.textContent = controlWebActivo ? 'Control desde la página' : 'Solo sensado';
+  if (item) item.classList.toggle('warn-txt', !controlWebActivo);
+  if (!bar) return;
+  bar.classList.toggle('solo-sensado', !controlWebActivo);
+  const play = bar.querySelector('.ctrl-play');
+  if (play) play.title = controlWebActivo ? 'Iniciar' : 'Cargar el dibujo en el telar (arranca con Marcha en la botonera)';
+  for (const sel of ['.ctrl-pause', '.ctrl-back-fisico']) {
+    const b = bar.querySelector(sel);
+    if (b) b.setAttribute('aria-disabled', String(!controlWebActivo));
+  }
+}
+
+// El backend dijo que el control está apagado (otra pantalla lo apagó hace un momento).
+function avisarSoloSensado() {
+  controlWebActivo = false;
+  aplicarControlWebUI();
+  toast(AVISO_SOLO_SENSADO);
+  actualizarEstadoTelar();
+}
+
+function cambiarControlWeb() {
+  if (origenSesion === 'invitado') { toast(AVISO_INVITADO_TELAR); return; }
+  if (!telarPorDefectoId) { toast('No hay telar seleccionado'); return; }
+  const apagar = controlWebActivo;
+  showConfirm(
+    apagar ? 'Pasar a solo sensado' : 'Prender el control desde la página',
+    apagar
+      ? 'La página deja de arrancar, pausar y retroceder el telar: se maneja con su botonera. Sigue mostrando lo que hace la máquina (fila, pasada y conteo), y con ▶ podés cargar un dibujo: el telar arranca cuando toquen Marcha. Lo podés volver a prender cuando quieras. ¿Apagar el control?'
+      : 'La página vuelve a arrancar, pausar y retroceder el telar con ▶, ⏸ y ⏪. ¿Prender el control?',
+    async () => {
+      try {
+        const r = await apiFetch(`/telares/${telarPorDefectoId}/control-web`, { method: 'PUT', body: JSON.stringify({ activo: !apagar }) });
+        controlWebActivo = !(r && r.control_web_activo === false);
+        aplicarControlWebUI();
+        toast(controlWebActivo ? 'Control desde la página prendido' : 'Solo sensado: el telar se maneja con su botonera');
+        actualizarEstadoTelar();
+      } catch (e) {
+        if (e.codigo === 'SOLO_OPERARIO') return;   // apiFetch ya mostró el aviso del invitado
+        toast('No se pudo cambiar el control: ' + e.message);
+      }
+    },
+    apagar ? 'Apagar' : 'Prender'
+  );
+}
+
 function terminarTrabajo() {
   if (origenSesion === 'invitado') { toast(AVISO_INVITADO_TELAR); return; }
   if (!telarPorDefectoId || !trabajoEnCursoPatronId) { toast('No hay un trabajo en curso'); return; }
+  // Solo sensado con la máquina andando: el backend lo rechaza (la página no puede pararla).
+  if (!controlWebActivo && isPlaying) {
+    toast('Solo sensado: el telar está tejiendo. Paralo con Pausa en la botonera y después terminá el trabajo.');
+    return;
+  }
   showConfirm(
     'Terminar el trabajo',
     'Se cierra la producción de este dibujo: la próxima vez que toques ▶ empieza desde la fila 1 y no se puede retomar donde quedó. ¿Terminar?',
@@ -1789,6 +1969,8 @@ function terminarTrabajo() {
       } catch (e) {
         updPlayUI();
         toast('No se pudo terminar el trabajo: ' + e.message);
+        // Solo sensado con la máquina tejiendo: la pantalla vuelve a seguir el tejido.
+        if (e.codigo === 'CONTROL_WEB_DESACTIVADO') actualizarEstadoTelar();
       }
     },
     'Terminar'
@@ -1826,6 +2008,17 @@ async function arrancarPlay() {
   if (telarPorDefectoId) {
     try {
       const telar = await apiFetch(`/telares/${telarPorDefectoId}`);
+      controlWebActivo = telar.control_web_activo !== false;
+      aplicarControlWebUI();
+      const mismoDibujo = String(telar.patron_actual_id) === String(editId);
+
+      // Solo sensado con este dibujo ya cargado: la página no arranca la máquina. Si ya está
+      // tejiendo (desde la botonera), la consulta de estado suma esta pantalla al tejido.
+      if (!controlWebActivo && mismoDibujo && telar.historial_actual_id) {
+        if (telar.estado === 'tejiendo') { toast('El telar ya está tejiendo este dibujo'); actualizarEstadoTelar(); }
+        else toast('Solo sensado: arrancá el telar con Marcha en la botonera. La página sigue el tejido sola.');
+        return;
+      }
 
       // Si el telar tiene un trabajo abierto de OTRO dibujo, empezar este lo cierra y esa posición
       // se pierde: antes de hacerlo, se pregunta.
@@ -1839,15 +2032,27 @@ async function arrancarPlay() {
         if (!seguir) return;
       }
 
-      if (String(telar.patron_actual_id) !== String(editId)) {
-        // Patrón distinto (o ninguno): es un trabajo nuevo, arranca de cero.
-        await apiFetch(`/telares/${telarPorDefectoId}/asignar-patron`, {
+      if (!mismoDibujo || !controlWebActivo) {
+        // Patrón distinto (o ninguno): es un trabajo nuevo, arranca de cero. En solo sensado
+        // también se llega con el mismo dibujo sin trabajo abierto: se abre uno sin arrancar.
+        const r = await apiFetch(`/telares/${telarPorDefectoId}/asignar-patron`, {
           method: 'POST',
           body: JSON.stringify({ patron_id: Number(editId) }),
         });
         curRow = 0; // arranca de cero, igual que en el backend
         repRestantes = largoFila(0) || 1;      // y con las pasadas de la primera fila completas
         trabajoEnCursoPatronId = String(editId);
+        // Solo sensado: el dibujo quedó cargado y la máquina arranca con Marcha en la botonera
+        // (si ya estaba tejiendo, la pantalla sigue de largo y acompaña el tejido).
+        if (r && r.solo_sensado) {
+          controlWebActivo = false;
+          aplicarControlWebUI();
+          if (r.estado_telar !== 'tejiendo') {
+            updPlayUI(); renderGrid();
+            toast('Dibujo cargado en el telar. Arrancalo con Marcha en la botonera: la página va a seguir el tejido.');
+            return;
+          }
+        }
       } else {
         // Mismo patrón: se está retomando algo pausado. Se reanuda sin tocar
         // la posición, para que el tejido siga donde había quedado. La pantalla toma la
@@ -1860,7 +2065,8 @@ async function arrancarPlay() {
         try {
           await apiFetch(`/telares/${telarPorDefectoId}/reanudar`, { method: 'POST', body: JSON.stringify({}) });
         } catch (e) {
-          if (e.codigo === 'SOLO_OPERARIO') throw e;   // invitado: se corta acá
+          // invitado, o solo sensado (otra pantalla apagó el control recién): se corta acá
+          if (e.codigo === 'SOLO_OPERARIO' || e.codigo === 'CONTROL_WEB_DESACTIVADO') throw e;
           // 409 = no hay producción en curso (por ejemplo, si antes se usó
           // Detener). Se reasigna el patrón para abrir una nueva.
           await apiFetch(`/telares/${telarPorDefectoId}/asignar-patron`, {
@@ -1877,6 +2083,7 @@ async function arrancarPlay() {
       // No se arranca la animación, porque cada paso volvería a pedir avanzar, a ser
       // rechazado y a mostrar el aviso de nuevo, dos veces por segundo.
       if (e.codigo === 'SOLO_OPERARIO') return;
+      if (e.codigo === 'CONTROL_WEB_DESACTIVADO') { avisarSoloSensado(); return; }
       logError('Error al asignar el dibujo al telar', e.message, 'ASIGNAR_TELAR');
       // El telar no quedó en marcha: la pantalla no puede mostrar "Tejiendo..." como si lo estuviera.
       toast('No se pudo poner en marcha el telar: ' + e.message);
@@ -2075,6 +2282,8 @@ function doTick() {
 // crear un dibujo nuevo en un celular frenaba la máquina que otra persona estaba tejiendo.
 // Ahora solo el botón (o quien estaba llevando el tejido) le avisa al telar.
 async function pausePlay(pedirAlTelar = false) {
+  // Solo sensado: ⏸ no para la máquina, y la pantalla sigue acompañando el tejido.
+  if (pedirAlTelar && !controlWebActivo && origenSesion !== 'invitado') { toast(AVISO_SOLO_SENSADO); return; }
   const estabaTejiendo = isPlaying;
   isPlaying = false;
   seguidor = false;
@@ -2093,6 +2302,7 @@ async function pausePlay(pedirAlTelar = false) {
     const r = await apiFetch(`/telares/${telarPorDefectoId}/pausar`, { method: 'POST', body: JSON.stringify({}) });
     if (estabaTejiendo || (r && r.estado === 'pausado')) toast('Tejido pausado');
   } catch (e) {
+    if (e.codigo === 'CONTROL_WEB_DESACTIVADO') { avisarSoloSensado(); return; }
     if (e.codigo !== 'SOLO_OPERARIO') toast('No se pudo pausar el telar: ' + e.message);
   }
 }
@@ -2110,6 +2320,7 @@ async function pausePlay(pedirAlTelar = false) {
 function retrocederFisico() {
   if (origenSesion === 'invitado') { toast(AVISO_INVITADO_TELAR); return; }
   if (!telarPorDefectoId) { toast('No hay telar seleccionado'); return; }
+  if (!controlWebActivo) { toast(AVISO_SOLO_SENSADO); return; }
   showConfirm(
     'Retroceder una pasada',
     'El telar va a retroceder una pasada y el tejido queda pausado. ¿Continuar?',
@@ -2130,6 +2341,7 @@ async function ejecutarRetroceso() {
   try {
     await apiFetch(`/telares/${telarPorDefectoId}/pausar`, { method: 'POST', body: JSON.stringify({}) });
   } catch (e) {
+    if (e.codigo === 'CONTROL_WEB_DESACTIVADO') { avisarSoloSensado(); return; }
     if (e.codigo !== 'SOLO_OPERARIO') toast('No se pudo pausar el telar: no se retrocede. ' + e.message);
     return;
   }
@@ -2571,7 +2783,10 @@ async function reingresar() {
       if (est.invitado) setUsuarioActual(null, null);
       else setUsuarioActual(est.usuario, est.nombre, origenGuardado());
       entrarAlSistema();
+      return;
     }
+    // Sin sesión de operario: si este navegador ya entró como cliente, va directo a su tejido.
+    try { await abrirVistaCliente(); } catch (e) { /* sin cookie de cliente: queda el login */ }
   } catch (e) { /* sin red: queda el login */ }
 })();
 
@@ -3514,6 +3729,7 @@ async function fichaGuardarHilado(reiniciar) {
 }
 
 async function fichaCargar() {
+  fichaClienteCargar();
   const cont = document.getElementById('ficha-est');
   const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
   if (!idActual) {
@@ -3624,6 +3840,365 @@ function fichaInicializar() {
 }
 
 fichaInicializar();
+
+
+// ═══════════ CLAVE DEL CLIENTE (en la ficha) ═══════════
+// El operario genera la clave de este tejido y se la pasa al cliente. Una por dibujo: generar una
+// nueva hace que la anterior deje de andar, también para quien ya había entrado con ella.
+
+function fichaClienteMostrar(acceso) {
+  const ver = (id, si) => { const el = document.getElementById(id); if (el) el.hidden = !si; };
+  document.getElementById('cli-acc-nombre').value = acceso && acceso.cliente_nombre ? acceso.cliente_nombre : '';
+  document.getElementById('cli-acc-metros').value = acceso ? mostrarDecimal(acceso.metros_pedidos) : '';
+  ver('cli-acc-campos', true); ver('cli-acc-botones', true);
+  ver('cli-acc-clave', !!acceso);
+  ver('cli-acc-generar', !acceso);
+  ver('cli-acc-guardar', !!acceso); ver('cli-acc-nueva', !!acceso); ver('cli-acc-quitar', !!acceso);
+  document.getElementById('cli-acc-generar').disabled = false;
+  document.getElementById('cli-acc-valor').textContent = acceso
+    ? (acceso.clave || 'No se puede mostrar (cambió la clave del servidor): generá una nueva')
+    : '-';
+  const res = document.getElementById('cli-acc-res');
+  if (!acceso) { res.textContent = 'Sin clave: el cliente no puede ver este tejido.'; return; }
+  res.textContent = acceso.ultimo_acceso
+    ? `El cliente entró por última vez el ${fechaHoraCorta(acceso.ultimo_acceso)}.`
+    : 'El cliente todavía no entró con esta clave.';
+}
+
+async function fichaClienteCargar() {
+  const sec = document.getElementById('cli-acc');
+  if (!sec) return;
+  const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
+  const res = document.getElementById('cli-acc-res');
+  if (origenSesion === 'invitado') {
+    fichaClienteMostrar(null);
+    document.getElementById('cli-acc-campos').hidden = true;
+    document.getElementById('cli-acc-botones').hidden = true;
+    res.textContent = 'Solo los operarios pueden generar la clave del cliente.';
+    return;
+  }
+  if (!idActual) {
+    fichaClienteMostrar(null);
+    document.getElementById('cli-acc-generar').disabled = true;
+    res.textContent = 'Guardá el dibujo para poder generar la clave del cliente.';
+    return;
+  }
+  res.textContent = 'Cargando…';
+  try {
+    const r = await apiFetch(`/patrones/${idActual}/acceso-cliente`);
+    if (String(idActual) !== String(editId)) return;   // mientras tanto se abrió otro dibujo
+    fichaClienteMostrar(r.acceso);
+  } catch (e) {
+    if (String(idActual) !== String(editId)) return;
+    res.textContent = 'No se pudo cargar la clave del cliente: ' + e.message;
+  }
+}
+
+// Lee los dos campos. Devuelve null (y avisa) si los metros no son un número válido.
+function fichaClienteDatos() {
+  const nombre = document.getElementById('cli-acc-nombre').value.trim();
+  const metros = leerCantidad(document.getElementById('cli-acc-metros').value);
+  if (Number.isNaN(metros) || (metros !== null && metros <= 0)) {
+    toast('Los metros encargados tienen que ser un número mayor que 0 (por ejemplo 500 o 1.250,5).');
+    return null;
+  }
+  return { cliente_nombre: nombre || null, metros_pedidos: metros };
+}
+
+async function fichaClienteEnviar(metodo, cuerpo, aviso) {
+  const idActual = (typeof editId !== 'undefined' && editId) ? editId : null;
+  if (!idActual) { toast('Primero guardá el dibujo.'); return; }
+  try {
+    const r = await apiFetch(`/patrones/${idActual}/acceso-cliente`, { method: metodo, body: cuerpo ? JSON.stringify(cuerpo) : undefined });
+    if (String(idActual) !== String(editId)) return;
+    fichaClienteMostrar(r ? r.acceso : null);
+    toast(aviso);
+  } catch (e) {
+    if (e.codigo === 'SOLO_OPERARIO') return;   // apiFetch ya mostró el aviso del invitado
+    toast(e.message);
+  }
+}
+
+function fichaClienteInicializar() {
+  if (!document.getElementById('cli-acc')) return;
+  document.getElementById('cli-acc-generar').addEventListener('click', () => {
+    const datos = fichaClienteDatos(); if (!datos) return;
+    fichaClienteEnviar('POST', datos, 'Clave generada: pasásela al cliente.');
+  });
+  document.getElementById('cli-acc-guardar').addEventListener('click', () => {
+    const datos = fichaClienteDatos(); if (!datos) return;
+    fichaClienteEnviar('PATCH', datos, 'Datos del cliente guardados.');
+  });
+  document.getElementById('cli-acc-nueva').addEventListener('click', () => {
+    showConfirm('¿Generar una clave nueva?', 'La clave actual deja de andar, también para el cliente que ya entró con ella. Le vas a tener que pasar la nueva.', () => {
+      const datos = fichaClienteDatos(); if (!datos) return;
+      fichaClienteEnviar('POST', datos, 'Clave nueva generada: la anterior ya no anda.');
+    }, 'Generar otra');
+  });
+  document.getElementById('cli-acc-quitar').addEventListener('click', () => {
+    showConfirm('¿Quitar la vista del cliente?', 'El cliente deja de ver este tejido (también si ya había entrado). Podés generar otra clave cuando quieras.', () => {
+      fichaClienteEnviar('DELETE', null, 'Listo: el cliente ya no ve este tejido.');
+    }, 'Quitar');
+  });
+  document.getElementById('cli-acc-copiar').addEventListener('click', async () => {
+    const btn = document.getElementById('cli-acc-copiar');
+    const clave = document.getElementById('cli-acc-valor').textContent;
+    if (!/^TEJ-/.test(clave)) return;
+    try { await navigator.clipboard.writeText(clave); btn.textContent = 'Copiada'; }
+    catch (e) {
+      const tmp = document.createElement('textarea');
+      tmp.value = clave; document.body.appendChild(tmp); tmp.select();
+      try { document.execCommand('copy'); btn.textContent = 'Copiada'; } catch (_) { btn.textContent = 'Copiala a mano'; }
+      document.body.removeChild(tmp);
+    }
+    setTimeout(() => { btn.textContent = 'Copiar'; }, 2500);
+  });
+}
+
+fichaClienteInicializar();
+
+
+// ═══════════ VISTA DEL CLIENTE ═══════════
+// El cliente no tiene cuenta: entra con la clave de su tejido y ve solo ese tejido, sin ningún
+// control. Usa sus propias rutas (/api/cliente) y su propia cookie, que no abre nada más: por eso
+// estas funciones no usan apiFetch (un 401 acá no es una sesión de operario vencida).
+let clienteTimer = null;
+const CLIENTE_REFRESCO_MS = 15000;
+
+function setCliMsg(txt, tipo) {
+  const el = document.getElementById('cli-msg');
+  el.textContent = txt || '';
+  el.style.color = tipo === 'error' ? 'var(--red)' : tipo === 'ok' ? 'var(--green)' : 'var(--tx3)';
+}
+
+function mostrarIngresoCliente() {
+  document.getElementById('login-overlay').style.display = 'none';
+  document.getElementById('cliente-ingreso-overlay').style.display = 'flex';
+  setCliMsg('');
+  const inp = document.getElementById('cli-clave');
+  if (inp) setTimeout(() => inp.focus(), 50);
+}
+
+function volverDelCliente() {
+  document.getElementById('cliente-ingreso-overlay').style.display = 'none';
+  document.getElementById('login-overlay').style.display = 'flex';
+}
+
+async function hacerIngresoCliente() {
+  const inp = document.getElementById('cli-clave');
+  const clave = inp.value.trim();
+  if (clave.replace(/[^a-z0-9]/gi, '').length < 8) { setCliMsg('Escribí la clave completa (por ejemplo TEJ-K7QX-4AMP).', 'error'); return; }
+  const btn = document.getElementById('btn-cli-entrar');
+  btn.disabled = true;
+  setCliMsg('Buscando tu tejido…');
+  try {
+    const r = await fetch('/api/cliente/entrar', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clave }),
+    });
+    const b = await r.json().catch(() => ({}));
+    if (!r.ok) { setCliMsg(b.error || `No se pudo entrar (error ${r.status}). Probá de nuevo.`, 'error'); return; }
+    inp.value = '';
+    setCliMsg('');
+    await abrirVistaCliente();
+  } catch (e) {
+    setCliMsg(e.status ? e.message : 'No hay conexión con el servidor. Revisá la conexión e intentá de nuevo.', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function pedirTejidoCliente() {
+  const r = await fetch('/api/cliente/tejido', { credentials: 'same-origin' });
+  const b = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(b.error || `Error del servidor (${r.status})`); e.status = r.status; throw e; }
+  return b;
+}
+
+async function abrirVistaCliente() {
+  const d = await pedirTejidoCliente();   // sin cookie válida tira error y no se muestra nada
+  for (const id of ['login-overlay', 'cliente-ingreso-overlay', 'recupero-overlay']) document.getElementById(id).style.display = 'none';
+  document.getElementById('cliente-overlay').style.display = 'block';
+  renderVistaCliente(d);
+  clearInterval(clienteTimer);
+  clienteTimer = setInterval(refrescarVistaCliente, CLIENTE_REFRESCO_MS);
+}
+
+async function refrescarVistaCliente() {
+  if (document.hidden) return;   // con la pestaña oculta no se consulta
+  try {
+    renderVistaCliente(await pedirTejidoCliente());
+  } catch (e) {
+    if (e.status === 401) { cerrarVistaCliente(e.message); return; }
+    document.getElementById('cli-pie').textContent = 'Sin conexión: se vuelve a intentar en unos segundos.';
+  }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && clienteTimer) refrescarVistaCliente(); });
+// Al cambiar el ancho (girar el celular) la tela se vuelve a dibujar con el ancho nuevo.
+window.addEventListener('resize', () => { if (clienteTimer && ultimoTejidoCliente) dibujarTelaCliente(ultimoTejidoCliente); });
+
+// La clave cambió o se quitó: vuelve al ingreso con el motivo.
+function cerrarVistaCliente(msg) {
+  clearInterval(clienteTimer); clienteTimer = null;
+  document.getElementById('cliente-overlay').style.display = 'none';
+  mostrarIngresoCliente();
+  if (msg) setCliMsg(msg, 'error');
+}
+
+async function salirVistaCliente() {
+  try { await fetch('/api/cliente/salir', { method: 'POST', credentials: 'same-origin' }); } catch (e) { /* igual se sale */ }
+  clearInterval(clienteTimer); clienteTimer = null;
+  document.getElementById('cliente-overlay').style.display = 'none';
+  document.getElementById('login-overlay').style.display = 'flex';
+}
+
+// Fecha y hora en 24 h ("19/10/2026 23:39"): con el formato de 12 h quedaba "11:39 p. m.." al
+// cerrar la frase con un punto.
+function fechaHoraCorta(s) {
+  if (!s) return '-';
+  const f = new Date(s);
+  return `${f.toLocaleDateString('es-AR')} ${f.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })}`;
+}
+
+let ultimoTejidoCliente = null;
+function renderVistaCliente(d) {
+  const t = d.tejido, R = d.resumen;
+  const num = (n, dec = 0) => fichaFormatearNumero(n, dec);
+  const fecha = (s) => s ? new Date(s).toLocaleDateString('es-AR') : '-';
+  const fechaHora = fechaHoraCorta;
+  // "≈" solo si ya hay algo tejido con un conteo todavía sin validar.
+  const aprox = R.metros_son_estimados && R.pasadas_tejidas > 0 ? '≈ ' : '';
+
+  document.getElementById('cli-titulo').textContent = t.nombre;
+  document.getElementById('cli-sub').textContent =
+    [d.cliente_nombre ? `Cliente: ${d.cliente_nombre}` : '', t.tipo ? `Tipo: ${t.tipo}` : ''].filter(Boolean).join(' · ');
+
+  // Estado: tejiéndose, en pausa, pedido completo o sin tejer ahora.
+  const tejiendo = d.en_telar.find((x) => x.estado === 'tejiendo');
+  const enPausa = d.en_telar.find((x) => x.estado === 'pausado');
+  let clase = '', texto = 'Sin tejer en este momento';
+  if (tejiendo) { clase = 'ok'; texto = 'Tejiéndose ahora'; }
+  else if (enPausa) { clase = 'warn'; texto = 'En pausa'; }
+  else if (d.pedido && d.pedido.completo) { clase = 'ok'; texto = 'Pedido completo'; }
+  document.getElementById('cli-estado-dot').className = 'telar-dot' + (clase ? ' ' + clase : '');
+  document.getElementById('cli-estado-txt').textContent = texto;
+  const detalle = document.getElementById('cli-detalle');
+  const nombresEstado = { tejiendo: 'tejiendo', pausado: 'en pausa', detenido: 'detenido' };
+  if (d.en_telar.length) {
+    detalle.innerHTML = d.en_telar.map((x) => {
+      const p = x.posicion;
+      let pos = `Va por la fila ${p.fila} de ${p.filas}`;
+      if (p.de > 1) pos += ` · pasada ${num(p.pasada)} de ${num(p.de)}${p.intercalado ? ' del intercalado' : ''}`;
+      return `<p><b>${esc(x.telar)}</b>: ${nombresEstado[x.estado] || esc(x.estado)} desde el ${esc(fechaHora(x.desde))}. ` +
+        `${pos}. ${aprox}${num(x.pasadas)} ${x.pasadas === 1 ? 'pasada' : 'pasadas'} en esta tanda.</p>`;
+    }).join('');
+  } else {
+    detalle.innerHTML = `<p>${R.ultima_vez ? `La última vez se tejió el ${esc(fecha(R.ultima_vez))}.` : 'Todavía no se empezó a tejer.'}</p>`;
+  }
+
+  // Pedido: cuánto lleva de los metros que encargó.
+  const card = document.getElementById('cli-pedido-card');
+  card.hidden = !d.pedido;
+  if (d.pedido) {
+    const P = d.pedido;
+    const pct = P.porcentaje === null ? 0 : P.porcentaje;
+    document.getElementById('cli-barra').style.width = `${pct}%`;
+    document.getElementById('cli-barra-cont').setAttribute('aria-valuenow', String(pct));
+    document.getElementById('cli-pedido').innerHTML = P.metros_tejidos === null
+      ? `<p>Encargaste ${num(P.metros_pedidos, 2)} m. Los metros tejidos se van a ver cuando la fábrica cargue cuánto avanza la tela en cada pasada.</p>`
+      : `<p><b>${aprox}${num(P.metros_tejidos, 2)} m</b> de ${num(P.metros_pedidos, 2)} m (${P.metros_tejidos > 0 && pct < 0.1 ? 'menos del 0,1' : aprox + num(pct, 1)} %). ` +
+        (P.completo ? '¡Tu pedido está completo!' : `Faltan ${aprox}${num(P.metros_que_faltan, 2)} m.`) + '</p>';
+  }
+
+  // Resumen
+  const datos = [
+    ['Pasadas tejidas', aprox + num(R.pasadas_tejidas)],
+    ['Metros tejidos', R.metros_tejidos === null ? 'Sin dato todavía' : `${aprox}${num(R.metros_tejidos, 2)} m`],
+    ['Empezó', R.primera_vez ? fecha(R.primera_vez) : 'Todavía no'],
+    ['Última actividad', R.ultima_vez ? fechaHora(R.ultima_vez) : '-'],
+  ];
+  document.getElementById('cli-datos').innerHTML =
+    datos.map(([k, v]) => `<div class="ficha-dato"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('');
+  const aviso = document.getElementById('cli-aviso');
+  aviso.hidden = !aprox;
+  aviso.textContent = 'Los números son aproximados: el conteo exacto del telar todavía se está verificando.';
+
+  // Tela
+  ultimoTejidoCliente = { t, enTelar: tejiendo || enPausa || null };
+  dibujarTelaCliente(ultimoTejidoCliente);
+
+  // Producción: las últimas tandas
+  const hist = document.getElementById('cli-historial');
+  hist.innerHTML = d.historial.length
+    ? '<ul class="cli-lista">' + d.historial.map((h) =>
+        `<li><span>${esc(fechaHora(h.desde))} → ${h.estado === 'en_curso' ? 'en curso' : esc(fechaHora(h.hasta))}</span>` +
+        `<b>${aprox}${num(h.pasadas)} ${h.pasadas === 1 ? 'pasada' : 'pasadas'}</b></li>`).join('') + '</ul>'
+    : '<p class="cli-nota">Todavía no hay producción registrada.</p>';
+
+  document.getElementById('cli-pie').textContent =
+    `Actualizado a las ${new Date(d.actualizado || Date.now()).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })} · se actualiza solo`;
+}
+
+// Una vuelta del dibujo como franjas de arriba hacia abajo, cada fila con el alto de sus pasadas
+// y el color de su hilo (sin color, un gris por bobina, como en la ficha en PDF). Los intercalados
+// se dibujan alternando sus filas. La línea marca por dónde va el telar.
+function dibujarTelaCliente({ t, enTelar }) {
+  const cv = document.getElementById('cli-tela');
+  if (!cv || !t) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const ancho = Math.max(160, cv.clientWidth || 300), alto = 200;
+  cv.width = Math.round(ancho * dpr); cv.height = Math.round(alto * dpr);
+  cv.style.height = alto + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const filas = t.filas, M = Array.isArray(t.matriz_pasadas) ? t.matriz_pasadas : [];
+  const reps = Array.from({ length: filas }, (_, i) => {
+    const r = Number(Array.isArray(t.repeticiones_por_fila) ? t.repeticiones_por_fila[i] : NaN);
+    return Number.isInteger(r) && r >= 1 ? r : 1;
+  });
+  const grupos = Array.isArray(t.grupos_intercalados) ? t.grupos_intercalados : [];
+  const GRISES = ['#96A0AC', '#CCD2DA', '#747F8D', '#B2BAC4'];
+  const color = (r) => {
+    const c = Array.isArray(t.colores_filas) ? t.colores_filas[r] : null;
+    if (typeof c === 'string' && /^#[0-9a-f]{6}$/i.test(c)) return c;
+    const b = (M[r] || []).findIndex((v) => Number(v) > 0);
+    return b >= 0 ? GRISES[b % GRISES.length] : '#B8C0CA';
+  };
+  const tramos = [];
+  for (let r = 0; r < filas; r++) {
+    const g = grupos.find((x) => x.desde === r);
+    if (g) {
+      for (let k = 0; k < g.pasadas && tramos.length < 50000;) {
+        for (let i = g.desde; i <= g.hasta && k < g.pasadas; i++) { const n = Math.min(reps[i], g.pasadas - k); tramos.push([i, n]); k += n; }
+      }
+      r = g.hasta;
+    } else tramos.push([r, reps[r]]);
+  }
+  const total = tramos.reduce((a, x) => a + x[1], 0) || 1;
+  let acc = 0;
+  for (const [r, n] of tramos) {
+    const y0 = (acc / total) * alto, y1 = ((acc + n) / total) * alto;
+    ctx.fillStyle = color(r);
+    ctx.fillRect(0, y0, ancho, Math.max(y1 - y0, 0.6));
+    acc += n;
+  }
+  // la urdimbre: hilos verticales finos
+  ctx.globalAlpha = 0.1; ctx.fillStyle = '#000';
+  for (let x = 1; x < ancho; x += 4) ctx.fillRect(x, 0, 1, alto);
+  ctx.globalAlpha = 1;
+  const nota = document.getElementById('cli-tela-nota');
+  let txt = `Una vuelta del dibujo, de arriba hacia abajo (${fichaFormatearNumero(total)} ${total === 1 ? 'pasada' : 'pasadas'}); después se repite.`;
+  if (enTelar && enTelar.posicion) {
+    const y = Math.min(alto - 2, Math.max(2, (enTelar.posicion.porcentaje_vuelta / 100) * alto));
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(255,255,255,.9)';
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(ancho, y); ctx.stroke();
+    ctx.lineWidth = 2; ctx.strokeStyle = '#B03A2E';
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(ancho, y); ctx.stroke();
+    txt += ' La línea roja marca por dónde va el telar.';
+  }
+  nota.textContent = txt;
+}
 
 
 // ═══════════ ESTADÍSTICAS EN LA BIBLIOTECA ═══════════

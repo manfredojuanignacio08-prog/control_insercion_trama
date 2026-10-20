@@ -24,9 +24,9 @@ por completo.** Todo lo que importa está en `backend/`, `esp32/`,
 
 Desde que se escribió, la API cambió. Tal como está, esta app **no funcionaría**:
 
-- **Inicio de sesión.** Hoy toda la API (salvo `/api/health` y `/api/auth/*`) exige una
-  sesión (cookie firmada que entrega el ingreso con huella o con el código de recuperación)
-  o la clave del dispositivo. Sin eso cada pedido responde **401**. Habría que sumar el
+- **Inicio de sesión.** Hoy toda la API (salvo `/api/health`, `/api/auth/*` y la vista de los
+  clientes, `/api/cliente/*`) exige una sesión (cookie firmada que entrega el ingreso con
+  huella o con el código de recuperación) o la clave del dispositivo. Sin eso cada pedido responde **401**. Habría que sumar el
   ingreso (WebAuthn en Android, o el código de recuperación con `POST /api/auth/recuperar`)
   y guardar la cookie (`CookieJar` de OkHttp).
 - **Pausa y reanudación.** El telar se pausa con `POST /api/telares/:id/pausar` y se retoma

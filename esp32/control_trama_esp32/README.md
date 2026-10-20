@@ -29,6 +29,13 @@ Los pines no se pisan:
 Con el Nivel 2 y un dibujo nuevo, la placa pulsa Marcha recién cuando tiene el dibujo cargado, así la
 máquina no arranca tejiendo sin la selección.
 
+**Solo sensado.** En la página se puede apagar el control del telar (`control_web_activo` en
+`false`, que la placa lee en la misma consulta): entonces no pulsa Marcha, Pausa ni Retroceder por
+nada que cambie en el backend, y la máquina se maneja con su botonera. Todo lo demás sigue: el
+sensado de los botones avisa cada uso, y con el Nivel 2 el sensor cuenta las pasadas y los LCA110
+seleccionan las bobinas del dibujo cuando el telar teje. Al volver a prender el control no sale
+ningún pulso de una orden vieja: lo que cambió mientras tanto ya quedó memorizado.
+
 Antes había dos programas (`control_trama_esp32` para el Bloque A y `nivel2` para todo). Se
 unificaron en este: el del Nivel 2 ya hacía todo lo del Bloque A con la misma lógica, y ahora el
 interruptor `NIVEL2_INSTALADO` reemplaza a cambiar de programa.

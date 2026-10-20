@@ -1,6 +1,6 @@
 // Ejecuta la parte del Bloque A del firmware (relés y sensado de la botonera) con un reloj
 // simulado: arranque seguro, orden de los pulsos, anti-doble-pulso, varios retrocesos pedidos juntos, Marcha en espera hasta tener
-// el dibujo, el filtro del eco del propio relé en el sensado y el de los canales que bajan juntos al prenderse el telar.
+// el dibujo, el modo solo sensado (sin ningún pulso), el filtro del eco del propio relé en el sensado y el de los canales que bajan juntos al prenderse el telar.
 #include <cassert>
 #include "/tmp/fw_botonera.cpp"
 static int pulsos(int pin) { return g_cambios[pin] / 2; }
@@ -37,6 +37,21 @@ int main() {
   g_ms += 2500; botoneraAplicarEstado("pausado", 50, true);
   g_ms += 2500; botoneraAplicarEstado("pausado", 2, true);
   assert(pulsos(27) == 3);
+  // Solo sensado: con el control desde la página apagado no sale ningún pulso, ni de Marcha ni de
+  // Pausa ni de Retroceder, y al volver a prenderlo no se pulsa una orden vieja.
+  limpiar();
+  controlWebActivo = false;
+  g_ms += 2500; botoneraAplicarEstado("tejiendo", 2, true);
+  g_ms += 2500; botoneraAplicarEstado("pausado", 3, true);
+  g_ms += 2500; botoneraAplicarEstado("tejiendo", 4, true);
+  assert(pulsos(25) + pulsos(26) + pulsos(27) == 0);
+  controlWebActivo = true;
+  g_ms += 2500; botoneraAplicarEstado("tejiendo", 4, true);   // lo mismo que ya sabía: nada
+  assert(pulsos(25) + pulsos(26) + pulsos(27) == 0);
+  g_ms += 2500; botoneraAplicarEstado("pausado", 5, true);    // una orden nueva: Pausa, y Retroceder después
+  assert(pulsos(26) == 1 && pulsos(27) == 0);
+  g_ms += 2500; botoneraAplicarEstado("pausado", 5, true);
+  assert(pulsos(27) == 1 && pulsos(25) == 0);
   // Eco: el sensado de Pausa ve el pulso del propio relé y no lo toma por una pulsación a mano.
   g_ms = ultimoPulsoPausa + 300; isrBotonPausa();
   assert(!eventoPausaPendiente);

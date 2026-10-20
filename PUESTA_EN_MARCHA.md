@@ -17,7 +17,7 @@ Son tres contraseñas largas que el servidor necesita. Se cargan como **variable
 | Variable | Para qué sirve | Qué pasa si falta |
 |---|---|---|
 | `SESSION_SECRET` | El servidor firma con ella la cookie de sesión de quien inicia sesión. Sin una clave secreta, cualquiera podría fabricar una cookie falsa. | **El servidor no arranca.** |
-| `RECOVERY_SECRET` | Cifra los códigos de recuperación guardados en la base: sin ella, quien consiga una copia de la base no puede usarlos. Mínimo 16 caracteres. | **El servidor no arranca.** Si se cambia después, los códigos guardados dejan de leerse: regenerarlos con `npm run codigo -- <usuario> --rotar` (con los dos guiones antes del usuario: sin ellos, npm se queda con `--rotar` y no rota nada). |
+| `RECOVERY_SECRET` | Cifra los códigos de recuperación y las claves de los clientes guardados en la base: sin ella, quien consiga una copia de la base no puede usarlos. Mínimo 16 caracteres. | **El servidor no arranca.** Si se cambia después, los códigos guardados dejan de leerse: regenerarlos con `npm run codigo -- <usuario> --rotar` (con los dos guiones antes del usuario: sin ellos, npm se queda con `--rotar` y no rota nada). Las claves de los clientes siguen andando, pero para volver a verlas hay que generar una nueva desde la ficha del dibujo. |
 | `ESP32_DEVICE_KEY` | Contraseña compartida entre el servidor y los ESP32. Ellos no tienen huella ni navegador: mandan esta clave en cada pedido (header `X-Device-Key`). | El servidor rechaza a los ESP32 con error 401 y no controlan nada. |
 
 **Pasos**

@@ -195,3 +195,56 @@ export function requerirSesionODispositivo(req, res, next) {
   if (s) { req.usuario = s; return next(); }
   return noAutenticado(res, 'Tenés que iniciar sesión (o mandar la clave del dispositivo).');
 }
+
+// ============================================================================
+//  Sesión de CLIENTE (vista de solo lectura de su tejido)
+//
+//  Un cliente no tiene cuenta: entra con la clave de su tejido (ver cliente.controller.js) y recibe
+//  una cookie APARTE, trama_cliente, firmada igual que la de los operarios. Esa cookie no sirve para
+//  nada más: leerSesion (operarios e invitados) solo mira trama_sesion, así que con ella no se llega
+//  a ninguna otra parte de la API. Lleva el id del dibujo y el comienzo del hash de la clave: si el
+//  operario genera una clave nueva o quita el acceso, la cookie deja de coincidir y se rechaza.
+//
+//  CLIENTE_DIAS (opcional): cuántos días dura, por defecto 30 (el cliente no tiene que volver a
+//  escribir la clave cada vez que mira).
+// ============================================================================
+const COOKIE_CLIENTE = 'trama_cliente';
+const DIAS_CLIENTE = Number(process.env.CLIENTE_DIAS) > 0 ? Number(process.env.CLIENTE_DIAS) : 30;
+
+/** Devuelve { patronId, huella } si el pedido trae una cookie de cliente válida; si no, null. */
+export function leerSesionCliente(req) {
+  const valor = leerCookie(req, COOKIE_CLIENTE);
+  if (!valor) return null;
+  const [cuerpo, firma] = valor.split('.');
+  if (!cuerpo || !firma || !iguales(firma, firmar('cliente:' + cuerpo))) return null;
+  try {
+    const datos = JSON.parse(Buffer.from(cuerpo, 'base64url').toString('utf-8'));
+    if (!Number.isInteger(datos.p) || typeof datos.h !== 'string' || !datos.exp || Date.now() > datos.exp) return null;
+    return { patronId: datos.p, huella: datos.h };
+  } catch {
+    return null;
+  }
+}
+
+/** Entrega la cookie de cliente (patronId: el dibujo; huella: el comienzo del hash de su clave). */
+export function emitirSesionCliente(req, res, { patronId, huella }) {
+  const exp = Date.now() + DIAS_CLIENTE * 24 * 3600 * 1000;
+  const cuerpo = Buffer.from(JSON.stringify({ p: patronId, h: huella, exp })).toString('base64url');
+  // El prefijo en la firma separa las dos cookies: una firma de operario no sirve como de cliente.
+  const valor = `${cuerpo}.${firmar('cliente:' + cuerpo)}`;
+  const partes = [
+    `${COOKIE_CLIENTE}=${encodeURIComponent(valor)}`,
+    'Path=/api/cliente',
+    'HttpOnly',
+    'SameSite=Lax',
+    `Max-Age=${DIAS_CLIENTE * 24 * 3600}`,
+  ];
+  if (conexionSegura(req)) partes.push('Secure');
+  res.append('Set-Cookie', partes.join('; '));
+}
+
+export function cerrarSesionCliente(req, res) {
+  const partes = [`${COOKIE_CLIENTE}=`, 'Path=/api/cliente', 'HttpOnly', 'SameSite=Lax', 'Max-Age=0'];
+  if (conexionSegura(req)) partes.push('Secure');
+  res.append('Set-Cookie', partes.join('; '));
+}

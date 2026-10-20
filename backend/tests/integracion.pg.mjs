@@ -236,6 +236,117 @@ assert.equal(psql(`select vueltas_completadas from historial_produccion where te
   assert.ok(!/upgrade-insecure-requests/.test(h.get('content-security-policy') || ''), 'sin upgrade-insecure-requests por http');
   assert.equal(h.get('strict-transport-security'), null, 'sin HSTS por http');
 }
+// Solo sensado: con el control desde la página apagado, la página no mueve la máquina y el sensado sigue
+{ let t = await api('POST','/telares',{codigo:'TELAR-SS'}); assert.equal(t.s,201); const TS = t.b.id;
+  t = await api('GET',`/telares/${TS}`); assert.equal(t.b.control_web_activo,true, 'prendido por defecto');
+  t = await api('PUT',`/telares/${TS}/control-web`,{activo:false},{ck:INV}); assert.equal(t.s,403);
+  t = await api('PUT',`/telares/${TS}/control-web`,{activo:'no'}); assert.equal(t.s,400);
+  t = await api('PUT',`/telares/99999/control-web`,{activo:false}); assert.equal(t.s,404);
+  t = await api('PUT',`/telares/${TS}/control-web`,{activo:false}); assert.equal(t.s,200); assert.equal(t.b.control_web_activo,false);
+  t = await api('GET',`/telares/${TS}?origen=esp32`,null,{ck:null,dev:true}); assert.equal(t.b.control_web_activo,false, 'el ESP32 lo ve');
+  // ▶ carga el dibujo sin arrancar la máquina
+  t = await api('POST',`/telares/${TS}/asignar-patron`,{patron_id:P}); assert.equal(t.s,201);
+  assert.equal(t.b.solo_sensado,true); assert.equal(t.b.estado_telar,'pausado');
+  t = await api('GET',`/telares/${TS}`); assert.equal(t.b.estado,'pausado'); assert.equal(t.b.motivo_pausa,'solo_sensado');
+  for (const a of ['reanudar','pausar','retroceder-fisico']) {
+    t = await api('POST',`/telares/${TS}/${a}`); assert.equal(t.s,409,a); assert.equal(t.b.codigo,'CONTROL_WEB_DESACTIVADO',a);
+  }
+  t = await api('GET',`/telares/${TS}`); assert.equal(t.b.retroceder_seq,0); assert.equal(t.b.estado,'pausado');
+  // la botonera la arranca y la página sigue contando
+  t = await api('POST',`/telares/${TS}/evento-fisico`,{tipo:'marcha'},{ck:null,dev:true}); assert.equal(t.b.estado,'tejiendo');
+  t = await api('POST',`/telares/${TS}/avanzar`,{pasos:1,cliente:'S'}); assert.equal(t.s,200); assert.equal(t.b.pasadas_totales,1);
+  // terminar el trabajo con la máquina andando: no (la página no la puede parar)
+  t = await api('POST',`/telares/${TS}/detener`,{}); assert.equal(t.s,409); assert.equal(t.b.codigo,'CONTROL_WEB_DESACTIVADO');
+  // volver a cargar el mismo dibujo con la máquina tejiendo: sigue tejiendo, no reinicia
+  t = await api('POST',`/telares/${TS}/asignar-patron`,{patron_id:P}); assert.equal(t.s,200);
+  assert.equal(t.b.reanudado,true); assert.equal(t.b.estado_telar,'tejiendo');
+  t = await api('POST',`/telares/${TS}/evento-fisico`,{tipo:'retroceder'},{ck:null,dev:true}); assert.equal(t.s,200);
+  t = await api('POST',`/telares/${TS}/evento-fisico`,{tipo:'pausa'},{ck:null,dev:true}); assert.equal(t.b.estado,'pausado');
+  t = await api('POST',`/telares/${TS}/detener`,{}); assert.equal(t.s,200);
+  // prendido otra vez: ▶ arranca como siempre
+  t = await api('PUT',`/telares/${TS}/control-web`,{activo:true}); assert.equal(t.b.control_web_activo,true);
+  t = await api('POST',`/telares/${TS}/asignar-patron`,{patron_id:P}); assert.equal(t.s,201); assert.equal(t.b.solo_sensado,undefined);
+  t = await api('GET',`/telares/${TS}`); assert.equal(t.b.estado,'tejiendo');
+  t = await api('POST',`/telares/${TS}/pausar`); assert.equal(t.s,200);
+  t = await api('POST',`/telares/${TS}/detener`,{}); assert.equal(t.s,200);
+}
+// Vista de clientes: una clave por tejido, solo lectura, y la clave vieja deja de andar
+async function cli(m, path, body, ck = null) {
+  const h = { 'Content-Type':'application/json' }; if (ck) h.Cookie = ck;
+  const x = await fetch(B+path, { method:m, headers:h, body: body ? JSON.stringify(body) : undefined });
+  const sc = x.headers.get('set-cookie'); const tx = await x.text(); let j; try { j = JSON.parse(tx); } catch { j = tx; }
+  return { s:x.status, b:j, cookie: sc ? sc.split(';')[0] : null, setCookie: sc };
+}
+{ let t = await api('POST','/patrones',{nombre:'Tejido Sur',filas:3,columnas:4,matriz_pasadas:MAT,repeticiones_por_fila:[2,1,3],colores_filas:['#112233','#445566','#778899']});
+  assert.equal(t.s,201); const PC = t.b.id;
+  t = await api('GET',`/patrones/${PC}/acceso-cliente`); assert.equal(t.s,200); assert.equal(t.b.acceso,null);
+  t = await api('POST',`/patrones/${PC}/acceso-cliente`,{cliente_nombre:'Textil Sur'},{ck:INV}); assert.equal(t.s,403);
+  t = await api('GET',`/patrones/${PC}/acceso-cliente`,null,{ck:INV}); assert.equal(t.s,403);
+  t = await api('POST',`/patrones/${PC}/acceso-cliente`,{cliente_nombre:'x'.repeat(81)}); assert.equal(t.s,400);
+  t = await api('POST',`/patrones/${PC}/acceso-cliente`,{metros_pedidos:-3}); assert.equal(t.s,400);
+  t = await api('POST',`/patrones/99999/acceso-cliente`,{}); assert.equal(t.s,404);
+  t = await api('POST',`/patrones/${PC}/acceso-cliente`,{cliente_nombre:' Textil Sur ',metros_pedidos:10}); assert.equal(t.s,201);
+  const CLAVE = t.b.acceso.clave;
+  assert.match(CLAVE,/^TEJ-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/); assert.equal(t.b.acceso.cliente_nombre,'Textil Sur'); assert.equal(t.b.acceso.metros_pedidos,10);
+  // en la base no queda en texto plano
+  assert.equal(psql(`SELECT count(*) FROM accesos_cliente WHERE clave_cifrada LIKE '%${CLAVE}%' OR clave_hash LIKE '%${CLAVE}%'`),'0');
+  t = await api('GET',`/patrones/${PC}/acceso-cliente`); assert.equal(t.b.acceso.clave,CLAVE, 'el operario la vuelve a ver');
+  t = await api('GET','/patrones'); assert(!JSON.stringify(t.b).includes(CLAVE), 'la biblioteca no la muestra');
+  // el cliente: clave equivocada o vacía, no; la buena entra (sin importar guiones ni mayúsculas)
+  t = await cli('POST','/cliente/entrar',{clave:'TEJ-AAAA-AAAA'}); assert.equal(t.s,401); assert.equal(t.b.codigo,'CLAVE_INVALIDA');
+  t = await cli('POST','/cliente/entrar',{clave:'x'}); assert.equal(t.s,400);
+  t = await cli('POST','/cliente/entrar',{clave:12345678}); assert.equal(t.s,400);
+  t = await cli('GET','/cliente/tejido'); assert.equal(t.s,401); assert.equal(t.b.codigo,'CLIENTE_SIN_ACCESO');
+  t = await cli('POST','/cliente/entrar',{clave: CLAVE.toLowerCase().replace(/-/g,' ')}); assert.equal(t.s,200, JSON.stringify(t.b));
+  assert.match(t.setCookie,/HttpOnly/); assert.match(t.setCookie,/Path=\/api\/cliente/);
+  const CC = t.cookie; assert.match(CC,/^trama_cliente=/);
+  t = await cli('GET','/cliente/tejido',null,CC); assert.equal(t.s,200);
+  assert.equal(t.b.tejido.nombre,'Tejido Sur'); assert.equal(t.b.cliente_nombre,'Textil Sur'); assert.deepEqual(t.b.en_telar,[]);
+  assert.deepEqual(t.b.tejido.colores_filas,['#112233','#445566','#778899']);
+  // la cookie del cliente no abre nada más, y la de un operario no sirve como de cliente
+  r = await api('GET','/patrones',null,{ck:CC}); assert.equal(r.s,401);
+  r = await api('GET','/telares',null,{ck:CC}); assert.equal(r.s,401);
+  t = await cli('GET','/cliente/tejido',null,OP.replace(/^trama_sesion=/,'trama_cliente=')); assert.equal(t.s,401);
+  t = await cli('GET','/cliente/tejido',null,'trama_cliente=eyJwIjoxfQ.abc'); assert.equal(t.s,401);
+  // tejiéndose en un telar: lo ve, con la fila y la pasada como las cuenta el telar
+  t = await api('POST','/telares',{codigo:'TELAR-CLI',nombre:'Telar 2'}); assert.equal(t.s,201); const TC = t.b.id;
+  t = await api('PUT',`/patrones/${PC}/metros-por-pasada`,{metros_por_pasada:0.01}); assert.equal(t.s,200);
+  t = await api('POST',`/telares/${TC}/asignar-patron`,{patron_id:PC}); assert.equal(t.s,201);
+  t = await api('POST',`/telares/${TC}/avanzar`,{pasos:4,cliente:'C'}); assert.equal(t.s,200);
+  t = await cli('GET','/cliente/tejido',null,CC); assert.equal(t.s,200);
+  assert.equal(t.b.en_telar.length,1); assert.equal(t.b.en_telar[0].estado,'tejiendo'); assert.equal(t.b.en_telar[0].telar,'Telar 2');
+  // repeticiones [2,1,3]: 4 pasadas = fila 3, pasada 2 de 3, 4 de las 6 pasadas de una vuelta
+  assert.deepEqual(t.b.en_telar[0].posicion,{fila:3,filas:3,pasada:2,de:3,intercalado:false,porcentaje_vuelta:66.7});
+  assert.equal(t.b.resumen.pasadas_tejidas,4); assert.equal(t.b.resumen.metros_tejidos,0.04);
+  assert.deepEqual(t.b.pedido,{metros_pedidos:10,metros_tejidos:0.04,porcentaje:0.4,metros_que_faltan:9.96,completo:false});
+  assert.equal(t.b.historial.length,1); assert.equal(t.b.historial[0].estado,'en_curso');
+  { const txt = JSON.stringify(t.b);
+    for (const no of [CLAVE,'creada_por','ultimo_ping','retroceder_seq','clave_hash','errores','"ana"']) assert(!txt.includes(no), no); }
+  // el operario cambia los datos sin cambiar la clave
+  t = await api('PATCH',`/patrones/${PC}/acceso-cliente`,{metros_pedidos:null}); assert.equal(t.s,200);
+  assert.equal(t.b.acceso.clave,CLAVE); assert.equal(t.b.acceso.metros_pedidos,null); assert.equal(t.b.acceso.cliente_nombre,'Textil Sur');
+  t = await api('PATCH',`/patrones/${PC}/acceso-cliente`,{}); assert.equal(t.s,400);
+  t = await cli('GET','/cliente/tejido',null,CC); assert.equal(t.b.pedido,null);
+  // clave nueva: la vieja deja de andar, también para quien ya había entrado; el nombre se conserva
+  t = await api('POST',`/patrones/${PC}/acceso-cliente`,{}); assert.equal(t.s,201); const CLAVE2 = t.b.acceso.clave;
+  assert.notEqual(CLAVE2,CLAVE); assert.equal(t.b.acceso.cliente_nombre,'Textil Sur');
+  t = await cli('GET','/cliente/tejido',null,CC); assert.equal(t.s,401); assert.equal(t.b.codigo,'CLIENTE_SIN_ACCESO');
+  t = await cli('POST','/cliente/entrar',{clave:CLAVE}); assert.equal(t.s,401);
+  t = await cli('POST','/cliente/entrar',{clave:CLAVE2}); assert.equal(t.s,200); const CC2 = t.cookie;
+  t = await cli('POST','/cliente/salir',null,CC2); assert.equal(t.s,200); assert.match(t.setCookie,/Max-Age=0/);
+  // quitar el acceso: deja de andar
+  t = await api('DELETE',`/patrones/${PC}/acceso-cliente`,null,{ck:INV}); assert.equal(t.s,403);
+  t = await api('DELETE',`/patrones/${PC}/acceso-cliente`); assert.equal(t.s,204);
+  t = await cli('GET','/cliente/tejido',null,CC2); assert.equal(t.s,401);
+  t = await api('GET',`/patrones/${PC}/acceso-cliente`); assert.equal(t.b.acceso,null);
+  t = await api('PATCH',`/patrones/${PC}/acceso-cliente`,{cliente_nombre:'X'}); assert.equal(t.s,404);
+  await api('POST',`/telares/${TC}/detener`,{});
+  // borrar un dibujo borra su acceso
+  t = await api('POST','/patrones',{nombre:'Para borrar',filas:1,columnas:4,matriz_pasadas:[[1,0,0,0]]}); const PB = t.b.id;
+  t = await api('POST',`/patrones/${PB}/acceso-cliente`,{}); assert.equal(t.s,201);
+  t = await api('DELETE',`/patrones/${PB}`); assert.equal(t.s,204);
+  assert.equal(psql(`SELECT count(*) FROM accesos_cliente WHERE patron_id = ${PB}`),'0');
+}
 // Un dibujo con intercalados en un telar: la posición avanza por grupos y el nodo recibe el ciclo
 { const tramos = {nombre:'Tramos en telar',filas:7,columnas:4,matriz_pasadas:[[1,0,0,0],[0,0,1,0],[0,0,0,1],[0,1,0,0],[0,0,0,1],[0,1,0,0],[1,0,0,0]],
     repeticiones_por_fila:[1,1,1,1,140,1,1],grupos_intercalados:[{desde:0,hasta:3,pasadas:120},{desde:5,hasta:6,pasadas:140}]};

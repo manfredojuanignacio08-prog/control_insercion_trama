@@ -48,8 +48,9 @@ que elegir nada, simplemente correrlo.
 4. Pegalo en el SQL Editor de Neon (Ctrl+V / Cmd+V).
 5. Click en **Run** (o `Ctrl+Enter` / `Cmd+Enter`).
 6. Al final de la ejecución, en la pestaña de resultados debería aparecer
-   una tabla con 9 filas:
+   una tabla con 10 filas:
    ```
+   accesos_cliente
    credenciales_biometricas
    desafios_webauthn
    errores_log
@@ -60,7 +61,7 @@ que elegir nada, simplemente correrlo.
    telares
    usuarios
    ```
-   Eso confirma que las 9 tablas quedaron creadas. Si la base ya tenía
+   Eso confirma que las 10 tablas quedaron creadas. Si la base ya tenía
    datos de antes, no se borró nada, el mismo script lo detecta y solo
    completa lo que faltaba.
 
@@ -72,9 +73,10 @@ que elegir nada, simplemente correrlo.
 ## Paso 4, Confirmar visualmente que las tablas están bien
 
 1. En el menú de la izquierda, click en **Table Editor**.
-2. Deberías ver las 9 tablas: las cuatro del telar (`patrones`, `telares`, `historial_produccion`,
+2. Deberías ver las 10 tablas: las cuatro del telar (`patrones`, `telares`, `historial_produccion`,
    `errores_log`), las cuatro del ingreso (`usuarios`, `credenciales_biometricas`, `desafios_webauthn`,
-   `invitaciones`) y `migraciones_aplicadas`, que registra qué actualizaciones se aplicaron.
+   `invitaciones`), `accesos_cliente` (la clave con la que cada cliente ve su tejido) y
+   `migraciones_aplicadas`, que registra qué actualizaciones se aplicaron.
 3. Click en `patrones` y fijate que tenga estas columnas: `id`, `nombre`,
    `filas`, `columnas`, `matriz_pasadas`, `matriz_ligamento`, `colores_filas`,
    `metadata`, `creado_at`, `modificado_at`, `repeticiones_por_fila`,

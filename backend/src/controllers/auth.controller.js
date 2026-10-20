@@ -7,6 +7,7 @@ import {
 import crypto from 'crypto';
 import { pool } from '../db.js';
 import { emitirSesion, cerrarSesion, leerSesion } from '../middleware/auth.js';
+import { hashCodigo, cifrarCodigo, descifrarCodigo, generarCodigo } from '../utils/codigos.js';
 
 /**
  * Autenticación biométrica (huella dactilar) mediante WebAuthn / FIDO2.
@@ -104,9 +105,8 @@ async function buscarUsuario(nombre) {
   return rows[0];
 }
 
-// Hash SHA-256 (para guardar códigos de recuperación e invitación sin texto plano)
-const hashCodigo = (codigo) =>
-  crypto.createHash('sha256').update(String(codigo).trim().toUpperCase()).digest('hex');
+// hashCodigo, cifrarCodigo, descifrarCodigo y generarCodigo están en utils/codigos.js (los usa
+// también la clave de los clientes).
 
 // ─── Cifrado del código de recuperación en reposo ────────────────────
 // La columna recovery_code YA NO guarda texto plano: guarda el código
@@ -127,38 +127,6 @@ if (process.env.NODE_ENV === 'production' &&
     'RECOVERY_SECRET no está definida (o tiene menos de 16 caracteres). ' +
     'Definila en el .env antes de arrancar en producción.'
   );
-}
-
-function claveRecovery() {
-  const s = process.env.RECOVERY_SECRET;
-  if (s && s.length >= 16) return crypto.createHash('sha256').update(s).digest();
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('RECOVERY_SECRET no está definida (mínimo 16 caracteres). Definila en el .env.');
-  }
-  if (!globalThis.__recoveryTmp) {
-    globalThis.__recoveryTmp = crypto.randomBytes(32);
-    console.warn('⚠ RECOVERY_SECRET no definida: cifrado de recuperación temporal (solo desarrollo/test).');
-  }
-  return globalThis.__recoveryTmp;
-}
-
-function cifrarCodigo(codigo) {
-  const iv = crypto.randomBytes(12);
-  const c = crypto.createCipheriv('aes-256-gcm', claveRecovery(), iv);
-  const enc = Buffer.concat([c.update(String(codigo), 'utf8'), c.final()]);
-  return `gcm1.${iv.toString('base64url')}.${enc.toString('base64url')}.${c.getAuthTag().toString('base64url')}`;
-}
-
-// Devuelve: el código (string) si es cifrado válido; null si es texto
-// plano legado; undefined si es cifrado pero ilegible (otra clave).
-function descifrarCodigo(guardado) {
-  const partes = String(guardado || '').split('.');
-  if (partes.length !== 4 || partes[0] !== 'gcm1') return null;
-  try {
-    const d = crypto.createDecipheriv('aes-256-gcm', claveRecovery(), Buffer.from(partes[1], 'base64url'));
-    d.setAuthTag(Buffer.from(partes[3], 'base64url'));
-    return Buffer.concat([d.update(Buffer.from(partes[2], 'base64url')), d.final()]).toString('utf8');
-  } catch { return undefined; }
 }
 
 // ¿El código ingresado coincide con lo guardado (cifrado, plano legado o
@@ -187,16 +155,6 @@ async function guardarCodigoCifrado(userId, codigo) {
     'UPDATE usuarios SET recovery_code = $1, recovery_hash = $2, recovery_usado = false WHERE id = $3',
     [cifrarCodigo(codigo), hashCodigo(codigo), userId]
   );
-}
-
-// Genera un código legible tipo "TRAMA-K7QX4A": 6 caracteres sin I, O, 0 ni 1 (fácil de anotar,
-// difícil de adivinar)
-function generarCodigo(prefijo) {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin I,O,0,1 para no confundir
-  let s = '';
-  const bytes = crypto.randomBytes(6);
-  for (let i = 0; i < 6; i++) s += chars[bytes[i] % chars.length];
-  return `${prefijo}-${s}`;
 }
 
 // Consume un código de invitación. Devuelve {ok, id?, motivo?}.

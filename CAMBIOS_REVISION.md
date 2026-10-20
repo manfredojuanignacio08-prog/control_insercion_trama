@@ -1409,3 +1409,48 @@ confirmaciones, intercalados, la pasada en la barra) y los dos sitios sin errore
 anclas rotas. En el Excel del Gantt quedan tres nombres definidos de la plantilla original (`Type`,
 `ScheduleStart`, `Interval`) que apuntan a `#REF!`; no los usa ninguna fórmula ni se ven en ninguna
 celda, y vienen así desde la primera versión.
+
+## Trigésima sexta revisión: solo sensado y vista para los clientes
+
+Dos funciones nuevas en la página, pedidas por el equipo.
+
+**Solo sensado (se prende y se apaga).** En la barra del telar hay un interruptor «Control desde la
+página» / «Solo sensado». Apagado, la página no puede arrancar, pausar ni retroceder la máquina,
+pero todo lo demás sigue: la botonera y el sensor de pasada avisan lo que hace el telar, el Nivel 2
+sigue seleccionando las bobinas y la página muestra la fila, la pasada y el conteo.
+
+| Dónde | Qué hace |
+|---|---|
+| Base (migración 023) | Columna `telares.control_web_activo` (por defecto `true`) |
+| Backend | `PUT /api/telares/:id/control-web { activo }` (solo operarios). Con el control apagado, `pausar`, `reanudar` y `retroceder-fisico` responden 409 `CONTROL_WEB_DESACTIVADO`; la condición va dentro del mismo `UPDATE`, así un cambio de otra pantalla no se cruza. Cargar un dibujo abre la producción **sin arrancar la máquina** (queda en pausa con `motivo_pausa = 'solo_sensado'` y arranca con Marcha en la botonera), salvo que el telar ya esté tejiendo. Terminar un trabajo solo se puede con la máquina parada |
+| Firmware (Nivel 1) | Lee `control_web_activo` del sondeo y, si está en `false`, no pulsa ningún relé: solo memoriza el estado para no dar un pulso viejo cuando se vuelva a prender. Prueba nueva en `esp32/verificacion/host/test_botonera.cpp` y control 17 en `verif_coherencia.py` |
+| Web | El interruptor (con confirmación), los botones ▶ ⏸ ⏪ marcados como no disponibles, el aviso si se tocan, y la pantalla que sigue sola el tejido. Si otra pantalla cambia el interruptor, esta lo toma en el siguiente sondeo |
+
+**Vista para los clientes, con una clave por tejido.** Desde la ficha de un dibujo, el operario
+genera la clave del cliente (`TEJ-XXXX-XXXX`, ocho caracteres al azar de un alfabeto de 32, sin
+letras que se confundan). El cliente toca «Soy cliente: ver mi tejido» en la pantalla de ingreso,
+escribe la clave y ve **solo ese tejido**: la tela, si se está tejiendo y en qué fila, las pasadas,
+los metros tejidos, cuánto lleva de su pedido (si el operario cargó los metros encargados) y las
+últimas producciones. No ve otros dibujos, los controles del telar, los errores ni quién lo operó.
+
+| Dónde | Qué hace |
+|---|---|
+| Base (migración 024) | Tabla `accesos_cliente`: una fila por dibujo, con el nombre del cliente y los metros encargados (opcionales). La clave no se guarda en texto plano: un SHA-256 (único) para encontrarla y una copia cifrada con AES-256-GCM (`RECOVERY_SECRET`) para que el operario la vuelva a ver. Se borra con el dibujo |
+| Backend del operario | `GET/POST/PATCH/DELETE /api/patrones/:id/acceso-cliente`. Generar otra clave reemplaza la anterior; quitarla corta el acceso, también de quien ya había entrado |
+| Backend del cliente | `POST /api/cliente/entrar`, `GET /api/cliente/tejido` y `POST /api/cliente/salir`. Cookie propia (`trama_cliente`, firmada aparte de la del operario, solo para `/api/cliente`, 30 días) que lleva el comienzo del hash de la clave: si la clave cambia, deja de andar. Límite de intentos fallidos por IP (`CLIENTE_INTENTOS_MAX`, 20 cada 15 minutos) |
+| Web | Ingreso del cliente, la vista de solo lectura (se actualiza cada 15 s) y el bloque «Vista para el cliente» en la ficha. Las estadísticas salen de la misma cuenta que la ficha (`calcularEstadisticas`), así el cliente y el operario ven los mismos números |
+
+Pruebas nuevas: `tests/frontend.test.mjs` (interruptor, botones, aviso, vista del cliente) e
+`integracion.pg.mjs` contra PostgreSQL real (las dos funciones, la clave reemplazada y quitada, la
+cookie de cliente que no abre ninguna otra ruta, los 409). En Chromium a 360, 480 y 1280 px.
+
+Documentos al día: `README.md`, `backend/README.md`, `esp32/README.md`,
+`esp32/control_trama_esp32/README.md`, `esp32/documentacion/CHECKLIST_VALIDACION.md`,
+`docs/guias/Como_Crear_La_Base_De_Datos.md` y `Manual_Instalacion_y_Funcionamiento.md`,
+`database/01_base_de_datos_completa.sql` (24 migraciones, diez tablas), los diagramas `ERD`,
+`DER_Negocio` y `diagrama_logico_arquitectura` (SVG y PNG); el Manual de la página web (solo sensado en los
+puntos 4.3 y 4.6; la vista del cliente en 2.5 y 4.10, con capturas nuevas), la Documentación de Proyecto
+(requisitos RF11 y RF12, RIU08, tablas de rutas y de la base, flujos, Épica 5 y figuras), el Estado
+completo del proyecto, la Bitácora (20/10), el Manual del telar en la fábrica, la Guía de conexión y
+puesta en marcha (Word y PDF de cada uno), los dos sitios y el checklist de verificaciones (punto 26,
+«Solo sensado»: que con el control apagado ningún relé haga clic, y que la botonera siga avisando).

@@ -43,7 +43,7 @@ partes.push(
   migraciones.map((m) => `  ('${m}')`).join(',\n'),
   'ON CONFLICT (archivo) DO NOTHING;', '',
   SEP,
-  '-- Verificación final: lista las tablas creadas (deben ser nueve).',
+  '-- Verificación final: lista las tablas creadas (deben ser diez).',
   '-- Es el resultado que se ve al terminar de correr este script.',
   SEP,
   'SELECT table_name AS tablas_creadas',

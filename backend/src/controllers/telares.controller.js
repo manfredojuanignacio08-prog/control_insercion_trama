@@ -26,6 +26,26 @@ function leerPasos(pasos) {
   return pasos;
 }
 
+// ─── Solo sensado ─────────────────────────────────────────────────────
+// Con telares.control_web_activo en false, la página no arranca, no pausa y no retrocede la
+// máquina: esas órdenes se rechazan con 409 CONTROL_WEB_DESACTIVADO, y el ESP32 tampoco pulsa
+// los relés aunque el estado cambie (lo lee en la misma consulta). El sensado sigue igual: la
+// botonera y el sensor de pasada avisan lo que hace la máquina y la página lo muestra.
+function soloSensado(accion) {
+  return conflict(
+    `El control desde la página está desactivado (solo sensado): ${accion} con la botonera del telar.`,
+    'CONTROL_WEB_DESACTIVADO'
+  );
+}
+
+// Para los UPDATE que filtran por control_web_activo: si no tocaron ninguna fila, dice si fue
+// porque el telar no existe (404) o porque tiene el control apagado (409).
+async function sinFilaPorControl(id, accion) {
+  const { rows } = await pool.query('SELECT control_web_activo FROM telares WHERE id = $1', [id]);
+  if (rows.length === 0) return notFound(`No existe el telar con id ${id}.`);
+  return soloSensado(accion);
+}
+
 const COLUMNAS_TELAR = `
   t.*, p.nombre AS patron_actual_nombre,
   h.id AS historial_actual_id, h.fila_actual, h.columna_actual, h.repeticion_en_fila,
@@ -153,6 +173,14 @@ export async function asignarPatron(req, res, next) {
     // No se rechaza la asignación, porque mientras el Nivel 2 no esté instalado el
     // dibujo lo define la cinta de papel y la cantidad de columnas es indistinta.
     // Pero se devuelve el aviso para que la interfaz pueda mostrarlo.
+    // Solo sensado: asignar el dibujo abre (o retoma) la producción pero NO arranca la máquina.
+    // Si ya está tejiendo (la arrancaron con la botonera), sigue tejiendo; si no, queda en pausa
+    // esperando que alguien toque Marcha en la botonera (motivo_pausa 'solo_sensado').
+    const soloSens = telar.rows[0].control_web_activo === false;
+    const estadoNuevo = !soloSens || telar.rows[0].estado === 'tejiendo' ? 'tejiendo' : 'pausado';
+    const motivoNuevo = estadoNuevo === 'pausado' ? 'solo_sensado' : null;
+    const extra = soloSens ? { solo_sensado: true, estado_telar: estadoNuevo } : {};
+
     const elementos = telar.rows[0].elementos_seleccion ?? 4;
     let advertencia = null;
     if (patron.rows[0].columnas > elementos) {
@@ -172,11 +200,11 @@ export async function asignarPatron(req, res, next) {
     );
     if (abierta.rows.length > 0 && req.body.reiniciar !== true) {
       await client.query(
-        `UPDATE telares SET patron_actual_id = $1, estado = 'tejiendo', motivo_pausa = NULL WHERE id = $2`,
-        [patron_id, id]
+        `UPDATE telares SET patron_actual_id = $1, estado = $3, motivo_pausa = $4 WHERE id = $2`,
+        [patron_id, id, estadoNuevo, motivoNuevo]
       );
       await client.query('COMMIT');
-      return res.status(200).json({ ...abierta.rows[0], reanudado: true, ...(advertencia ? { advertencia } : {}) });
+      return res.status(200).json({ ...abierta.rows[0], reanudado: true, ...extra, ...(advertencia ? { advertencia } : {}) });
     }
 
     // Cierra cualquier producción en curso previa de este telar
@@ -188,8 +216,8 @@ export async function asignarPatron(req, res, next) {
     );
 
     await client.query(
-      `UPDATE telares SET patron_actual_id = $1, estado = 'tejiendo', motivo_pausa = NULL WHERE id = $2`,
-      [patron_id, id]
+      `UPDATE telares SET patron_actual_id = $1, estado = $3, motivo_pausa = $4 WHERE id = $2`,
+      [patron_id, id, estadoNuevo, motivoNuevo]
     );
 
     const nuevoHistorial = await client.query(
@@ -201,7 +229,7 @@ export async function asignarPatron(req, res, next) {
     );
 
     await client.query('COMMIT');
-    res.status(201).json(advertencia ? { ...nuevoHistorial.rows[0], advertencia } : nuevoHistorial.rows[0]);
+    res.status(201).json({ ...nuevoHistorial.rows[0], ...extra, ...(advertencia ? { advertencia } : {}) });
   } catch (err) {
     await client.query('ROLLBACK').catch(() => {});
     next(err);
@@ -230,8 +258,13 @@ export async function detenerTelar(req, res, next) {
     // Primero el telar y después la producción: el mismo orden de bloqueo que asignar-patron,
     // evento-fisico y el reporte del sensor. Con el orden al revés, un detener y un asignar (o un
     // reporte del Nivel 2) simultáneos se esperaban mutuamente y PostgreSQL cortaba uno con error.
-    const telar = await client.query('SELECT id FROM telares WHERE id = $1 FOR UPDATE', [id]);
+    const telar = await client.query('SELECT id, estado, control_web_activo FROM telares WHERE id = $1 FOR UPDATE', [id]);
     if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    // Solo sensado: terminar el trabajo con la máquina andando la dejaría tejiendo con la página
+    // diciendo "Detenido" (el ESP32 no pulsa Pausa). Primero se la para con la botonera.
+    if (telar.rows[0].control_web_activo === false && telar.rows[0].estado === 'tejiendo') {
+      throw soloSensado('el telar está tejiendo; pará la máquina con Pausa y después terminá el trabajo');
+    }
 
     const enCurso = await client.query(
       `SELECT * FROM historial_produccion WHERE telar_id = $1 AND estado = 'en_curso' FOR UPDATE`,
@@ -419,11 +452,11 @@ export async function pausarTelar(req, res, next) {
                                           WHERE telar_id = telares.id AND estado = 'en_curso')
                             THEN 'pausado' ELSE 'apagado' END,
               motivo_pausa = NULL
-       WHERE id = $1
+       WHERE id = $1 AND control_web_activo
        RETURNING id, estado, patron_actual_id`,
       [id]
     );
-    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    if (rows.length === 0) throw await sinFilaPorControl(id, 'pausalo');
     res.json(rows[0]);
   } catch (err) {
     next(err);
@@ -443,8 +476,9 @@ export async function reanudarTelar(req, res, next) {
   try {
     const { id } = req.params;
     await client.query('BEGIN');
-    const telar = await client.query('SELECT id FROM telares WHERE id = $1 FOR UPDATE', [id]);
+    const telar = await client.query('SELECT id, control_web_activo FROM telares WHERE id = $1 FOR UPDATE', [id]);
     if (telar.rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    if (telar.rows[0].control_web_activo === false) throw soloSensado('arrancalo con Marcha');
     const enCurso = await client.query(
       `SELECT id FROM historial_produccion
        WHERE telar_id = $1 AND estado = 'en_curso'`,
@@ -493,11 +527,11 @@ export async function retrocederFisico(req, res, next) {
       `UPDATE telares
           SET retroceder_seq = retroceder_seq + 1,
               retrocesos_contados = retrocesos_contados + 1
-       WHERE id = $1
+       WHERE id = $1 AND control_web_activo
        RETURNING id, retroceder_seq, retrocesos_contados`,
       [id]
     );
-    if (rows.length === 0) throw notFound(`No existe el telar con id ${id}.`);
+    if (rows.length === 0) throw await sinFilaPorControl(id, 'retrocedelo');
     res.json(rows[0]);
   } catch (err) {
     next(err);
@@ -669,6 +703,25 @@ export async function eventoFisico(req, res, next) {
     next(err);
   } finally {
     client.release();
+  }
+}
+
+// PUT /api/telares/:id/control-web  { activo: true | false }
+// Prende o apaga el control del telar desde la página (ver soloSensado). No mueve la máquina: si
+// estaba tejiendo, sigue tejiendo, y se la para con la botonera (o volviendo a prender el control).
+export async function cambiarControlWeb(req, res, next) {
+  try {
+    const { activo } = req.body ?? {};
+    if (typeof activo !== 'boolean') throw badRequest('activo debe ser true o false.');
+    const { rows } = await pool.query(
+      `UPDATE telares SET control_web_activo = $2 WHERE id = $1
+       RETURNING id, control_web_activo, estado`,
+      [req.params.id, activo]
+    );
+    if (rows.length === 0) throw notFound(`No existe el telar con id ${req.params.id}.`);
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
   }
 }
 

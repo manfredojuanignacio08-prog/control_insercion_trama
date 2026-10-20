@@ -14,6 +14,7 @@ import historialRouter from './routes/historial.routes.js';
 import erroresRouter from './routes/errores.routes.js';
 import authRouter from './routes/auth.routes.js';
 import nivel2Router from './nivel2/nivel2.routes.js';
+import clienteRouter from './routes/cliente.routes.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { requerirSesion, requerirSesionODispositivo, esDispositivoValido, leerSesion } from './middleware/auth.js';
 import { aplicarMigraciones } from './db/migrator.js';
@@ -136,10 +137,13 @@ app.get('/api/health', (req, res) => {
 });
 
 // ─── Rutas ───────────────────────────────────────────────────────────
-// /api/health y /api/auth/* son públicas (hay que poder entrar para tener sesión).
+// /api/health, /api/auth/* y /api/cliente/* son públicas (hay que poder entrar para tener sesión;
+// la del cliente verifica su clave o su cookie en cada pedido).
 // Todo lo demás exige sesión de operario o clave de dispositivo; cada ruta de
 // escritura aclara además quién puede llamarla (ver routes/*.js).
 app.use('/api/auth', authRouter);
+// Vista de clientes: entran con la clave de su tejido y solo ven ese tejido (cliente.controller.js).
+app.use('/api/cliente', clienteRouter);
 app.use('/api/patrones', requerirSesion, patronesRouter);
 app.use('/api/telares', requerirSesionODispositivo, telaresRouter);
 app.use('/api/telares', requerirSesionODispositivo, nivel2Router);   // Nivel 2: patron-actual y pasadas

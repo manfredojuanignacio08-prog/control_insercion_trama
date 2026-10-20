@@ -26,7 +26,7 @@ npm run init-db
 
 Esto ejecuta `backend/src/db/schema.sql`: crea las tablas del telar (`patrones`, `telares`,
 `historial_produccion`, `errores_log`), las del ingreso (`usuarios`, `credenciales_biometricas`,
-`desafios_webauthn`, `invitaciones`), los índices y el trigger de `modificado_at`. Es seguro
+`desafios_webauthn`, `invitaciones`), la de las claves de los clientes (`accesos_cliente`), los índices y el trigger de `modificado_at`. Es seguro
 correrlo de nuevo: usa `CREATE TABLE IF NOT EXISTS`. Las migraciones (`npm run migrate`) las
 aplica además el servidor solo al arrancar.
 
@@ -106,12 +106,13 @@ en vez de la del proxy.
 | `PGSSL=true` | **Dejarla siempre con Neon.** Cifra la conexión y verifica el certificado del servidor. Si `DATABASE_URL` trae `?sslmode=...`, la librería `pg` usa eso (la URL manda): para Neon, `?sslmode=verify-full` |
 | `PGSSL_VERIFICAR=false` | Solo como salida de emergencia, para una base con certificado propio que no se pueda verificar: cifra sin comprobar con quién habla. Con Neon no hace falta |
 | `SESSION_SECRET` | **Obligatoria.** Firma las cookies de sesión (mínimo 32 caracteres). En producción sin ella el servidor no arranca; en desarrollo se usa clave temporal y las sesiones se pierden en cada reinicio |
-| `RECOVERY_SECRET` | **Obligatoria en producción.** Cifra los códigos de recuperación en la base (mínimo 16 caracteres). Si cambia, los códigos viejos dejan de leerse: rotarlos con `npm run codigo -- <usuario> --rotar` (los dos guiones hacen falta: sin ellos npm se queda con `--rotar` y el código no se rota) |
+| `RECOVERY_SECRET` | **Obligatoria en producción.** Cifra los códigos de recuperación y las claves de los clientes en la base (mínimo 16 caracteres). Si cambia, los códigos viejos dejan de leerse: rotarlos con `npm run codigo -- <usuario> --rotar` (los dos guiones hacen falta: sin ellos npm se queda con `--rotar` y el código no se rota) |
 | `ESP32_DEVICE_KEY` | **Obligatoria.** Clave que manda el ESP32 en `X-Device-Key` (la misma que `DEVICE_KEY` en `esp32/control_trama_esp32/config.h`). Sin ella el ESP32 recibe 401 |
 | `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | Dominio real para el login por huella (requiere HTTPS) |
 | `REGISTRO_LIBRE_MAX` | Usuarios que se registran libres (defecto 3); después hace falta invitación |
 | `CORS_ORIGIN` | Dominios que pueden llamar a la API desde otro origen. Vacío en producción = ninguno (la web se sirve desde el mismo servidor y no lo necesita) |
 | `TRUST_PROXY` | Poner en `true` si hay Nginx/load balancer delante (en Render se activa solo) |
+| `CLIENTE_DIAS` / `CLIENTE_INTENTOS_MAX` | Vista para clientes: cuántos días dura su ingreso (defecto 30) y cuántas claves equivocadas se pueden probar por IP cada 15 minutos (defecto 20) |
 | `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW_MS` | Límite de pedidos por usuario (por IP para quien no inició sesión o entra como invitado): en la fábrica todos salen por la misma IP, y un límite por IP haría que un operario bloquee a los demás |
 
 ## 5. Endpoints
@@ -127,6 +128,10 @@ en vez de la del proxy.
 | PUT | `/api/patrones/:id/metros-por-pasada` | `{metros_por_pasada}` (número mayor que 0 y hasta 1, o `null`) | Cuánto avanza la tela por pasada: con este dato las estadísticas pasan pasadas a metros. `null` lo deja sin definir |
 | PUT | `/api/patrones/:id/hilado` | `{peso_kg, metros_max, reiniciar}` (números mayores que 0 o `null`; `reiniciar` true/false) | Hilado disponible: peso en kg y metros de tela que alcanza a tejer. Las estadísticas devuelven `hilado` con lo usado, lo restante y los metros que faltan, contados desde que se cargó (`reiniciar: true` = hilado nuevo, vuelve a contar desde cero). Los dos en `null` borran el dato |
 | GET | `/api/patrones/:id/estadisticas` | sin cuerpo | Producción acumulada del dibujo: veces tejido, pasadas, vueltas, horas de máquina, primera y última vez, y metros si tiene `metros_por_pasada`. Indica si el conteo es estimado o del sensor (`precision_conteo`) |
+| GET | `/api/patrones/:id/acceso-cliente` | sin cuerpo | **Solo operarios.** La clave del cliente de este tejido (`acceso: null` si no tiene): `clave`, `cliente_nombre`, `metros_pedidos`, cuándo se creó y el último ingreso del cliente |
+| POST | `/api/patrones/:id/acceso-cliente` | `{cliente_nombre?, metros_pedidos?}` | **Solo operarios.** Genera la clave (`TEJ-XXXX-XXXX`) o una nueva, que reemplaza la anterior: la vieja deja de andar, también para quien ya había entrado. Los datos que no se mandan se conservan |
+| PATCH | `/api/patrones/:id/acceso-cliente` | `{cliente_nombre?, metros_pedidos?}` | **Solo operarios.** Cambia el nombre del cliente o los metros encargados sin tocar la clave |
+| DELETE | `/api/patrones/:id/acceso-cliente` | sin cuerpo | **Solo operarios.** Quita el acceso: el cliente deja de ver el tejido |
 
 Una sesión de **invitado** puede crear dibujos y cambiar o borrar solo los que creó como invitado; en los de los operarios, `PUT`, `DELETE`, `metros-por-pasada` e `hilado` responden **403** `SOLO_OPERARIO`. Cuando un operario guarda un dibujo hecho por un invitado, pasa a ser de los operarios.
 
@@ -148,6 +153,7 @@ Una sesión de **invitado** puede crear dibujos y cambiar o borrar solo los que 
 | POST | `/api/telares/:id/evento-fisico` | `{tipo: 'marcha'\|'pausa'\|'retroceder'\|'sin_senal'\|'reinicio'}` | **Solo con clave de dispositivo.** Lo llama el ESP32 cuando **sensa** (no acciona) algo en la máquina. Actualiza el estado real: `marcha`→`tejiendo`, `pausa`→`pausado` (o `apagado` si no hay trabajo abierto, igual que `/pausar`), `retroceder`→ una pasada atrás (si el sensor del Nivel 2 lleva la posición, solo suma a `retrocesos_contados`: el nodo descuenta la pasada y la informa en su próximo reporte; moverla también acá la restaría dos veces), `sin_senal` (el sensor dejó de recibir pulsos con el telar en marcha)→`pausado` con `motivo_pausa='sin_senal'` y un registro en el log de errores. `reinicio` (el ESP32 arrancó en frío: corte de luz o traslado)→ si figuraba `tejiendo`, pasa a `pausado` con `motivo_pausa='reinicio'` **conservando producción, dibujo y posición**, y marca la posición como incierta. Sin esto, alguien podía arrancar el telar a mano y la web seguía mostrando "detenido" |
 | POST | `/api/telares/:id/confirmar-posicion` | `{visto_hasta?}` | El operario ya revisó el telar y confirma la posición: limpia `posicion_incierta`. Si se manda `visto_hasta` (timestamp del evento que la web mostró) y llegó otro evento después, responde **409** en vez de tapar el aviso nuevo |
 | POST | `/api/telares/:id/validar-conteo` | `{confirmo: true}` | El operario da por bueno el conteo del sensor tras compararlo con el contador mecánico del telar |
+| PUT | `/api/telares/:id/control-web` | `{activo: true\|false}` | **Solo sensado.** Prende o apaga el control del telar desde la página (`control_web_activo`, prendido por defecto). Apagado: `pausar`, `reanudar` y `retroceder-fisico` responden **409 `CONTROL_WEB_DESACTIVADO`**; `asignar-patron` abre (o retoma) la producción **sin arrancar** la máquina (queda `pausado` con `motivo_pausa='solo_sensado'` hasta que tocan Marcha en la botonera; si ya estaba tejiendo, sigue) y responde `solo_sensado: true`; `detener` con la máquina tejiendo también da 409 (primero se la para con la botonera). El ESP32 lee el mismo campo y no pulsa ningún relé. El sensado sigue igual: `evento-fisico`, el sensor y el conteo |
 | GET | `/api/telares/:id/historial` | sin cuerpo | Historial de ese telar (`limit`, `offset`) |
 
 ### Nivel 2 (los usa el firmware con el sensor)
@@ -155,6 +161,14 @@ Una sesión de **invitado** puede crear dibujos y cambiar o borrar solo los que 
 |---|---|---|
 | GET | `/api/telares/:id/patron-actual` | El dibujo asignado (matriz y repeticiones) y la posición de la producción en curso, para que el nodo retome donde quedó |
 | POST | `/api/telares/:id/pasadas` | **Solo con clave de dispositivo.** `{pasadas_sensor, fila_actual, repeticion_en_fila}`: el conteo acumulado del sensor y la posición del nodo. Detalle en `src/nivel2/README.md` |
+
+### Vista para clientes (públicas: cada una verifica la clave o la cookie del cliente)
+
+| Método | Ruta | Para qué |
+|---|---|---|
+| POST | `/api/cliente/entrar` | `{clave}` (sin importar guiones ni mayúsculas). Con la clave buena entrega la cookie del cliente (`trama_cliente`, `HttpOnly`, solo para `/api/cliente`, dura `CLIENTE_DIAS`); con una equivocada, **401 `CLAVE_INVALIDA`**. Límite de intentos fallidos por IP (`CLIENTE_INTENTOS_MAX`) |
+| GET | `/api/cliente/tejido` | Lo que ve el cliente, solo de su tejido: el dibujo (para la vista previa), en qué telar se está tejiendo y por qué fila y pasada va, las pasadas y los metros tejidos, cuánto lleva del pedido (si se cargaron los metros encargados) y las últimas producciones. Sin datos de operarios, errores ni controles. **401 `CLIENTE_SIN_ACCESO`** si la clave cambió o se quitó |
+| POST | `/api/cliente/salir` | Borra la cookie del cliente |
 
 ### Historial global y errores
 | Método | Ruta | Descripción |
@@ -195,6 +209,8 @@ src/
 │   ├── migracion_020_hilado.sql  Migración: hilado del dibujo (`hilado_peso_kg`, `hilado_metros_max`, `hilado_pasadas_base`) para la ficha y el PDF.
 │   ├── migracion_021_secuencias_por_fila.sql  Migración: primera versión de los intercalados (el orden dentro de una fila); la reemplaza la 022.
 │   ├── migracion_022_grupos_intercalados.sql  Migración: intercalados por grupos de filas (`grupos_intercalados`) y borra `secuencias_por_fila`.
+│   ├── migracion_023_solo_sensado.sql  Migración: `control_web_activo` en `telares` (solo sensado: la página no acciona la máquina).
+│   ├── migracion_024_acceso_cliente.sql  Migración: tabla `accesos_cliente` (la clave de cada cliente para ver su tejido, con hash y cifrada).
 │   ├── migrator.js                               Aplica cada migración UNA vez (tabla migraciones_aplicadas)
 │   └── migrate.js                                Corre las migraciones pendientes (npm run migrate)
 ├── scripts/
@@ -203,9 +219,10 @@ src/
 ├── utils/
 │   ├── ligamento.js        Deriva matriz_ligamento desde matriz_pasadas
 │   ├── posicion.js         Lógica pura de avanzar/retroceder (espejo 1:1 de doTick() y ejecutarRetroceso() del frontend)
+│   ├── codigos.js          Hash y cifrado de códigos (recuperación, invitaciones, claves de clientes)
 │   └── validacion.js       Validación de patrones
 ├── middleware/
-│   ├── auth.js             Sesión (cookie firmada), modo invitado y clave del dispositivo
+│   ├── auth.js             Sesión (cookie firmada), modo invitado, clave del dispositivo y cookie del cliente
 │   └── errorHandler.js     Manejo centralizado de errores (404/400/409/500)
 ├── nivel2/                  Endpoints del Nivel 2 (patron-actual y pasadas) y su README
 ├── controllers/             Lógica de negocio por entidad
@@ -255,17 +272,20 @@ src/
 
 ## Seguridad de la API
 
-**Toda la API exige autenticación**, salvo `GET /api/health` y `/api/auth/*` (hay que poder entrar para tener sesión). Hay dos formas de autenticarse:
+**Toda la API exige autenticación**, salvo `GET /api/health`, `/api/auth/*` (hay que poder entrar para tener sesión) y `/api/cliente/*` (verifica la clave o la cookie del cliente en cada pedido). Hay dos formas de autenticarse para el resto:
 
 | Quién | Cómo | Qué puede |
 |---|---|---|
 | Operario (web) | Cookie de sesión firmada (`HttpOnly`, `SameSite=Lax`, `Secure` con HTTPS), que el servidor entrega tras el login por huella o con el código de recuperación | Todo lo de la web: dibujos, asignar/pausar/reanudar, avanzar, retroceder, historial |
 | Invitado (web) | La misma cookie, marcada como invitado ("Continuar sin iniciar sesión") | Mirar todo y diseñar dibujos nuevos (cambiar o borrar solo los suyos). Comandar el telar, validar el conteo o invitar responde **403** `SOLO_OPERARIO` |
 | Dispositivo (ESP32) | Header `X-Device-Key` con el valor de `ESP32_DEVICE_KEY` | Sondear `GET /telares/:id`, avisar `evento-fisico`, reportar `pasadas`, `POST /errores`, descargar `patron-actual` |
+| Cliente (vista de su tejido) | Cookie aparte (`trama_cliente`), que entrega `/api/cliente/entrar` con la clave del tejido. Solo viaja a `/api/cliente` | Ver su tejido y nada más: con esa cookie el resto de la API responde **401** |
 
 Sin ninguna de las dos, la API responde **401**. Las acciones de la web (asignar dibujo, pausar, etc.) las rechaza si vienen con clave de dispositivo, y los avisos del hardware (`evento-fisico`, `pasadas`) los rechaza si vienen de una sesión: una persona no puede falsear lo que "sensó" el telar.
 
 Variables de entorno obligatorias en producción (ver `.env.example`): `DATABASE_URL` y `PGSSL=true` (con Neon), `SESSION_SECRET` (mínimo 32 caracteres), `RECOVERY_SECRET` (mínimo 16 caracteres), `ESP32_DEVICE_KEY` (la misma en `DEVICE_KEY` del firmware, `esp32/control_trama_esp32/config.h`), y `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` con el dominio real. El login por huella exige HTTPS (o `localhost`): por `http://192.168.x.x` el navegador lo bloquea, así que en la red local hay que servir por HTTPS o entrar con el código de recuperación.
+
+Las claves de los clientes no quedan legibles en la base: se guarda un hash (para encontrarlas) y una copia cifrada con `RECOVERY_SECRET` (para que el operario la pueda volver a ver). La cookie del cliente lleva el comienzo de ese hash: al generar una clave nueva o quitar el acceso, deja de servir.
 
 Además: el registro es libre solo para los primeros `REGISTRO_LIBRE_MAX` usuarios (defecto 3); después hace falta un código de invitación. Sumar una huella a un usuario existente exige haber iniciado sesión como ese usuario. La recuperación con código tiene un límite estricto de intentos por IP (`AUTH_INTENTOS_MAX`, 20 cada 15 minutos); el ingreso con huella, uno amplio (`AUTH_HUELLA_MAX`, 300), porque no se puede adivinar y en la fábrica todos los celulares comparten la IP del router.
 
@@ -275,9 +295,9 @@ Cada `db/migracion_NNN_*.sql` se aplica **una sola vez**, dentro de una transacc
 
 ## Pruebas
 
-`npm test` corre seis pruebas: la lógica de posición (avanzar/retroceder son espejos, y el cálculo directo coincide con el paso a paso en 20.000 casos al azar, hacia adelante y hacia atrás), la autenticación (cookie firmada, clave de dispositivo), el modo invitado, los **controladores con una base simulada** (retomar/reanudar, `reinicio`, `sin_senal`, retrocesos, bloqueo de edición, estadísticas, registro e invitaciones, conductor único, límite de `pasos`), la **lógica de la web ejecutada sin navegador** (recuperar el trabajo al abrir, reanudar sin reiniciar, 401, terminar trabajo, etiquetas de "estimado", pausa, retroceso, segunda pestaña) y los códigos de recuperación. No necesita base de datos.
+`npm test` corre seis pruebas: la lógica de posición (avanzar/retroceder son espejos, y el cálculo directo coincide con el paso a paso en 20.000 casos al azar, hacia adelante y hacia atrás), la autenticación (cookie firmada, clave de dispositivo), el modo invitado, los **controladores con una base simulada** (retomar/reanudar, `reinicio`, `sin_senal`, retrocesos, bloqueo de edición, estadísticas, registro e invitaciones, conductor único, límite de `pasos`), la **lógica de la web ejecutada sin navegador** (recuperar el trabajo al abrir, reanudar sin reiniciar, 401, terminar trabajo, etiquetas de "estimado", pausa, retroceso, segunda pestaña, solo sensado y la vista del cliente) y los códigos de recuperación. No necesita base de datos.
 
-`tests/integracion.pg.mjs` es una prueba aparte, **contra el servidor real y un PostgreSQL real**: telar, dibujos, conductor del reloj, eventos de los ESP32, reportes del sensor, retrocesos con sensor, estadísticas, invitaciones, dos registros simultáneos con la misma invitación, ocho guardados simultáneos del mismo dibujo (se guarda uno solo), la pausa sin trabajo abierto, los permisos del invitado sobre los dibujos, el usuario sin distinguir mayúsculas y las vueltas que cuenta el sensor del Nivel 2. Crea y borra datos, así que se corre **solo contra una base de prueba vacía**; los pasos están al principio del archivo. Ninguna de las dos reemplaza probar en un navegador real.
+`tests/integracion.pg.mjs` es una prueba aparte, **contra el servidor real y un PostgreSQL real**: telar, dibujos, conductor del reloj, el modo solo sensado (ninguna orden mueve la máquina y el sensado sigue), la vista para clientes (la clave no queda legible, la vieja deja de andar y la cookie del cliente no abre nada más), eventos de los ESP32, reportes del sensor, retrocesos con sensor, estadísticas, invitaciones, dos registros simultáneos con la misma invitación, ocho guardados simultáneos del mismo dibujo (se guarda uno solo), la pausa sin trabajo abierto, los permisos del invitado sobre los dibujos, el usuario sin distinguir mayúsculas y las vueltas que cuenta el sensor del Nivel 2. Crea y borra datos, así que se corre **solo contra una base de prueba vacía**; los pasos están al principio del archivo. Ninguna de las dos reemplaza probar en un navegador real.
 
 ## Retomar un trabajo (pausa, cierre de la página, corte de luz, traslado)
 

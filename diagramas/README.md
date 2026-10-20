@@ -91,9 +91,9 @@ El árbol de causas y efectos del problema que resuelve el proyecto, con las
 soluciones propuestas para cada causa.
 
 ### `ERD.svg`, `DER_Negocio.svg` y `DER_Autenticacion.svg`
-El modelo de la base de datos: el diagrama completo con las nueve tablas, y sus dos bloques por
-separado (los dibujos, los telares y su producción; y el ingreso con huella, los desafíos y las
-invitaciones), con las columnas de todas las migraciones.
+El modelo de la base de datos: el diagrama completo con las diez tablas, y sus dos bloques por
+separado (los dibujos, los telares, su producción y la clave de los clientes; y el ingreso con
+huella, los desafíos y las invitaciones), con las columnas de todas las migraciones.
 
 ### `gantt.svg`, `estimacion.svg` y `organigrama.svg`
 Las figuras de la Documentación de Proyecto: el cronograma en ocho etapas, la estructura de costos

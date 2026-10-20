@@ -373,4 +373,79 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   f.run('curRow=-1; updPlayUI()');
   assert.equal(f.els['play-row'].textContent, 'Fila - / 3'); }
 
+// ── Solo sensado: con el control desde la página apagado, ▶ carga el dibujo sin arrancar la
+// máquina, y ⏸ y ⏪ no mandan nada al telar
+{ telar = { id:8, estado:'apagado', patron_actual_id:null, historial_actual_id:null, fila_actual:null, control_web_activo:false };
+  const pedidos = [];
+  const rutas = (m,u,b) => {
+    if (m==='POST' && u==='/api/telares/8/asignar-patron') { pedidos.push(u); return { status:201, body:{ id:12, solo_sensado:true, estado_telar:'pausado' } }; }
+    if (m==='PUT' && u==='/api/telares/8/control-web') { pedidos.push(m+' '+u); telar = { ...telar, control_web_activo:b.activo }; return { id:8, control_web_activo:b.activo }; }
+    if (m==='POST' || m==='PUT') { pedidos.push(m+' '+u); return { id:8 }; }
+    return routes(m,u,b);
+  };
+  f = boot(rutas); await f.run('iniciarApp()'); f.run('origenSesion="huella"');
+  await f.run('actualizarEstadoTelar()');
+  assert.equal(f.run('controlWebActivo'), false, 'toma el estado del backend');
+  assert.equal(f.els['telar-control-txt'].textContent, 'Solo sensado');
+  f.run("loadDrawInEditor('3')");
+  await f.run('startPlay()');
+  assert.deepEqual(pedidos, ['/api/telares/8/asignar-patron'], 'solo carga el dibujo: ' + pedidos.join('|'));
+  assert.equal(f.run('isPlaying'), false, 'la pantalla no arranca: espera la botonera');
+  assert.equal(f.run('trabajoEnCursoPatronId'), '3');
+  assert.match(f.els['toast'].textContent, /Marcha en la botonera/);
+  // con el dibujo ya cargado, ▶ no pide reanudar
+  telar = { ...telar, estado:'pausado', patron_actual_id:3, historial_actual_id:12, fila_actual:0, motivo_pausa:'solo_sensado' };
+  pedidos.length = 0; await f.run('startPlay()');
+  assert.deepEqual(pedidos, [], 'no reanuda: ' + pedidos.join('|'));
+  // ⏸ y ⏪ avisan y no mandan nada
+  await f.run('pausePlay(true)'); f.run('retrocederFisico()');
+  assert.deepEqual(pedidos, []); assert.match(f.els['toast'].textContent, /Solo sensado/);
+  // ⏹ con la máquina tejiendo: avisa que primero hay que pararla con la botonera
+  f.run('isPlaying=true'); f.run('terminarTrabajo()'); f.run('isPlaying=false');
+  assert.deepEqual(pedidos, []); assert.match(f.els['toast'].textContent, /Pausa en la botonera/);
+  // el interruptor vuelve a prender el control (pide confirmación)
+  f.run("showConfirm = function(t,m,yes){ yes(); };");
+  await f.run('cambiarControlWeb()'); await new Promise(r => setImmediate(r));
+  assert(pedidos.includes('PUT /api/telares/8/control-web'), pedidos.join('|'));
+  assert.equal(f.run('controlWebActivo'), true); }
+
+// ── Vista del cliente: sin sesión de operario, un navegador con la cookie del cliente va directo
+// a su tejido; la vista se dibuja sin controles y una clave que cambió vuelve al ingreso
+{ const datos = { cliente_nombre:'Textil Sur', tejido:{ nombre:'Tejido Sur', tipo:null, filas:3, columnas:4, matriz_pasadas:[[1,0,0,0],[0,1,0,0],[0,0,1,0]],
+      colores_filas:['#112233',null,null], repeticiones_por_fila:[2,1,3], grupos_intercalados:null, metros_por_pasada:0.01 },
+    en_telar:[{ telar:'Telar 2', estado:'tejiendo', desde:'2026-10-19T10:00:00Z', pasadas:4, posicion:{ fila:3, filas:3, pasada:2, de:3, intercalado:false, porcentaje_vuelta:66.7 } }],
+    resumen:{ pasadas_tejidas:4, metros_tejidos:0.04, metros_son_estimados:true, precision_conteo:'estimado', producciones:1, primera_vez:'2026-10-19T10:00:00Z', ultima_vez:'2026-10-19T10:05:00Z' },
+    pedido:{ metros_pedidos:10, metros_tejidos:0.04, porcentaje:0.4, metros_que_faltan:9.96, completo:false },
+    historial:[{ desde:'2026-10-19T10:00:00Z', hasta:null, estado:'en_curso', pasadas:4 }], actualizado:'2026-10-19T10:05:00Z' };
+  let respuesta = { status:200, body:datos };
+  const pedidos = [];
+  const rutas = (m,u) => {
+    pedidos.push(m+' '+u);
+    if (u==='/api/auth/sesion') return { autenticado:false };
+    if (u==='/api/cliente/tejido') return respuesta;
+    return {};
+  };
+  f = boot(rutas);
+  for (let i = 0; i < 5; i++) await new Promise(r => setImmediate(r));
+  assert(pedidos.includes('GET /api/cliente/tejido'), pedidos.join('|'));
+  assert.equal(f.els['cliente-overlay'].style.display, 'block', 'entra directo a su tejido');
+  assert.equal(f.els['login-overlay'].style.display, 'none');
+  assert.equal(f.els['cli-titulo'].textContent, 'Tejido Sur');
+  assert.equal(f.els['cli-estado-txt'].textContent, 'Tejiéndose ahora');
+  assert.match(f.els['cli-detalle'].innerHTML, /Va por la fila 3 de 3 · pasada 2 de 3/);
+  assert.match(f.els['cli-pedido'].innerHTML, /de 10,00 m/);
+  assert.equal(f.els['cli-barra'].style.width, '0.4%');
+  assert.equal(f.els['cli-pedido-card'].hidden, false);
+  assert(!pedidos.some(p => /\/api\/(telares|patrones)/.test(p)), 'no pide nada de los operarios: ' + pedidos.join('|'));
+  // el nombre se escapa (no se interpreta como HTML)
+  respuesta = { status:200, body:{ ...datos, en_telar:[{ ...datos.en_telar[0], telar:'<img src=x onerror=alert(1)>' }] } };
+  await f.run('refrescarVistaCliente()');
+  assert(!/<img/.test(f.els['cli-detalle'].innerHTML), 'escapado');
+  // la clave cambió: vuelve al ingreso con el motivo
+  respuesta = { status:401, body:{ error:'La clave de este tejido cambió o ya no está habilitada.', codigo:'CLIENTE_SIN_ACCESO' } };
+  await f.run('refrescarVistaCliente()');
+  assert.equal(f.els['cliente-overlay'].style.display, 'none');
+  assert.equal(f.els['cliente-ingreso-overlay'].style.display, 'flex');
+  assert.match(f.els['cli-msg'].textContent, /cambió/); }
+
 console.log('frontend OK');

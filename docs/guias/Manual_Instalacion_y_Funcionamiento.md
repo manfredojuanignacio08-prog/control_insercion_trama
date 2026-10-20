@@ -373,9 +373,10 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
 | `RATE_LIMIT_WINDOW_MS` | Ventana de tiempo del rate limit en milisegundos | `900000` (15 min) |
 | `SESSION_SECRET` | Firma las cookies de sesión. **Obligatoria en producción** (mínimo 32 caracteres) | *(clave al azar)* |
 | `SESSION_HORAS` | Duración de la sesión en horas | `12` |
-| `RECOVERY_SECRET` | Cifra los códigos de recuperación en la base. **Obligatoria en producción** (mínimo 16 caracteres). Si cambia, rotar los códigos con `npm run codigo -- <usuario> --rotar` | *(clave al azar)* |
+| `RECOVERY_SECRET` | Cifra los códigos de recuperación y las claves de los clientes en la base. **Obligatoria en producción** (mínimo 16 caracteres). Si cambia, rotar los códigos con `npm run codigo -- <usuario> --rotar` | *(clave al azar)* |
 | `ESP32_DEVICE_KEY` | Clave del dispositivo: igual a `DEVICE_KEY` del firmware. Sin ella ningún ESP32 se conecta | *(clave al azar)* |
 | `REGISTRO_LIBRE_MAX` | Cuántos usuarios se registran sin invitación | `3` |
+| `CLIENTE_DIAS` / `CLIENTE_INTENTOS_MAX` | Cuántos días dura el ingreso de un cliente a la vista de su tejido, y cuántas claves equivocadas se pueden probar por IP cada 15 minutos | `30` / `20` |
 | `AUTH_INTENTOS_MAX` / `AUTH_HUELLA_MAX` | Intentos por IP cada 15 minutos con el código de recuperación / con la huella | `20` / `300` |
 | `WEBAUTHN_RP_ID` / `WEBAUTHN_ORIGIN` | Dominio real del sitio para el ingreso con huella (en producción) | `control-trama-backend.onrender.com` / `https://control-trama-backend.onrender.com` |
 
@@ -457,12 +458,14 @@ estado vive en la base de datos, no en el dispositivo.
 
 | Funcionalidad | Estado |
 |---|---|
-| Backend: API REST completa (patrones, telares, historial, errores) | ✅ Funcionando |
+| Backend: API REST completa (patrones, telares, historial, errores, vista de clientes) | ✅ Funcionando |
 | Guardar / editar / borrar patrones en la base de datos | ✅ Funcionando |
 | Cargar patrones desde la base de datos | ✅ Funcionando |
 | Historial de producción (tablas de BD) | ✅ Funcionando |
 | Telar único automático (sin selector, por ahora hay uno solo) | ✅ Funcionando |
 | Iniciar / Pausa / Retroceder / Terminar trabajo con posición real en la base | ✅ Funcionando |
+| Solo sensado: apagar y prender el control del telar desde la página (el sensado sigue) | ✅ Funcionando |
+| Vista para clientes: cada uno ve su tejido con una clave, sin ningún control | ✅ Funcionando |
 | Log de errores en la base de datos | ✅ Funcionando |
 | Página web (editor, biblioteca, simulación) para el celular | ✅ Funcionando |
 | Modo claro / oscuro de la web | ✅ Funcionando |

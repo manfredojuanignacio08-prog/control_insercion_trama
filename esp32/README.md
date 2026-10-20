@@ -39,6 +39,9 @@ El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
    - cada ⏪ pedido desde la web (sube `retroceder_seq`) → pulso de 300 ms en el relé de
      **Retroceder**, siempre después del de Pausa. Si se pidieron dos o tres entre dos consultas,
      da un pulso por cada uno, con 2 s entre pulsos
+   - con el **control desde la página apagado** (solo sensado: `control_web_activo` en `false`)
+     no pulsa ningún relé, cambie lo que cambie el estado: solo lo memoriza, y al volver a
+     prenderlo no sale el pulso de una orden vieja. El sensado sigue igual
 4. Si alguien usa la botonera a mano, lo sensa y se lo avisa al backend (`POST /evento-fisico`).
 5. Si se cae el Wi-Fi o el backend no responde: **no hace nada**
    (fail-safe). El telar queda gobernado por su botonera física, que
@@ -52,6 +55,7 @@ El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
 - **Primera lectura sin actuar**: tras un reinicio, el firmware solo
   memoriza el estado del backend; no arranca ni pausa la máquina por su
   cuenta.
+- **Solo sensado**: si en la página apagaron el control del telar, ningún relé se mueve.
 - **Pulso acotado e incondicional**: un relé jamás queda pegado.
 - **Anti-doble-pulso**: 2 s mínimos entre comandos.
 - **Watchdog por hardware (15 s)**: si el programa se cuelga (ruido

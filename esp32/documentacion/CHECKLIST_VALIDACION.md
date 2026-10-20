@@ -46,6 +46,9 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 - [ ] Tocá ⏸ en la web: debe activarse el relé de **Pausa** una vez.
 - [ ] Apretá el botón ⏪ de la web (con confirmación): debe activarse el
       relé de **Retroceder** una vez.
+- [ ] **Solo sensado:** en la web apagá «Control desde la página» y tocá ▶ (carga el dibujo),
+      ⏸ y ⏪: **ningún relé** tiene que hacer clic. Prendelo de nuevo: tampoco tiene que sonar
+      ninguno hasta que toques un botón de la web.
 - [ ] **Prueba del arranque seguro:** reiniciá el ESP32 con todo conectado.
       Los tres relés **NO deben dispararse solos** al encender. Si se
       disparan, revisá los pull-ups de 10 kΩ en IN1/IN2 y el pull-down de GPIO 27.

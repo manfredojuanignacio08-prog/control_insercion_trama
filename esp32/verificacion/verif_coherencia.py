@@ -191,6 +191,19 @@ bob = {
 chk("Cantidad de bobinas igual en web, firmware y base", len(set(bob.values())) == 1 and None not in bob.values(),
     ", ".join(f"{k}={v}" for k, v in bob.items()))
 
+# ── 17. Solo sensado: el mismo campo en la base, el backend, el firmware y la web ──
+# Con control_web_activo en false la página no mueve la máquina: el backend rechaza las órdenes y el
+# ESP32 no pulsa los relés. Si una capa quedara sin el campo, una de las dos protecciones faltaría.
+tel = _leer('backend/src/controllers/telares.controller.js')
+ss = {
+    'base':     'control_web_activo BOOLEAN NOT NULL DEFAULT true' in esquema,
+    'backend':  tel.count('AND control_web_activo') >= 2 and "codigo" in tel and 'CONTROL_WEB_DESACTIVADO' in tel,
+    'firmware': 'filtro["control_web_activo"]' in ino and 'if (!controlWebActivo)' in ino,
+    'web':      'control_web_activo' in web and "'CONTROL_WEB_DESACTIVADO'" in web,
+}
+chk("Solo sensado coherente en base, backend, firmware y web", all(ss.values()),
+    ", ".join(f"{k}={v}" for k, v in ss.items()))
+
 # ── RESULTADO ──
 ok = sum(1 for c,_,_ in checks if c)
 print(f"{'='*66}")

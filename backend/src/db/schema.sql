@@ -199,3 +199,25 @@ ALTER TABLE telares ADD COLUMN IF NOT EXISTS retrocesos_contados   INTEGER NOT N
 ALTER TABLE telares ADD COLUMN IF NOT EXISTS motivo_pausa           TEXT;
 DROP INDEX IF EXISTS idx_historial_en_curso;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_historial_en_curso ON historial_produccion (telar_id) WHERE estado = 'en_curso';
+
+-- ============================================================
+-- Migración 023 (ver db/migracion_023_solo_sensado.sql): solo sensado, el control del telar
+-- desde la página se puede apagar. El sensado sigue.
+-- ============================================================
+ALTER TABLE telares ADD COLUMN IF NOT EXISTS control_web_activo BOOLEAN NOT NULL DEFAULT true;
+
+-- ============================================================
+-- Migración 024 (ver db/migracion_024_acceso_cliente.sql): clave de un cliente para ver su
+-- tejido. Se guarda con hash (para buscarla) y cifrada (para que el operario la vuelva a ver).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS accesos_cliente (
+  patron_id      INTEGER PRIMARY KEY REFERENCES patrones(id) ON DELETE CASCADE,
+  cliente_nombre TEXT CHECK (cliente_nombre IS NULL OR char_length(cliente_nombre) BETWEEN 1 AND 80),
+  clave_hash     TEXT NOT NULL UNIQUE,
+  clave_cifrada  TEXT NOT NULL,
+  -- metros que encargó el cliente (opcional): con ellos ve cuánto lleva de su pedido
+  metros_pedidos NUMERIC(12, 2) CHECK (metros_pedidos IS NULL OR (metros_pedidos > 0 AND metros_pedidos <= 10000000)),
+  creada_por     TEXT,
+  creada_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ultimo_acceso  TIMESTAMPTZ
+);

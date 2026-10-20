@@ -344,105 +344,114 @@ export async function actualizarHilado(req, res, next) {
  */
 export async function estadisticasPatron(req, res, next) {
   try {
-    const { id } = req.params;
-    const p = await pool.query(
-      'SELECT id, nombre, filas, columnas, metros_por_pasada, hilado_peso_kg, hilado_metros_max, hilado_pasadas_base FROM patrones WHERE id = $1',
-      [id]
-    );
-    if (p.rows.length === 0) return res.status(404).json({ error: `No existe el dibujo con id ${id}.` });
-
-    const h = await pool.query(
-      `SELECT COUNT(*)::int                                            AS producciones,
-              COUNT(*) FILTER (WHERE pasadas_sensor > 0)::int          AS producciones_con_sensor,
-              COUNT(*) FILTER (WHERE pasadas_sensor > 0 AND conteo_validado)::int AS producciones_validadas,
-              COALESCE(SUM(pasadas_totales) FILTER (WHERE pasadas_sensor = 0), 0)::int AS pasadas_estimadas,
-              COALESCE(SUM(pasadas_sensor), 0)::int                    AS pasadas_medidas,
-              COALESCE(SUM(pasadas_sensor) FILTER (WHERE conteo_validado), 0)::int AS pasadas_validadas,
-              COALESCE(SUM(CASE WHEN pasadas_sensor > 0 THEN pasadas_sensor ELSE pasadas_totales END), 0)::int AS pasadas_totales,
-              COALESCE(MAX(CASE WHEN pasadas_sensor > 0 THEN pasadas_sensor ELSE pasadas_totales END), 0)::int AS pasadas_mayor_produccion,
-              COALESCE(SUM(vueltas_completadas), 0)::int               AS repeticiones,
-              MIN(fecha_inicio)                                        AS primera_vez,
-              MAX(COALESCE(fecha_fin, fecha_inicio))                   AS ultima_vez,
-              COALESCE(SUM(
-                EXTRACT(EPOCH FROM (COALESCE(fecha_fin, now()) - fecha_inicio))
-              ), 0)::bigint                                            AS segundos_de_maquina
-         FROM historial_produccion
-        WHERE patron_id = $1`,
-      [id]
-    );
-    const s = h.rows[0];
-    const mpp = p.rows[0].metros_por_pasada === null ? null : Number(p.rows[0].metros_por_pasada);
-
-    let precision = 'estimado';
-    if (s.producciones_con_sensor > 0) {
-      if (s.producciones_con_sensor === s.producciones) {
-        precision = s.producciones_validadas === s.producciones_con_sensor ? 'sensor_validado' : 'sensor';
-      } else {
-        precision = 'mixto';
-      }
-    }
-
-    const out = {
-      patron: { id: p.rows[0].id, nombre: p.rows[0].nombre, filas: p.rows[0].filas, columnas: p.rows[0].columnas },
-      metros_por_pasada: mpp,
-      producciones: s.producciones,
-      pasadas_totales: s.pasadas_totales,
-      pasadas_estimadas: s.pasadas_estimadas,
-      pasadas_medidas: s.pasadas_medidas,
-      pasadas_validadas: s.pasadas_validadas,
-      precision_conteo: precision,
-      repeticiones_del_dibujo: s.repeticiones,
-      pasadas_mayor_produccion: s.pasadas_mayor_produccion,
-      primera_vez: s.primera_vez,
-      ultima_vez: s.ultima_vez,
-      horas_de_maquina: Math.round((Number(s.segundos_de_maquina) / 3600) * 100) / 100,
-    };
-
-    if (precision !== 'sensor_validado') {
-      out.aviso_precision = precision === 'estimado'
-        ? 'Estas pasadas se estiman por el reloj de la aplicación, no las mide la máquina. Hasta que el sensor de pasada esté instalado y validado, los números (y los metros) son aproximados.'
-        : 'El conteo del sensor todavía no se validó contra el contador mecánico del telar (o hay producciones sin sensor). Los números son aproximados.';
-    }
-
-    if (mpp !== null) {
-      out.metros_tejidos = Math.round(s.pasadas_totales * mpp * 100) / 100;
-      out.metros_mayor_produccion = Math.round(s.pasadas_mayor_produccion * mpp * 100) / 100;
-      out.metros_son_estimados = precision !== 'sensor_validado';
-      // Cuántas pasadas entran en un metro, que es como suele pensarlo el operario.
-      out.pasadas_por_metro = Math.round(1 / mpp);
-    } else {
-      out.aviso = 'Este dibujo todavía no tiene cargados los metros por pasada, así que no se pueden calcular los metros tejidos. Se carga desde el ícono de engranaje en el editor.';
-    }
-
-    // Hilado: lo usado y lo que falta se cuentan desde que se cargó (hilado_pasadas_base). Lo
-    // usado es proporcional a los metros tejidos: si el hilado alcanza para 1000 m y pesa 50 kg,
-    // cada metro tejido usa 50 g. Sin metros por pasada no se pueden calcular metros ni consumo.
-    const pr = p.rows[0];
-    const pesoHilado = pr.hilado_peso_kg === null ? null : Number(pr.hilado_peso_kg);
-    const metrosMax = pr.hilado_metros_max === null ? null : Number(pr.hilado_metros_max);
-    if (pesoHilado !== null || metrosMax !== null) {
-      const base = pr.hilado_pasadas_base === null ? s.pasadas_totales : Number(pr.hilado_pasadas_base);
-      const pasadasDesde = Math.max(0, s.pasadas_totales - base);
-      const hilado = { peso_kg: pesoHilado, metros_max: metrosMax, pasadas_desde_carga: pasadasDesde };
-      if (mpp !== null) {
-        const metrosDesde = Math.round(pasadasDesde * mpp * 100) / 100;
-        hilado.metros_desde_carga = metrosDesde;
-        if (metrosMax !== null) {
-          hilado.metros_que_faltan = Math.max(0, Math.round((metrosMax - metrosDesde) * 100) / 100);
-          hilado.porcentaje_usado = Math.min(100, Math.round((metrosDesde / metrosMax) * 1000) / 10);
-          if (pesoHilado !== null) {
-            const usado = Math.min(pesoHilado, (metrosDesde / metrosMax) * pesoHilado);
-            hilado.peso_usado_kg = Math.round(usado * 1000) / 1000;
-            hilado.peso_restante_kg = Math.round((pesoHilado - usado) * 1000) / 1000;
-          }
-        }
-      }
-      hilado.son_estimados = precision !== 'sensor_validado';
-      out.hilado = hilado;
-    }
-
+    const out = await calcularEstadisticas(req.params.id);
+    if (!out) return res.status(404).json({ error: `No existe el dibujo con id ${req.params.id}.` });
     res.json(out);
   } catch (err) {
     next(err);
   }
+}
+
+/**
+ * Las cuentas de estadisticasPatron, aparte, porque la vista del cliente muestra las mismas
+ * (así el cliente y el operario ven los mismos números). Devuelve null si el dibujo no existe.
+ */
+export async function calcularEstadisticas(id) {
+  const p = await pool.query(
+    'SELECT id, nombre, filas, columnas, metros_por_pasada, hilado_peso_kg, hilado_metros_max, hilado_pasadas_base FROM patrones WHERE id = $1',
+    [id]
+  );
+  if (p.rows.length === 0) return null;
+
+  const h = await pool.query(
+    `SELECT COUNT(*)::int                                            AS producciones,
+            COUNT(*) FILTER (WHERE pasadas_sensor > 0)::int          AS producciones_con_sensor,
+            COUNT(*) FILTER (WHERE pasadas_sensor > 0 AND conteo_validado)::int AS producciones_validadas,
+            COALESCE(SUM(pasadas_totales) FILTER (WHERE pasadas_sensor = 0), 0)::int AS pasadas_estimadas,
+            COALESCE(SUM(pasadas_sensor), 0)::int                    AS pasadas_medidas,
+            COALESCE(SUM(pasadas_sensor) FILTER (WHERE conteo_validado), 0)::int AS pasadas_validadas,
+            COALESCE(SUM(CASE WHEN pasadas_sensor > 0 THEN pasadas_sensor ELSE pasadas_totales END), 0)::int AS pasadas_totales,
+            COALESCE(MAX(CASE WHEN pasadas_sensor > 0 THEN pasadas_sensor ELSE pasadas_totales END), 0)::int AS pasadas_mayor_produccion,
+            COALESCE(SUM(vueltas_completadas), 0)::int               AS repeticiones,
+            MIN(fecha_inicio)                                        AS primera_vez,
+            MAX(COALESCE(fecha_fin, fecha_inicio))                   AS ultima_vez,
+            COALESCE(SUM(
+              EXTRACT(EPOCH FROM (COALESCE(fecha_fin, now()) - fecha_inicio))
+            ), 0)::bigint                                            AS segundos_de_maquina
+       FROM historial_produccion
+      WHERE patron_id = $1`,
+    [id]
+  );
+  const s = h.rows[0];
+  const mpp = p.rows[0].metros_por_pasada === null ? null : Number(p.rows[0].metros_por_pasada);
+
+  let precision = 'estimado';
+  if (s.producciones_con_sensor > 0) {
+    if (s.producciones_con_sensor === s.producciones) {
+      precision = s.producciones_validadas === s.producciones_con_sensor ? 'sensor_validado' : 'sensor';
+    } else {
+      precision = 'mixto';
+    }
+  }
+
+  const out = {
+    patron: { id: p.rows[0].id, nombre: p.rows[0].nombre, filas: p.rows[0].filas, columnas: p.rows[0].columnas },
+    metros_por_pasada: mpp,
+    producciones: s.producciones,
+    pasadas_totales: s.pasadas_totales,
+    pasadas_estimadas: s.pasadas_estimadas,
+    pasadas_medidas: s.pasadas_medidas,
+    pasadas_validadas: s.pasadas_validadas,
+    precision_conteo: precision,
+    repeticiones_del_dibujo: s.repeticiones,
+    pasadas_mayor_produccion: s.pasadas_mayor_produccion,
+    primera_vez: s.primera_vez,
+    ultima_vez: s.ultima_vez,
+    horas_de_maquina: Math.round((Number(s.segundos_de_maquina) / 3600) * 100) / 100,
+  };
+
+  if (precision !== 'sensor_validado') {
+    out.aviso_precision = precision === 'estimado'
+      ? 'Estas pasadas se estiman por el reloj de la aplicación, no las mide la máquina. Hasta que el sensor de pasada esté instalado y validado, los números (y los metros) son aproximados.'
+      : 'El conteo del sensor todavía no se validó contra el contador mecánico del telar (o hay producciones sin sensor). Los números son aproximados.';
+  }
+
+  if (mpp !== null) {
+    out.metros_tejidos = Math.round(s.pasadas_totales * mpp * 100) / 100;
+    out.metros_mayor_produccion = Math.round(s.pasadas_mayor_produccion * mpp * 100) / 100;
+    out.metros_son_estimados = precision !== 'sensor_validado';
+    // Cuántas pasadas entran en un metro, que es como suele pensarlo el operario.
+    out.pasadas_por_metro = Math.round(1 / mpp);
+  } else {
+    out.aviso = 'Este dibujo todavía no tiene cargados los metros por pasada, así que no se pueden calcular los metros tejidos. Se carga desde el ícono de engranaje en el editor.';
+  }
+
+  // Hilado: lo usado y lo que falta se cuentan desde que se cargó (hilado_pasadas_base). Lo
+  // usado es proporcional a los metros tejidos: si el hilado alcanza para 1000 m y pesa 50 kg,
+  // cada metro tejido usa 50 g. Sin metros por pasada no se pueden calcular metros ni consumo.
+  const pr = p.rows[0];
+  const pesoHilado = pr.hilado_peso_kg === null ? null : Number(pr.hilado_peso_kg);
+  const metrosMax = pr.hilado_metros_max === null ? null : Number(pr.hilado_metros_max);
+  if (pesoHilado !== null || metrosMax !== null) {
+    const base = pr.hilado_pasadas_base === null ? s.pasadas_totales : Number(pr.hilado_pasadas_base);
+    const pasadasDesde = Math.max(0, s.pasadas_totales - base);
+    const hilado = { peso_kg: pesoHilado, metros_max: metrosMax, pasadas_desde_carga: pasadasDesde };
+    if (mpp !== null) {
+      const metrosDesde = Math.round(pasadasDesde * mpp * 100) / 100;
+      hilado.metros_desde_carga = metrosDesde;
+      if (metrosMax !== null) {
+        hilado.metros_que_faltan = Math.max(0, Math.round((metrosMax - metrosDesde) * 100) / 100);
+        hilado.porcentaje_usado = Math.min(100, Math.round((metrosDesde / metrosMax) * 1000) / 10);
+        if (pesoHilado !== null) {
+          const usado = Math.min(pesoHilado, (metrosDesde / metrosMax) * pesoHilado);
+          hilado.peso_usado_kg = Math.round(usado * 1000) / 1000;
+          hilado.peso_restante_kg = Math.round((pesoHilado - usado) * 1000) / 1000;
+        }
+      }
+    }
+    hilado.son_estimados = precision !== 'sensor_validado';
+    out.hilado = hilado;
+  }
+
+  return out;
 }

@@ -22,7 +22,7 @@ el repositorio para que el código y la documentación viajen juntos.
 | `Conexionado_Nivel2.docx` | El paso a paso del sensor de pasada y los relés, con sus diagramas. |
 | `Conexiones_de_las_plaquetas.docx` | El resumen de las conexiones de las cinco plaquetas, pata por pata, para quien las arma, con lo que hay que corregir del diseño en Proteus. |
 | `Guia_Bloques_C_y_D.docx` | Qué falta hacer en esos dos bloques y en qué orden. |
-| `Checklist_verificaciones.xlsx` | Las 25 verificaciones antes y durante la instalación. |
+| `Checklist_verificaciones.xlsx` | Las 26 verificaciones antes y durante la instalación. |
 | `Componentes_en_placa.xlsx` | Los componentes de la placa, con su ubicación. |
 
 ## Economía y planificación

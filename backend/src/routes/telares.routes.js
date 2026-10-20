@@ -57,6 +57,8 @@ router.post('/:id/confirmar-posicion', requerirOperario, telaresController.confi
 // El operario da por bueno el conteo del sensor tras compararlo con el contador
 // mecánico del telar durante una jornada completa.
 router.post('/:id/validar-conteo', requerirOperario, telaresController.validarConteo);
+// Solo sensado: prender o apagar el control del telar desde la página (el sensado sigue).
+router.put('/:id/control-web', requerirOperario, telaresController.cambiarControlWeb);
 router.get('/:id/historial', requerirSesion, telaresController.historialPorTelar);
 
 export default router;
