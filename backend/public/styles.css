@@ -922,8 +922,8 @@ font-family:var(--font-mono);}
    Con --int-color: la fila redefine --acc con el color de su hilo, y la llave cambiaba de color. */
 .g-int,.g-int-h{width:28px;flex:none;position:sticky;right:0;z-index:2;background:var(--bg)}
 .g-int{height:var(--cel,42px);border:none;padding:0;cursor:pointer;position:sticky;display:flex;align-items:center;justify-content:center;color:var(--int-color)}
-.g-int:not(.en)::after{content:"+";opacity:.25;font-weight:700;font-size:13px}
-.g-int:not(.en):hover::after,.g-int:not(.en):focus-visible::after{opacity:.8}
+.g-int:not(.en)::after{content:"+";opacity:.5;font-weight:600;font-size:22px;line-height:1}
+.g-int:not(.en):hover::after,.g-int:not(.en):focus-visible::after{opacity:1}
 /* llave: una línea que une las filas del grupo, con remates arriba y abajo */
 .g-int.en::before{content:"";position:absolute;left:8px;top:-2px;bottom:-2px;border-right:3px solid var(--int-color);box-sizing:content-box;width:0}
 .g-int.en.ini::before{top:6px;border-top:3px solid var(--int-color);width:6px;left:2px;border-top-right-radius:4px}
@@ -940,25 +940,26 @@ font-family:var(--font-mono);}
 .int-filas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 /* ═══ Vista para clientes ═══ */
-.cli-link-login{display:block;width:100%;margin-top:14px;padding:11px;border:1px solid var(--bd);
-  border-radius:14px;background:transparent;color:var(--acc);font-size:13px;font-weight:700;
+/* Pantalla de ingreso: dos pestañas arriba, «Personal» (huella) y «Clientes» (clave del pedido). */
+.login-tabs{display:flex;gap:4px;padding:4px;margin:0 0 18px;border-radius:14px;background:var(--srf2);border:1px solid var(--bd)}
+.login-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:8px 10px;
+  border:none;border-radius:11px;background:transparent;color:var(--tx2);font-size:14px;font-weight:700;
   cursor:pointer;font-family:inherit}
-.cli-ov{position:fixed;inset:0;z-index:2001;background:var(--bg);display:flex;flex-direction:column;
-  align-items:center;justify-content:center;padding:28px;text-align:center;overflow-y:auto}
-.cli-ingreso{max-width:340px;width:100%}
-.cli-icono{width:82px;height:82px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;
-  background:var(--acc-lt);border-radius:22px}
-.cli-ingreso h1{font-size:20px;color:var(--tx);margin:0 0 6px}
-.cli-intro{color:var(--tx3);font-size:13px;margin:0 0 22px;line-height:1.5}
-.cli-ingreso input{width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);
+.login-tab.activa{background:#fff;color:var(--acc);box-shadow:0 1px 4px rgba(30,58,95,.22)}
+[data-theme="dark"] .login-tab.activa{background:#3B4A5C;color:#DCE8F4;box-shadow:0 1px 4px rgba(0,0,0,.45)}
+.login-paneles{display:grid}
+.login-paneles>[role="tabpanel"]{grid-area:1/1}
+/* la pestaña que no se ve igual ocupa su lugar (no se la puede tocar ni la lee el lector de pantalla) */
+.login-paneles>[hidden]{display:block;visibility:hidden}
+.login-tab:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.cli-intro{color:var(--tx3);font-size:13.5px;margin:0 0 18px;line-height:1.5}
+#login-panel-cliente input{width:100%;padding:14px;border-radius:14px;border:1px solid var(--bd);background:var(--srf);
   color:var(--tx);font-size:16px;font-family:inherit;margin-bottom:14px;box-sizing:border-box;text-align:center;
   letter-spacing:1px}
 .cli-btn{width:100%;padding:15px;border:none;border-radius:14px;background:var(--rose);color:#fff;font-size:15px;
   font-weight:600;cursor:pointer;font-family:inherit}
 .cli-btn:disabled{opacity:.6;cursor:default}
 .cli-msg{margin-top:16px;font-size:13px;min-height:18px;color:var(--tx3);line-height:1.45}
-.cli-volver{margin-top:6px;background:none;border:none;color:var(--tx3);font-size:12px;text-decoration:underline;
-  cursor:pointer;font-family:inherit}
 .cli-vista{position:fixed;inset:0;z-index:2003;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
 .cli-wrap{max-width:640px;margin:0 auto;padding:18px 16px 28px;box-sizing:border-box}
 .cli-cab{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}

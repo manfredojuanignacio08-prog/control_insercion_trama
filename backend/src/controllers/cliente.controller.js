@@ -2,7 +2,7 @@
 //  Vista para clientes: cada tejido (un dibujo) puede tener una clave
 //
 //  El operario genera la clave desde la ficha del dibujo y se la pasa al cliente. El cliente la
-//  escribe en la página ("Soy cliente: ver mi tejido") y entra a una vista de SOLO LECTURA de ese
+//  escribe en la página (pestaña "Clientes" del ingreso) y entra a una vista de SOLO LECTURA de ese
 //  tejido: cómo se ve la tela, si se está tejiendo, cuánto avanzó, los metros tejidos y, si el
 //  operario cargó los metros encargados, cuánto lleva del pedido. No ve otros dibujos, ni los
 //  controles del telar, ni los errores, ni quién lo operó.

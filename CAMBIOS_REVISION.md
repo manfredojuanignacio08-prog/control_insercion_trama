@@ -1698,3 +1698,37 @@ porque cuentan lo que pasaba esos días.
 | `README.md`, `esp32/control_trama_esp32/README.md`, `esp32/documentacion/NIVELES_DE_CONTROL.md`, `docs/guias/Manual_Instalacion_y_Funcionamiento.md` | Lo mismo | Lo mismo |
 
 El diagrama del Gantt no cambia: muestra el estado por etapa, y la Etapa 07 sigue en curso.
+
+## Trigésima novena revisión: el acceso de los clientes y el «+» del intercalado
+
+Dos pedidos sobre la página. El botón «Soy cliente: ver mi tejido» estaba al pie de la pantalla de
+ingreso, debajo de los dos enlaces chicos, y era incómodo de encontrar y de tocar. Ahora la pantalla
+tiene arriba de todo dos pestañas, **«Personal»** (la huella, como siempre, y es la que aparece al
+abrir) y **«Clientes»**, que muestra en la misma tarjeta la clave y el botón **«Ver mi pedido»**. Ya
+no hay una pantalla aparte con «Volver». Las dos pestañas ocupan el mismo lugar (la tarjeta toma el
+alto de la más larga), así que al cambiar de una a otra el selector no se mueve de debajo del dedo.
+Con el teclado se pasa de una a otra con las flechas. «Salir» de la vista del cliente, o una clave
+que cambió, vuelven a la pestaña «Clientes»; cerrar sesión, la sesión vencida o el ingreso desde el
+modo invitado, a «Personal».
+
+El «+» que arma un intercalado desde una fila (columna ⇄) era chico y muy tenue: pasa de 13 a 22 px y
+de 25 % a 50 % de opacidad (100 % al pasar el mouse o con el foco). La columna sigue midiendo 28 px,
+así que la grilla no cambia de ancho.
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| `backend/public/index.html` y `styles.css` | Botón al pie y una pantalla aparte para la clave | Pestañas «Personal» y «Clientes» arriba; la clave y «Ver mi pedido» en la pestaña |
+| `backend/public/styles.css` | «+» de 13 px al 25 % | «+» de 22 px al 50 % |
+| Ayuda de la ficha del dibujo, comentario de `cliente.controller.js` | «Soy cliente: ver mi tejido» | La pestaña «Clientes» del ingreso |
+| `backend/tests/frontend.test.mjs` | Esperaba la pantalla aparte | Comprueba la pestaña que queda abierta en cada caso |
+| Manual de la página web (Word, PDF y sitio) | Punto 2.5 «Soy cliente: ver mi tejido»; capturas viejas | Punto 2.5 «Clientes: ver cómo va el pedido», la introducción del punto 2 con las pestañas, y once capturas nuevas (el ingreso, la pestaña «Clientes», la ficha del cliente y las de la grilla con el «+» nuevo) |
+| Documentación de Proyecto (Word, PDF y sitio) | «Se entra desde el ingreso, con «Soy cliente: ver mi tejido»» | «Se entra desde la pestaña «Clientes» de la pantalla de ingreso» |
+| Bitácora (Word y PDF) | — | La entrada del 20/10 suma los dos cambios; la del día en que se hizo la vista del cliente queda como estaba |
+
+Se probó en Chromium a 360 y 390 px, claro y oscuro: las dos pestañas, la clave corta y la clave que no
+existe, las flechas del teclado y la grilla de 8 columnas (con 360 px se desliza de costado igual que
+antes: el cambio del «+» no le suma ancho).
+
+De paso, en el celular más chico (320 × 568) y con el campo del código de invitación a la vista, la
+tarjeta de ingreso no entraba y la pantalla no se podía desplazar: se cortaba 11 px arriba y abajo
+(ya pasaba antes, justo en el borde). Ahora, si no entra, se desplaza; si entra, sigue centrada.

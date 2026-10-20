@@ -454,7 +454,15 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   respuesta = { status:401, body:{ error:'La clave de este tejido cambió o ya no está habilitada.', codigo:'CLIENTE_SIN_ACCESO' } };
   await f.run('refrescarVistaCliente()');
   assert.equal(f.els['cliente-overlay'].style.display, 'none');
-  assert.equal(f.els['cliente-ingreso-overlay'].style.display, 'flex');
-  assert.match(f.els['cli-msg'].textContent, /cambió/); }
+  assert.equal(f.els['login-overlay'].style.display, 'flex');
+  assert.equal(f.els['login-panel-cliente'].hidden, false, 'en la pestaña de clientes');
+  assert.equal(f.els['login-panel-personal'].hidden, true);
+  assert.match(f.els['cli-msg'].textContent, /cambió/);
+  // «Salir» también vuelve a la pestaña de clientes; la sesión vencida de un operario, a la del personal
+  await f.run('salirVistaCliente()');
+  assert.equal(f.els['login-panel-cliente'].hidden, false);
+  f.run("appIniciada = true; sesionVencida()");
+  assert.equal(f.els['login-panel-personal'].hidden, false, 'el aviso de sesión vencida queda a la vista');
+  assert.equal(f.els['login-panel-cliente'].hidden, true); }
 
 console.log('frontend OK');

@@ -34,8 +34,10 @@
 <!-- ════════════════════════════════════════════
      OVERLAY: LOGIN POR HUELLA DACTILAR
 ════════════════════════════════════════════ -->
-<div id="login-overlay" style="position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center;">
-  <div style="max-width:340px;width:100%;">
+<!-- La tarjeta va centrada (margin:auto); si no entra (un celular chico con el campo de invitación),
+     la pantalla se desplaza en vez de cortarla arriba y abajo. -->
+<div id="login-overlay" style="position:fixed;inset:0;z-index:2000;background:var(--bg);display:flex;flex-direction:column;align-items:center;padding:28px;text-align:center;overflow-y:auto;">
+  <div style="max-width:340px;width:100%;margin:auto 0;">
     <div style="width:88px;height:88px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;background:var(--acc-lt);border-radius:22px;">
       <svg width="54" height="54" viewBox="0 0 48 48" fill="none" aria-hidden="true">
         <!-- Tejido: la urdimbre en vertical y la trama pasando por encima y por debajo -->
@@ -51,8 +53,23 @@
         </g>
       </svg>
     </div>
-    <h1 style="font-size:22px;color:var(--tx);margin:0 0 6px;">Control de Inserción de Trama</h1>
-    <p style="color:var(--tx3);font-size:14px;margin:0 0 28px;">Ingresá con tu huella dactilar</p>
+    <h1 style="font-size:22px;color:var(--tx);margin:0 0 16px;">Control de Inserción de Trama</h1>
+
+    <!-- Quién entra: el personal de la fábrica (con la huella) o un cliente (con la clave de su pedido) -->
+    <div class="login-tabs" role="tablist" aria-label="Quién entra" onkeydown="teclaIngreso(event)">
+      <button type="button" role="tab" id="tab-personal" class="login-tab activa" aria-selected="true" aria-controls="login-panel-personal" onclick="elegirIngreso('personal')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 11v3.5M8.5 9.5a3.5 3.5 0 0 1 7 0v5M5.5 11a6.5 6.5 0 0 1 13 0v3M15.5 19.5a10 10 0 0 0 1-4.5"/><path d="M8.5 19a8 8 0 0 0 1-4"/></svg>Personal
+      </button>
+      <button type="button" role="tab" id="tab-cliente" class="login-tab" aria-selected="false" aria-controls="login-panel-cliente" tabindex="-1" onclick="mostrarIngresoCliente()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 8 12 3.5 20.5 8v8L12 20.5 3.5 16z"/><path d="M3.5 8 12 12.5 20.5 8M12 12.5v8"/></svg>Clientes
+      </button>
+    </div>
+
+    <!-- Las dos pestañas ocupan el mismo lugar y la tarjeta toma el alto de la más larga: así, al
+         cambiar de pestaña, el selector no se mueve de debajo del dedo. -->
+    <div class="login-paneles">
+    <div id="login-panel-personal" role="tabpanel" aria-labelledby="tab-personal">
+    <p style="color:var(--tx3);font-size:14px;margin:0 0 20px;">Ingresá con tu huella dactilar</p>
 
     <input id="login-usuario" type="text" placeholder="Usuario" aria-label="Usuario"
       autocomplete="username" autocapitalize="none" spellcheck="false"
@@ -82,11 +99,18 @@
     <button type="button" onclick="entrarSinLogin()" id="link-invitado" style="margin-top:10px;background:none;border:none;color:var(--tx3);font-size:12px;text-decoration:underline;cursor:pointer;display:block;width:100%;">
       Continuar sin iniciar sesión
     </button>
+    </div>
 
-    <!-- Vista para clientes: entran con la clave de su tejido y solo ven ese tejido -->
-    <button type="button" onclick="mostrarIngresoCliente()" id="link-cliente" class="cli-link-login">
-      Soy cliente: ver mi tejido
-    </button>
+    <!-- Clientes: entran con la clave de su pedido y solo ven ese tejido -->
+    <div id="login-panel-cliente" role="tabpanel" aria-labelledby="tab-cliente" hidden>
+      <p class="cli-intro">Escribí la clave que te pasó la fábrica. Vas a ver cómo va tu pedido: si se está tejiendo, cuánto avanzó y los metros.</p>
+      <input id="cli-clave" type="text" placeholder="Clave (ej: TEJ-K7QX-4AMP)" aria-label="Clave de tu pedido"
+        autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="40"
+        onkeydown="if(event.key==='Enter')hacerIngresoCliente()">
+      <button type="button" class="cli-btn" id="btn-cli-entrar" onclick="hacerIngresoCliente()">Ver mi pedido</button>
+      <p id="cli-msg" class="cli-msg" role="status"></p>
+    </div>
+    </div>
 
   </div>
 </div>
@@ -152,32 +176,6 @@
       style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--rose);color:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;">
       Ya lo anoté, entrar
     </button>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════
-     OVERLAY: INGRESO DEL CLIENTE (con la clave de su tejido)
-════════════════════════════════════════════ -->
-<div id="cliente-ingreso-overlay" class="cli-ov" style="display:none;">
-  <div class="cli-ingreso">
-    <div class="cli-icono" aria-hidden="true">
-      <svg width="46" height="46" viewBox="0 0 48 48" fill="none">
-        <g stroke="var(--acc)" stroke-width="3.4" stroke-linecap="round" opacity=".38">
-          <line x1="13" y1="8" x2="13" y2="40"/><line x1="24" y1="8" x2="24" y2="40"/><line x1="35" y1="8" x2="35" y2="40"/>
-        </g>
-        <g stroke="var(--acc)" stroke-width="3.8" stroke-linecap="round" fill="none">
-          <path d="M7 15 q6 -5 11 0 q6 5 11 0 q6 -5 11 0"/><path d="M7 24 q6 5 11 0 q6 -5 11 0 q6 5 11 0"/><path d="M7 33 q6 -5 11 0 q6 5 11 0 q6 -5 11 0"/>
-        </g>
-      </svg>
-    </div>
-    <h1>Ver mi tejido</h1>
-    <p class="cli-intro">Escribí la clave que te pasó la fábrica. Vas a ver cómo va tu tejido: si se está tejiendo, cuánto avanzó y los metros.</p>
-    <input id="cli-clave" type="text" placeholder="Clave (ej: TEJ-K7QX-4AMP)" aria-label="Clave de tu tejido"
-      autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="40"
-      onkeydown="if(event.key==='Enter')hacerIngresoCliente()">
-    <button type="button" class="cli-btn" id="btn-cli-entrar" onclick="hacerIngresoCliente()">Ver mi tejido</button>
-    <p id="cli-msg" class="cli-msg" role="status"></p>
-    <button type="button" class="cli-volver" onclick="volverDelCliente()">Volver</button>
   </div>
 </div>
 
@@ -419,7 +417,7 @@
       <!-- Vista para el cliente: la clave con la que el cliente ve solo este tejido -->
       <div class="ficha-mpp ficha-hilado" id="cli-acc">
         <label for="cli-acc-nombre">Vista para el cliente</label>
-        <p class="ficha-ayuda">Con una clave, el cliente ve solo este tejido desde la página («Soy cliente: ver mi tejido»): cómo se ve la tela, si se está tejiendo, cuánto avanzó y los metros. No ve otros dibujos ni puede tocar el telar. El nombre y los metros encargados son opcionales: con los metros, el cliente ve cuánto lleva de su pedido.</p>
+        <p class="ficha-ayuda">Con una clave, el cliente ve solo este tejido desde la página (en la pantalla de ingreso, pestaña «Clientes»): cómo se ve la tela, si se está tejiendo, cuánto avanzó y los metros. No ve otros dibujos ni puede tocar el telar. El nombre y los metros encargados son opcionales: con los metros, el cliente ve cuánto lleva de su pedido.</p>
         <div class="ficha-fila ficha-fila-2" id="cli-acc-campos">
           <div class="ficha-campo">
             <span>Cliente</span>
@@ -884,6 +882,7 @@ function cerrarSesion() {
     const u = document.getElementById('login-usuario'); if (u) u.value = '';
     setLoginMsg('');
     goTo('sc-inicio');
+    elegirIngreso('personal');
     document.getElementById('login-overlay').style.display = 'flex';
   });
 }
@@ -892,6 +891,7 @@ function cerrarSesion() {
 function irAlLogin() {
   const u = document.getElementById('login-usuario'); if (u) u.value = '';
   setLoginMsg('');
+  elegirIngreso('personal');
   document.getElementById('login-overlay').style.display = 'flex';
 }
 
@@ -1009,6 +1009,7 @@ function sesionVencida() {
   if (telarStatusTimer) { clearInterval(telarStatusTimer); telarStatusTimer = null; }   // sin sesión no hay nada que consultar
   setUsuarioActual(null, null);
   document.getElementById('recupero-overlay').style.display = 'none';
+  elegirIngreso('personal');   // el aviso va en la pestaña del personal
   document.getElementById('login-overlay').style.display = 'flex';
   setLoginMsg('Tu sesión venció. Volvé a entrar.', 'error');
 }
@@ -3986,17 +3987,34 @@ function setCliMsg(txt, tipo) {
   el.style.color = tipo === 'error' ? 'var(--red)' : tipo === 'ok' ? 'var(--green)' : 'var(--tx3)';
 }
 
-function mostrarIngresoCliente() {
-  document.getElementById('login-overlay').style.display = 'none';
-  document.getElementById('cliente-ingreso-overlay').style.display = 'flex';
-  setCliMsg('');
-  const inp = document.getElementById('cli-clave');
-  if (inp) setTimeout(() => inp.focus(), 50);
+// La pantalla de ingreso tiene dos pestañas arriba: «Personal» (la huella) y «Clientes» (la clave
+// del pedido). Antes el cliente tenía un botón suelto al pie, debajo de los enlaces, difícil de ver.
+function elegirIngreso(cual) {
+  const cliente = cual === 'cliente';
+  for (const [tab, panel, activa] of [['tab-personal', 'login-panel-personal', !cliente], ['tab-cliente', 'login-panel-cliente', cliente]]) {
+    const t = document.getElementById(tab);
+    t.classList.toggle('activa', activa);
+    t.setAttribute('aria-selected', String(activa));
+    t.tabIndex = activa ? 0 : -1;
+    document.getElementById(panel).hidden = !activa;
+  }
 }
 
-function volverDelCliente() {
-  document.getElementById('cliente-ingreso-overlay').style.display = 'none';
+// Con el teclado, las flechas pasan de una pestaña a la otra (como en cualquier grupo de pestañas).
+function teclaIngreso(e) {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  e.preventDefault();
+  if (document.getElementById('tab-cliente').getAttribute('aria-selected') === 'true') {
+    elegirIngreso('personal'); document.getElementById('tab-personal').focus();
+  } else {
+    mostrarIngresoCliente(); document.getElementById('tab-cliente').focus();
+  }
+}
+
+function mostrarIngresoCliente() {
   document.getElementById('login-overlay').style.display = 'flex';
+  elegirIngreso('cliente');
+  setCliMsg('');
 }
 
 async function hacerIngresoCliente() {
@@ -4005,7 +4023,7 @@ async function hacerIngresoCliente() {
   if (clave.replace(/[^a-z0-9]/gi, '').length < 8) { setCliMsg('Escribí la clave completa (por ejemplo TEJ-K7QX-4AMP).', 'error'); return; }
   const btn = document.getElementById('btn-cli-entrar');
   btn.disabled = true;
-  setCliMsg('Buscando tu tejido…');
+  setCliMsg('Buscando tu pedido…');
   try {
     const r = await fetch('/api/cliente/entrar', {
       method: 'POST', credentials: 'same-origin',
@@ -4033,7 +4051,7 @@ async function pedirTejidoCliente() {
 
 async function abrirVistaCliente() {
   const d = await pedirTejidoCliente();   // sin cookie válida tira error y no se muestra nada
-  for (const id of ['login-overlay', 'cliente-ingreso-overlay', 'recupero-overlay']) document.getElementById(id).style.display = 'none';
+  for (const id of ['login-overlay', 'recupero-overlay']) document.getElementById(id).style.display = 'none';
   document.getElementById('cliente-overlay').style.display = 'block';
   renderVistaCliente(d);
   clearInterval(clienteTimer);
@@ -4065,7 +4083,7 @@ async function salirVistaCliente() {
   try { await fetch('/api/cliente/salir', { method: 'POST', credentials: 'same-origin' }); } catch (e) { /* igual se sale */ }
   clearInterval(clienteTimer); clienteTimer = null;
   document.getElementById('cliente-overlay').style.display = 'none';
-  document.getElementById('login-overlay').style.display = 'flex';
+  mostrarIngresoCliente();   // vuelve a la pestaña de clientes, que es la que usó
 }
 
 // Fecha y hora en 24 h ("19/10/2026 23:39"): con el formato de 12 h quedaba "11:39 p. m.." al
