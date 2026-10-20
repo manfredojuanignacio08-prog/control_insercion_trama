@@ -1473,3 +1473,13 @@ sitios), empezando de nuevo cada vez que aparecía un error.
 | Manual de la página web y Manual del telar (Word, PDF y sitio) | Frases sin la excepción de solo sensado: «Pausa y Retroceder funcionan en cualquier momento», «las dos formas arrancan la máquina», «se puede detener desde la página», «Nuevo: primero hay que pausar (⏸)» | Cada una aclara qué pasa en solo sensado (se hace con la botonera) |
 | Documentación de Proyecto (Word, PDF y sitio), control de cambios | Terminaba en la versión 5.0 (14/10): no figuraban el cronograma reorganizado, los valores por hora nuevos ni las dos funciones | Versión 5.1 (20/10/2026) |
 | Sitio de la documentación (`web_doc/`) | 27 archivos que ninguna página usa, con contenido viejo: el Gantt anterior, la estructura de costos con el presupuesto de $37.053.629, el modelo de datos viejo y capturas con el diseño anterior de la aplicación | Quitados; el `LEEME.md` de los sitios dice qué es cada archivo que queda |
+
+**Vuelta 2.** Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Web, barra de abajo del editor | Con un trabajo en pausa del dibujo abierto que esta pantalla no conocía (lo cargó otra pantalla, o quedó cargado en solo sensado esperando la botonera), la barra decía «Detenido · Fila - / 6» mientras la de arriba decía «Dibujo cargado». La captura de solo sensado del manual lo mostraba así | La barra toma la posición del trabajo: «En pausa · Fila 1 / 6 · pasada 1 de 30». Al terminar un trabajo, una consulta que salió antes ya no la vuelve a mostrar. Prueba nueva en `tests/frontend.test.mjs` (falla sin el cambio). Captura rehecha por el camino real (interruptor y ▶ en la página), en el Word, el PDF y el sitio |
+| Web, grilla | La franja de la fila que se teje se cortaba en la columna ⇄: esa columna tiene fondo propio para tapar las celdas cuando la grilla se desplaza | La columna toma el tono de la franja sin dejar de tapar las celdas (probado en Chromium en los dos temas y con la grilla de 8 columnas desplazada a 360 px) |
+
+También en esta vuelta: contraste de las pantallas nuevas (ingreso y vista del cliente, ficha con la
+clave, editor en solo sensado) en los dos temas, sin problemas.

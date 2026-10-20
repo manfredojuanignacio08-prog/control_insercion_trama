@@ -930,6 +930,11 @@ font-family:var(--font-mono);}
 .g-int.en.fin::before{bottom:6px;border-bottom:3px solid var(--int-color);width:6px;left:2px;border-bottom-right-radius:4px}
 .g-int.en span{position:relative;z-index:1;margin-left:12px;font-family:var(--font-mono);font-size:10px;font-weight:800;color:var(--int-color);background:var(--bg);writing-mode:vertical-rl;transform:rotate(180deg);line-height:1}
 .g-int-h{text-align:center}
+/* En la fila que se teje, la columna ⇄ sigue la franja (su fondo es opaco para tapar las celdas al
+   desplazar la grilla, y cortaba la franja en dos) */
+.grid-row.active-row .g-int{background:linear-gradient(rgba(30,58,95,.09),rgba(30,58,95,.09)),var(--bg)}
+[data-theme="dark"] .grid-row.active-row .g-int{background:linear-gradient(rgba(125,160,200,.14),rgba(125,160,200,.14)),var(--bg)}
+.grid-row.active-row .g-int.en span{background:inherit}
 /* la casilla de pasadas queda al lado del apartado */
 .g-rep,.g-rep-h{right:28px}
 .int-filas{display:grid;grid-template-columns:1fr 1fr;gap:10px}

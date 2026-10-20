@@ -1337,6 +1337,15 @@ async function actualizarEstadoTelar() {
       generacionPlay++;
       updPlayUI(); renderGrid();
       doTick();
+    } else if (!isPlaying && gen === generacionPlay && curRow < 0 && telar.estado === 'pausado' &&
+               telar.historial_actual_id && String(editId) === String(telar.patron_actual_id) &&
+               Number.isInteger(telar.fila_actual) && telar.fila_actual >= 0 && telar.fila_actual < nR) {
+      // Un trabajo en pausa de este mismo dibujo que esta pantalla no conocía (lo cargó otra
+      // pantalla, o quedó cargado en solo sensado esperando la botonera): la barra muestra dónde
+      // quedó, en vez de "Detenido · Fila -" con el telar diciendo "Dibujo cargado".
+      curRow = telar.fila_actual;
+      repRestantes = restantesDesde(curRow, telar.repeticion_en_fila);
+      updPlayUI(); renderGrid();
     }
 
     // Solo sensado: el interruptor y los botones siguen lo que guarda el backend (otra pantalla
@@ -1965,6 +1974,9 @@ function terminarTrabajo() {
       clearTimeout(playTimer);
       try {
         await apiFetch(`/telares/${telarPorDefectoId}/detener`, { method: 'POST', body: JSON.stringify({}) });
+        // Una consulta que salió mientras se terminaba todavía ve el trabajo abierto: no puede
+        // volver a mostrar su fila.
+        generacionPlay++;
         trabajoEnCursoPatronId = null;
         curRow = -1;
         updPlayUI(); renderGrid();

@@ -397,6 +397,12 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   telar = { ...telar, estado:'pausado', patron_actual_id:3, historial_actual_id:12, fila_actual:0, motivo_pausa:'solo_sensado' };
   pedidos.length = 0; await f.run('startPlay()');
   assert.deepEqual(pedidos, [], 'no reanuda: ' + pedidos.join('|'));
+  // un trabajo en pausa de este dibujo que la pantalla no conocía (lo cargó otra pantalla): la
+  // barra de abajo muestra dónde quedó, no «Detenido · Fila -»
+  f.run('curRow=-1; updPlayUI()'); telar = { ...telar, fila_actual:1, repeticion_en_fila:0 };
+  await f.run('actualizarEstadoTelar()');
+  assert.equal(f.els['play-status'].textContent, 'En pausa');
+  assert.match(f.els['play-row'].textContent, /^Fila 2 \//);
   // ⏸ y ⏪ avisan y no mandan nada
   await f.run('pausePlay(true)'); f.run('retrocederFisico()');
   assert.deepEqual(pedidos, []); assert.match(f.els['toast'].textContent, /Solo sensado/);
