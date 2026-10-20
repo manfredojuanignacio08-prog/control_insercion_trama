@@ -1514,3 +1514,15 @@ estaba mal:
 | Guía de mediciones y verificaciones (Word y PDF) | Las órdenes desde la web (2.3) no tenían la verificación de solo sensado, que el checklist y `CHECKLIST_VALIDACION.md` sí tienen | Verificación 21 «Solo sensado»; las siguientes corren un número (57 en total) |
 | `_referencia_app_android/AVISO.md` | La lista de lo que cambió en la API no tenía el solo sensado (409 `CONTROL_WEB_DESACTIVADO`), y un renglón había quedado largo | El punto nuevo, y el párrafo rearmado |
 | `backend/README.md` | Un renglón del párrafo de `init-db` había quedado largo al sumar `accesos_cliente` | Rearmado como el resto |
+
+**Vuelta 6: sin errores.** Pruebas (`npm test` 9/9, integración contra PostgreSQL real, firmware en
+la PC en los dos modos, simulaciones 6/6, 6/6 y 29/29, coherencia 20/20), Chromium (editor,
+botonera, confirmaciones, intercalados, la pasada en la barra, solo sensado y la vista del cliente),
+contraste en los dos temas, `html-validate` de la página y de los dos sitios, los 17 PDF contra su
+Word, los dos sitios contra sus Word, los datos de las funciones nuevas cruzados en todos los
+documentos (tablas, migraciones, verificaciones, chequeos, claves, tiempos y nombres de los
+botones), los diagramas de la base, este registro y el `config.h` con los valores de ejemplo.
+No apareció nada para corregir.
+
+Queda para decidir el equipo: el Gantt no tiene tareas para estas dos funciones. Sumarlas cambia
+las horas (633) y, con ellas, el presupuesto.
