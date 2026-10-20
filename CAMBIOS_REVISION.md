@@ -1483,3 +1483,12 @@ sitios), empezando de nuevo cada vez que aparecía un error.
 
 También en esta vuelta: contraste de las pantallas nuevas (ingreso y vista del cliente, ficha con la
 clave, editor en solo sensado) en los dos temas, sin problemas.
+
+**Vuelta 3.** Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Este registro, «Trigésima sexta revisión» | Decía que ▶ quedaba marcado como no disponible en solo sensado (solo ⏸ y ⏪ se atenúan; ▶ carga el dibujo), que en `reanudar` la condición iba en el mismo `UPDATE` (ahí se mira con la fila bloqueada) y ubicaba el cambio del firmware en el «Nivel 1» (está en el Bloque A, en los dos modos) | Corregido |
+| `backend/public/index.html` | `html-validate` marcaba los tres menús de abajo (uno por pantalla) sin un nombre propio para los lectores de pantalla, y este registro dice que la página valida sin errores | Cada menú tiene su `aria-label`; la página vuelve a validar sin errores |
+| Sitio de la documentación | 66 encabezados de tabla sin `scope` (`html-validate`, regla de accesibilidad) | `scope="col"` en todos; el sitio valida sin errores, igual que el de los manuales |
+| `main` | Tenía cuatro subidas a mano del 19/10 (el registro, la web, el Gantt, los costos y varios documentos) y el PR no se podía unir | Son copias exactas de versiones de este branch: se unió `main` quedándose con lo del branch, sin cambiar el contenido |
