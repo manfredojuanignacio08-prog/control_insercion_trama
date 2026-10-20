@@ -1577,3 +1577,33 @@ protección, y queda como pendiente donde estaba.
 
 Los diagramas de hardware siguen mostrando la regla (220 Ω 2 W hasta 15 V, 470 Ω 3 W de 15 a 30 V):
 es correcta, y los documentos dicen cuál va en el C 201.
+
+### Revisión ampliada, en vueltas
+
+Más completa que las anteriores: además del código, las pruebas y los textos, se miraron los PDF
+página por página, las letras de cada PDF (para encontrar texto sin formato), el alto de las filas
+de las planillas, el texto alternativo de las imágenes de los sitios y la impresión de las planillas.
+
+**Vuelta 1.** `npm test` (9/9), integración contra PostgreSQL real desde cero (24 migraciones, diez
+tablas), firmware en la PC en los dos modos, simulaciones (6/6, 6/6, 29/29), coherencia (20/20),
+ESLint del servidor y de la página, Chromium (editor, ▶ ⏸ ⏪, solo sensado apagado y prendido,
+la vista del cliente y el cambio de clave, y las pruebas de navegador anteriores), `html-validate`
+de la página y de los dos sitios, los 18 PDF contra su Word y los enlaces de los Markdown. Lo que
+estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `docs/analisis/Arbol_de_problemas_y_soluciones.docx` | El estado del Nivel 2 seguía en «se está armando la plaqueta para probarlo en la máquina» (la copia de `documentacion_proyecto/` sí estaba al día) | El mismo texto que la otra copia: la prueba del 17/10 |
+| Bitácora, apartado de los niveles de control | «se probó en protoboard el 10/10/2026 y se está armando la plaqueta» | Suma la prueba del 17/10 en el telar |
+| Estimación de costos, 3.2 y 4.2 | El Bloque D se compraba «recién después de medir el telar (tarea 5.9)» y lo que faltaba «después de medir el lector» | Con la medición hecha el 17/10/2026, como en la Tabla 15 de la Documentación |
+| Modalidad de inversión, 2.1 y 2.2 | El financiamiento de los Bloques C y D «queda condicionado» a una medición que ya se hizo | Las condiciones, ya confirmadas: cuatro relés (19/09) y la alimentación del lector (17/10) |
+| Conexionado del Nivel 2, sección 3 | «Buena parte del diseño se apoya en datos que todavía no se tomaron», con la alimentación ya medida | «Una parte del diseño» |
+| Parado automático, 4 «Qué hacer primero» | «Instalar el sensor de pasada», cuando ya está conectado y calibrado | «Terminar de instalar el sensor de pasada (ya conectado y calibrado en el telar el 17/10/2026)» |
+| Sitio de la documentación, tres figuras | El texto alternativo decía «Figura de la seccion 3.2.3 / 6.3 / 8» (sin tilde y sin decir qué muestra) | El nombre de cada figura, como las demás (Figuras 1, 12 y 13) |
+| Sitio de los manuales, seis capturas | El texto alternativo era «Ilustración del manual» | El epígrafe de cada una, como las otras capturas |
+| Estado completo, sección 11 | Tres renglones estaban enteros en negrita y los otros dos solo en la etiqueta | Negrita solo en la etiqueta, en los cinco |
+| Guía de los Bloques C y D, paso 1 | «En el C 201 ese eje ya se identificó…» no tenía formato y salía en Times, más chica | Con la letra del párrafo |
+| Estimación de costos | El encabezado y el número de página no tenían letra y salían en Georgia | IBM Plex Sans, la del documento |
+| Lista de componentes (planilla) | La nota nueva de la resistencia de protección quedaba cortada (la fila tenía alto fijo), y ya había otras notas cortadas: arriba y abajo (relé LCA110, bobinas, capacitor de 470 µF) o a la derecha, porque no tenían «ajustar texto» (regulador 7824, optoacoplador, borneras, cable) | Las celdas largas con «ajustar texto», las filas con el alto que necesita su texto y centradas en vertical; no cambia ningún valor |
+| Componentes en placa y Checklist (planillas) | Lo mismo en tres filas | Igual |
+| Checklist de verificaciones | Para imprimir salía partida por columnas en 8 hojas | Horizontal, ajustada al ancho y con el encabezado repetido: 2 hojas |
