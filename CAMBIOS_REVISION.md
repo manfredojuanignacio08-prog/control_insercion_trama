@@ -1634,3 +1634,21 @@ las referencias a secciones y los identificadores internos de párrafo. Lo que e
 | Tablas de todos los Word | Algunas filas se partían entre dos páginas y dejaban una sola línea arriba de la hoja siguiente (Bitácora, «grilla matricial.») | Las filas cortas ya no se parten (en el Registro, las de hasta 250 letras, para no dejar huecos); las largas sí pueden |
 | Gantt (en el Google Sheet), C12 a C21 | «Analisis del mercado», «Fabrica de tela» sin tilde y espacios dobles en «Armado de entrevista  - Taller CyP» y otras cuatro | Corregidas en el Drive y bajadas otra vez al repositorio; no cambia ninguna fecha ni hora |
 | `esp32/documentacion/CHECKLIST_VALIDACION.md` | Los dos mensajes del monitor serie llevaban tres puntos sueltos («apretó ...», «juntos ...»), y el resto de la documentación usa «…» | «…» |
+
+**Vuelta 3.** Controles nuevos sobre todo el texto del proyecto (Word, Markdown, planillas, la página y
+los dos sitios, sin contar el código): palabras escritas con y sin tilde, palabras repetidas, espacios
+dobles y espacios antes de un signo; además, las anclas, los identificadores y los archivos que cargan
+los sitios y la página, los errores y los valores de las fórmulas de las planillas y otra mirada a las
+páginas de los 18 PDF. También se volvieron a correr las simulaciones del firmware (6/6, 6/6, 29/29),
+la coherencia, las pruebas en la PC, `npm test` y `html-validate`. Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Gantt (en el Google Sheet) | «Login por biometria», «Dolar a», «Aca se agregan…» e «Inversion inicial» sin tilde, y un espacio de más al final de la tarea «Testing interno del prototipo con el equipo» | Corregidas en el Drive y bajadas otra vez al repositorio |
+| Lista de componentes (planilla) | Las 43 fórmulas (subtotales y total) estaban guardadas sin su valor: Excel y LibreOffice las calculan al abrir, pero en el celular o en una vista previa los subtotales salían vacíos | Cada fórmula guarda su valor: A $73.653, C $13.950, D $34.536 y total $122.139, como en los documentos |
+| Los dos sitios, «El equipo» | «Ferrando, Jacó», cuando el Gantt, los Word y el organigrama dicen «Jaco» | «Jaco» |
+
+Al bajar el Gantt se vio, además, que en el Drive la tarea 7,2 («Pasar el armado de protoboard a las 5
+plaquetas soldadas») pasó de 8 a 12 horas hechas de 12. No cambia el total (643 horas) ni los costos,
+que salen de las horas planificadas; los documentos siguen diciendo que las plaquetas se están armando
+hasta confirmarlo.
