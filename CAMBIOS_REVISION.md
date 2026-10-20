@@ -1409,3 +1409,292 @@ confirmaciones, intercalados, la pasada en la barra) y los dos sitios sin errore
 anclas rotas. En el Excel del Gantt quedan tres nombres definidos de la plantilla original (`Type`,
 `ScheduleStart`, `Interval`) que apuntan a `#REF!`; no los usa ninguna fórmula ni se ven en ninguna
 celda, y vienen así desde la primera versión.
+
+## Trigésima sexta revisión: solo sensado y vista para los clientes
+
+Dos funciones nuevas en la página, pedidas por el equipo.
+
+**Solo sensado (se prende y se apaga).** En la barra del telar hay un interruptor «Control desde la
+página» / «Solo sensado». Apagado, la página no puede arrancar, pausar ni retroceder la máquina,
+pero todo lo demás sigue: la botonera y el sensor de pasada avisan lo que hace el telar, el Nivel 2
+sigue seleccionando las bobinas y la página muestra la fila, la pasada y el conteo.
+
+| Dónde | Qué hace |
+|---|---|
+| Base (migración 023) | Columna `telares.control_web_activo` (por defecto `true`) |
+| Backend | `PUT /api/telares/:id/control-web { activo }` (solo operarios). Con el control apagado, `pausar`, `reanudar` y `retroceder-fisico` responden 409 `CONTROL_WEB_DESACTIVADO`; la condición se mira dentro del mismo `UPDATE` (pausar y retroceder) o con la fila del telar bloqueada (reanudar), así un cambio de otra pantalla no se cruza. Cargar un dibujo abre la producción **sin arrancar la máquina** (queda en pausa con `motivo_pausa = 'solo_sensado'` y arranca con Marcha en la botonera), salvo que el telar ya esté tejiendo. Terminar un trabajo solo se puede con la máquina parada |
+| Firmware (Bloque A, en los dos modos) | Lee `control_web_activo` del sondeo y, si está en `false`, no pulsa ningún relé: solo memoriza el estado para no dar un pulso viejo cuando se vuelva a prender. Prueba nueva en `esp32/verificacion/host/test_botonera.cpp` y control 17 en `verif_coherencia.py` |
+| Web | El interruptor (con confirmación); ▶ que solo carga el dibujo; ⏸ y ⏪ atenuados, con un aviso si se tocan; y la pantalla que sigue sola el tejido cuando arrancan con la botonera. Si otra pantalla cambia el interruptor, esta lo toma en el siguiente sondeo |
+
+**Vista para los clientes, con una clave por tejido.** Desde la ficha de un dibujo, el operario
+genera la clave del cliente (`TEJ-XXXX-XXXX`, ocho caracteres al azar de un alfabeto de 32, sin
+letras que se confundan). El cliente toca «Soy cliente: ver mi tejido» en la pantalla de ingreso,
+escribe la clave y ve **solo ese tejido**: la tela, si se está tejiendo y en qué fila, las pasadas,
+los metros tejidos, cuánto lleva de su pedido (si el operario cargó los metros encargados) y las
+últimas producciones. No ve otros dibujos, los controles del telar, los errores ni quién lo operó.
+
+| Dónde | Qué hace |
+|---|---|
+| Base (migración 024) | Tabla `accesos_cliente`: una fila por dibujo, con el nombre del cliente y los metros encargados (opcionales). La clave no se guarda en texto plano: un SHA-256 (único) para encontrarla y una copia cifrada con AES-256-GCM (`RECOVERY_SECRET`) para que el operario la vuelva a ver. Se borra con el dibujo |
+| Backend del operario | `GET/POST/PATCH/DELETE /api/patrones/:id/acceso-cliente`. Generar otra clave reemplaza la anterior; quitarla corta el acceso, también de quien ya había entrado |
+| Backend del cliente | `POST /api/cliente/entrar`, `GET /api/cliente/tejido` y `POST /api/cliente/salir`. Cookie propia (`trama_cliente`, firmada aparte de la del operario, solo para `/api/cliente`, 30 días) que lleva el comienzo del hash de la clave: si la clave cambia, deja de andar. Límite de intentos fallidos por IP (`CLIENTE_INTENTOS_MAX`, 20 cada 15 minutos) |
+| Web | Ingreso del cliente, la vista de solo lectura (se actualiza cada 15 s) y el bloque «Vista para el cliente» en la ficha. Las estadísticas salen de la misma cuenta que la ficha (`calcularEstadisticas`), así el cliente y el operario ven los mismos números |
+
+Pruebas nuevas: `tests/frontend.test.mjs` (interruptor, botones, aviso, vista del cliente) e
+`integracion.pg.mjs` contra PostgreSQL real (las dos funciones, la clave reemplazada y quitada, la
+cookie de cliente que no abre ninguna otra ruta, los 409). En Chromium a 360, 480 y 1280 px.
+
+Documentos al día: `README.md`, `backend/README.md`, `esp32/README.md`,
+`esp32/control_trama_esp32/README.md`, `esp32/documentacion/CHECKLIST_VALIDACION.md`,
+`docs/guias/Como_Crear_La_Base_De_Datos.md` y `Manual_Instalacion_y_Funcionamiento.md`,
+`database/01_base_de_datos_completa.sql` (24 migraciones, diez tablas), los diagramas `ERD`,
+`DER_Negocio` y `diagrama_logico_arquitectura` (SVG y PNG); el Manual de la página web (solo sensado en los
+puntos 4.3 y 4.6; la vista del cliente en 2.5 y 4.10, con capturas nuevas), la Documentación de Proyecto
+(requisitos RF11 y RF12, RIU08, tablas de rutas y de la base, flujos, Épica 5 y figuras), el Estado
+completo del proyecto, la Bitácora (20/10), el Manual del telar en la fábrica, la Guía de conexión y
+puesta en marcha (Word y PDF de cada uno), los dos sitios y el checklist de verificaciones (punto 26,
+«Solo sensado»: que con el control apagado ningún relé haga clic, y que la botonera siga avisando).
+
+### Revisión completa después de agregar las dos funciones
+
+Repetí la revisión de todo (código, pruebas, Markdown, Word, PDF, planillas, diagramas y los dos
+sitios), empezando de nuevo cada vez que aparecía un error.
+
+**Vuelta 1.** Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `telares.controller.js` (mensajes de solo sensado) | Al terminar un trabajo con la máquina tejiendo, el servidor decía «…pará la máquina con Pausa y después terminá el trabajo **con la botonera del telar**», y el trabajo se termina desde la página. Los otros decían «arrancalo con Marcha con la botonera» | Cada mensaje dice entero qué hacer: «Paralo con Pausa en la botonera y después terminá el trabajo», «arrancá el telar con Marcha en su botonera», «pausá el telar con su botonera», «retrocedé con la botonera del telar» |
+| Web, editor | En solo sensado, con el telar tejiendo, tocar la grilla decía «Pausá o detené la ejecución», cosa que la página no puede hacer en ese modo | «El telar está tejiendo: pausalo con la botonera para poder editar la matriz». Prueba nueva en `tests/frontend.test.mjs` |
+| `utils/codigos.js` | Un comentario decía «256 no es múltiplo de 32» (sí lo es) | Corregido |
+| `backend/.env.example`, `DESPLIEGUE_RENDER.md`, `PUESTA_EN_MARCHA.md` | Faltaban `CLIENTE_DIAS` y `CLIENTE_INTENTOS_MAX`, y `RECOVERY_SECRET` figuraba solo para los códigos de recuperación | Las dos variables, y que `RECOVERY_SECRET` también cifra las claves de los clientes (si cambia, siguen andando pero hay que generar otra para volver a verlas) |
+| `AUTENTICACION_BIOMETRICA.md`, `_referencia_app_android/AVISO.md` | Decían que las únicas rutas sin sesión son `/api/health` y `/api/auth/*` | Suman `/api/cliente/*`, que verifica la clave o la cookie del cliente |
+| `CHECKLIST_VALIDACION.md`, `esp32/verificacion/LEEME.md` | 19 chequeos de coherencia | 20 (el de solo sensado) |
+| Manual de la página web y Manual del telar (Word, PDF y sitio) | Frases sin la excepción de solo sensado: «Pausa y Retroceder funcionan en cualquier momento», «las dos formas arrancan la máquina», «se puede detener desde la página», «Nuevo: primero hay que pausar (⏸)» | Cada una aclara qué pasa en solo sensado (se hace con la botonera) |
+| Documentación de Proyecto (Word, PDF y sitio), control de cambios | Terminaba en la versión 5.0 (14/10): no figuraban el cronograma reorganizado, los valores por hora nuevos ni las dos funciones | Versión 5.1 (20/10/2026) |
+| Sitio de la documentación (`web_doc/`) | 27 archivos que ninguna página usa, con contenido viejo: el Gantt anterior, la estructura de costos con el presupuesto de $37.053.629, el modelo de datos viejo y capturas con el diseño anterior de la aplicación | Quitados; el `LEEME.md` de los sitios dice qué es cada archivo que queda |
+
+**Vuelta 2.** Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Web, barra de abajo del editor | Con un trabajo en pausa del dibujo abierto que esta pantalla no conocía (lo cargó otra pantalla, o quedó cargado en solo sensado esperando la botonera), la barra decía «Detenido · Fila - / 6» mientras la de arriba decía «Dibujo cargado». La captura de solo sensado del manual lo mostraba así | La barra toma la posición del trabajo: «En pausa · Fila 1 / 6 · pasada 1 de 30». Al terminar un trabajo, una consulta que salió antes ya no la vuelve a mostrar. Prueba nueva en `tests/frontend.test.mjs` (falla sin el cambio). Captura rehecha por el camino real (interruptor y ▶ en la página), en el Word, el PDF y el sitio |
+| Web, grilla | La franja de la fila que se teje se cortaba en la columna ⇄: esa columna tiene fondo propio para tapar las celdas cuando la grilla se desplaza | La columna toma el tono de la franja sin dejar de tapar las celdas (probado en Chromium en los dos temas y con la grilla de 8 columnas desplazada a 360 px) |
+
+También en esta vuelta: contraste de las pantallas nuevas (ingreso y vista del cliente, ficha con la
+clave, editor en solo sensado) en los dos temas, sin problemas.
+
+**Vuelta 3.** Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Este registro, «Trigésima sexta revisión» | Decía que ▶ quedaba marcado como no disponible en solo sensado (solo ⏸ y ⏪ se atenúan; ▶ carga el dibujo), que en `reanudar` la condición iba en el mismo `UPDATE` (ahí se mira con la fila bloqueada) y ubicaba el cambio del firmware en el «Nivel 1» (está en el Bloque A, en los dos modos) | Corregido |
+| `backend/public/index.html` | `html-validate` marcaba los tres menús de abajo (uno por pantalla) sin un nombre propio para los lectores de pantalla, y este registro dice que la página valida sin errores | Cada menú tiene su `aria-label`; la página vuelve a validar sin errores |
+| Sitio de la documentación | 66 encabezados de tabla sin `scope` (`html-validate`, regla de accesibilidad) | `scope="col"` en todos; el sitio valida sin errores, igual que el de los manuales |
+| `main` | Tenía cuatro subidas a mano del 19/10 (el registro, la web, el Gantt, los costos y varios documentos) y el PR no se podía unir | Son copias exactas de versiones de este branch: se unió `main` quedándose con lo del branch, sin cambiar el contenido |
+
+**Vuelta 4.** Todos los PDF de `documentacion_proyecto/PDF/` exportados de nuevo y comparados con
+su Word (los 17 iguales), los enlaces de los Markdown, las referencias «punto N» de los dos
+manuales, el SQL completo contra su generador y contra una base vacía (24 migraciones, diez
+tablas), `npm audit` (0), el contraste y el HTML de la página y de los dos sitios. Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `documentacion_proyecto/LEEME.md` | Nombraba el Gantt como «`Gantt_2026 - ...xlsx`» | El nombre completo del archivo |
+| Documentación de Proyecto (Word, PDF y sitio), Tabla 4 «Características de los usuarios» | No estaba el cliente de la fábrica, que ahora usa el sistema con la clave de su tejido. Y el dueño «verificaba el avance en la consola de inicio», que no lo muestra (el avance está en el editor y en las estadísticas de la biblioteca) | Fila nueva «Cliente de la fábrica», y el dueño verifica el avance en el editor y en las estadísticas |
+
+**Vuelta 5.** Busqué, en todos los documentos, las listas que tendrían que nombrar lo nuevo (usuarios,
+pantallas, rutas, verificaciones) y comparé la guía de conexión en Markdown con su Word. Lo que
+estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md` | Le faltaba la nota de «Control desde la página» para las primeras pruebas, que su versión en Word sí tenía | La nota, en el mismo lugar (5.2) |
+| La misma guía (Markdown, Word y PDF), secciones 7 y 8 | Las pruebas de los relés desde la web no decían que hace falta el control prendido: después de la nota anterior, alguien podía probar con el control apagado y no escuchar ningún clic | «con «Control desde la página» prendido» en las dos pruebas |
+| Guía de mediciones y verificaciones (Word y PDF) | Las órdenes desde la web (2.3) no tenían la verificación de solo sensado, que el checklist y `CHECKLIST_VALIDACION.md` sí tienen | Verificación 21 «Solo sensado»; las siguientes corren un número (57 en total) |
+| `_referencia_app_android/AVISO.md` | La lista de lo que cambió en la API no tenía el solo sensado (409 `CONTROL_WEB_DESACTIVADO`), y un renglón había quedado largo | El punto nuevo, y el párrafo rearmado |
+| `backend/README.md` | Un renglón del párrafo de `init-db` había quedado largo al sumar `accesos_cliente` | Rearmado como el resto |
+
+**Vuelta 6: sin errores.** Pruebas (`npm test` 9/9, integración contra PostgreSQL real, firmware en
+la PC en los dos modos, simulaciones 6/6, 6/6 y 29/29, coherencia 20/20), Chromium (editor,
+botonera, confirmaciones, intercalados, la pasada en la barra, solo sensado y la vista del cliente),
+contraste en los dos temas, `html-validate` de la página y de los dos sitios, los 17 PDF contra su
+Word, los dos sitios contra sus Word, los datos de las funciones nuevas cruzados en todos los
+documentos (tablas, migraciones, verificaciones, chequeos, claves, tiempos y nombres de los
+botones), los diagramas de la base, este registro y el `config.h` con los valores de ejemplo.
+No apareció nada para corregir.
+
+Queda para decidir el equipo: el Gantt no tiene tareas para estas dos funciones. Sumarlas cambia
+las horas (633) y, con ellas, el presupuesto.
+
+## Trigésima séptima revisión: el Gantt con las dos funciones y la prueba del 17/10 en el telar
+
+**El Gantt, desde el Google Sheet.** Se cargaron en la planilla del Drive (la misma que se usa
+siempre) tres tareas nuevas en la Etapa 07, ya hechas: 7,12 «Agregar el modo solo sensado» (3 h),
+7,13 «Agregar la vista para los clientes» (4 h) y 7,14 «Documentar las dos funciones» (3 h). Las
+tareas 7,4 a 7,6 (medir el lector, el sensor de pasada y el primer canal de los relés) pasan a la
+fecha real, 17/10/2026, y 7,4 depende de 5,21. Las sumas de la planilla se ajustaron solas: 169
+tareas, **643 horas** (586 hechas), y la Etapa 07 pasa de 36 a 46 horas. El `.xlsx` del repositorio
+es la exportación de esa planilla.
+
+**Los costos, con las 643 horas.** Mismo método que antes (las horas de cada tarea, repartidas
+entre sus responsables; tarifa en USD × 1.525 × 1,05):
+
+| Valor | Antes (633 h) | Ahora (643 h) |
+|---|---|---|
+| Personal | $31.325.190 | **$31.844.539** |
+| Costo total (más $231.814 de componentes y gastos) | $31.557.004 | **$32.076.353** |
+| Ganancia (25 %) | $7.889.251 | **$8.019.088** |
+| Presupuesto final | $39.446.255 | **$40.095.441** |
+| Hardware / Software (costo) | $14.357.101 / $17.199.903 | **$14.401.855 / $17.674.498** |
+| Hardware / Software (precio) | $17.946.376 / $21.499.879 | **$18.002.318 / $22.093.123** (44,9 % / 55,1 %) |
+
+Cambian las horas de PM (138,65), D01 (54,07), D02 (72,30), IM01 (102,12), BD (17,90) y MUL (29,00);
+el reparto del personal compartido pasa a 44,7 % / 55,3 %, y la suba del 20 % del dólar, a unos
+$38.200.000 de personal y $48.100.000 de presupuesto. Se actualizaron la Estimación de costos, la
+Modalidad de inversión, la Documentación de Proyecto (sección 8, Figura 13 y 6.1, Figura 11), el
+sitio de la documentación, `diagramas/sistema/estimacion.*` y `gantt.*` (169 tareas, 14 en la
+Etapa 07), el Estado completo, el `LEEME.md` y la Bitácora (entrada del 20/10). En la planilla, la
+hoja «Estimación de Costos» (que suma las horas *hechas* de cada persona) pasa de 1545 a 1575 horas.
+
+**La prueba del 17/10/2026 en el telar**, con el armado en protoboard: la alimentación del lector
+óptico dio entre 15 y 30 V, así que la resistencia de protección es la de **470 Ω 3 W**; el sensor
+de pasada quedó conectado y calibrado, y cuenta las pasadas; y el primer canal de los relés LCA110,
+con la conexión final, seleccionó bien. Faltan los otros tres canales, las plaquetas soldadas (7,2,
+al 67 %) y el gabinete en la planta (7,3). No se midió todavía la corriente con la resistencia de
+protección, y queda como pendiente donde estaba.
+
+| Dónde | Qué cambió |
+|---|---|
+| Bitácora (Word y PDF) | Entrada nueva del 17/10/2026 |
+| Documentación de Proyecto (Word, PDF y sitio) | Control de cambios 5.1, el Nivel 2 (2.2 Alcance), LIM01 y LIM02, el estado de la Etapa 07, el HITO 3, la BOM (la resistencia de protección es de 470 Ω 3 W), la Tabla 15 y el orden de compra, y 10.3 Plazos |
+| Estado completo (Word y PDF) | Los Bloques C y D, el armado, 7.3 «Lo que falta medir» y la lista de lo que falta |
+| Guía de mediciones (Word y PDF) | El registro: lector, alimentación, entre 15 y 30 V, 17/10/2026 |
+| Guías de los Bloques C y D, de los relés LCA110, de conexión y puesta en marcha, Conexionado del Nivel 2 y Conexiones de las plaquetas (Word y PDF) | El valor del C 201 junto a la regla general (que sigue sirviendo para otro telar); en el Conexionado, las tablas de lo confirmado, las incógnitas y las mediciones pendientes |
+| Manual del telar (Word, PDF y sitio), Parado automático, Árbol de problemas | El estado del Nivel 2 |
+| Lista de componentes y Componentes en placa (planillas), Componentes completos (Word y PDF) | «Resistencia de protección 470 Ω 3 W»; el precio sigue a completar |
+| `README.md`, `PUESTA_EN_MARCHA.md`, `diagramas/README.md`, `docs/guias/*.md`, `esp32/control_trama_esp32/README.md` y `config.h` (comentario de `CANAL_ACTIVO_EN_ALTO`), `esp32/documentacion/*.md` | Lo mismo, con las mismas palabras |
+
+Los diagramas de hardware siguen mostrando la regla (220 Ω 2 W hasta 15 V, 470 Ω 3 W de 15 a 30 V):
+es correcta, y los documentos dicen cuál va en el C 201.
+
+### Revisión ampliada, en vueltas
+
+Más completa que las anteriores: además del código, las pruebas y los textos, se miraron los PDF
+página por página, las letras de cada PDF (para encontrar texto sin formato), el alto de las filas
+de las planillas, el texto alternativo de las imágenes de los sitios y la impresión de las planillas.
+
+**Vuelta 1.** `npm test` (9/9), integración contra PostgreSQL real desde cero (24 migraciones, diez
+tablas), firmware en la PC en los dos modos, simulaciones (6/6, 6/6, 29/29), coherencia (20/20),
+ESLint del servidor y de la página, Chromium (editor, ▶ ⏸ ⏪, solo sensado apagado y prendido,
+la vista del cliente y el cambio de clave, y las pruebas de navegador anteriores), `html-validate`
+de la página y de los dos sitios, los 18 PDF contra su Word y los enlaces de los Markdown. Lo que
+estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `docs/analisis/Arbol_de_problemas_y_soluciones.docx` | El estado del Nivel 2 seguía en «se está armando la plaqueta para probarlo en la máquina» (la copia de `documentacion_proyecto/` sí estaba al día) | El mismo texto que la otra copia: la prueba del 17/10 |
+| Bitácora, apartado de los niveles de control | «se probó en protoboard el 10/10/2026 y se está armando la plaqueta» | Suma la prueba del 17/10 en el telar |
+| Estimación de costos, 3.2 y 4.2 | El Bloque D se compraba «recién después de medir el telar (tarea 5.9)» y lo que faltaba «después de medir el lector» | Con la medición hecha el 17/10/2026, como en la Tabla 15 de la Documentación |
+| Modalidad de inversión, 2.1 y 2.2 | El financiamiento de los Bloques C y D «queda condicionado» a una medición que ya se hizo | Las condiciones, ya confirmadas: cuatro relés (19/09) y la alimentación del lector (17/10) |
+| Conexionado del Nivel 2, sección 3 | «Buena parte del diseño se apoya en datos que todavía no se tomaron», con la alimentación ya medida | «Una parte del diseño» |
+| Parado automático, 4 «Qué hacer primero» | «Instalar el sensor de pasada», cuando ya está conectado y calibrado | «Terminar de instalar el sensor de pasada (ya conectado y calibrado en el telar el 17/10/2026)» |
+| Sitio de la documentación, tres figuras | El texto alternativo decía «Figura de la seccion 3.2.3 / 6.3 / 8» (sin tilde y sin decir qué muestra) | El nombre de cada figura, como las demás (Figuras 1, 12 y 13) |
+| Sitio de los manuales, seis capturas | El texto alternativo era «Ilustración del manual» | El epígrafe de cada una, como las otras capturas |
+| Estado completo, sección 11 | Tres renglones estaban enteros en negrita y los otros dos solo en la etiqueta | Negrita solo en la etiqueta, en los cinco |
+| Guía de los Bloques C y D, paso 1 | «En el C 201 ese eje ya se identificó…» no tenía formato y salía en Times, más chica | Con la letra del párrafo |
+| Estimación de costos | El encabezado y el número de página no tenían letra y salían en Georgia | IBM Plex Sans, la del documento |
+| Lista de componentes (planilla) | La nota nueva de la resistencia de protección quedaba cortada (la fila tenía alto fijo), y ya había otras notas cortadas: arriba y abajo (relé LCA110, bobinas, capacitor de 470 µF) o a la derecha, porque no tenían «ajustar texto» (regulador 7824, optoacoplador, borneras, cable) | Las celdas largas con «ajustar texto», las filas con el alto que necesita su texto y centradas en vertical; no cambia ningún valor |
+| Componentes en placa y Checklist (planillas) | Lo mismo en tres filas | Igual |
+| Checklist de verificaciones | Para imprimir salía partida por columnas en 8 hojas | Horizontal, ajustada al ancho y con el encabezado repetido: 2 hojas |
+
+**Vuelta 2.** Además de lo de la vuelta 1, se buscó en todos los PDF: títulos que quedan solos al pie
+de una página, hojas en blanco, filas de tabla partidas, tablas que se salen del margen, columnas
+demasiado angostas para su texto, letras que no son las del proyecto y párrafos con la negrita
+distinta de la de sus vecinos. En los Word se revisaron también la numeración de figuras y tablas,
+las referencias a secciones y los identificadores internos de párrafo. Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Documentación de Proyecto, Tabla 1 (control de cambios) | La columna de la descripción era muy angosta: la tabla ocupaba cinco páginas | Columnas repartidas según el texto: unas dos páginas |
+| Documentación de Proyecto, tablas 2, 4 y 6 a 13 | Columnas angostas que cortaban palabras o estiraban las filas | Anchos según el contenido; el PDF baja de 66 a 57 páginas |
+| Documentación de Proyecto, tablas 11 a 13 y Tabla 12 | Textos de celda sin tamaño de letra (salían más grandes) y la fila de títulos de la Tabla 12 sin el formato de las demás | El tamaño de su fila; la Tabla 12, con fondo azul y letra blanca en negrita |
+| Estado completo (tabla 3), Conexiones de las plaquetas (tabla 8) y Bitácora (tablas 1 a 4) | Lo mismo: columnas que no seguían su contenido | Anchos según el texto |
+| Los 17 Word con títulos | Títulos y frases que presentan una lista («…dos "máquinas":») quedaban solos al pie de una página, con el texto en la siguiente (por ejemplo «7. Oferta Económica», «3.4.5. Protocolos señalados», «Minuta - Reunión 4», «5. Contrato y garantía») | «Conservar con el siguiente» en todos los títulos, también cuando hay un párrafo vacío en el medio |
+| Modalidad de inversión, Guía de armado del Bloque A y Componentes completos | Sin letra definida: salían enteros en Times, distintos del resto | IBM Plex Sans, la de toda la documentación |
+| Conexionado del Nivel 2, Estado completo, Guía de los Bloques C y D, Parado automático | Las viñetas salían en Times | Con la letra del documento |
+| Documentación de Proyecto (Nivel 2 en 2.2, 3.4.8, Respaldo en 3.4.9, Paso 3 en 5.3, Prensacables, PB-4.1, Fabricación de placas, Costos de operación y todos los puntos de 9.5, 9.6 y 9.7) | Diecinueve párrafos enteros en negrita, cuando los de al lado (y el sitio) llevan en negrita solo el rótulo; uno de la sección 8 en negrita sin serlo | Negrita solo en el rótulo; el de la sección 8, en letra común |
+| Estado completo, Guía de los Bloques C y D, Conexionado del Nivel 2, Manual del telar y Guía de los relés | Lo mismo en diez párrafos («Adaptación de la señal», «Sobre el encapsulado», «Cuatro relés OptoMOS LCA110…», tres avisos del conexionado, «Estado de este documento», «Medir un lector óptico…») | Negrita solo en el rótulo |
+| Bitácora, entradas del 16/10 al 20/10 | Enteras en negrita; las demás llevan en negrita solo la fecha | Solo la fecha en negrita |
+| Estimación de costos, 3.7 | «Cable de control» y «Gabinete o caja de protección» no tenían el rótulo en negrita, como los otros dos puntos | En negrita |
+| Componentes completos | Las dos tablas medían más que el ancho de la hoja (se salían del margen derecho) y una hoja quedaba en blanco al pasar a la letra del proyecto | Tablas del ancho del texto, en 9 pt, y los capítulos empiezan en página nueva sin dejar hojas vacías: sigue en 4 páginas |
+| Documentación de Proyecto, Manual del telar, Manual de la página y Registro de entrevistas | 147 párrafos tenían el mismo identificador interno que otro (párrafos copiados); Word puede pedir reparar el archivo | Identificadores únicos |
+| Documentación de Proyecto (PDF) | Terminaba con una hoja en blanco (estaba así en todas las versiones anteriores); el Word termina en las firmas | El PDF termina en la página de las firmas |
+| Documentación de Proyecto (15 tablas), Estimación de costos (2) y Registro de entrevistas (10) | La fila de títulos no se repetía en la hoja siguiente, y la de la Tabla 2 (acrónimos) quedaba sola al pie de la página 8 | Fila de títulos repetida en cada hoja |
+| Tablas de todos los Word | Algunas filas se partían entre dos páginas y dejaban una sola línea arriba de la hoja siguiente (Bitácora, «grilla matricial.») | Las filas cortas ya no se parten (en el Registro, las de hasta 250 letras, para no dejar huecos); las largas sí pueden |
+| Gantt (en el Google Sheet), C12 a C21 | «Analisis del mercado», «Fabrica de tela» sin tilde y espacios dobles en «Armado de entrevista  - Taller CyP» y otras cuatro | Corregidas en el Drive y bajadas otra vez al repositorio; no cambia ninguna fecha ni hora |
+| `esp32/documentacion/CHECKLIST_VALIDACION.md` | Los dos mensajes del monitor serie llevaban tres puntos sueltos («apretó ...», «juntos ...»), y el resto de la documentación usa «…» | «…» |
+
+**Vuelta 3.** Controles nuevos sobre todo el texto del proyecto (Word, Markdown, planillas, la página y
+los dos sitios, sin contar el código): palabras escritas con y sin tilde, palabras repetidas, espacios
+dobles y espacios antes de un signo; además, las anclas, los identificadores y los archivos que cargan
+los sitios y la página, los errores y los valores de las fórmulas de las planillas y otra mirada a las
+páginas de los 18 PDF. También se volvieron a correr las simulaciones del firmware (6/6, 6/6, 29/29),
+la coherencia, las pruebas en la PC, `npm test` y `html-validate`. Lo que estaba mal:
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| Gantt (en el Google Sheet) | «Login por biometria», «Dolar a», «Aca se agregan…» e «Inversion inicial» sin tilde, y un espacio de más al final de la tarea «Testing interno del prototipo con el equipo» | Corregidas en el Drive y bajadas otra vez al repositorio |
+| Lista de componentes (planilla) | Las 43 fórmulas (subtotales y total) estaban guardadas sin su valor: Excel y LibreOffice las calculan al abrir, pero en el celular o en una vista previa los subtotales salían vacíos | Cada fórmula guarda su valor: A $73.653, C $13.950, D $34.536 y total $122.139, como en los documentos |
+| Los dos sitios, «El equipo» | «Ferrando, Jacó», cuando el Gantt, los Word y el organigrama dicen «Jaco» | «Jaco» |
+
+Al bajar el Gantt se vio, además, que en el Drive la tarea 7,2 («Pasar el armado de protoboard a las 5
+plaquetas soldadas») pasó de 8 a 12 horas hechas de 12. No cambia el total (643 horas) ni los costos,
+que salen de las horas planificadas; los documentos siguen diciendo que las plaquetas se están armando
+hasta confirmarlo.
+
+**Vuelta 4.** Se repitió todo, esta vez con la integración contra PostgreSQL desde una base vacía, sin
+correr antes `npm run init-db`, para ver qué pasa si alguien despliega contra una base nueva: el
+servidor arranca, pero 20 de las 24 migraciones fallan porque modifican tablas que todavía no existen
+(las crea `schema.sql`). Eso ya estaba documentado («`npm run init-db`, solo la primera vez»), pero el
+aviso del servidor decía «Se reintentan en el próximo arranque, o a mano con: npm run migrate», que en
+ese caso no lo arregla. Lo demás salió bien: `npm test`, ESLint del servidor, la integración completa
+(`init-db` y dos arranques: «Migraciones al día (24 nueva/s)», después «nada pendiente», diez tablas
+con `telares.control_web_activo` y `accesos_cliente`), Chromium (▶ ⏸ con el control prendido; 409 y el
+aviso con «Solo sensado»; la vista del cliente, los 401 y el cambio de clave; y las cinco pruebas de
+navegador anteriores, sin errores), el firmware, los controles de los Word y PDF, el texto, los enlaces
+y las planillas.
+
+| Dónde | Qué pasaba | Cómo quedó |
+|---|---|---|
+| `backend/src/db/migrator.js` | Con una base vacía, el aviso mandaba a `npm run migrate` | Si falta la tabla `patrones`, agrega: «La base no tiene las tablas base (patrones, telares...). Crealas una sola vez con: npm run init-db, y volvé a arrancar el servidor.» |
+| `backend/README.md` | No decía qué pasa en ese caso | Lo dice |
+
+**Vuelta 5.** Todo de nuevo, sin cambiar nada en el medio: `npm test`, ESLint, la base desde cero
+(`init-db` y dos arranques: 24 migraciones y después ninguna pendiente, diez tablas), el firmware
+(6/6, 6/6, 29/29, coherencia 20/20 y las pruebas en la PC), `html-validate` de la página y los dos
+sitios, Chromium con un servidor recién arrancado (las dos funciones y las cinco pruebas anteriores),
+los controles de los 18 Word y sus PDF, el texto de todo el proyecto, los enlaces y las planillas.
+**Sin errores.** Quedan, revisados y a propósito: el orden de lectura de las tablas al pasar el PDF a
+texto, las tablas del Registro de entrevistas corridas hacia el margen (así es el original) y las
+columnas de descripción de los requerimientos, que ya tienen el ancho que les deja el resto.
+
+## Trigésima octava revisión: las plaquetas terminadas
+
+El equipo confirmó que la tarea 7,2 del Gantt («Pasar el armado de protoboard a las 5 plaquetas
+soldadas») está al 100 %: las cinco plaquetas ya están soldadas. Lo que sigue es instalar el gabinete
+en la planta y cablearlo hasta la botonera (7,3), conectar los otros tres canales y las pruebas finales
+(7,7 a 7,11). Las entradas de la Bitácora y del Registro del 10/10 y del 17/10 quedan como estaban,
+porque cuentan lo que pasaba esos días.
+
+| Dónde | Decía | Ahora dice |
+|---|---|---|
+| Documentación de Proyecto (Nivel 2 en 2.2, 4.7, 6.1 y el HITO 3) y el sitio de la documentación | «se están haciendo las plaquetas», «Faltan los otros tres canales, las plaquetas soldadas y la instalación del gabinete» | Las plaquetas ya están soldadas (20/10/2026); faltan los otros tres canales y la instalación del gabinete en la planta |
+| Documentación de Proyecto, control de cambios 5.1 (y el sitio) | — | Suma que quedan terminadas las cinco plaquetas soldadas del gabinete |
+| Estado completo (Bloques C y D, gabinete, lo que falta) | «Falta pasarlo a la plaqueta», «Faltan la plaqueta y los otros tres canales», «Pasar el circuito a las plaquetas soldadas» | La plaqueta ya está soldada; falta instalarla en la planta, conectar los otros tres canales y validar el conteo. En lo que falta: «Hecho al 20/10/2026, las plaquetas soldadas» |
+| Bitácora | «se están armando las plaquetas» (niveles de control) | Al 20/10/2026 quedaron soldadas; la entrada del 20/10 lo suma |
+| Árbol de problemas (las dos copias), Guía de los relés, Manual del telar (y su sitio), Parado automático | «Se están armando / haciendo las plaquetas», «falta pasarlo a la plaqueta» | Ya están soldadas; la Guía de los relés pasa a «Estado al 20/10/2026» |
+| Lista de componentes (planilla), notas de la plaqueta del Nivel 2 y del orden de compra | «se está haciendo la plaqueta» | «Ya está soldada (20/10/2026)»; «Estado al 20/10/2026» |
+| `README.md`, `esp32/control_trama_esp32/README.md`, `esp32/documentacion/NIVELES_DE_CONTROL.md`, `docs/guias/Manual_Instalacion_y_Funcionamiento.md` | Lo mismo | Lo mismo |
+
+El diagrama del Gantt no cambia: muestra el estado por etapa, y la Etapa 07 sigue en curso.

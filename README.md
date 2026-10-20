@@ -59,7 +59,9 @@ Cuatro componentes forman el producto:
 
 1. **Página web (interfaz de uso real)**, diseñada mobile-first, para
    abrirse en el navegador del celular. Desde acá se diseñan los patrones
-   (editor de cuadrícula), se controla el telar y se consulta la biblioteca.
+   (editor de cuadrícula), se controla el telar y se consulta la biblioteca. El control del
+   telar desde la página se puede apagar (solo sensado), y cada cliente puede ver su
+   tejido con una clave, sin ningún control.
    La sirve el mismo backend y ya está conectada a la API (no usa
    `localStorage`). Tiene modo claro y oscuro.
 2. **Backend (Node.js + Express)**, expone la API REST, sirve la web, aplica
@@ -118,13 +120,15 @@ mejoras eléctricas en `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md`.
 - `src/routes/`, define las rutas de la API.
 - `src/utils/`, lógica pura sin base de datos: derivación de ligamento,
   cálculo de posición de tejido, validaciones.
-- `backend/src/db/schema.sql` + `migracion_*.sql`, esquema de 9 tablas y
+- `backend/src/db/schema.sql` + `migracion_*.sql`, esquema de 10 tablas y
   migraciones que se aplican una sola vez cada una (el servidor aplica las pendientes al arrancar).
 - `public/`, la página web (HTML/CSS/JS + jsPDF), diseñada para el celular,
   con modo claro y oscuro.
 - `backend/src/controllers/auth.controller.js` + `backend/src/routes/auth.routes.js` -
   ingreso con huella (WebAuthn), código de recuperación, invitaciones y modo invitado. Ver
   `AUTENTICACION_BIOMETRICA.md`.
+- `backend/src/controllers/cliente.controller.js` + `backend/src/routes/cliente.routes.js`, la
+  vista para clientes: la clave de cada tejido y lo que ve el cliente (solo lectura).
 - `Dockerfile`, `docker-compose.yml`, `ecosystem.config.cjs`, despliegue.
 
 ### `esp32/`
@@ -165,7 +169,9 @@ el `AVISO.md` dentro de la carpeta. Se puede ignorar por completo.
 
 **Hecho y probado:** backend completo con PostgreSQL/Neon (probado de
 punta a punta), página web conectada a la API y diseñada para el celular
-(con modo claro/oscuro), ingreso con huella (WebAuthn) y código de recuperación,
+(con modo claro/oscuro), ingreso con huella (WebAuthn) y código de recuperación, vista de solo
+lectura para los clientes (cada uno con la clave de su tejido), modo solo sensado (la página deja
+de mover el telar y sigue mostrando lo que hace),
 esquema multi-telar, historial y log de errores, firmware ESP32 gateway
 (relés Marcha/Pausa/Retroceder) acorde al diseño eléctrico del equipo.
 
@@ -173,9 +179,12 @@ esquema multi-telar, historial y log de errores, firmware ESP32 gateway
 la botonera), probado en la máquina el 19/09/2026.
 
 **Siguiente fase:** el Nivel 2 (sensor de pasada y relés LCA110 en el lugar de los lectores
-ópticos). El 10/10/2026 se probó todo en protoboard y funcionó; se está haciendo la plaqueta
-para probarlo en la máquina. Las mediciones que faltan están en
-`esp32/control_trama_esp32/README.md` y `PUESTA_EN_MARCHA.md`.
+ópticos). El 10/10/2026 se probó todo en protoboard y funcionó, y el 17/10/2026 se probó en la
+máquina, todavía en protoboard: el lector se alimenta con 15 a 30 V (lleva la resistencia de
+protección de 470 Ω 3 W), el sensor de pasada quedó conectado y calibrado, y el primer canal
+seleccionó bien. Las cinco plaquetas soldadas ya están terminadas (20/10/2026); faltan los otros
+tres canales y el gabinete en la planta.
+Las mediciones que faltan están en `esp32/control_trama_esp32/README.md` y `PUESTA_EN_MARCHA.md`.
 
 
 ## Nivel 2, en desarrollo
