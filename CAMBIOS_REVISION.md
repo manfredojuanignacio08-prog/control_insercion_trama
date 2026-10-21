@@ -1768,7 +1768,7 @@ a una celda vacía: en Google Sheets se ve vacía y en Excel muestra un 0.
 ## Cuadragésima segunda revisión: revisión final en vueltas
 
 Se revisó todo de nuevo, y cada vez que apareció un error se corrigió y se volvió a empezar la
-revisión entera, hasta una vuelta sin errores (la cuarta, después de revisar también los zips). En cada vuelta: `npm test`, ESLint de la web y del
+revisión entera, hasta una vuelta sin errores (la sexta, después de revisar también los zips). En cada vuelta: `npm test`, ESLint de la web y del
 servidor, una base desde cero, la integración con PostgreSQL, el firmware (6/6, 6/6, 29/29,
 coherencia 20/20 y las pruebas en la PC), `html-validate`, las pruebas en Chromium (las anteriores, el
 ingreso con pestañas y el recorrido del cliente), los Word contra el esquema, contra su PDF y contra
@@ -1785,6 +1785,8 @@ dos sitios abiertos en el navegador.
 | 3 | Nada | — |
 | Zips | La copia del Árbol de problemas en `docs/analisis/` era el único Word sin su PDF | Se exportó: `docs/analisis/Arbol_de_problemas_y_soluciones.pdf` (11 páginas) |
 | 4 | Nada | — |
+| 5 | Con el esquema estricto de Word (no solo «abre bien»), 11 Word traían avisos heredados: elementos en otro orden dentro de las propiedades de párrafos, celdas, bordes y controles; colores de tema escritos con ceros de más; espaciados con decimales; márgenes sin el «gutter»; sombreados sin tipo | Se ordenaron y completaron. Los 20 Word pasan el esquema sin avisos, el texto quedó igual (mismos párrafos, mismas palabras) y, exportados de nuevo, dan PDF iguales píxel por píxel a los que ya estaban, con las mismas páginas: los PDF no cambian |
+| 6 | Nada | — |
 
 Siguen igual, revisados y a propósito, los mismos casos de las vueltas anteriores (las guías rápidas
 de los sitios son más largas que las del Word, los títulos cortos de las épicas en el sitio, las
