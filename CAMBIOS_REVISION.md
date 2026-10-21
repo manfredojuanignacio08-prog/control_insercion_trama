@@ -1743,3 +1743,24 @@ botonera hasta que lo muestra la página); y las herramientas usadas: los lengua
 servicios (Render y Neon), las pruebas y la inteligencia artificial (Claude, con Claude Code). Cada dato
 se tomó del código: las rutas, las tablas y sus columnas, los intervalos del firmware (2,5 s y 1 s) y de
 la página (4 s y 15 s), y los cifrados. Queda en la lista del `README.md` y en `documentacion_proyecto/LEEME.md`.
+
+## Cuadragésima primera revisión: los cuatro zips, archivo por archivo
+
+Se armaron de nuevo los cuatro zips (el proyecto, los dos sitios y el modelo 3D) y se revisaron
+descomprimidos: que no estén dañados, los nombres con tilde, que cada archivo sea igual a su origen
+(el proyecto, byte por byte contra el commit), que no haya claves reales ni archivos de más, que cada
+Word valide y tenga su PDF con el mismo texto, las planillas, las imágenes, la sintaxis de todo el
+código, `npm test`, la integración con PostgreSQL y una base nueva desde cero, las pruebas y
+simulaciones del firmware, los enlaces, y los sitios y el modelo 3D abiertos en Chromium. Lo que
+apareció:
+
+| Dónde | Qué pasaba | Ahora |
+|---|---|---|
+| Documentación de Proyecto, Figura 4 (Word, PDF y sitio) | La captura del ingreso era la vieja, con el botón «Soy cliente: ver mi tejido» | La nueva, con las pestañas «Personal» y «Clientes» (también en la galería del sitio) |
+| Documentación de Proyecto, Figura 8 | **En el PDF no salía la captura del editor**: las de las figuras 7 y 8 estaban en el mismo párrafo, una al lado de la otra, sin lugar para las dos, y la segunda quedaba aplastada en un iconito (venía así del original). Además tenía el «+» chico | Cada captura en su párrafo, seguida de su epígrafe, como las figuras 4 a 6; la del editor, nueva. El PDF pasa de 57 a 58 páginas |
+| Sitio de la documentación | `ERD_Sistema_Telares.html` y `3FN_Sistema_Telares.html`, sueltas y sin enlazar, mostraban el modelo de datos viejo (seis tablas) | Se quitaron; el modelo actual está en la sección 3.2.3 |
+
+Revisado y sin cambios, a propósito: once Word del equipo traen dos avisos menores del esquema
+estricto (un sombreado y un margen sin «gutter») desde el original; Word y LibreOffice los abren
+bien y no se sumó ninguno. En el Gantt, la etiqueta de la fila de totales de «Cashflow» (A12) apunta
+a una celda vacía: en Google Sheets se ve vacía y en Excel muestra un 0.
