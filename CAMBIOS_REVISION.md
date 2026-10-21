@@ -1764,3 +1764,26 @@ Revisado y sin cambios, a propósito: once Word del equipo traen dos avisos meno
 estricto (un sombreado y un margen sin «gutter») desde el original; Word y LibreOffice los abren
 bien y no se sumó ninguno. En el Gantt, la etiqueta de la fila de totales de «Cashflow» (A12) apunta
 a una celda vacía: en Google Sheets se ve vacía y en Excel muestra un 0.
+
+## Cuadragésima segunda revisión: revisión final en vueltas
+
+Se revisó todo de nuevo, y cada vez que apareció un error se corrigió y se volvió a empezar la
+revisión entera, hasta una vuelta sin errores. En cada vuelta: `npm test`, ESLint de la web y del
+servidor, una base desde cero, la integración con PostgreSQL, el firmware (6/6, 6/6, 29/29,
+coherencia 20/20 y las pruebas en la PC), `html-validate`, las pruebas en Chromium (las anteriores, el
+ingreso con pestañas y el recorrido del cliente), los Word contra el esquema, contra su PDF y contra
+su sitio, la ortografía y los términos viejos de todo el proyecto, los enlaces, las planillas y los
+dos sitios abiertos en el navegador.
+
+| Vuelta | Qué apareció | Qué se hizo |
+|---|---|---|
+| 1 | En el Gantt, la etiqueta de la fila de totales de «Cashflow» (A12) apuntaba a una fila vacía de la hoja de referencias: en Excel decía «0» | Ahora dice «Total», cambiado en el Google Sheet y bajado al repositorio (solo cambió esa celda) |
+| 1 | «Recorrido del código y herramientas» decía que el dibujo se guarda «a los pocos segundos» de cada cambio | Se guarda en el momento; si hay un guardado en camino, el siguiente espera a que termine |
+| 1 | El mismo documento decía que el Nivel 2 sigue «aunque la red se corte», y en la sección de seguridad, que sin red no acciona nada | Sin Wi-Fi apaga todo; si falla una consulta al servidor, sigue con la fila que toca y reporta después |
+| 1 | En la guía rápida del sitio de los manuales, la pantalla de ingreso se describía sin las pestañas | Nombra las pestañas «Personal» y «Clientes» |
+| 2 | En el sitio de la documentación quedaba suelta, sin usar, una foto del cable mallado, que se descartó | Se quitó |
+| 3 | Nada | — |
+
+Siguen igual, revisados y a propósito, los mismos casos de las vueltas anteriores (las guías rápidas
+de los sitios son más largas que las del Word, los títulos cortos de las épicas en el sitio, las
+tablas del Registro de entrevistas como el original, las copias SVG de los diagramas en el sitio).
