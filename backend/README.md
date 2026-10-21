@@ -268,8 +268,9 @@ src/
    la vista del cliente muestra las últimas de su tejido).
 3. Instalar el Nivel 2: el firmware ya reporta las pasadas medidas por el sensor inductivo
    (`POST /pasadas`, que se guardan en `pasadas_sensor`, aparte de la estimación por reloj) y
-   la web deja de estimar mientras el sensor esté conectado. Falta el hardware y validar el
-   conteo contra el contador mecánico (`PUESTA_EN_MARCHA.md`).
+   la web deja de estimar mientras el sensor esté conectado. Faltan instalar el hardware (las
+   plaquetas ya están soldadas) y validar el conteo contra el contador mecánico
+   (`PUESTA_EN_MARCHA.md`).
 
 ## Seguridad de la API
 

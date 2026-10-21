@@ -1818,6 +1818,9 @@ palabras que no entran en su columna, los epígrafes separados de su tabla y los
 | 1 | Documentación: la Tabla 14 salía al pie de la página 51 y su epígrafe solo, arriba de la 52; la tabla, además, pasaba el margen | La tabla va junto con su epígrafe y dentro del margen (el PDF pasa a 59 páginas) |
 | 1 | Documentación: dos párrafos con dos saltos de línea manuales dejaban el renglón anterior estirado («automáticamente      si      cae…») | Los renglones antes de un salto manual ya no se estiran, en Word y en LibreOffice |
 | 1 | `backend/README.md`: «todavía no una lista de las producciones», sin decir que la vista del cliente ya muestra las últimas | Aclarado |
+| 2 | `backend/README.md`: para el Nivel 2 «falta el hardware», con las plaquetas ya soldadas | Faltan instalarlo y validar el conteo |
+| 2 | Estado del proyecto, lista de archivos: «Conexiones_de_las_plaquetas.docx» estaba metido dentro de la celda de «Conexionado_Nivel2.docx», no en una fila propia | Fila propia |
+| 2 | De la vuelta 1: los títulos de la Tabla 15 quedaron sin tamaño de letra propio, y la frase nueva de la Estimación no decía de qué documento es la sección 10.7 | Corregidos |
 
 Quedan como estaban, revisados y a propósito: los 15 comentarios de la Documentación de Proyecto (de la
 profesora, del 28/08, y del equipo, del 07/08) están todos resueltos en el texto, y se dejan como registro;
