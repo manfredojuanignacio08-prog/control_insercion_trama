@@ -1698,3 +1698,134 @@ porque cuentan lo que pasaba esos días.
 | `README.md`, `esp32/control_trama_esp32/README.md`, `esp32/documentacion/NIVELES_DE_CONTROL.md`, `docs/guias/Manual_Instalacion_y_Funcionamiento.md` | Lo mismo | Lo mismo |
 
 El diagrama del Gantt no cambia: muestra el estado por etapa, y la Etapa 07 sigue en curso.
+
+## Trigésima novena revisión: el acceso de los clientes y el «+» del intercalado
+
+Dos pedidos sobre la página. El botón «Soy cliente: ver mi tejido» estaba al pie de la pantalla de
+ingreso, debajo de los dos enlaces chicos, y era incómodo de encontrar y de tocar. Ahora la pantalla
+tiene arriba de todo dos pestañas, **«Personal»** (la huella, como siempre, y es la que aparece al
+abrir) y **«Clientes»**, que muestra en la misma tarjeta la clave y el botón **«Ver mi pedido»**. Ya
+no hay una pantalla aparte con «Volver». Las dos pestañas ocupan el mismo lugar (la tarjeta toma el
+alto de la más larga), así que al cambiar de una a otra el selector no se mueve de debajo del dedo.
+Con el teclado se pasa de una a otra con las flechas. «Salir» de la vista del cliente, o una clave
+que cambió, vuelven a la pestaña «Clientes»; cerrar sesión, la sesión vencida o el ingreso desde el
+modo invitado, a «Personal».
+
+El «+» que arma un intercalado desde una fila (columna ⇄) era chico y muy tenue: pasa de 13 a 22 px y
+de 25 % a 50 % de opacidad (100 % al pasar el mouse o con el foco). La columna sigue midiendo 28 px,
+así que la grilla no cambia de ancho.
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| `backend/public/index.html` y `styles.css` | Botón al pie y una pantalla aparte para la clave | Pestañas «Personal» y «Clientes» arriba; la clave y «Ver mi pedido» en la pestaña |
+| `backend/public/styles.css` | «+» de 13 px al 25 % | «+» de 22 px al 50 % |
+| Ayuda de la ficha del dibujo, comentario de `cliente.controller.js` | «Soy cliente: ver mi tejido» | La pestaña «Clientes» del ingreso |
+| `backend/tests/frontend.test.mjs` | Esperaba la pantalla aparte | Comprueba la pestaña que queda abierta en cada caso |
+| Manual de la página web (Word, PDF y sitio) | Punto 2.5 «Soy cliente: ver mi tejido»; capturas viejas | Punto 2.5 «Clientes: ver cómo va el pedido», la introducción del punto 2 con las pestañas, y once capturas nuevas (el ingreso, la pestaña «Clientes», la ficha del cliente y las de la grilla con el «+» nuevo) |
+| Documentación de Proyecto (Word, PDF y sitio) | «Se entra desde el ingreso, con «Soy cliente: ver mi tejido»» | «Se entra desde la pestaña «Clientes» de la pantalla de ingreso» |
+| Bitácora (Word y PDF) | — | La entrada del 20/10 suma los dos cambios; la del día en que se hizo la vista del cliente queda como estaba |
+
+Se probó en Chromium a 360 y 390 px, claro y oscuro: las dos pestañas, la clave corta y la clave que no
+existe, las flechas del teclado y la grilla de 8 columnas (con 360 px se desliza de costado igual que
+antes: el cambio del «+» no le suma ancho).
+
+De paso, en el celular más chico (320 × 568) y con el campo del código de invitación a la vista, la
+tarjeta de ingreso no entraba y la pantalla no se podía desplazar: se cortaba 11 px arriba y abajo
+(ya pasaba antes, justo en el borde). Ahora, si no entra, se desplaza; si entra, sigue centrada.
+
+## Cuadragésima revisión: el recorrido del código y las herramientas
+
+Documento nuevo, **Recorrido del código y herramientas** (`documentacion_proyecto/`, en Word y en
+`PDF/`, y en Markdown en `docs/analisis/`), de cinco páginas: las cuatro partes del sistema y cómo se
+hablan; la página web, el servidor, la base de datos (las diez tablas) y el firmware, cada uno con sus
+archivos; dos recorridos de punta a punta (▶ en el celular hasta que arranca la máquina, y Pausa en la
+botonera hasta que lo muestra la página); y las herramientas usadas: los lenguajes, las librerías, los
+servicios (Render y Neon), las pruebas y la inteligencia artificial (Claude, con Claude Code). Cada dato
+se tomó del código: las rutas, las tablas y sus columnas, los intervalos del firmware (2,5 s y 1 s) y de
+la página (4 s y 15 s), y los cifrados. Queda en la lista del `README.md` y en `documentacion_proyecto/LEEME.md`.
+
+## Cuadragésima primera revisión: los cuatro zips, archivo por archivo
+
+Se armaron de nuevo los cuatro zips (el proyecto, los dos sitios y el modelo 3D) y se revisaron
+descomprimidos: que no estén dañados, los nombres con tilde, que cada archivo sea igual a su origen
+(el proyecto, byte por byte contra el commit), que no haya claves reales ni archivos de más, que cada
+Word valide y tenga su PDF con el mismo texto, las planillas, las imágenes, la sintaxis de todo el
+código, `npm test`, la integración con PostgreSQL y una base nueva desde cero, las pruebas y
+simulaciones del firmware, los enlaces, y los sitios y el modelo 3D abiertos en Chromium. Lo que
+apareció:
+
+| Dónde | Qué pasaba | Ahora |
+|---|---|---|
+| Documentación de Proyecto, Figura 4 (Word, PDF y sitio) | La captura del ingreso era la vieja, con el botón «Soy cliente: ver mi tejido» | La nueva, con las pestañas «Personal» y «Clientes» (también en la galería del sitio) |
+| Documentación de Proyecto, Figura 8 | **En el PDF no salía la captura del editor**: las de las figuras 7 y 8 estaban en el mismo párrafo, una al lado de la otra, sin lugar para las dos, y la segunda quedaba aplastada en un iconito (venía así del original). Además tenía el «+» chico | Cada captura en su párrafo, seguida de su epígrafe, como las figuras 4 a 6; la del editor, nueva. El PDF pasa de 57 a 58 páginas |
+| Sitio de la documentación | `ERD_Sistema_Telares.html` y `3FN_Sistema_Telares.html`, sueltas y sin enlazar, mostraban el modelo de datos viejo (seis tablas) | Se quitaron; el modelo actual está en la sección 3.2.3 |
+
+Revisado y sin cambios, a propósito: once Word del equipo traen dos avisos menores del esquema
+estricto (un sombreado y un margen sin «gutter») desde el original; Word y LibreOffice los abren
+bien y no se sumó ninguno. En el Gantt, la etiqueta de la fila de totales de «Cashflow» (A12) apunta
+a una celda vacía: en Google Sheets se ve vacía y en Excel muestra un 0.
+
+## Cuadragésima segunda revisión: revisión final en vueltas
+
+Se revisó todo de nuevo, y cada vez que apareció un error se corrigió y se volvió a empezar la
+revisión entera, hasta una vuelta sin errores (la sexta, después de revisar también los zips). En cada vuelta: `npm test`, ESLint de la web y del
+servidor, una base desde cero, la integración con PostgreSQL, el firmware (6/6, 6/6, 29/29,
+coherencia 20/20 y las pruebas en la PC), `html-validate`, las pruebas en Chromium (las anteriores, el
+ingreso con pestañas y el recorrido del cliente), los Word contra el esquema, contra su PDF y contra
+su sitio, la ortografía y los términos viejos de todo el proyecto, los enlaces, las planillas y los
+dos sitios abiertos en el navegador.
+
+| Vuelta | Qué apareció | Qué se hizo |
+|---|---|---|
+| 1 | En el Gantt, la etiqueta de la fila de totales de «Cashflow» (A12) apuntaba a una fila vacía de la hoja de referencias: en Excel decía «0» | Ahora dice «Total», cambiado en el Google Sheet y bajado al repositorio (solo cambió esa celda) |
+| 1 | «Recorrido del código y herramientas» decía que el dibujo se guarda «a los pocos segundos» de cada cambio | Se guarda en el momento; si hay un guardado en camino, el siguiente espera a que termine |
+| 1 | El mismo documento decía que el Nivel 2 sigue «aunque la red se corte», y en la sección de seguridad, que sin red no acciona nada | Sin Wi-Fi apaga todo; si falla una consulta al servidor, sigue con la fila que toca y reporta después |
+| 1 | En la guía rápida del sitio de los manuales, la pantalla de ingreso se describía sin las pestañas | Nombra las pestañas «Personal» y «Clientes» |
+| 2 | En el sitio de la documentación quedaba suelta, sin usar, una foto del cable mallado, que se descartó | Se quitó |
+| 3 | Nada | — |
+| Zips | La copia del Árbol de problemas en `docs/analisis/` era el único Word sin su PDF | Se exportó: `docs/analisis/Arbol_de_problemas_y_soluciones.pdf` (11 páginas) |
+| 4 | Nada | — |
+| 5 | Con el esquema estricto de Word (no solo «abre bien»), 11 Word traían avisos heredados: elementos en otro orden dentro de las propiedades de párrafos, celdas, bordes y controles; colores de tema escritos con ceros de más; espaciados con decimales; márgenes sin el «gutter»; sombreados sin tipo | Se ordenaron y completaron. Los 20 Word pasan el esquema sin avisos, el texto quedó igual (mismos párrafos, mismas palabras) y, exportados de nuevo, dan PDF iguales píxel por píxel a los que ya estaban, con las mismas páginas: los PDF no cambian |
+| 6 | Nada | — |
+
+Siguen igual, revisados y a propósito, los mismos casos de las vueltas anteriores (las guías rápidas
+de los sitios son más largas que las del Word, los títulos cortos de las épicas en el sitio, las
+tablas del Registro de entrevistas como el original, las copias SVG de los diagramas en el sitio).
+
+## Cuadragésima tercera revisión: revisión detallada de los zips
+
+Se revisaron otra vez, descomprimidos, los cuatro zips, ahora leyendo los documentos y con controles nuevos, en vueltas hasta una sin problemas (la tercera):
+los índices contra los títulos, la numeración de figuras y tablas, las referencias a secciones (también
+entre documentos), los comentarios guardados en los Word, las imágenes y los enlaces internos de cada Word,
+las cuentas de las planillas contra los documentos (las 169 tareas y 643 horas del Gantt, repartidas por
+rol, contra la Estimación; los subtotales de la Lista de componentes), cada número que dan los documentos
+(secciones, tablas, figuras, verificaciones, componentes, reuniones, tareas por etapa del diagrama del Gantt),
+las rutas de la API y las variables de entorno contra el código, los textos del modelo 3D y, en los PDF, las
+palabras que no entran en su columna, los epígrafes separados de su tabla y los renglones estirados.
+
+| Vuelta | Qué apareció | Qué se hizo |
+|---|---|---|
+| 1 | Documentación de Proyecto (Word, PDF y sitio): «Requerimentos No Funcionales» | «Requerimientos» |
+| 1 | Modalidad: los subtítulos del índice (2.1 a 5.3) tenían estilo de título: salían separados en el PDF y repetidos en el panel de navegación de Word | Entradas comunes del índice, con sangría |
+| 1 | Modalidad, plazos: la presentación final del 14/11 figuraba «previo a la expo», cuando es en la Expo; faltaba la presentación a los profesores (04/11) y la de avances decía «mediados de septiembre» | Como en el Gantt: 22/09, 04/11 y 14/11 en la Expo |
+| 1 | Estimación: decía que la Documentación no tiene cláusula de Garantía (la tiene, en la 10.7) | Corregido |
+| 1 | Guía de los Bloques C y D: «Lo que falta medir, antes de comprar nada», sin el estado del 17/10 ni las plaquetas soldadas | Estado al 20/10/2026 en la introducción y el título del punto al día |
+| 1 | Conexiones de las plaquetas (y el LEEME): seguía con lo «que hay que corregir» y «lo que todavía hay que decidir», escrito antes de soldar | Aclara que es la revisión del 16/10, antes de soldar, y que las plaquetas quedaron soldadas el 20/10 |
+| 1 | Capacitor de la entrada de 5 V «de 220 a 470 µF» en la Lista de componentes, Componentes en placa y la Guía de armado del Bloque A, cuando se decidió 470 µF | 470 µF (16 V o más) en los tres |
+| 1 | Estado del proyecto: «85 secciones» (son 70 numeradas; también en el LEEME), «terminar la plaqueta» del Bloque D (ya está soldada), los nombres viejos de los zips y faltaban el zip del modelo 3D y el Recorrido del código en la lista de archivos | Corregidos y agregados |
+| 1 | Documentación, Tabla 15: «faltan dos precios de la lista» (en la Lista son nueve) y dos tamaños de letra mezclados en las filas | «Faltan los precios de nueve ítems» (también en el sitio) y un solo tamaño |
+| 1 | En los PDF, palabras cortadas en columnas angostas: «Conectivida-d», «Procesamie-nto», «SUBTOT-AL», «COMPRAR-LO», «historial_produc-ción», «/api/telares/:id/retrocede-r» y «pausa-do» (Documentación), «estima-das» y «Conti-nge.» (Estimación), «Conec-tor» (Puesta en marcha), «CANAL_ACTIVO_EN_AL-TO», una ruta y una fecha (Mediciones) y los nombres de archivo del Estado | Columnas más anchas donde hacía falta; en el Estado, los nombres de archivo se cortan en los guiones bajos. Ninguna palabra queda más ancha que su columna |
+| 1 | Documentación: la Tabla 14 salía al pie de la página 51 y su epígrafe solo, arriba de la 52; la tabla, además, pasaba el margen | La tabla va junto con su epígrafe y dentro del margen (el PDF pasa a 59 páginas) |
+| 1 | Documentación: dos párrafos con dos saltos de línea manuales dejaban el renglón anterior estirado («automáticamente      si      cae…») | Los renglones antes de un salto manual ya no se estiran, en Word y en LibreOffice |
+| 1 | `backend/README.md`: «todavía no una lista de las producciones», sin decir que la vista del cliente ya muestra las últimas | Aclarado |
+| 2 | `backend/README.md`: para el Nivel 2 «falta el hardware», con las plaquetas ya soldadas | Faltan instalarlo y validar el conteo |
+| 2 | Estado del proyecto, lista de archivos: «Conexiones_de_las_plaquetas.docx» estaba metido dentro de la celda de «Conexionado_Nivel2.docx», no en una fila propia | Fila propia |
+| 2 | De la vuelta 1: los títulos de la Tabla 15 quedaron sin tamaño de letra propio, y la frase nueva de la Estimación no decía de qué documento es la sección 10.7 | Corregidos |
+| 3 | Nada (los zips rehechos, todo de nuevo: `npm test`, integración, base desde cero, firmware, navegador, los Word, las celdas, los cortes en los PDF, las frases de estado, los sitios y el modelo 3D) | — |
+
+Después, a pedido del equipo, se borraron los 15 comentarios de la Documentación de Proyecto (de la
+profesora, del 28/08, y del equipo, del 07/08), que estaban todos resueltos en el texto: el texto y el PDF quedan iguales.
+Quedan como estaban, revisados y a propósito:
+las dos tareas del Gantt que se llaman igual («Análisis de los resultados») son de dos entrevistas distintas;
+las entradas viejas de la Bitácora y del Registro de entrevistas cuentan lo que había en su fecha.
+

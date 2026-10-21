@@ -9,6 +9,8 @@ web pensada para el celular**; un **backend** guarda y coordina todo en una
 
 > **Para conectar todo y levantar el sistema, seguir [`docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`](docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md)** (también en Word: `documentacion_proyecto/Guia_Conexion_y_Puesta_en_Marcha.docx`): las cinco plaquetas, el telar, el servidor, la web y el ESP32, en orden.
 >
+> **Para entender el código por dentro**, leer [`docs/analisis/Recorrido_del_codigo_y_herramientas.md`](docs/analisis/Recorrido_del_codigo_y_herramientas.md) (también en Word: `documentacion_proyecto/Recorrido_del_Codigo_y_Herramientas.docx`): la web, el servidor, la base de datos y el firmware, cómo viaja una orden y las herramientas usadas.
+>
 > **Antes de instalar en el telar (Vamatex C 201, cuatro bobinas), leer [`PUESTA_EN_MARCHA.md`](PUESTA_EN_MARCHA.md)**: claves del sistema, ajuste de la sincronización, validación del conteo y lista de primera puesta en marcha. Los cambios de la última revisión están en [`CAMBIOS_REVISION.md`](CAMBIOS_REVISION.md).
 
 ## Estructura del repositorio
