@@ -1732,3 +1732,14 @@ antes: el cambio del «+» no le suma ancho).
 De paso, en el celular más chico (320 × 568) y con el campo del código de invitación a la vista, la
 tarjeta de ingreso no entraba y la pantalla no se podía desplazar: se cortaba 11 px arriba y abajo
 (ya pasaba antes, justo en el borde). Ahora, si no entra, se desplaza; si entra, sigue centrada.
+
+## Cuadragésima revisión: el recorrido del código y las herramientas
+
+Documento nuevo, **Recorrido del código y herramientas** (`documentacion_proyecto/`, en Word y en
+`PDF/`, y en Markdown en `docs/analisis/`), de cinco páginas: las cuatro partes del sistema y cómo se
+hablan; la página web, el servidor, la base de datos (las diez tablas) y el firmware, cada uno con sus
+archivos; dos recorridos de punta a punta (▶ en el celular hasta que arranca la máquina, y Pausa en la
+botonera hasta que lo muestra la página); y las herramientas usadas: los lenguajes, las librerías, los
+servicios (Render y Neon), las pruebas y la inteligencia artificial (Claude, con Claude Code). Cada dato
+se tomó del código: las rutas, las tablas y sus columnas, los intervalos del firmware (2,5 s y 1 s) y de
+la página (4 s y 15 s), y los cifrados. Queda en la lista del `README.md` y en `documentacion_proyecto/LEEME.md`.
