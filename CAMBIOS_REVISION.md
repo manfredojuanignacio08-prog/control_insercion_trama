@@ -1823,8 +1823,9 @@ palabras que no entran en su columna, los epígrafes separados de su tabla y los
 | 2 | De la vuelta 1: los títulos de la Tabla 15 quedaron sin tamaño de letra propio, y la frase nueva de la Estimación no decía de qué documento es la sección 10.7 | Corregidos |
 | 3 | Nada (los zips rehechos, todo de nuevo: `npm test`, integración, base desde cero, firmware, navegador, los Word, las celdas, los cortes en los PDF, las frases de estado, los sitios y el modelo 3D) | — |
 
-Quedan como estaban, revisados y a propósito: los 15 comentarios de la Documentación de Proyecto (de la
-profesora, del 28/08, y del equipo, del 07/08) están todos resueltos en el texto, y se dejan como registro;
+Después, a pedido del equipo, se borraron los 15 comentarios de la Documentación de Proyecto (de la
+profesora, del 28/08, y del equipo, del 07/08), que estaban todos resueltos en el texto: el texto y el PDF quedan iguales.
+Quedan como estaban, revisados y a propósito:
 las dos tareas del Gantt que se llaman igual («Análisis de los resultados») son de dos entrevistas distintas;
 las entradas viejas de la Bitácora y del Registro de entrevistas cuentan lo que había en su fecha.
 
