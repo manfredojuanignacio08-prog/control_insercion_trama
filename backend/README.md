@@ -264,7 +264,8 @@ src/
    con cualquier id de telar, no hay que tocar el backend para eso.
 2. **Pantalla de historial de producción**: la base ya tiene los datos
    (`historial_produccion` con posición, vueltas completadas, etc.). La web muestra los
-   acumulados de cada dibujo (ficha y PDF), pero todavía no una lista de las producciones.
+   acumulados de cada dibujo (ficha y PDF), pero todavía no una lista de las producciones (solo
+   la vista del cliente muestra las últimas de su tejido).
 3. Instalar el Nivel 2: el firmware ya reporta las pasadas medidas por el sensor inductivo
    (`POST /pasadas`, que se guardan en `pasadas_sensor`, aparte de la estimación por reloj) y
    la web deja de estimar mientras el sensor esté conectado. Falta el hardware y validar el

@@ -1791,3 +1791,36 @@ dos sitios abiertos en el navegador.
 Siguen igual, revisados y a propósito, los mismos casos de las vueltas anteriores (las guías rápidas
 de los sitios son más largas que las del Word, los títulos cortos de las épicas en el sitio, las
 tablas del Registro de entrevistas como el original, las copias SVG de los diagramas en el sitio).
+
+## Cuadragésima tercera revisión: revisión detallada de los zips
+
+Se revisaron otra vez, descomprimidos, los cuatro zips, ahora leyendo los documentos y con controles nuevos:
+los índices contra los títulos, la numeración de figuras y tablas, las referencias a secciones (también
+entre documentos), los comentarios guardados en los Word, las imágenes y los enlaces internos de cada Word,
+las cuentas de las planillas contra los documentos (las 169 tareas y 643 horas del Gantt, repartidas por
+rol, contra la Estimación; los subtotales de la Lista de componentes), cada número que dan los documentos
+(secciones, tablas, figuras, verificaciones, componentes, reuniones, tareas por etapa del diagrama del Gantt),
+las rutas de la API y las variables de entorno contra el código, los textos del modelo 3D y, en los PDF, las
+palabras que no entran en su columna, los epígrafes separados de su tabla y los renglones estirados.
+
+| Vuelta | Qué apareció | Qué se hizo |
+|---|---|---|
+| 1 | Documentación de Proyecto (Word, PDF y sitio): «Requerimentos No Funcionales» | «Requerimientos» |
+| 1 | Modalidad: los subtítulos del índice (2.1 a 5.3) tenían estilo de título: salían separados en el PDF y repetidos en el panel de navegación de Word | Entradas comunes del índice, con sangría |
+| 1 | Modalidad, plazos: la presentación final del 14/11 figuraba «previo a la expo», cuando es en la Expo; faltaba la presentación a los profesores (04/11) y la de avances decía «mediados de septiembre» | Como en el Gantt: 22/09, 04/11 y 14/11 en la Expo |
+| 1 | Estimación: decía que la Documentación no tiene cláusula de Garantía (la tiene, en la 10.7) | Corregido |
+| 1 | Guía de los Bloques C y D: «Lo que falta medir, antes de comprar nada», sin el estado del 17/10 ni las plaquetas soldadas | Estado al 20/10/2026 en la introducción y el título del punto al día |
+| 1 | Conexiones de las plaquetas (y el LEEME): seguía con lo «que hay que corregir» y «lo que todavía hay que decidir», escrito antes de soldar | Aclara que es la revisión del 16/10, antes de soldar, y que las plaquetas quedaron soldadas el 20/10 |
+| 1 | Capacitor de la entrada de 5 V «de 220 a 470 µF» en la Lista de componentes, Componentes en placa y la Guía de armado del Bloque A, cuando se decidió 470 µF | 470 µF (16 V o más) en los tres |
+| 1 | Estado del proyecto: «85 secciones» (son 70 numeradas; también en el LEEME), «terminar la plaqueta» del Bloque D (ya está soldada), los nombres viejos de los zips y faltaban el zip del modelo 3D y el Recorrido del código en la lista de archivos | Corregidos y agregados |
+| 1 | Documentación, Tabla 15: «faltan dos precios de la lista» (en la Lista son nueve) y dos tamaños de letra mezclados en las filas | «Faltan los precios de nueve ítems» (también en el sitio) y un solo tamaño |
+| 1 | En los PDF, palabras cortadas en columnas angostas: «Conectivida-d», «Procesamie-nto», «SUBTOT-AL», «COMPRAR-LO», «historial_produc-ción», «/api/telares/:id/retrocede-r» y «pausa-do» (Documentación), «estima-das» y «Conti-nge.» (Estimación), «Conec-tor» (Puesta en marcha), «CANAL_ACTIVO_EN_AL-TO», una ruta y una fecha (Mediciones) y los nombres de archivo del Estado | Columnas más anchas donde hacía falta; en el Estado, los nombres de archivo se cortan en los guiones bajos. Ninguna palabra queda más ancha que su columna |
+| 1 | Documentación: la Tabla 14 salía al pie de la página 51 y su epígrafe solo, arriba de la 52; la tabla, además, pasaba el margen | La tabla va junto con su epígrafe y dentro del margen (el PDF pasa a 59 páginas) |
+| 1 | Documentación: dos párrafos con dos saltos de línea manuales dejaban el renglón anterior estirado («automáticamente      si      cae…») | Los renglones antes de un salto manual ya no se estiran, en Word y en LibreOffice |
+| 1 | `backend/README.md`: «todavía no una lista de las producciones», sin decir que la vista del cliente ya muestra las últimas | Aclarado |
+
+Quedan como estaban, revisados y a propósito: los 15 comentarios de la Documentación de Proyecto (de la
+profesora, del 28/08, y del equipo, del 07/08) están todos resueltos en el texto, y se dejan como registro;
+las dos tareas del Gantt que se llaman igual («Análisis de los resultados») son de dos entrevistas distintas;
+las entradas viejas de la Bitácora y del Registro de entrevistas cuentan lo que había en su fecha.
+

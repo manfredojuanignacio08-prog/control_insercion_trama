@@ -8,7 +8,7 @@ el repositorio para que el código y la documentación viajen juntos.
 | Archivo | Qué contiene |
 |---|---|
 | `Estado_Completo_del_Proyecto.docx` | **Empezar por acá.** Resume todo: qué es el proyecto, qué se construyó, las decisiones técnicas y su fundamento, y lo que falta. |
-| `Documentación_de_Proyecto.docx` | El documento formal completo, con 85 secciones (contando los subtítulos). |
+| `Documentación_de_Proyecto.docx` | El documento formal completo, con 70 secciones numeradas, 15 tablas y 13 figuras. |
 | `Bitácora.docx` | Registro cronológico de avances y decisiones. |
 | `Registro de Entrevistas.docx` | Las minutas de las siete reuniones con el cliente (la última, del 10/10/2026) y la octava, pendiente. |
 | `Recorrido_del_Codigo_y_Herramientas.docx` | Cómo está armado el código por dentro (la web, el servidor, la base de datos y el firmware), cómo viaja una orden de punta a punta y las herramientas usadas, incluida la inteligencia artificial. Cinco páginas; en Markdown en `docs/analisis/`. |
@@ -21,7 +21,7 @@ el repositorio para que el código y la documentación viajen juntos.
 | `Guia_Conexion_Reles_LCA110.docx` | Los relés de selección: mediciones, la conexión final (la más segura), pruebas y problemas frecuentes. |
 | `Guia_Mediciones_y_Verificaciones.docx` | Todas las mediciones y pruebas, en orden, con la planilla para anotar. |
 | `Conexionado_Nivel2.docx` | El paso a paso del sensor de pasada y los relés, con sus diagramas. |
-| `Conexiones_de_las_plaquetas.docx` | El resumen de las conexiones de las cinco plaquetas, pata por pata, para quien las arma, con lo que hay que corregir del diseño en Proteus. |
+| `Conexiones_de_las_plaquetas.docx` | El resumen de las conexiones de las cinco plaquetas, pata por pata, para quien las arma, con lo que se marcó para corregir del diseño en Proteus antes de soldarlas. |
 | `Guia_Bloques_C_y_D.docx` | Qué falta hacer en esos dos bloques y en qué orden. |
 | `Checklist_verificaciones.xlsx` | Las 26 verificaciones antes y durante la instalación. |
 | `Componentes_en_placa.xlsx` | Los componentes de la placa, con su ubicación. |
