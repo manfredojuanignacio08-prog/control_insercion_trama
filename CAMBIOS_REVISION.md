@@ -1829,3 +1829,13 @@ Quedan como estaban, revisados y a propósito:
 las dos tareas del Gantt que se llaman igual («Análisis de los resultados») son de dos entrevistas distintas;
 las entradas viejas de la Bitácora y del Registro de entrevistas cuentan lo que había en su fecha.
 
+
+## Cuadragésima cuarta revisión: pull-ups del sensado de la botonera (21/10/2026)
+
+Revisando el diseño en Proteus de la plaqueta de sensado, las 10 kΩ de GPIO 32 (Marcha) y GPIO 33
+(Pausa) tienen la otra pata sin conectar; solo la de GPIO 34 (Retroceder) llega a 3,3 V. Para que
+el firmware se ajuste a la plaqueta como está, `botoneraIniciar()` configura 32 y 33 como
+`INPUT_PULLUP` (pull-up interna del ESP32, unos 45 kΩ, suficiente para el colector del PC817) y deja
+34 como `INPUT` (no tiene resistencia interna y usa la 10 kΩ externa). Si más adelante se conectan
+las 10 kΩ de 32 y 33, el firmware sigue funcionando igual: quedan en paralelo con la interna.
+Verificaciones del firmware (coherencia, simulaciones y `host/correr.sh`): todas OK.

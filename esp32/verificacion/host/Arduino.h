@@ -12,6 +12,7 @@ using std::min; using std::max;
 #define LOW 0
 #define OUTPUT 1
 #define INPUT 0
+#define INPUT_PULLUP 5
 #define FALLING 2
 struct String {
   std::string s;

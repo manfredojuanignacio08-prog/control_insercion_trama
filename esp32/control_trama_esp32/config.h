@@ -68,9 +68,9 @@
 static const int PIN_RELE_MARCHA       = 25;   // IN1 del módulo de 2 canales
 static const int PIN_RELE_PAUSA        = 26;   // IN2 del módulo de 2 canales
 static const int PIN_RELE_RETROCEDER   = 27;   // S del módulo individual
-static const int PIN_BOTON_MARCHA      = 32;   // PC817: sensa el botón Marcha (solo lectura)
-static const int PIN_BOTON_PAUSA       = 33;   // PC817: sensa el botón Pausa
-static const int PIN_BOTON_RETROCEDER  = 34;   // PC817: sensa el botón Retroceder (solo entrada)
+static const int PIN_BOTON_MARCHA      = 32;   // PC817: sensa el botón Marcha (pull-up interna)
+static const int PIN_BOTON_PAUSA       = 33;   // PC817: sensa el botón Pausa (pull-up interna)
+static const int PIN_BOTON_RETROCEDER  = 34;   // PC817: sensa el botón Retroceder (10 kΩ externa)
 static const int PIN_LED               = 2;    // LED de la placa: encendido = conectado a la red
 
 // Polaridad de CADA módulo de relé. Los módulos optoacoplados de 2 canales se activan con
