@@ -1,0 +1,89 @@
+// Prueba la lógica REAL de seleccion_dibujo.h con un reloj simulado:
+// en cada pasada los canales activos se cierran y se sueltan pasada la duración de
+// la selección, aunque la fila se repita (un agujero por pasada, como el papel).
+#include "seleccion_dibujo.h"
+#include <cstdio>
+static int fallas = 0, total = 0;
+static void chequear(bool ok, const char* que) { total++; if (!ok) { fallas++; printf("  FALLA: %s\n", que); } }
+static bool activo(int canal) { return g_pin[PIN_CANAL[canal]] == nivelPara(true); }
+static int cuantosActivos() { int n = 0; for (int i = 0; i < N_CANALES; i++) n += activo(i); return n; }
+
+int main() {
+  const unsigned long PASADA = 200;             // 300 pasadas por minuto
+  g_ms = 1000; seleccionIniciar();
+  chequear(cuantosActivos() == 0, "al iniciar, todos los canales en reposo");
+
+  const bool fila1[4] = { true, false, false, false };  // bobina 1 (una sola por fila: una trama por pasada)
+  const bool fila2[4] = { false, false, true, false };  // bobina 3
+  int activaciones1 = 0, activaciones3 = 0, sueltasEntrePasadas = 0;
+  bool ant1 = false, ant3 = false;
+
+  // 25 pasadas de la fila 1 y después 10 de la fila 2, milisegundo a milisegundo
+  for (int p = 0; p < 35; p++) {
+    const bool* fila = (p < 25) ? fila1 : fila2;
+    seleccionAplicarFila(fila, 4);
+    const unsigned long inicio = g_ms;
+    for (unsigned long t = 0; t < PASADA; t++) {
+      g_ms = inicio + t;
+      seleccionSoltarSiCorresponde();
+      const bool a1 = activo(0), a3 = activo(2);
+      if (a1 && !ant1) activaciones1++;
+      if (a3 && !ant3) activaciones3++;
+      ant1 = a1; ant3 = a3;
+      if (t == 99) chequear(cuantosActivos() == 1, "justo antes de soltar (99 ms), la fila sigue aplicada");
+      if (t == 100) {
+        chequear(cuantosActivos() == 0, "pasada la duración, se sueltan todos los canales");
+        if (cuantosActivos() == 0) sueltasEntrePasadas++;
+      }
+    }
+    g_ms = inicio + PASADA;
+  }
+  chequear(activaciones1 == 25, "la bobina 1 se activa 25 veces separadas (una por pasada), no una sola larga");
+  chequear(activaciones3 == 10, "la bobina 3 se activa 10 veces separadas, una por cada pasada de la fila 2");
+  chequear(sueltasEntrePasadas == 35, "entre cada pasada y la siguiente los canales quedan sueltos");
+
+  // telar más lento: una pasada de 400 ms. La selección se alarga sola al 50 %: 200 ms
+  seleccionAplicarFila(fila1, 4); unsigned long t0 = g_ms;
+  g_ms = t0 + 400; seleccionSoltarSiCorresponde(); seleccionAplicarFila(fila1, 4); t0 = g_ms;
+  g_ms = t0 + 150; seleccionSoltarSiCorresponde();
+  chequear(cuantosActivos() == 1, "con pasadas de 400 ms, a los 150 ms la selección sigue aplicada");
+  g_ms = t0 + 200; seleccionSoltarSiCorresponde();
+  chequear(cuantosActivos() == 0, "con pasadas de 400 ms, se suelta a los 200 ms (la mitad)");
+
+  // después de una parada no hay referencia: vuelve a la duración inicial
+  seleccionApagarTodo(); g_ms += 60000; seleccionAplicarFila(fila1, 4); t0 = g_ms;
+  g_ms = t0 + 100; seleccionSoltarSiCorresponde();
+  chequear(cuantosActivos() == 0, "tras una parada, la primera pasada usa la duración inicial (100 ms)");
+
+  // la fila 2 activa la bobina 3 y ya no la 1
+  seleccionAplicarFila(fila2, 4);
+  chequear(!activo(0) && activo(2) && cuantosActivos() == 1, "la fila 2 activa la bobina 3, y no la 1");
+
+  // apagar todo cancela la suelta pendiente y deja todo en reposo
+  seleccionApagarTodo();
+  chequear(cuantosActivos() == 0 && !seleccionPorSoltar, "apagar todo deja los canales en reposo");
+
+  // fila intercalada 1, 3, 4, 2: en cada pasada se activa solo la bobina que le toca, en orden
+  {
+    const uint8_t sec[4] = { 1, 3, 4, 2 };
+    const int esperado[10] = { 0, 2, 3, 1, 0, 2, 3, 1, 0, 2 };
+    bool ok = true;
+    for (long h = 0; h < 10; h++) {
+      seleccionAplicarIntercalada(sec, 4, h, 4);
+      if (cuantosActivos() != 1 || !activo(esperado[h])) ok = false;
+      g_ms += 200; seleccionSoltarSiCorresponde();
+    }
+    chequear(ok, "fila intercalada 1, 3, 4, 2: una sola bobina por pasada, en orden y volviendo a empezar");
+    chequear(seleccionCanalIntercalado(sec, 4, 119) == 1, "la pasada 120 de un tramo de 120 es la bobina 2");
+    const uint8_t secVacia[3] = { 1, 0, 2 };   // una fila del grupo sin bobina
+    seleccionAplicarIntercalada(secVacia, 3, 1, 4);
+    chequear(cuantosActivos() == 0, "una fila del intercalado sin bobina no activa ninguna");
+    seleccionApagarTodo();
+    const uint8_t sec2[2] = { 2, 1 };
+    chequear(seleccionCanalIntercalado(sec2, 2, 139) == 0, "la pasada 140 de un tramo 2, 1 es la bobina 1");
+    seleccionApagarTodo();
+  }
+
+  printf("  selección por pasada: %d/%d verificaciones OK\n", total - fallas, total);
+  return fallas ? 1 : 0;
+}
