@@ -1794,7 +1794,7 @@ tablas del Registro de entrevistas como el original, las copias SVG de los diagr
 
 ## Cuadragésima tercera revisión: revisión detallada de los zips
 
-Se revisaron otra vez, descomprimidos, los cuatro zips, ahora leyendo los documentos y con controles nuevos:
+Se revisaron otra vez, descomprimidos, los cuatro zips, ahora leyendo los documentos y con controles nuevos, en vueltas hasta una sin problemas (la tercera):
 los índices contra los títulos, la numeración de figuras y tablas, las referencias a secciones (también
 entre documentos), los comentarios guardados en los Word, las imágenes y los enlaces internos de cada Word,
 las cuentas de las planillas contra los documentos (las 169 tareas y 643 horas del Gantt, repartidas por
@@ -1821,6 +1821,7 @@ palabras que no entran en su columna, los epígrafes separados de su tabla y los
 | 2 | `backend/README.md`: para el Nivel 2 «falta el hardware», con las plaquetas ya soldadas | Faltan instalarlo y validar el conteo |
 | 2 | Estado del proyecto, lista de archivos: «Conexiones_de_las_plaquetas.docx» estaba metido dentro de la celda de «Conexionado_Nivel2.docx», no en una fila propia | Fila propia |
 | 2 | De la vuelta 1: los títulos de la Tabla 15 quedaron sin tamaño de letra propio, y la frase nueva de la Estimación no decía de qué documento es la sección 10.7 | Corregidos |
+| 3 | Nada (los zips rehechos, todo de nuevo: `npm test`, integración, base desde cero, firmware, navegador, los Word, las celdas, los cortes en los PDF, las frases de estado, los sitios y el modelo 3D) | — |
 
 Quedan como estaban, revisados y a propósito: los 15 comentarios de la Documentación de Proyecto (de la
 profesora, del 28/08, y del equipo, del 07/08) están todos resueltos en el texto, y se dejan como registro;
