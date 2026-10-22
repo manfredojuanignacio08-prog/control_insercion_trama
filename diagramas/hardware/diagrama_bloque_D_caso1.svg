@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" font-family="IBM Plex Sans, system-ui, sans-serif">
+<rect width="1400" height="1000" fill="#F6F8FA"/>
+<text x="700.0" y="32" font-size="18" font-weight="bold" fill="#1E3A5F" text-anchor="middle" font-family="Questrial, IBM Plex Sans, sans-serif">Bloque D · Caso 1: los 4 relés directo en los bornes de señal</text>
+<text x="700.0" y="52" font-size="10.5" font-weight="normal" fill="#6B7684" text-anchor="middle">La plaqueta pone la tensión (con el lector desconectado hay tensión entre los 2 bornes de señal). Cada relé reemplaza a su lector tal cual.</text>
+<rect x="20" y="70" width="560" height="810" rx="10" fill="#DCE7F0" stroke="#3D6B96" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="300" y="92" font-size="11.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LADO ESP32 · igual en los tres casos</text>
+<rect x="605" y="70" width="775" height="810" rx="10" fill="#FBF1E3" stroke="#9C5C0A" stroke-width="1.4" stroke-dasharray="6 4"/>
+<text x="992" y="92" font-size="11.5" font-weight="bold" fill="#9C5C0A" text-anchor="middle">LADO TELAR · nada se une con el GND del ESP32</text>
+<line x1="592" y1="66" x2="592" y2="884" stroke="#6B7684" stroke-width="1.4" stroke-dasharray="5 4"/>
+<rect x="36" y="130" width="84" height="635" rx="6" fill="#1E3A5F" stroke="#1E3A5F" stroke-width="1"/>
+<text x="78" y="447.5" font-size="13" font-weight="bold" fill="#FFFFFF" text-anchor="middle">ESP32</text>
+<text x="78" y="463.5" font-size="8.5" font-weight="normal" fill="#7FA8C9" text-anchor="middle">WROOM-32</text>
+<line x1="380" y1="202" x2="380" y2="795" stroke="#1F2937" stroke-width="2"/>
+<line x1="368" y1="795" x2="392" y2="795" stroke="#1F2937" stroke-width="2.4"/>
+<line x1="372" y1="801" x2="388" y2="801" stroke="#1F2937" stroke-width="2"/>
+<line x1="376" y1="807" x2="384" y2="807" stroke="#1F2937" stroke-width="1.6"/>
+<text x="380" y="825" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">GND del ESP32 (común a los 4 relés)</text>
+<text x="300" y="845" font-size="9" font-weight="normal" fill="#6B7684" text-anchor="middle">patas 3 y 5 de cada relé: sin conectar</text>
+<line x1="120" y1="162" x2="260" y2="162" stroke="#1F2937" stroke-width="2"/>
+<text x="126" y="155" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="start">GPIO 18</text>
+<rect x="260" y="151" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="290" y="166" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="middle">330 Ω</text>
+<line x1="320" y1="162" x2="420" y2="162" stroke="#1F2937" stroke-width="2"/>
+<circle cx="190" cy="162" r="3.6" fill="#1F2937"/>
+<line x1="190" y1="162" x2="190" y2="172" stroke="#1F2937" stroke-width="2"/>
+<rect x="180" y="172" width="20" height="50" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="206" y="202" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ</text>
+<polyline points="190,222 190,240 380,240" fill="none" stroke="#1F2937" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="380" cy="240" r="3.6" fill="#1F2937"/>
+<line x1="420" y1="202" x2="380" y2="202" stroke="#1F2937" stroke-width="2"/>
+<circle cx="380" cy="202" r="3.6" fill="#1F2937"/>
+<rect x="420" y="142" width="140" height="80" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="490" y="136" font-size="10.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LCA110 · relé 1</text>
+<line x1="490" y1="150" x2="490" y2="216" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="3 3"/>
+<text x="426" y="166" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">1</text>
+<text x="426" y="206" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">2</text>
+<text x="554" y="166" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">4</text>
+<text x="554" y="206" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">6</text>
+<text x="462" y="186" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">LED</text>
+<text x="522" y="186" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">salida</text>
+<rect x="1180" y="124" width="186" height="162" rx="6" fill="#FFFFFF" stroke="#9C5C0A" stroke-width="1.8"/>
+<text x="1273" y="140" font-size="10" font-weight="bold" fill="#9C5C0A" text-anchor="middle">PLAQUETA · lector 1</text>
+<text x="1273" y="151" font-size="8" font-weight="normal" fill="#6B7684" text-anchor="middle">(lector desconectado)</text>
+<circle cx="1180" cy="162" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="166" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">+ (alim. del lector)</text>
+<circle cx="1180" cy="212" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="216" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">señal</text>
+<circle cx="1180" cy="242" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="246" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">referencia</text>
+<circle cx="1180" cy="270" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="274" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">− (alim. del lector)</text>
+<polyline points="560,162 640,162 640,212 1180,212" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="560,202 610,202 610,242 1180,242" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="820" y="206" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 del relé 1 → señal</text>
+<text x="820" y="236" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 6 del relé 1 → el otro borne</text>
+<line x1="1180" y1="162" x2="1110" y2="162" stroke="#B4423C" stroke-width="2"/>
+<rect x="1084" y="154" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="1078" y="166" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable + del lector: aislado</text>
+<line x1="1180" y1="270" x2="1110" y2="270" stroke="#B4423C" stroke-width="2"/>
+<rect x="1084" y="262" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="1078" y="274" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable − del lector: aislado</text>
+<line x1="120" y1="337" x2="260" y2="337" stroke="#1F2937" stroke-width="2"/>
+<text x="126" y="330" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="start">GPIO 19</text>
+<rect x="260" y="326" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="290" y="341" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="middle">330 Ω</text>
+<line x1="320" y1="337" x2="420" y2="337" stroke="#1F2937" stroke-width="2"/>
+<circle cx="190" cy="337" r="3.6" fill="#1F2937"/>
+<line x1="190" y1="337" x2="190" y2="347" stroke="#1F2937" stroke-width="2"/>
+<rect x="180" y="347" width="20" height="50" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="206" y="377" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ</text>
+<polyline points="190,397 190,415 380,415" fill="none" stroke="#1F2937" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="380" cy="415" r="3.6" fill="#1F2937"/>
+<line x1="420" y1="377" x2="380" y2="377" stroke="#1F2937" stroke-width="2"/>
+<circle cx="380" cy="377" r="3.6" fill="#1F2937"/>
+<rect x="420" y="317" width="140" height="80" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="490" y="311" font-size="10.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LCA110 · relé 2</text>
+<line x1="490" y1="325" x2="490" y2="391" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="3 3"/>
+<text x="426" y="341" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">1</text>
+<text x="426" y="381" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">2</text>
+<text x="554" y="341" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">4</text>
+<text x="554" y="381" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">6</text>
+<text x="462" y="361" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">LED</text>
+<text x="522" y="361" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">salida</text>
+<rect x="1180" y="299" width="186" height="162" rx="6" fill="#FFFFFF" stroke="#9C5C0A" stroke-width="1.8"/>
+<text x="1273" y="315" font-size="10" font-weight="bold" fill="#9C5C0A" text-anchor="middle">PLAQUETA · lector 2</text>
+<text x="1273" y="326" font-size="8" font-weight="normal" fill="#6B7684" text-anchor="middle">(lector desconectado)</text>
+<circle cx="1180" cy="337" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="341" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">+ (alim. del lector)</text>
+<circle cx="1180" cy="387" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="391" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">señal</text>
+<circle cx="1180" cy="417" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="421" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">referencia</text>
+<circle cx="1180" cy="445" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="449" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">− (alim. del lector)</text>
+<polyline points="560,337 640,337 640,387 1180,387" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="560,377 610,377 610,417 1180,417" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="820" y="381" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 del relé 2 → señal</text>
+<text x="820" y="411" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 6 del relé 2 → el otro borne</text>
+<line x1="1180" y1="337" x2="1110" y2="337" stroke="#B4423C" stroke-width="2"/>
+<rect x="1084" y="329" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="1078" y="341" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable + del lector: aislado</text>
+<line x1="1180" y1="445" x2="1110" y2="445" stroke="#B4423C" stroke-width="2"/>
+<rect x="1084" y="437" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="1078" y="449" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable − del lector: aislado</text>
+<line x1="120" y1="512" x2="260" y2="512" stroke="#1F2937" stroke-width="2"/>
+<text x="126" y="505" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="start">GPIO 21</text>
+<rect x="260" y="501" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="290" y="516" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="middle">330 Ω</text>
+<line x1="320" y1="512" x2="420" y2="512" stroke="#1F2937" stroke-width="2"/>
+<circle cx="190" cy="512" r="3.6" fill="#1F2937"/>
+<line x1="190" y1="512" x2="190" y2="522" stroke="#1F2937" stroke-width="2"/>
+<rect x="180" y="522" width="20" height="50" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="206" y="552" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ</text>
+<polyline points="190,572 190,590 380,590" fill="none" stroke="#1F2937" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="380" cy="590" r="3.6" fill="#1F2937"/>
+<line x1="420" y1="552" x2="380" y2="552" stroke="#1F2937" stroke-width="2"/>
+<circle cx="380" cy="552" r="3.6" fill="#1F2937"/>
+<rect x="420" y="492" width="140" height="80" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="490" y="486" font-size="10.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LCA110 · relé 3</text>
+<line x1="490" y1="500" x2="490" y2="566" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="3 3"/>
+<text x="426" y="516" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">1</text>
+<text x="426" y="556" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">2</text>
+<text x="554" y="516" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">4</text>
+<text x="554" y="556" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">6</text>
+<text x="462" y="536" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">LED</text>
+<text x="522" y="536" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">salida</text>
+<rect x="1180" y="474" width="186" height="162" rx="6" fill="#FFFFFF" stroke="#9C5C0A" stroke-width="1.8"/>
+<text x="1273" y="490" font-size="10" font-weight="bold" fill="#9C5C0A" text-anchor="middle">PLAQUETA · lector 3</text>
+<text x="1273" y="501" font-size="8" font-weight="normal" fill="#6B7684" text-anchor="middle">(lector desconectado)</text>
+<circle cx="1180" cy="512" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="516" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">+ (alim. del lector)</text>
+<circle cx="1180" cy="562" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="566" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">señal</text>
+<circle cx="1180" cy="592" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="596" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">referencia</text>
+<circle cx="1180" cy="620" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="624" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">− (alim. del lector)</text>
+<polyline points="560,512 640,512 640,562 1180,562" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="560,552 610,552 610,592 1180,592" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="820" y="556" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 del relé 3 → señal</text>
+<text x="820" y="586" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 6 del relé 3 → el otro borne</text>
+<line x1="1180" y1="512" x2="1110" y2="512" stroke="#B4423C" stroke-width="2"/>
+<rect x="1084" y="504" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="1078" y="516" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable + del lector: aislado</text>
+<line x1="1180" y1="620" x2="1110" y2="620" stroke="#B4423C" stroke-width="2"/>
+<rect x="1084" y="612" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="1078" y="624" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable − del lector: aislado</text>
+<line x1="120" y1="687" x2="260" y2="687" stroke="#1F2937" stroke-width="2"/>
+<text x="126" y="680" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="start">GPIO 22</text>
+<rect x="260" y="676" width="60" height="22" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="290" y="691" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="middle">330 Ω</text>
+<line x1="320" y1="687" x2="420" y2="687" stroke="#1F2937" stroke-width="2"/>
+<circle cx="190" cy="687" r="3.6" fill="#1F2937"/>
+<line x1="190" y1="687" x2="190" y2="697" stroke="#1F2937" stroke-width="2"/>
+<rect x="180" y="697" width="20" height="50" rx="4" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
+<text x="206" y="727" font-size="9.5" font-weight="bold" fill="#1F2937" text-anchor="start">10 kΩ</text>
+<polyline points="190,747 190,765 380,765" fill="none" stroke="#1F2937" stroke-width="2" stroke-linejoin="round"/>
+<circle cx="380" cy="765" r="3.6" fill="#1F2937"/>
+<line x1="420" y1="727" x2="380" y2="727" stroke="#1F2937" stroke-width="2"/>
+<circle cx="380" cy="727" r="3.6" fill="#1F2937"/>
+<rect x="420" y="667" width="140" height="80" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="2"/>
+<text x="490" y="661" font-size="10.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">LCA110 · relé 4</text>
+<line x1="490" y1="675" x2="490" y2="741" stroke="#CDD8E0" stroke-width="1.4" stroke-dasharray="3 3"/>
+<text x="426" y="691" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">1</text>
+<text x="426" y="731" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="start">2</text>
+<text x="554" y="691" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">4</text>
+<text x="554" y="731" font-size="9" font-weight="bold" fill="#1E3A5F" text-anchor="end">6</text>
+<text x="462" y="711" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">LED</text>
+<text x="522" y="711" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">salida</text>
+<rect x="1180" y="649" width="186" height="162" rx="6" fill="#FFFFFF" stroke="#9C5C0A" stroke-width="1.8"/>
+<text x="1273" y="665" font-size="10" font-weight="bold" fill="#9C5C0A" text-anchor="middle">PLAQUETA · lector 4</text>
+<text x="1273" y="676" font-size="8" font-weight="normal" fill="#6B7684" text-anchor="middle">(lector desconectado)</text>
+<circle cx="1180" cy="687" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="691" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">+ (alim. del lector)</text>
+<circle cx="1180" cy="737" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="741" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">señal</text>
+<circle cx="1180" cy="767" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="771" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">referencia</text>
+<circle cx="1180" cy="795" r="3.6" fill="#9C5C0A"/>
+<text x="1188" y="799" font-size="8.8" font-weight="normal" fill="#9C5C0A" text-anchor="start">− (alim. del lector)</text>
+<polyline points="560,687 640,687 640,737 1180,737" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<polyline points="560,727 610,727 610,767 1180,767" fill="none" stroke="#1E3A5F" stroke-width="2.2" stroke-linejoin="round"/>
+<text x="820" y="731" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 4 del relé 4 → señal</text>
+<text x="820" y="761" font-size="9" font-weight="normal" fill="#1E3A5F" text-anchor="middle">pata 6 del relé 4 → el otro borne</text>
+<line x1="1180" y1="687" x2="1110" y2="687" stroke="#B4423C" stroke-width="2"/>
+<rect x="1084" y="679" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="1078" y="691" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable + del lector: aislado</text>
+<line x1="1180" y1="795" x2="1110" y2="795" stroke="#B4423C" stroke-width="2"/>
+<rect x="1084" y="787" width="26" height="16" rx="3" fill="#FFFFFF" stroke="#B4423C" stroke-width="1.4"/>
+<text x="1078" y="799" font-size="8.8" font-weight="bold" fill="#B4423C" text-anchor="end">cable − del lector: aislado</text>
+<text x="30" y="906" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">Cada relé toca solamente los 2 bornes de señal de su lector; las patas 4 y 6 no tienen polaridad. Las salidas de los cuatro relés no se unen entre sí.</text>
+<text x="30" y="924" font-size="10.5" font-weight="normal" fill="#1F2937" text-anchor="start">Los cables + y − de cada lector quedan sin usar: se aíslan (termocontraíble o bornera vacía).</text>
+<text x="1370" y="952" font-size="12" font-weight="bold" fill="#2E6E4A" text-anchor="end">agujero = bornes unidos → CANAL_ACTIVO_EN_ALTO true  ·  agujero = bornes separados → false</text>
+<text x="30" y="952" font-size="10.5" font-weight="normal" fill="#6B7684" text-anchor="start">Un solo valor en config.h vale para los 4 canales.</text>
+<text x="700.0" y="986" font-size="10" font-weight="bold" fill="#1F2937" text-anchor="middle">Antes de los 4: probar un solo canal, medir que la corriente por el relé cerrado sea de pocos mA (nunca más de 100) y conectar con bornera para poder volver a poner los lectores.</text>
+</svg>
