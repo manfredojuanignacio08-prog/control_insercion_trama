@@ -1,0 +1,184 @@
+# Recomendaciones sobre la conexión eléctrica (Telar – ESP32)
+
+Revisión del diseño eléctrico del nodo de control. La base es sólida: el
+ESP32 actúa como puente entre la web y la botonera del telar, mediante tres
+relés en paralelo con los botones de Marcha, Pausa y Retroceder, más el
+sensado aislado de esos mismos tres botones, para detectar cuando el operario los usa a mano.
+
+La alimentación es una **fuente propia HLK-5M05 (220 V AC → 5 V DC, 1 A)**,
+independiente del telar: el sistema no toma corriente de la máquina, y lo
+único que toca su circuito son los contactos secos de los relés y las
+entradas de sensado, aisladas por optoacopladores.
+
+Lo que sigue son las mejoras y precauciones concretas, ordenadas por
+importancia.
+
+## 1. Lo más importante: el "golpe fantasma" de los relés al arrancar
+
+**El problema:** los módulos de relé optoacoplados comunes se activan con
+nivel BAJO. Durante el arranque del ESP32 (encendido, reinicio por corte
+de luz, reinicio por watchdog), los pines GPIO quedan un instante
+"flotando" antes de que el programa los configure, y un pin flotante
+puede dejar pasar corriente por el optoacoplador. Resultado posible: **el
+telar recibe un pulso de Marcha o Pausa que nadie pidió**, justo al
+prenderse el sistema. En una máquina real esto es un riesgo de seguridad,
+no un detalle.
+
+**Solución en dos capas (recomendadas las dos):**
+
+1. **Hardware (4 resistencias, centavos):** una resistencia de **10 kΩ** en
+   cada línea de los relés y en la entrada de sensado del GPIO 34. **En los relés, el sentido depende de
+   la polaridad de cada módulo** (`RELE_*_ACTIVO_BAJO` en `config.h`), y ponerla
+   al revés hace que el relé arranque PEGADO:
+   - **IN1 (Marcha) e IN2 (Pausa)** (módulo de 2 canales, activo-bajo): **pull-up**
+     de 10 kΩ a 3.3V. Lo mantiene suelto.
+   - **S (Retroceder)** (módulo individual, activo-alto): **pull-down** de 10 kΩ
+     a **GND**, NO a 3.3V. Con pull-up este relé arranca pegado.
+   - **Sensado, GPIO 32, 33 y 34** (los tres botones): en reposo tienen que quedar en alto.
+     El GPIO 34 es solo de entrada y no tiene pull-up interna: lleva una **pull-up**
+     de 10 kΩ a 3.3V, obligatoria. El 32 y el 33 usan la pull-up interna del ESP32
+     (`INPUT_PULLUP` en el firmware, desde el 21/10/2026): en la plaqueta de sensado
+     sus 10 kΩ no se conectan a 3,3 V.
+
+   Mantienen los pines en nivel inactivo durante el arranque, pase lo que pase
+   con el software. Es la protección más barata y efectiva de toda la lista.
+2. **Software (ya aplicado en el firmware):** se escribe el nivel inactivo
+   en el pin **antes** de configurarlo como salida, y tras un reinicio el
+   firmware **solo memoriza** el estado del backend sin pulsar nada, hasta
+   detectar un cambio real.
+
+**Elección de pines (bien elegidos):** los pines en uso -GPIO 25, 26 y
+27 para los relés (Marcha, Pausa, Retroceder), GPIO 32, 33 y 34 para el
+sensado de los tres botones y, con el Nivel 2 en la misma placa, GPIO 35 para el
+sensor de pasada y 18, 19, 21 y 22 para los relés LCA110- **no** son pines de arranque del ESP32 (los "strapping
+pins" 0, 2, 5, 12 y 15 cambian de nivel solos durante el boot). Mantenerlos;
+no mover ni los relés ni las entradas de sensado a un pin de arranque: un
+relé conectado ahí puede dar un pulso fantasma al encender la placa.
+
+## 2. Alimentación por USB durante la programación
+
+Cuando se conecta el cable USB para programar o ver el monitor serie, el
+puerto USB de la computadora alimenta el ESP32 por su propio regulador.
+Si al mismo tiempo el módulo de fuente está entregando 5 V al pin VIN,
+ambas fuentes quedan enfrentadas.
+
+**Regla práctica:** desconectar la entrada de 220 V del módulo de fuente
+antes de enchufar el USB para programar. Es la forma más simple y segura;
+no hace falta ningún componente extra para resolverlo.
+
+Una vez cargado el firmware, el sistema trabaja alimentado únicamente por
+su propia fuente, con el USB desconectado.
+
+## 3. Dimensionar el fusible
+
+La alimentación del sistema es una fuente propia HLK-5M05 (220 V AC → 5 V
+DC, 1 A), independiente del telar, y el fusible protege su entrada de red.
+
+El consumo real del circuito es chico: ESP32 con WiFi (~250 mA
+pico) + 3 relés (~70 mA c/u en 5V) → unos 500 mA como techo en la línea
+de 5V. Del lado de 220V eso es una corriente muy baja, pero el módulo
+switching tiene un pico de arranque (inrush) bastante mayor que su
+consumo nominal.
+
+Recomendación: **fusible lento (slow-blow) de 1 A** en la entrada de 220 V,
+que es el valor que indica el propio datasheet del módulo. Un fusible de
+menor amperaje puede saltar solo en cada encendido por ese pico inicial,
+sin que haya ninguna falla real.
+
+## 4. Verificaciones de la etapa de alimentación
+
+- **Medir la salida ANTES de conectar el ESP32:** con la entrada de 220 V
+  conectada y la salida en vacío, confirmar con el multímetro que entrega
+  **5,0 V estables**. El módulo no tiene ajuste; si no da 5 V, está fallado
+  y hay que reemplazarlo antes de conectarle nada.
+- **Respetar la polaridad de salida:** OUT+ es positivo, OUT– negativo. Un
+  error acá quema el ESP32 en el acto.
+- **Capacitor de desacople de 100 nF** lo más cerca posible del pin de
+  alimentación del ESP32 y del VCC del módulo de relés. Filtra el ruido de
+  alta frecuencia que generan las bobinas al conmutar.
+- **Aislar la entrada de red:** los 220 V solo deben tocar el módulo de
+  fuente. Ningún cable de red debe quedar suelto ni cerca de la etapa
+  lógica dentro del gabinete.
+
+## 5. Cableado y ruido (costo cero, mucho efecto)
+
+- **Los cables de los relés a la botonera, de a pares** (NO1 y COM1 en un par
+  del cable de 6 conductores; ídem canales 2 y 3) y **lejos de los cables de los
+  motores** del telar: no correrlos pegados ni en paralelo al cable del motor.
+  El ruido inductivo de los motores es la causa nº1 de cuelgues de WiFi y
+  reinicios en este tipo de montaje. No hace falta cable mallado ni trenzado:
+  la señal de contacto seco a 24 V tiene inmunidad de sobra.
+- **Cables cortos en la etapa lógica** (3.3 V, IN1, IN2, S y las tres
+  entradas de sensado): cuanto más largos, más antena para el ruido.
+- **Tierra en estrella:** todos los GND (salida de la fuente, ESP32, módulo
+  de relés) a un mismo punto físico, no encadenados uno tras otro.
+- **El jumper JD-VCC/VCC del módulo de relés va PUESTO:** con una sola
+  fuente de 5 V alimentando todo, el jumper une ambas líneas y no hace
+  falta una alimentación separada para las bobinas. El aislamiento entre el
+  ESP32 y el contacto que toca el telar lo da el propio relé: su contacto no
+  tiene conexión eléctrica con la bobina.
+
+## 6. Etapa de potencia del Nivel 2 (bobinas de selección)
+
+Las bobinas de selección del telar **trabajan con 24 V en corriente alterna**
+(confirmado con el dueño de la planta el 03/09/26). Eso define qué se puede
+usar para comandarlas y qué no.
+
+- **El punto de intervención es el lector óptico, no la bobina.** Según explicó
+  el dueño de la planta, cada lector se corta con una llave: en lugar de que el
+  papel interrumpa el haz, lo hace un interruptor electrónico. Con agujero, el
+  lector da la señal que activa la bobina; en la conexión final el relé ocupa su
+  lugar y da esa señal. El sistema conmuta entonces la señal del lector, no la
+  corriente de la bobina, y las plaquetas del telar quedan intactas.
+- **Relé de estado sólido LCA110 (OptoMOS), uno por lector óptico: cuatro en total**, uno por
+  cada bobina de selección. Un relé mecánico común no sirve: el telar hace 5 pasadas por segundo y
+  en un intercalado (o si se configura que la selección se suelte en cada pasada) un canal se
+  activa y se suelta en cada pasada, hasta 180.000 conmutaciones en una jornada de 10 horas, y
+  la vida típica de un relé mecánico con carga ronda las 100.000. Los relés mecánicos del Bloque A quedan bien donde están, porque Marcha, Pausa y Retroceder se accionan unas pocas veces
+  por día.
+- **Por qué el LCA110.** Como maneja la señal del lector (unos pocos mA, menos de 30 V) y no la
+  corriente de la bobina, no hace falta un SSR de potencia. Su salida son dos MOSFET en antiserie, así que
+  conduce en los dos sentidos: sirve con continua y con alterna (hasta 350 V y 120 mA). Se comanda
+  directo desde un pin del ESP32 (330 Ω en serie, unos 6 mA) y aísla los dos lados (3.750 V).
+- **Lo que no sirve.** Un MOSFET suelto (por ejemplo un IRLZ44N) conduce en un solo sentido y su
+  diodo interno deja pasar el otro semiciclo; un optoacoplador común (PC817) también conduce en un
+  solo sentido. Con una señal de alterna, cualquiera de los dos dejaría pasar medio ciclo.
+- **Antes de conectarlo hay que medir** la tensión y la corriente en la salida de un lector óptico,
+  y qué hace la señal con el agujero. La conexión final (la más segura) pone el relé en lugar del
+  lector, con una resistencia de protección: `diagramas/hardware/conexion_final_rele.png` y
+  `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`. En el C 201 la alimentación del lector se
+  midió el 17/10/2026: entre 15 y 30 V, así que va la resistencia de protección de 470 Ω 3 W, y el
+  primer canal seleccionó bien.
+
+## 7. Protecciones que ya quedaron aplicadas en el firmware
+
+Estas van de regalo con el código nuevo (adaptado al diseño real de
+relés):
+
+| Protección | Qué evita |
+|---|---|
+| Arranque seguro de relés (nivel inactivo antes de `pinMode`) | El pulso fantasma al encender |
+| Primera lectura "solo memorizar, no actuar" | Que un reinicio del ESP32 arranque o pause la máquina solo |
+| Pulso de duración fija (300 ms) con apagado incondicional | Que un relé quede pegado "apretando" el botón |
+| Anti-doble-pulso (2 s mínimos entre comandos) | Doble pulsación por lecturas repetidas del backend |
+| Watchdog por hardware (15 s) | Cuelgues por ruido eléctrico: el ESP32 se reinicia solo, con relés en reposo |
+| Fail-safe sin red | Si se cae el WiFi o el backend, el ESP32 no actúa y la botonera física sigue mandando |
+| Avisos de la botonera descartados cuando dos o más canales bajan dentro de 150 ms | Que prender el telar con el gabinete encendido (o que vuelva su tensión) se lea como Marcha, Pausa y Retroceder, con la posición una pasada atrás |
+| Polaridad configurable **por relé** (`RELE_*_ACTIVO_BAJO`) | Permite mezclar módulos activo-bajo y activo-alto en el mismo equipo. Ojo: la resistencia de cada canal depende de esto (pull-up a 3,3 V para activo-bajo, pull-down a GND para activo-alto) |
+
+## 8. Resumen de compras/cambios (protecciones del Bloque A y relés del Nivel 2)
+
+| Ítem | Cantidad | Para qué |
+|---|---|---|
+| Resistencia 10 kΩ | 4 (se compraron 6: 2 de repuesto) | Polarización de IN1, IN2 y S (3 relés) y del sensado de Retroceder, GPIO 34 (punto 1). La de S (relé de Retroceder) va a GND, no a 3V3. El sensado de Marcha y Pausa (GPIO 32 y 33) usa la pull-up interna. |
+| Relé LCA110 (OptoMOS, DIP-6) + 330 Ω + 10 kΩ | 4 de cada uno (+1 LCA110 de repuesto) | Dan la señal en lugar de cada lector óptico en el Nivel 2 (punto 6). Un relé mecánico se gastaría en una jornada por la frecuencia de conmutación. |
+| Resistencia de protección 470 Ω 3 W + 10 kΩ ½ W | 4 de cada una | Lado del telar de cada relé, en la conexión final (punto 6): la de protección del + del conector del lector a la pata 4, y la de 10 kΩ de la señal al −. Es de 470 Ω 3 W porque el lector del C 201 se alimenta con 15 a 30 V (medido el 17/10/2026); con hasta 15 V sería de 220 Ω 2 W. |
+| Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |
+| Capacitor cerámico 100 nF | 3 | Desacople: uno junto al ESP32 y uno junto a cada módulo de relé (punto 4) |
+| Optoacoplador PC817 + puente DB157 + R 2,2 kΩ 1 W | 3 de cada uno | Sensado aislado de los botones Marcha, Pausa y Retroceder (24 V AC → GPIO 32/33/34) |
+| Capacitor electrolítico 22 µF 50 V | 3 | En paralelo a la salida del puente, antes de la resistencia. Mantiene encendido el LED del optoacoplador entre los semiciclos: sin él, el LED se apaga 100 veces por segundo y el firmware mandaría avisos solos, sin que nadie apriete nada, cada uno con su efecto (en Retroceder, una pasada atrás). El valor fija cuánto hay que mantener apretado el botón para que se registre: con 22 µF, entre 0,15 y 0,25 s; con 47 µF, entre 0,3 y 0,5 s, y un toque rápido se perdería. TIENE POLARIDAD. |
+
+Total estimado: unos pocos dólares. La mejora de fiabilidad es enorme en
+relación al costo, especialmente los pull-ups del punto 1, que son la
+diferencia entre un prototipo y algo seguro de dejar conectado a una
+máquina.
