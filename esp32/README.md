@@ -79,7 +79,7 @@ El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
 | 5V | HLK-5M05 OUT → ESP32 VIN **y** VCC del módulo relé (jumper JD-VCC/VCC puesto) |
 | Lógica | GPIO 25 → IN1; GPIO 26 → IN2; GPIO 27 → S (módulo individual de Retroceder). IN1 e IN2 con pull-up de 10 kΩ a 3.3V (módulo de 2 canales, activo-bajo); S con pull-down de 10 kΩ a GND (el módulo de Retroceder es activo-alto: con pull-up arrancaría pegado). Todo por el conector de las señales (GND · IN · VCC): el VCC de ese conector va a **5V**, nunca a los 3.3V del ESP32 (con el jumper puesto, unirían 5V y 3.3V). El conector del jumper (JD-VCC · VCC · GND) no se usa |
 | Telar | NO1+COM1 en paralelo al botón de Marcha; NO2+COM2 al de Pausa; NO3+COM3 al de Retroceder |
-| Sensado | Los mismos 3 botones (Marcha/Pausa/Retroceder) → puente rectificador DB157 → capacitor 22 µF 50 V → R 2,2 kΩ → PC817 → GPIO 32 / 33 / 34 (pull-up 10 kΩ a 3.3V) |
+| Sensado | Los mismos 3 botones (Marcha/Pausa/Retroceder) → puente rectificador DB157 → capacitor 22 µF 50 V → R 2,2 kΩ → PC817 → GPIO 32 / 33 / 34 (32 y 33 con la pull-up interna del ESP32; 34 con 10 kΩ a 3.3V, porque no tiene interna) |
 | Filtrado | Capacitores de 100 nF de desacople junto al ESP32 y junto a cada módulo de relé |
 
 ### Sensado de los botones del telar (solo lectura)

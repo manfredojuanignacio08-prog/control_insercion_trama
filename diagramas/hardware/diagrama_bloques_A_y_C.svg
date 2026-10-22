@@ -36,7 +36,7 @@
 <text x="437.0" y="537" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">SENSADO ×3</text>
 <text x="437.0" y="554" text-anchor="middle" font-size="9" fill="#6B7684">DB157 · 22 µF</text>
 <text x="437.0" y="568" text-anchor="middle" font-size="9" fill="#6B7684">2,2 o 1,2 kΩ · PC817</text>
-<text x="437.0" y="582" text-anchor="middle" font-size="9" fill="#6B7684">10 kΩ a 3,3 V</text>
+<text x="437.0" y="582" text-anchor="middle" font-size="9" fill="#6B7684">pull-up: interna en 32 y 33 · 10 kΩ en 34</text>
 <rect x="690" y="410" width="230" height="110" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.6"/>
 <text x="805.0" y="431" text-anchor="middle" font-size="12" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">CANAL DEL SENSOR</text>
 <text x="805.0" y="448" text-anchor="middle" font-size="9" fill="#6B7684">1,2 kΩ · PC817</text>

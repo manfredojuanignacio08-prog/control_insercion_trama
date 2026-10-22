@@ -36,8 +36,8 @@
 // la copia local antes de subir el programa y NO se suben con valores reales (igual que
 // DEVICE_KEY). La clave real de la fábrica estuvo escrita acá y quedó en el historial del
 // repositorio: conviene cambiarla en el router.
-#define WIFI_SSID          "Claro4347"
-#define WIFI_PASSWORD      "11335577"
+#define WIFI_SSID          "NOMBRE_DE_LA_RED"
+#define WIFI_PASSWORD      "CLAVE_DE_LA_RED"
 // Red de respaldo (punto de acceso del celular). Vacía = se reintenta la principal.
 #define WIFI_SSID_ALT      ""
 #define WIFI_PASSWORD_ALT  ""
@@ -56,7 +56,7 @@
 
 // Clave del dispositivo: va en el header X-Device-Key de cada pedido. Tiene que ser IGUAL a
 // ESP32_DEVICE_KEY del backend. Si no coincide, el monitor serie muestra "401".
-#define DEVICE_KEY         "cc1ce04d-f582-4150-be55-dc06a0d1faf33e97df76-6c70-407d-963b-518b3a931f7c"
+#define DEVICE_KEY         "CAMBIAR_POR_LA_CLAVE_DE_ESP32_DEVICE_KEY"
 
 // Verificación del certificado HTTPS (opcional). Sin esto el nodo cifra el tráfico pero no
 // comprueba con quién habla. Para verificarlo, pegar el certificado raíz (PEM) y descomentar:
@@ -68,9 +68,9 @@
 static const int PIN_RELE_MARCHA       = 25;   // IN1 del módulo de 2 canales
 static const int PIN_RELE_PAUSA        = 26;   // IN2 del módulo de 2 canales
 static const int PIN_RELE_RETROCEDER   = 27;   // S del módulo individual
-static const int PIN_BOTON_MARCHA      = 32;   // PC817: sensa el botón Marcha (solo lectura)
-static const int PIN_BOTON_PAUSA       = 33;   // PC817: sensa el botón Pausa
-static const int PIN_BOTON_RETROCEDER  = 34;   // PC817: sensa el botón Retroceder (solo entrada)
+static const int PIN_BOTON_MARCHA      = 32;   // PC817: sensa el botón Marcha (pull-up interna)
+static const int PIN_BOTON_PAUSA       = 33;   // PC817: sensa el botón Pausa (pull-up interna)
+static const int PIN_BOTON_RETROCEDER  = 34;   // PC817: sensa el botón Retroceder (10 kΩ externa)
 static const int PIN_LED               = 2;    // LED de la placa: encendido = conectado a la red
 
 // Polaridad de CADA módulo de relé. Los módulos optoacoplados de 2 canales se activan con

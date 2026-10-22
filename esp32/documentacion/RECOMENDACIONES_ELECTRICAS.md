@@ -26,17 +26,19 @@ no un detalle.
 
 **Solución en dos capas (recomendadas las dos):**
 
-1. **Hardware (6 resistencias, centavos):** una resistencia de **10 kΩ** en
-   cada línea de los relés y en cada entrada de sensado. **El sentido depende de
+1. **Hardware (4 resistencias, centavos):** una resistencia de **10 kΩ** en
+   cada línea de los relés y en la entrada de sensado del GPIO 34. **En los relés, el sentido depende de
    la polaridad de cada módulo** (`RELE_*_ACTIVO_BAJO` en `config.h`), y ponerla
    al revés hace que el relé arranque PEGADO:
    - **IN1 (Marcha) e IN2 (Pausa)** (módulo de 2 canales, activo-bajo): **pull-up**
      de 10 kΩ a 3.3V. Lo mantiene suelto.
    - **S (Retroceder)** (módulo individual, activo-alto): **pull-down** de 10 kΩ
      a **GND**, NO a 3.3V. Con pull-up este relé arranca pegado.
-   - **Sensado, GPIO 32, 33 y 34** (los tres botones): **pull-up** de 10 kΩ a 3.3V,
-     una por canal. El GPIO 34 es solo de entrada y no tiene pull-up interna:
-     la externa es obligatoria.
+   - **Sensado, GPIO 32, 33 y 34** (los tres botones): en reposo tienen que quedar en alto.
+     El GPIO 34 es solo de entrada y no tiene pull-up interna: lleva una **pull-up**
+     de 10 kΩ a 3.3V, obligatoria. El 32 y el 33 usan la pull-up interna del ESP32
+     (`INPUT_PULLUP` en el firmware, desde el 21/10/2026): en la plaqueta de sensado
+     sus 10 kΩ no se conectan a 3,3 V.
 
    Mantienen los pines en nivel inactivo durante el arranque, pase lo que pase
    con el software. Es la protección más barata y efectiva de toda la lista.
@@ -168,7 +170,7 @@ relés):
 
 | Ítem | Cantidad | Para qué |
 |---|---|---|
-| Resistencia 10 kΩ | 6 | Polarización de IN1, IN2 y S (3 relés) y de los 3 canales de sensado (punto 1). La del canal de Retroceder va a GND, no a 3V3. |
+| Resistencia 10 kΩ | 4 (se compraron 6: 2 de repuesto) | Polarización de IN1, IN2 y S (3 relés) y del sensado de Retroceder, GPIO 34 (punto 1). La de S (relé de Retroceder) va a GND, no a 3V3. El sensado de Marcha y Pausa (GPIO 32 y 33) usa la pull-up interna. |
 | Relé LCA110 (OptoMOS, DIP-6) + 330 Ω + 10 kΩ | 4 de cada uno (+1 LCA110 de repuesto) | Dan la señal en lugar de cada lector óptico en el Nivel 2 (punto 6). Un relé mecánico se gastaría en una jornada por la frecuencia de conmutación. |
 | Resistencia de protección 470 Ω 3 W + 10 kΩ ½ W | 4 de cada una | Lado del telar de cada relé, en la conexión final (punto 6): la de protección del + del conector del lector a la pata 4, y la de 10 kΩ de la señal al −. Es de 470 Ω 3 W porque el lector del C 201 se alimenta con 15 a 30 V (medido el 17/10/2026); con hasta 15 V sería de 220 Ω 2 W. |
 | Fusible lento 1 A | 1 (+ repuesto) | Entrada de **220 V** del módulo de fuente (punto 3) |

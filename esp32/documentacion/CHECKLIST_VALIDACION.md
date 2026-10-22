@@ -30,7 +30,7 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
       el log). Todavía no hay relé, así que no pasa nada físico: solo se
       valida que la lógica corre.
 - [ ] Medí el pin **3.3V** del ESP32: debe leer ~3,3 V (es la referencia de las
-      resistencias de 10 kΩ de IN1/IN2 y del sensado; el módulo de relés se alimenta con 5 V).
+      resistencias de 10 kΩ de IN1/IN2 y del GPIO 34 del sensado; el módulo de relés se alimenta con 5 V).
 
 ## Etapa 3, El relé, pero con un LED o zumbador (NO el telar)
 
@@ -63,9 +63,10 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 ## Etapa 3b, Sensado de los botones (banco, sin telar)
 
 - [ ] Armá un canal de sensado: puente rectificador (DB157) + capacitor 22 µF 50 V + R 2,2 kΩ 1W
-      → LED del PC817; del otro lado, colector con pull-up de 10 kΩ a 3.3V
-      → GPIO 32 (Marcha). Repetí para GPIO 33 (Pausa) y GPIO 34 (Retroceder).
-- [ ] Sin tensión en la entrada del puente, el GPIO lee **3,3 V** (alto).
+      → LED del PC817; del otro lado, colector → GPIO 32 (Marcha), sin resistencia: el
+      firmware activa la pull-up interna del 32 y del 33. Repetí para GPIO 33 (Pausa) y
+      GPIO 34 (Retroceder); el 34 no tiene interna y lleva 10 kΩ a 3.3V.
+- [ ] Sin tensión en la entrada del puente y con el firmware cargado, el GPIO lee **3,3 V** (alto).
 - [ ] Aplicá 24 V de alterna (o de 12 a 24 V de continua) a la entrada del puente: el GPIO cae a
       **0 V**. Ese es el **reposo** en el telar: en el par NA de un botón hay 24 V mientras nadie
       lo aprieta.
@@ -128,7 +129,7 @@ pines (GPIO 25→IN1 Marcha, GPIO 26→IN2 Pausa), la cadena de voltajes
 (220V→5V→3,3V, con la fuente HLK-5M05), el jumper JD-VCC puesto (todo el módulo a 5V, sin llevar 3.3V al VCC), la conexión en paralelo, y la etapa de protección coinciden entre el
 firmware, el diagrama eléctrico y el documento de conexiones.
 
-> **Estado actual:** `verif_coherencia.py` da 20/20 (incluye que haya un solo firmware para la placa, que sus pines no se pisen, que `NIVEL2_INSTALADO` venga en `false`, que la cantidad de bobinas sea la misma en la web, el firmware y la base, y que el solo sensado sea coherente en la base, el backend, el firmware y la web). Ya incluye el tercer relé (GPIO 27 → S del módulo de Retroceder), que
+> **Estado actual:** `verif_coherencia.py` da 21/21 (incluye que haya un solo firmware para la placa, que sus pines no se pisen, que `NIVEL2_INSTALADO` venga en `false`, que la cantidad de bobinas sea la misma en la web, el firmware y la base, que el solo sensado sea coherente en la base, el backend, el firmware y la web, y que el sensado de la botonera use la pull-up interna en GPIO 32 y 33 y la de 10 kΩ en el 34). Ya incluye el tercer relé (GPIO 27 → S del módulo de Retroceder), que
 > el diagrama muestra, y además compara los límites de filas y columnas entre la web, el servidor,
 > el firmware y la base, y los pines de las bobinas del Nivel 2 con su diagrama.
 

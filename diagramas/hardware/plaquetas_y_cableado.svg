@@ -26,7 +26,7 @@
 <text x="54" y="447" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Tres canales iguales, uno por botón:</text>
 <text x="68" y="466" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">puente DB157 + capacitor de 22 µF 50 V</text>
 <text x="68" y="485" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">+ 2,2 kΩ 1 W → LED del PC817</text>
-<text x="68" y="504" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">salida del PC817 con 10 kΩ a 3,3 V</text>
+<text x="68" y="504" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">pull-up: interna en 32 y 33 · 10 kΩ en 34</text>
 <text x="54" y="523" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">B1: bornera doble por botón (par de la</text>
 <text x="68" y="542" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">botonera y par a NO y COM de su relé)</text>
 <text x="54" y="561" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">J4 a la principal (5 hilos): 3,3 V, GND,</text>

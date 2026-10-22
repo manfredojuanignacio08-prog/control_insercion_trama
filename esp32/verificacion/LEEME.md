@@ -5,7 +5,7 @@ Estos scripts verifican el diseño del sistema por software (sin hardware):
 - **`verif_coherencia.py`**, compara el firmware (.ino), el diagrama eléctrico
   (SVG) y el documento de conexiones, y confirma que los pines, voltajes y
   conexiones coincidan entre los tres; también la cantidad de bobinas, los límites del dibujo y
-  el solo sensado entre la web, el servidor, el firmware y la base (20 chequeos).
+  el solo sensado entre la web, el servidor, el firmware y la base (21 chequeos).
 - **`sim_flujo.py`**, simula el flujo lógico del Nivel 1 (Marcha/Pausa):
   arranque seguro, arranque/detención, sin doble-pulso (6 verificaciones).
 - **`sim_nivel2.py`**, simula el flujo lógico del Nivel 2 (selección de las bobinas):

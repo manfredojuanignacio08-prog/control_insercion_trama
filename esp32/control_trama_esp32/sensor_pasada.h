@@ -185,7 +185,7 @@ void sensorPasadaMarcarArranque() {
 
 void sensorPasadaIniciar() {
   // El pin 35 es solo de entrada y no tiene resistencia interna: la de 10 kilohm
-  // hacia 3,3 V va montada en la placa, igual que en los canales del Bloque A.
+  // hacia 3,3 V va montada en la placa, igual que la del GPIO 34 en el sensado de la botonera.
   pinMode(PIN_SENSOR_PASADA, INPUT);
   if (!MODO_BANCO) {
     attachInterrupt(digitalPinToInterrupt(PIN_SENSOR_PASADA), isrPasada, FALLING);

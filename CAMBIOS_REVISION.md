@@ -1829,3 +1829,37 @@ Quedan como estaban, revisados y a propósito:
 las dos tareas del Gantt que se llaman igual («Análisis de los resultados») son de dos entrevistas distintas;
 las entradas viejas de la Bitácora y del Registro de entrevistas cuentan lo que había en su fecha.
 
+
+## Cuadragésima cuarta revisión: pull-ups del sensado de la botonera (21/10/2026)
+
+Revisando el diseño en Proteus de la plaqueta de sensado, las 10 kΩ de GPIO 32 (Marcha) y GPIO 33
+(Pausa) tienen la otra pata sin conectar; solo la de GPIO 34 (Retroceder) llega a 3,3 V. Para que
+el firmware se ajuste a la plaqueta como está, `botoneraIniciar()` configura 32 y 33 como
+`INPUT_PULLUP` (pull-up interna del ESP32, unos 45 kΩ, suficiente para el colector del PC817) y deja
+34 como `INPUT` (no tiene resistencia interna y usa la 10 kΩ externa). Si más adelante se conectan
+las 10 kΩ de 32 y 33, el firmware sigue funcionando igual: quedan en paralelo con la interna.
+Verificaciones del firmware (coherencia, simulaciones y `host/correr.sh`): todas OK.
+
+## Cuadragésima quinta revisión: documentación de las pull-ups del sensado (21/10/2026)
+
+Todo lo que decía «10 kΩ a 3,3 V» en los GPIO 32 y 33 quedó igual que el firmware: el 32 y el 33
+usan la pull-up interna del ESP32 y solo el 34 (que no tiene) lleva su 10 kΩ en la plaqueta.
+
+| Dónde | Qué cambió |
+|---|---|
+| Conexiones de las plaquetas (Word y PDF) | Plaqueta 5 en la tabla de la sección 1, mapa de pines (32 y 33 sin resistencia), tabla de la sección 4.4 y «la 10 kΩ del GPIO 34»; imagen de las plaquetas nueva |
+| Guía de conexión y puesta en marcha (Word, PDF y `docs/guias/…md`) | Paso 4.4 (solo el 34 con 10 kΩ) e imagen de las plaquetas nueva |
+| Guía de armado del Bloque A | 4 resistencias de 10 kΩ (antes 6) y el armado del sensado |
+| Documentación de Proyecto (Word, PDF y sitio) | Tabla de componentes: 4 resistencias de 10 kΩ; bloque de compra: «6 (4 en uso y 2 de repuesto)». El costo no cambia: las 6 ya están compradas |
+| Estado completo del proyecto, Componentes completos | Cadena de sensado y cantidad (4) |
+| Bitácora | Entrada del 21/10/2026 |
+| Lista de componentes (xlsx) | Descripción de la fila de 10 kΩ; siguen 6 compradas, «4 en uso y 2 de repuesto» |
+| Componentes en placa (xlsx) | 4 resistencias de 10 kΩ: 3 en los relés y 1 en el sensado (GPIO 34) |
+| Diagramas | `diagrama_conexion_electrica`, `diagrama_bloque_A`, `diagrama_bloques_A_y_C` y `plaquetas_y_cableado` (SVG y PNG) |
+| Markdown del firmware | `esp32/README.md`, `RECOMENDACIONES_ELECTRICAS.md`, `CHECKLIST_VALIDACION.md` y el comentario de `sensor_pasada.h` |
+| Verificación | `verif_coherencia.py` suma un chequeo (21): `INPUT_PULLUP` en 32 y 33 e `INPUT` en 34, y que el diagrama y el README digan lo mismo |
+| Modelo 3D (zip aparte) | Sin las 10 kΩ de Marcha y Pausa en la plaqueta de sensado (los agujeros quedan) y descripción nueva |
+
+Revisado: los PDF tienen las mismas páginas que antes, sin palabras partidas ni celdas desbordadas;
+los párrafos cambiados conservan sus negritas; las demás menciones de 10 kΩ (arranque seguro de los
+relés, GPIO 35 y LCA110) siguen bien.

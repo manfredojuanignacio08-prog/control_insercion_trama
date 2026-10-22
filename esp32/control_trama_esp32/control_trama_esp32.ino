@@ -247,9 +247,10 @@ void botoneraIniciar() {
   digitalWrite(PIN_RELE_MARCHA,     nivelInactivo(PIN_RELE_MARCHA));
   digitalWrite(PIN_RELE_PAUSA,      nivelInactivo(PIN_RELE_PAUSA));
   digitalWrite(PIN_RELE_RETROCEDER, nivelInactivo(PIN_RELE_RETROCEDER));
-  // Pull-ups externas de 10 kΩ (el GPIO 34 no tiene interna).
-  pinMode(PIN_BOTON_MARCHA,     INPUT);
-  pinMode(PIN_BOTON_PAUSA,      INPUT);
+  // En la plaqueta de sensado solo el GPIO 34 tiene su 10 kΩ a 3,3 V (no tiene resistencia
+  // interna). Las 10 kΩ de 32 y 33 quedaron sin conectar: se usa la pull-up interna del ESP32.
+  pinMode(PIN_BOTON_MARCHA,     INPUT_PULLUP);
+  pinMode(PIN_BOTON_PAUSA,      INPUT_PULLUP);
   pinMode(PIN_BOTON_RETROCEDER, INPUT);
   attachInterrupt(digitalPinToInterrupt(PIN_BOTON_MARCHA),     isrBotonMarcha,     FALLING);
   attachInterrupt(digitalPinToInterrupt(PIN_BOTON_PAUSA),      isrBotonPausa,      FALLING);
