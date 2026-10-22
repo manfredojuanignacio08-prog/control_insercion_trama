@@ -57,6 +57,16 @@ svg_sens = 'GPIO 32' in svg and 'GPIO 34' in svg
 chk("Sensado de los 3 botones en GPIO32/33/34 (firmware y diagrama)", ino_sens and svg_sens,
     f"ino={ino_sens} svg={svg_sens}")
 
+# ── 2c. Pull-up del sensado: el 32 y el 33 usan la interna (INPUT_PULLUP); el 34 no la tiene y
+# lleva la de 10 kΩ en la plaqueta (INPUT). El diagrama y la doc tienen que decir lo mismo.
+ino_pu = (bool(re.search(r'pinMode\(PIN_BOTON_MARCHA,\s*INPUT_PULLUP\)', ino)) and
+          bool(re.search(r'pinMode\(PIN_BOTON_PAUSA,\s*INPUT_PULLUP\)', ino)) and
+          bool(re.search(r'pinMode\(PIN_BOTON_RETROCEDER,\s*INPUT\)', ino)))
+svg_pu = 'interna (32, 33)' in svg and '10 kΩ (34)' in svg
+doc_pu = '32 y 33 con la pull-up interna' in doc and '34 con 10 kΩ' in doc
+chk("Sensado: pull-up interna en GPIO 32 y 33, 10 kΩ externa en GPIO 34 (firmware, diagrama y doc)",
+    ino_pu and svg_pu and doc_pu, f"ino={ino_pu} svg={svg_pu} doc={doc_pu}")
+
 # ── 3. Cadena de alimentación 220V→5V→3.3V ──
 v220 = '220V' in svg
 v5   = '5V' in svg

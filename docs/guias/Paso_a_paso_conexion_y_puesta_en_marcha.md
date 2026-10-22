@@ -65,10 +65,10 @@ El gabinete lleva cinco plaquetas con las conexiones soldadas: cuatro de placa p
 
 Es una plaqueta impresa aparte, unida a la principal por J4.
 
-1. Por canal, los tres iguales: el puente **DB157** con sus patas ~ a la bornera **B1** del botón; un capacitor de **22 µF de 50 V** entre el + y el − del puente (pata larga al +; la botonera rectificada llega a unos 34 V de pico); **2,2 kΩ 1 W** del + del puente a la pata 1 del **PC817**; el − del puente a la pata 2; la pata 3 al GND de J4; la pata 4 al GPIO de J4, con **10 kΩ a 3,3 V**: GPIO **32** Marcha, **33** Pausa, **34** Retroceder.
+1. Por canal, los tres iguales: el puente **DB157** con sus patas ~ a la bornera **B1** del botón; un capacitor de **22 µF de 50 V** entre el + y el − del puente (pata larga al +; la botonera rectificada llega a unos 34 V de pico); **2,2 kΩ 1 W** del + del puente a la pata 1 del **PC817**; el − del puente a la pata 2; la pata 3 al GND de J4; la pata 4 al GPIO de J4: GPIO **32** Marcha, **33** Pausa, **34** Retroceder. Solo el 34 lleva **10 kΩ a 3,3 V** (no tiene resistencia interna); el 32 y el 33 usan la pull-up interna del ESP32, que activa el firmware.
 2. **B1**, una bornera doble por botón: un par para el cable de la botonera y otro para el cable que va a **NO y COM de su relé** (plaqueta 3), los dos unidos en la plaqueta a las patas ~ del puente.
 3. **J4** a la principal, 5 hilos: 3,3 V (del pin 3V3 del ESP32), GND y GPIO 32, 33 y 34.
-4. Lo de 24 V (B1, puentes, capacitores, 2,2 kΩ y las patas 1 y 2 de cada PC817) de un lado, y lo del ESP32 (patas 3 y 4, las 10 kΩ y J4) del otro, **sin pistas por debajo de los PC817**. Marcar a mano el + de cada capacitor y la pata 1 de cada PC817 y puente: en la plaqueta impresa no sale la serigrafía. Un capacitor invertido puede quedar en corto, y un canal en corto es como dejar el botón apretado.
+4. Lo de 24 V (B1, puentes, capacitores, 2,2 kΩ y las patas 1 y 2 de cada PC817) de un lado, y lo del ESP32 (patas 3 y 4, la 10 kΩ del GPIO 34 y J4) del otro, **sin pistas por debajo de los PC817**. Marcar a mano el + de cada capacitor y la pata 1 de cada PC817 y puente: en la plaqueta impresa no sale la serigrafía. Un capacitor invertido puede quedar en corto, y un canal en corto es como dejar el botón apretado.
 5. Sin alimentar, con el multímetro en continuidad: entre cualquier borne de B1 y cualquier pin de J4 **no tiene que pitar**.
 
 ### 4.4 Plaqueta 3 · Módulos de relé
