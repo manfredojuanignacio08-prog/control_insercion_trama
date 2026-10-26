@@ -1893,3 +1893,22 @@ de la botonera); los stubs de Arduino se comportan como el core 3.x. En el backe
 | `host/correr.sh` (sensor, selección, posición, Bloque A, sintaxis en los dos modos, red y JSON reales) | OK |
 | `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
 | Compilar con el core ESP32 real y probar en la placa | **NO se pudo** (sin acceso a las descargas de Espressif ni hardware en este entorno) |
+
+## Cuadragésima séptima revisión: otra vuelta completa, con el foco en el firmware (26/10/2026)
+
+Se repitió la revisión de todo el código con herramientas nuevas para el firmware: las pruebas de la PC
+compiladas con AddressSanitizer y UndefinedBehaviorSanitizer (sin errores de memoria ni comportamiento
+indefinido) y con las advertencias estrictas de g++ (`-Wshadow`, `-Wconversion`); además ESLint en el
+backend y en la web y `html-validate` en la página. Tres vueltas; la tercera salió sin errores.
+
+| # | Dónde | Qué apareció | Corrección |
+|---|---|---|---|
+| 1 | `retrocederSeqConocido` (firmware) | Era `int` y guardaba un valor `long` del backend (en el ESP32 miden lo mismo, así que no fallaba, pero el tipo no coincidía) | Pasa a `long` |
+| 2 | Recorrido del código (Word, PDF y `docs/analisis/…md`) | Decía que el firmware es «el `.ino` y cuatro `.h`»: con `salida_segura.h` son cinco | Corregido; el Word pasa el esquema y el PDF tiene las mismas 5 páginas |
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` y `tests/integracion.pg.mjs` contra PostgreSQL 16 | OK |
+| `host/correr.sh`, y las mismas pruebas con ASan, UBSan y `-Wconversion` | OK, sin advertencias |
+| `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
+| ESLint (backend y web) y `html-validate` (la página) | Sin errores |

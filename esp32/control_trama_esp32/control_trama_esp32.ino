@@ -191,7 +191,7 @@ static const int           FALLOS_PARA_AVISAR    = 5;     // consultas fallidas 
 static const long          MAX_RETROCESOS_PENDIENTES = 3;
 
 int estadoDeseado = -1;           // -1 desconocido | 0 detenido | 1 tejiendo (lo último que ordenó el backend)
-int retrocederSeqConocido = -1;   // -1 desconocido: no se pulsa hasta la primera lectura
+long retrocederSeqConocido = -1;  // -1 desconocido: no se pulsa hasta la primera lectura (long, como el valor del backend)
 // Solo sensado: con el control desde la página apagado (control_web_activo en false) no se pulsa
 // ningún relé, cambie lo que cambie el estado. El sensado de la botonera sigue avisando igual.
 bool controlWebActivo = true;

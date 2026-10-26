@@ -13,7 +13,7 @@ El sistema tiene cuatro partes. La **página web** es lo que usan el operario y 
 | Página web | En el navegador; la sirve el mismo servidor | Ingreso, editor de dibujos, biblioteca, control del telar, ficha en PDF y vista del cliente | `backend/public/index.html`, `styles.css` y `vendor/` |
 | Servidor | Render (Node.js 20 a 22) | API en `/api`, sesiones, permisos, estado del telar y cálculo de la posición | `backend/src/server.js`, `routes/`, `controllers/`, `middleware/`, `utils/`, `nivel2/` |
 | Base de datos | Neon (PostgreSQL) | Dibujos, telares, producción, usuarios, errores y claves de los clientes | `backend/src/db/schema.sql` y las 24 migraciones |
-| Firmware | ESP32 en el gabinete | Lee la botonera y el sensor, pulsa los relés y selecciona las bobinas | `esp32/control_trama_esp32/` (el `.ino` y cuatro `.h`) |
+| Firmware | ESP32 en el gabinete | Lee la botonera y el sensor, pulsa los relés y selecciona las bobinas | `esp32/control_trama_esp32/` (el `.ino` y cinco `.h`) |
 
 ## 2. La página web (frontend)
 
