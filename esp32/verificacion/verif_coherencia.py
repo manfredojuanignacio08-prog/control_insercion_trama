@@ -101,13 +101,14 @@ prot = 'FUSIBLE' in svg.upper() and '1 A' in svg
 chk("Fusible de 1A protegiendo la entrada de 220V (en el diagrama)", prot)
 
 # ── 9. Arranque seguro de relés en el firmware ──
-# escribe NIVEL_INACTIVO ANTES de pinMode OUTPUT
-m_w1 = re.search(r'digitalWrite\(PIN_RELE_MARCHA,\s*nivelInactivo\(', ino)
-idx_w1 = m_w1.start() if m_w1 else -1
-m_pm = re.search(r'pinMode\(PIN_RELE_MARCHA,\s*OUTPUT\)', ino)
-idx_pm = m_pm.start() if m_pm else -1
-chk("Firmware: arranque seguro (escribe INACTIVO antes de pinMode)", 0 <= idx_w1 < idx_pm,
-    f"write@{idx_w1} < pinMode@{idx_pm}")
+# Cada relé pasa a salida YA en su nivel inactivo: salidaSegura() carga el registro con
+# gpio_set_level ANTES de pinMode (en el core 3.x un digitalWrite antes de pinMode no hace nada).
+seg = _leer('esp32/control_trama_esp32/salida_segura.h')
+i_gs, i_pm = seg.find('gpio_set_level('), seg.find('pinMode(pin, OUTPUT)')
+usa = re.search(r'salidaSegura\(PIN_RELE_MARCHA,\s*nivelInactivo\(', ino) is not None and \
+      not re.search(r'pinMode\(PIN_RELE_(MARCHA|PAUSA|RETROCEDER),\s*OUTPUT\)', ino)
+chk("Firmware: arranque seguro (el registro en INACTIVO antes de habilitar la salida)", 0 <= i_gs < i_pm and usa,
+    f"gpio_set_level@{i_gs} < pinMode@{i_pm}, botonera usa salidaSegura: {usa}")
 
 # ── 10. Relé activo-bajo coherente (firmware) ──
 rab = 'RELE_MARCHA_ACTIVO_BAJO' in cfg and 'nivelActivo' in ino and 'nivelInactivo' in ino
@@ -213,6 +214,20 @@ ss = {
 }
 chk("Solo sensado coherente en base, backend, firmware y web", all(ss.values()),
     ", ".join(f"{k}={v}" for k, v in ss.items()))
+
+# ── 18. Watchdog más largo que el pedido más lento con la red mala ──
+# Cada pedido HTTP corre entre dos esp_task_wdt_reset(). Si el watchdog fuera más corto que el peor
+# caso (DNS sin respuesta: ~7 s por servidor, hasta 3; conexión; handshake más una lectura en curso;
+# encabezados y cuerpo), un corte de internet con el router andando reiniciaría la placa en pleno tejido.
+wdt = _num(r'WATCHDOG_MS\s*=\s*(\d+);', ino)
+con = _num(r'CONEXION_MAX_MS\s*=\s*(\d+);', ino)
+hs  = _num(r'HANDSHAKE_MAX_SEG\s*=\s*(\d+);', ino)
+lec = max([int(x) for x in re.findall(r'http\.setTimeout\((\d+)\)', ino)] or [0])
+usa = 'timeout_ms = WATCHDOG_MS' in ino
+peor = None if None in (con, hs) else 3 * 7000 + con + hs * 1000 + con + 2 * lec
+chk("Watchdog más largo que el pedido más lento (DNS, conexión, TLS y respuesta)",
+    usa and wdt is not None and peor is not None and wdt > peor,
+    f"watchdog={wdt} peor_caso={peor} usado_en_setup={usa}")
 
 # ── RESULTADO ──
 ok = sum(1 for c,_,_ in checks if c)

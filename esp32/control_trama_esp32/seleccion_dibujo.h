@@ -2,6 +2,7 @@
 #define SELECCION_DIBUJO_H
 
 #include "config.h"
+#include "salida_segura.h"
 
 // ============================================================================
 //  Bloque D, selección del dibujo
@@ -43,12 +44,9 @@ static inline int nivelPara(bool activo) {
 
 void seleccionIniciar() {
   for (int i = 0; i < N_CANALES; i++) {
-    // Igual que en el Bloque A: primero se escribe el nivel seguro y recién
-    // después se configura el pin como salida. Al revés, el pin queda un
-    // instante indefinido y el relé podría conducir solo durante el arranque.
-    digitalWrite(PIN_CANAL[i], nivelPara(false));
-    pinMode(PIN_CANAL[i], OUTPUT);
-    digitalWrite(PIN_CANAL[i], nivelPara(false));
+    // Igual que en el Bloque A: el pin pasa a salida ya en reposo (salida_segura.h).
+    // Si saliera un instante con el otro nivel, el relé conduciría solo durante el arranque.
+    salidaSegura(PIN_CANAL[i], nivelPara(false));
     canalActivo[i] = false;
   }
 }

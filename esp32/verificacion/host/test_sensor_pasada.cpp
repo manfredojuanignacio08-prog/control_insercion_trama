@@ -17,12 +17,12 @@ int main(){
   // --- retroceso que el sensor vio ANTES del aviso, con la máquina en pausa: se reclasifica
   sensorPasadaFijarTotal(50);
   pulso(); sensorPasadaHuboPulso(&r); assert(!r && sensorPasadaTotal()==51);  // contado como +1
-  g_ms+=1500; sensorPasadaAvisarRetroceso(1, false);                          // llega el aviso 1,5 s después
+  g_ms+=7000; sensorPasadaAvisarRetroceso(1, false);                          // llega el aviso 7 s después
   assert(sensorPasadaTotal()==49);                                            // 51 -> 49 (era un -1, no un +1)
   assert(sensorPasadaTomarReclasificados()==1 && sensorPasadaTomarReclasificados()==0);
   pulso(); sensorPasadaHuboPulso(&r); assert(!r && sensorPasadaTotal()==50);  // el siguiente pulso NO se descuenta
   // aviso tardío fuera de ventana: no reclasifica, queda pendiente
-  g_ms+=10000; sensorPasadaAvisarRetroceso(1,false); assert(sensorPasadaTotal()==50);
+  g_ms+=15000; sensorPasadaAvisarRetroceso(1,false); assert(sensorPasadaTotal()==50);
   pulso(); sensorPasadaHuboPulso(&r); assert(r && sensorPasadaTotal()==49);
   // --- #14: período de gracia
   g_ms=100000; sensorPasadaFijarTotal(0);

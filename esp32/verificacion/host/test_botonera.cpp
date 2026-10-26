@@ -9,6 +9,9 @@ int main() {
   botoneraIniciar();
   // Reposo: el módulo de 2 canales es activo-bajo (reposo en alto) y el de Retroceder activo-alto.
   assert(g_pin[25] == HIGH && g_pin[26] == HIGH && g_pin[27] == LOW);
+  // Y nunca pasaron por el nivel activo al configurarse como salidas (core 3.x: digitalWrite antes
+  // de pinMode no hace nada; por eso el firmware usa salidaSegura con gpio_set_level).
+  assert(g_bajoAlConfigurar[25] == 0 && g_bajoAlConfigurar[26] == 0);
   limpiar();
   g_ms = 10000;
   botoneraAplicarEstado("pausado", 0, true);        // primera lectura: solo se memoriza

@@ -79,8 +79,15 @@ class Nivel2Simulado:
                 self.restantes = self.repeticiones[self.fila_actual]
             return
         # El desplazamiento compensa el desfase entre el pulso del sensor y el
-        # instante en que el telar lee la selección.
-        i = (self.fila_actual + self.desplazamiento) % self.filas
+        # instante en que el telar lee la selección. Se cuenta en PASADAS, como el
+        # firmware: con una fila de muchas repeticiones, 1 adelanta una pasada, no la fila.
+        por_vuelta = sum(self.repeticiones)
+        pasada = sum(self.repeticiones[:self.fila_actual]) + self.repeticiones[self.fila_actual] - self.restantes
+        objetivo = (pasada + self.desplazamiento) % por_vuelta
+        i = 0
+        while objetivo >= self.repeticiones[i]:
+            objetivo -= self.repeticiones[i]
+            i += 1
         fila = self.dibujo[i]
         for i in range(N_CANALES):
             self.canales[i] = bool(fila[i]) if i < len(fila) else False
@@ -164,6 +171,16 @@ def verificar():
     s7.pulso_del_sensor()
     v.append(("Con desplazamiento -1 se aplica la última fila, sin índice negativo",
               s7.canales == [False] * 4))
+
+    # Con repeticiones el desplazamiento corre UNA PASADA, no la fila entera: en una fila de 3
+    # pasadas, con 1 la selección de la fila siguiente aparece recién en su tercera pasada.
+    s8 = Nivel2Simulado([[1, 0, 0, 0], [0, 1, 0, 0]], desplazamiento=1, repeticiones=[3, 2])
+    vistas = []
+    for _ in range(5):
+        s8.pulso_del_sensor()
+        vistas.append(s8.canales.index(True))
+    v.append(("Con repeticiones, el desplazamiento 1 adelanta una pasada y no la fila entera",
+              vistas == [0, 0, 1, 1, 0]))
 
     s9 = Nivel2Simulado(dibujo)
     for _ in range(4):

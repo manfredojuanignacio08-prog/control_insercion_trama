@@ -683,6 +683,8 @@ export async function eventoFisico(req, res, next) {
       }
     }
 
+    // La respuesta lleva retrocesos_contados: con un retroceso de la botonera, el nodo avisa a su
+    // sensor enseguida y no en su consulta siguiente (el pulso ya se contó y se reclasifica a tiempo).
     const { rows } = await client.query(
       `UPDATE telares
           SET estado = COALESCE($2, estado),
@@ -692,7 +694,7 @@ export async function eventoFisico(req, res, next) {
               ultimo_evento_manual = now(),
               ultimo_evento_manual_tipo = $4
         WHERE id = $1
-        RETURNING id, estado, posicion_incierta, ultimo_evento_manual, ultimo_evento_manual_tipo`,
+        RETURNING id, estado, posicion_incierta, ultimo_evento_manual, ultimo_evento_manual_tipo, retrocesos_contados`,
       [id, nuevoEstado, posicionIncierta, tipo]
     );
 

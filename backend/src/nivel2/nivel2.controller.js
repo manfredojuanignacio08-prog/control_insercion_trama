@@ -66,7 +66,12 @@ export async function obtenerPatronActual(req, res, next) {
       nombre: p.nombre,
       filas: p.filas,
       columnas: p.columnas,
-      matriz_pasadas: p.matriz_pasadas,
+      // En 0 y 1: el nodo solo mira si cada celda es mayor que cero (el mismo criterio que la web).
+      // La base acepta cualquier número >= 0, y con decimales largos un dibujo de 300 × 8 pasaba de
+      // los 32 KB que el nodo acepta: lo rechazaba entero y el telar no tejía. Así ocupa menos de 6 KB.
+      matriz_pasadas: Array.isArray(p.matriz_pasadas)
+        ? p.matriz_pasadas.map((fila) => (Array.isArray(fila) ? fila.map((v) => (Number(v) > 0 ? 1 : 0)) : fila))
+        : p.matriz_pasadas,
       // Cuántas pasadas seguidas se teje cada fila. Si el dibujo no lo define, se
       // manda un 1 por fila: el nodo no tiene que interpretar ausencias.
       // Con intercalados, la primera fila de cada grupo mide el total del grupo y las demás 0
@@ -114,8 +119,8 @@ function secuenciasParaNodo(p) {
  * un corte de red, el siguiente trae el número correcto igual. Con incrementos,
  * un reporte perdido quedaría perdido para siempre.
  *
- * Body: { pasadas_sensor, fila_actual }   (se acepta también "pasadas_totales" por
- * compatibilidad con el firmware anterior).
+ * Body: { pasadas_sensor, fila_actual, repeticion_en_fila, historial_id }   (se acepta también
+ * "pasadas_totales" por compatibilidad con el firmware anterior, que tampoco manda historial_id).
  *
  * Escribe en pasadas_sensor, NO en pasadas_totales: esa columna es la estimación por
  * reloj de la web, y durante la jornada de validación hay que poder comparar las dos.
@@ -160,6 +165,28 @@ export async function reportarPasadas(req, res, next) {
     }
 
     const actual = rows[0];
+
+    // El nodo dice para qué producción cuenta: el historial_id que adoptó al bajar el dibujo (0 si
+    // no había ninguna abierta). Si no es la que está en curso (empezó otra y el nodo todavía no se
+    // enteró en su consulta), el reporte no se aplica: se devuelve el conteo de la producción en
+    // curso y el nodo vuelve a bajar posición y conteo. Antes, un reporte que llegaba antes que esa
+    // consulta le cargaba a la producción nueva las pasadas de la anterior. Un firmware anterior no
+    // manda el dato: entonces no se compara.
+    const historialNodo = req.body.historial_id;
+    if (historialNodo !== undefined && historialNodo !== null) {
+      if (!Number.isInteger(historialNodo) || historialNodo < 0) {
+        await cliente.query('ROLLBACK');
+        throw badRequest('historial_id debe ser un número entero no negativo.');
+      }
+      if (historialNodo !== actual.id) {
+        await cliente.query('ROLLBACK');
+        return res.json({
+          aplicado: false,
+          motivo: 'El reporte es de otra producción: el telar empezó una nueva.',
+          pasadas_sensor: actual.pasadas_sensor,
+        });
+      }
+    }
 
     // La fila que informa el nodo tiene que ser coherente con el conteo que trae
     // el mismo reporte: pasadas_sensor es la fuente de verdad del avance y la

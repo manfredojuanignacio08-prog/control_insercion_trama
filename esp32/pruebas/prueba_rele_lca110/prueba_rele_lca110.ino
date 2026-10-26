@@ -58,8 +58,10 @@ static void rele(bool cerrado) {
 }
 
 void setup() {
-  // Primero el nivel seguro y después la salida: al revés, el pin queda un instante indefinido.
-  digitalWrite(PIN_CANAL, LOW);
+  // Primero el nivel seguro y después la salida, como en el firmware (control_trama_esp32/salida_segura.h).
+  // En el core 3.x un digitalWrite() antes de pinMode() no hace nada: el nivel se carga con
+  // gpio_set_level(), que sí escribe el registro de salida antes de habilitarla.
+  gpio_set_level((gpio_num_t)PIN_CANAL, 0);
   pinMode(PIN_CANAL, OUTPUT);
   rele(false);
 

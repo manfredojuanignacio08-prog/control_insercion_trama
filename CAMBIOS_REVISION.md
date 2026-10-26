@@ -1863,3 +1863,33 @@ usan la pull-up interna del ESP32 y solo el 34 (que no tiene) lleva su 10 kΩ en
 Revisado: los PDF tienen las mismas páginas que antes, sin palabras partidas ni celdas desbordadas;
 los párrafos cambiados conservan sus negritas; las demás menciones de 10 kΩ (arranque seguro de los
 relés, GPIO 35 y LCA110) siguen bien.
+
+## Cuadragésima sexta revisión: el firmware en vueltas hasta una limpia (26/10/2026)
+
+Revisión de todo el código con el foco en el firmware, repetida hasta una vuelta sin errores (cinco
+vueltas). Errores encontrados y corregidos:
+
+| # | Dónde | Error | Corrección |
+|---|---|---|---|
+| 1 | `botoneraIniciar()` y `seleccionIniciar()` | En el core ESP32 3.x un `digitalWrite()` antes de `pinMode()` no hace nada y `pinMode(OUTPUT)` saca el pin en bajo: los relés de Marcha y Pausa (activos en bajo) quedaban activos un instante al encender | `salida_segura.h`: el nivel se carga con `gpio_set_level()` antes de habilitar la salida. Lo mismo en el sketch de prueba de mesa |
+| 2 | `iniciarHttp()` | Sin tope para el handshake TLS (el core trae 120 s) ni para la conexión: con el Wi-Fi cortándose, el watchdog reiniciaba la placa | 3 s de conexión y 5 s de handshake |
+| 3 | Watchdog | 15 s: un corte de internet con el router andando (DNS sin respuesta, ~7 s por servidor) o una red mala superaban ese tiempo y la placa se reiniciaba en pleno tejido | 45 s, con el peor caso calculado en el código; `verif_coherencia.py` lo comprueba (22 chequeos) |
+| 4 | `DESPLAZAMIENTO_FILAS` | Se sumaba a la fila: en una fila de 100 repeticiones, 1 aplicaba la fila siguiente durante las 100 pasadas | Se cuenta en pasadas, con la misma cuenta que la posición (firmware, simulación y comentarios) |
+| 5 | Consulta de estado | Un dibujo bajado sin producción abierta (id 0) no se volvía a bajar al empezar una: la producción heredaba el conteo de la placa | Se compara también contra el id 0 |
+| 6 | Reporte de pasadas | Un reporte que salía antes de que la placa notara una producción nueva le cargaba a esa producción el conteo de la anterior | La placa manda `historial_id`; el backend no aplica un reporte de otra producción (`aplicado: false`) y la placa vuelve a bajar posición y conteo |
+| 7 | Retroceder en la botonera | El aviso llegaba en la consulta siguiente (hasta 2,5 s más el pedido) y podía quedar fuera de la ventana de 5 s para reclasificar el pulso: conteo y fila dos pasadas adelante | `evento-fisico` devuelve `retrocesos_contados` y la placa avisa al sensor en el momento; ventana de 10 s |
+| 8 | `patron-actual` | La base acepta cualquier número ≥ 0 en una celda: con decimales largos, un dibujo de 300 × 8 pasaba de los 32 KB que acepta la placa y no se cargaba | La matriz se manda en 0 y 1 (menos de 6 KB) |
+| 9 | Comentarios y herramientas | Comentarios de `config.h` que hablaban de filas enteras; el sketch de prueba decía que el `digitalWrite` previo protegía; `gen_payload.mjs` no generaba `payloads.h` tal cual | Corregidos |
+
+Pruebas nuevas: `host/red/test_red_json.cpp` corre el firmware completo contra la **ArduinoJson real**
+y las respuestas del backend real (descarga con intercalado, selección pasada por pasada con
+`DESPLAZAMIENTO_FILAS` en 0, 1 y −1, consultas, producción nueva, reporte con `historial_id`, Retroceder
+de la botonera); los stubs de Arduino se comportan como el core 3.x. En el backend, casos de
+`historial_id`, de la matriz en 0 y 1 y de `retrocesos_contados` (unitarios y contra PostgreSQL).
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` y `tests/integracion.pg.mjs` contra PostgreSQL 16 | OK |
+| `host/correr.sh` (sensor, selección, posición, Bloque A, sintaxis en los dos modos, red y JSON reales) | OK |
+| `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
+| Compilar con el core ESP32 real y probar en la placa | **NO se pudo** (sin acceso a las descargas de Espressif ni hardware en este entorno) |

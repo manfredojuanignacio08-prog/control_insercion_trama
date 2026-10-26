@@ -56,15 +56,19 @@ volatile bool esperandoReposo = false;
 volatile int  pasadasARetroceder = 0;
 volatile bool ultimoPulsoFueRetroceso = false;
 
-// Orden de llegada. El aviso de "hubo un retroceso" (por el backend, hasta 2,5 s de demora)
-// y el pulso del sensor pueden llegar en cualquier orden. Si el pulso llega PRIMERO se cuenta
-// como una pasada hacia adelante; cuando después llega el aviso, con la máquina detenida (un
-// retroceso normal se hace con el telar en pausa) ese pulso se reclasifica: se le quita el +1
-// y se le resta 1. Si no, el descuento quedaría pendiente y se aplicaría al pulso equivocado.
+// Orden de llegada. El aviso de "hubo un retroceso" (por el backend) y el pulso del sensor pueden
+// llegar en cualquier orden. Si el pulso llega PRIMERO se cuenta como una pasada hacia adelante;
+// cuando después llega el aviso, con la máquina detenida (un retroceso normal se hace con el telar
+// en pausa) ese pulso se reclasifica: se le quita el +1 y se le resta 1. Si no, el descuento
+// quedaría pendiente y se aplicaría al pulso equivocado.
+// Con la botonera, el aviso sale cuando se suelta el botón y vuelve en la respuesta del backend:
+// el botón apretado, el filtro de la botonera y un pedido que estuviera en curso suman unos
+// segundos. La ventana deja margen para una red lenta; más larga no hace daño, porque solo se
+// reclasifica con el telar en pausa.
 volatile bool          ultimoAdelanteReclasificable = false;
 volatile unsigned long ultimoAdelanteMs = 0;
 volatile int           reclasificadosPendientes = 0;
-static const unsigned long VENTANA_RECLASIFICAR_MS = 5000;
+static const unsigned long VENTANA_RECLASIFICAR_MS = 10000;
 
 // Un aviso de retroceso que NO llega a consumirse con un pulso (el relé de Retroceder no actuó, la
 // máquina no se movió) no puede quedar esperando para siempre: descontaría una pasada del pulso

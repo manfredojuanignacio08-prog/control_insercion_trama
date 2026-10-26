@@ -39,6 +39,7 @@
 #include <esp_system.h>
 
 #include "config.h"
+#include "salida_segura.h"
 #include "sensor_pasada.h"
 #include "seleccion_dibujo.h"
 #include "posicion_dibujo.h"
@@ -106,13 +107,28 @@ static void cerrarTlsSiFalla(int codigo) {
   if (codigo < 0) clienteTls.stop();
 }
 
+// Cada pedido tiene que terminar (bien o mal) antes del watchdog (WATCHDOG_MS, en setup), que lo
+// cuenta desde el último esp_task_wdt_reset(). El core trae el handshake en 120 s: con el Wi-Fi
+// cortándose a mitad de uno, la tarea de red quedaba esperando y el watchdog reiniciaba la placa
+// (con el Nivel 2, en pleno tejido). Con estos topes, el peor caso de un pedido es:
+//   - el nombre del servidor (DNS): ~7 s por cada servidor DNS que no contesta. Pasa con el router
+//     andando y sin internet; el router da uno o dos (hasta tres): de 7 a 21 s;
+//   - 3 s de conexión + 5 s de handshake (más lo que tarde la lectura en curso, hasta 3 s);
+//   - hasta 5 s esperando los encabezados de la respuesta y otros 5 s el cuerpo.
+// Sumado, unos 40 s en el caso más desfavorable: por eso el watchdog va en 45 s y no en 15.
+static const int32_t       CONEXION_MAX_MS   = 3000;
+static const uint32_t      WATCHDOG_MS       = 45000;
+static const unsigned long HANDSHAKE_MAX_SEG = 5;
+
 static bool iniciarHttp(HTTPClient& http, const String& url) {
+  http.setConnectTimeout(CONEXION_MAX_MS);
   if (url.startsWith("https://")) {
 #ifdef API_CA_CERT
     clienteTls.setCACert(API_CA_CERT);
 #else
     clienteTls.setInsecure();   // cifra pero no verifica el servidor: ver config.h
 #endif
+    clienteTls.setHandshakeTimeout(HANDSHAKE_MAX_SEG);
     if (!http.begin(clienteTls, url)) return false;
   } else {
     if (!http.begin(url)) return false;
@@ -235,18 +251,12 @@ void IRAM_ATTR isrBotonRetroceder() {
   if (ahora - ultimoEventoRetroceder >= DEBOUNCE_BOTON_MS) { ultimoEventoRetroceder = ahora; eventoRetrocederPendiente = true; }
 }
 
-// Arranque seguro: primero el nivel inactivo y recién después el pin como salida (al revés, el
-// relé da un pulso fantasma al encender). Es lo primero que hace setup().
+// Arranque seguro: cada relé pasa a salida ya en su nivel inactivo (salida_segura.h). Al revés,
+// el relé da un pulso fantasma al encender. Es lo primero que hace setup().
 void botoneraIniciar() {
-  digitalWrite(PIN_RELE_MARCHA,     nivelInactivo(PIN_RELE_MARCHA));
-  digitalWrite(PIN_RELE_PAUSA,      nivelInactivo(PIN_RELE_PAUSA));
-  digitalWrite(PIN_RELE_RETROCEDER, nivelInactivo(PIN_RELE_RETROCEDER));
-  pinMode(PIN_RELE_MARCHA,     OUTPUT);
-  pinMode(PIN_RELE_PAUSA,      OUTPUT);
-  pinMode(PIN_RELE_RETROCEDER, OUTPUT);
-  digitalWrite(PIN_RELE_MARCHA,     nivelInactivo(PIN_RELE_MARCHA));
-  digitalWrite(PIN_RELE_PAUSA,      nivelInactivo(PIN_RELE_PAUSA));
-  digitalWrite(PIN_RELE_RETROCEDER, nivelInactivo(PIN_RELE_RETROCEDER));
+  salidaSegura(PIN_RELE_MARCHA,     nivelInactivo(PIN_RELE_MARCHA));
+  salidaSegura(PIN_RELE_PAUSA,      nivelInactivo(PIN_RELE_PAUSA));
+  salidaSegura(PIN_RELE_RETROCEDER, nivelInactivo(PIN_RELE_RETROCEDER));
   // En la plaqueta de sensado solo el GPIO 34 tiene su 10 kΩ a 3,3 V (no tiene resistencia
   // interna). Las 10 kΩ de 32 y 33 quedaron sin conectar: se usa la pull-up interna del ESP32.
   pinMode(PIN_BOTON_MARCHA,     INPUT_PULLUP);
@@ -273,6 +283,24 @@ void pulsarRele(int pin) {
   esp_task_wdt_reset();
 }
 
+// Retrocesos que contó el backend (retrocesos_contados), leídos de la consulta de estado o de la
+// respuesta a un evento de la botonera. El backend cuenta CADA retroceso (desde la aplicación o desde
+// la botonera, que sensa el Bloque A de esta misma placa y avisa con evento-fisico). Comparándolo con
+// el último valor visto, se sabe cuántos hubo y se le avisa al sensor, que descuenta esas pasadas.
+// (No se usa retroceder_seq: es la ORDEN de pulsar el relé de Retroceder y solo sube por pedidos de
+// la web, así que los retrocesos hechos en la botonera pasaban inadvertidos.)
+void procesarRetrocesos(long rc) {
+  if (rc < 0) return;
+  if (retrocesosVisto < 0 || rc < retrocesosVisto) {
+    retrocesosVisto = rc;   // primera lectura (o la base se reinició): referencia, sin disparar nada
+  } else if (rc > retrocesosVisto) {
+    const long cuantos = rc - retrocesosVisto;
+    sensorPasadaAvisarRetroceso((int)cuantos, tejiendo);
+    log("Retroceso detectado (" + String(cuantos) + "): se descuentan del conteo");
+    retrocesosVisto = rc;
+  }
+}
+
 // POST /evento-fisico: alguien usó un botón a mano (o el equipo arrancó en frío). Devuelve true
 // si el backend lo recibió. Toma de la respuesta el estado en que quedó el telar, así la
 // consulta siguiente no lo toma por una orden nueva y no da un pulso que nadie pidió.
@@ -297,12 +325,22 @@ bool reportarEventoFisico(const char* tipo) {
   }
   JsonDocument filtroResp;
   filtroResp["estado"] = true;
+  filtroResp["retrocesos_contados"] = true;
   JsonDocument resp;
   const char* estadoResp = nullptr;
-  if (!deserializeJson(resp, respuesta, DeserializationOption::Filter(filtroResp))) estadoResp = resp["estado"];
+  long retrocesosResp = -1;
+  if (!deserializeJson(resp, respuesta, DeserializationOption::Filter(filtroResp))) {
+    estadoResp = resp["estado"];
+    retrocesosResp = resp["retrocesos_contados"] | -1L;
+  }
   if (estadoResp != nullptr)            estadoDeseado = (strcmp(estadoResp, "tejiendo") == 0) ? 1 : 0;
   else if (strcmp(tipo, "marcha") == 0) estadoDeseado = 1;
   else if (strcmp(tipo, "pausa") == 0 || strcmp(tipo, "reinicio") == 0) estadoDeseado = 0;
+  // Un Retroceder de la botonera: el sensor ya contó su pulso hacia adelante, y solo se reclasifica
+  // dentro de VENTANA_RECLASIFICAR_MS. El backend devuelve el contador ya sumado: se avisa ahora y no
+  // en la consulta siguiente, que podía llegar hasta 2,5 s más tarde (más lo que tarde el pedido) y
+  // dejar el pulso fuera de la ventana, con el conteo y la fila dos pasadas adelante.
+  if (NIVEL2_INSTALADO) procesarRetrocesos(retrocesosResp);
   return true;
 }
 
@@ -703,25 +741,9 @@ void consultarEstado() {
     }
 
     // ---- Retrocesos --------------------------------------------------------------
-    // El backend cuenta CADA retroceso (desde la aplicación o desde la botonera, que sensa el
-    // Bloque A de esta misma placa y avisa con evento-fisico) en retrocesos_contados.
-    // Comparándolo con el último valor visto, se sabe cuántos hubo y se le avisa al sensor, que
-    // descuenta esas pasadas. Se procesa ANTES de dar el pulso de Retroceder (más abajo): así el
-    // aviso llega primero y el pulso del sensor se descuenta en vez de sumarse.
-    //
-    // (No se usa retroceder_seq: es la ORDEN de pulsar el relé de Retroceder y solo sube por
-    // pedidos de la web, así que los retrocesos hechos en la botonera pasaban inadvertidos.)
-    const long rc = doc["retrocesos_contados"] | -1L;
-    if (rc >= 0) {
-      if (retrocesosVisto < 0 || rc < retrocesosVisto) {
-        retrocesosVisto = rc;   // primera lectura (o la base se reinició): referencia, sin disparar nada
-      } else if (rc > retrocesosVisto) {
-        const long cuantos = rc - retrocesosVisto;
-        sensorPasadaAvisarRetroceso((int)cuantos, tejiendo);
-        log("Retroceso detectado (" + String(cuantos) + "): se descuentan del conteo");
-        retrocesosVisto = rc;
-      }
-    }
+    // Se procesan ANTES de dar el pulso de Retroceder (más abajo): así el aviso llega primero y el
+    // pulso del sensor se descuenta en vez de sumarse (ver procesarRetrocesos).
+    procesarRetrocesos(doc["retrocesos_contados"] | -1L);
 
     // ---- Dibujo asignado ----------------------------------------------------------
     // Si desde la aplicación asignaron otro dibujo, hay que volver a bajarlo. Sin esto el nodo
@@ -732,8 +754,11 @@ void consultarEstado() {
     // placa viera el telar sin dibujo) también obliga a bajarlo: la producción nueva empieza en
     // la fila 0 con el conteo en 0. Antes solo se miraba el dibujo, y el nodo seguía con la
     // posición y el conteo del trabajo anterior, que la producción nueva heredaba.
+    // Vale también si el dibujo se bajó cuando no había ninguna producción abierta (id 0): al
+    // empezar una, se baja de nuevo. Antes ese caso no se comparaba nunca, y desde ahí todas las
+    // producciones siguientes del mismo dibujo heredaban el conteo de la placa.
     const long produccionAhora = doc["historial_actual_id"] | 0L;
-    const bool otraProduccion = produccionAhora > 0 && produccionCargada > 0 && produccionAhora != produccionCargada;
+    const bool otraProduccion = produccionAhora > 0 && produccionAhora != produccionCargada;
     if (patronAhora == 0) {
       hayDibujo = false;     // sin dibujo asignado: el loop deja los canales en reposo
       debeTejer = false;
@@ -797,6 +822,11 @@ void reportarPasadas() {
   doc["pasadas_sensor"] = totalEnviado;   // va a pasadas_sensor: el conteo MEDIDO, no la estimación por reloj
   doc["fila_actual"]    = filaAhora;
   doc["repeticion_en_fila"] = hechasAhora;   // para reanudar en la pasada exacta
+  // La producción para la que cuenta esta placa (0 = el dibujo se bajó sin ninguna abierta). Si en
+  // el backend ya empezó otra, no aplica el reporte y devuelve aplicado: false (más abajo): sin esto,
+  // un reporte que salía antes de la consulta siguiente le cargaba a la producción nueva el conteo
+  // de la anterior.
+  doc["historial_id"] = produccionCargada;
   String cuerpo;
   serializeJson(doc, cuerpo);
 
@@ -991,9 +1021,11 @@ void setup() {
   }
 
   // Watchdog (core 3.x). Puede venir ya inicializado por el sistema: en ese caso se
-  // reconfigura.
+  // reconfigura. 45 s y no 15: un pedido con la red mala puede tardar unos 40 s (ver iniciarHttp).
+  // Con 15 s, un corte de internet con el router andando reiniciaba la placa en pleno tejido, y
+  // sin el backend no podía volver a bajar el dibujo: la selección quedaba apagada.
   esp_task_wdt_config_t wdtConfig = {
-    .timeout_ms = 15 * 1000,
+    .timeout_ms = WATCHDOG_MS,
     .idle_core_mask = 0,
     .trigger_panic = true,
   };
@@ -1068,14 +1100,21 @@ void loop() {
         // Se aplica la fila que corresponde a esta pasada: su bobina, o en un intercalado la que
         // le toca a esta pasada según su ciclo.
         //
-        // DESPLAZAMIENTO_FILAS compensa filas enteras; RETARDO_APLICACION_US compensa un desfase
+        // DESPLAZAMIENTO_FILAS compensa pasadas enteras; RETARDO_APLICACION_US compensa un desfase
         // dentro de la pasada. Los dos quedan en cero hasta medir sobre la máquina.
         if (RETARDO_APLICACION_US > 0) delayMicroseconds(RETARDO_APLICACION_US);
 
         int filaAplicada, filasTotales, cambioA, restantes;
         portENTER_CRITICAL(&mux);
         filasTotales = dibujoFilas;
-        filaAplicada = envolverFila(filaActual + DESPLAZAMIENTO_FILAS, filasTotales);
+        // La selección que se aplica es la de la pasada en curso corrida DESPLAZAMIENTO_FILAS pasadas
+        // (no filas): se avanza o retrocede una copia de la posición con la misma cuenta que la
+        // posición real. Antes se sumaba a la fila, y en una fila de 100 repeticiones un 1 aplicaba
+        // la fila siguiente durante las 100 pasadas.
+        int filaSel = filaActual, restSel = repeticionesRestantes;
+        for (int k = 0; k < DESPLAZAMIENTO_FILAS; k++) posicionAdelante(filaSel, restSel, repeticiones, filasTotales);
+        for (int k = 0; k > DESPLAZAMIENTO_FILAS; k--) posicionAtras(filaSel, restSel, repeticiones, filasTotales);
+        filaAplicada = filaSel;
         // En un retroceso la máquina deshace una pasada: no se selecciona nada (los canales quedan
         // en reposo). Antes se aplicaba la fila de la PRÓXIMA pasada mientras la máquina deshacía la
         // anterior, que es otra combinación. Así lo modela también sim_nivel2_firmware.py.
@@ -1083,7 +1122,7 @@ void loop() {
         // pasada como referencia de duración: medida contra ella, la pasada siguiente duraría el doble.
         // En un intercalado va solo la bobina que le toca a esta pasada: la que sigue en su ciclo
         // según cuántas pasadas del grupo ya se tejieron.
-        const long hechasFila = (long)repeticiones[filaActual] - repeticionesRestantes;
+        const long hechasFila = (long)repeticiones[filaSel] - restSel;
         if (pulsoFueRetroceso)                  seleccionApagarTodo();
         else if (secuenciaLargo[filaAplicada])  seleccionAplicarIntercalada(secuencia[filaAplicada], secuenciaLargo[filaAplicada], hechasFila, dibujoColumnas);
         else                                    seleccionAplicarFila(dibujo[filaAplicada], dibujoColumnas);

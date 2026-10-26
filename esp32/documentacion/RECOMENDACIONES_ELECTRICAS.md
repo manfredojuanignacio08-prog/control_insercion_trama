@@ -161,7 +161,7 @@ relés):
 | Primera lectura "solo memorizar, no actuar" | Que un reinicio del ESP32 arranque o pause la máquina solo |
 | Pulso de duración fija (300 ms) con apagado incondicional | Que un relé quede pegado "apretando" el botón |
 | Anti-doble-pulso (2 s mínimos entre comandos) | Doble pulsación por lecturas repetidas del backend |
-| Watchdog por hardware (15 s) | Cuelgues por ruido eléctrico: el ESP32 se reinicia solo, con relés en reposo |
+| Watchdog por hardware (45 s, más que el pedido más lento con la red mala) | Cuelgues por ruido eléctrico: el ESP32 se reinicia solo, con relés en reposo |
 | Fail-safe sin red | Si se cae el WiFi o el backend, el ESP32 no actúa y la botonera física sigue mandando |
 | Avisos de la botonera descartados cuando dos o más canales bajan dentro de 150 ms | Que prender el telar con el gabinete encendido (o que vuelva su tensión) se lea como Marcha, Pausa y Retroceder, con la posición una pasada atrás |
 | Polaridad configurable **por relé** (`RELE_*_ACTIVO_BAJO`) | Permite mezclar módulos activo-bajo y activo-alto en el mismo equipo. Ojo: la resistencia de cada canal depende de esto (pull-up a 3,3 V para activo-bajo, pull-down a GND para activo-alto) |

@@ -70,8 +70,9 @@ repita es lo correcto: esa pasada se va a volver a tejer. En el pulso del retroc
 selecciona nada (los canales quedan en reposo): la máquina está deshaciendo una pasada, no
 tejiendo una.
 
-El aviso puede llegar DESPUÉS del pulso (la consulta al backend es cada 2,5 s). Si el telar
-está en pausa y el último pulso se contó hacia adelante hace menos de 5 s, ese pulso se
+El aviso puede llegar DESPUÉS del pulso: en la botonera sale al soltar el botón y vuelve en la
+respuesta del backend a ese evento (los pedidos desde la web, en la consulta de cada 2,5 s). Si el
+telar está en pausa y el último pulso se contó hacia adelante hace menos de 10 s, ese pulso se
 reclasifica: el contador baja dos (se quita el +1 y se resta 1) y la fila vuelve dos pasadas.
 
 ## Cambio de dibujo en caliente
@@ -177,6 +178,8 @@ son estimaciones y no deben darse por buenos.
 - `seleccion_dibujo.h`, el comando de los cuatro canales (Bloque D)
 - `posicion_dibujo.h`, la posición dentro del dibujo (fila y pasadas que le faltan), el mismo
   modelo que `backend/src/utils/posicion.js`; se prueba en la PC con `verificacion/host/correr.sh`
+- `salida_segura.h`, el arranque seguro de las salidas: cada relé y cada canal pasa a salida ya en
+  su nivel de reposo (con el core 3.x, un `digitalWrite` antes de `pinMode` no hace nada)
 
 ## Cómo está organizado (dos núcleos)
 

@@ -32,7 +32,15 @@ inline unsigned long millis(){ return g_ms; }
 inline void delay(unsigned long){} inline void delayMicroseconds(unsigned long){}
 inline int g_pin[64] = {0};
 inline int g_cambios[64] = {0};   // cuántas veces cambió cada pin (para contar pulsos)
-inline void digitalWrite(int p,int v){ if(p>=0&&p<64){ if(g_pin[p]!=v) g_cambios[p]++; g_pin[p]=v; } } inline int digitalRead(int){return 0;} inline void pinMode(int,int){}
+// Como el core ESP32 3.x: digitalWrite() antes de pinMode(OUTPUT) no hace nada, y pinMode(OUTPUT)
+// habilita la salida con lo que tenga el registro (al arrancar, bajo). gpio_set_level() (ESP-IDF) sí
+// carga el registro antes. g_bajoAlConfigurar cuenta las veces que un pin salió en bajo al configurarlo.
+inline int  g_reg[64] = {0};
+inline bool g_esSalida[64] = {false};
+inline int  g_bajoAlConfigurar[64] = {0};
+typedef int gpio_num_t;
+inline void gpio_set_level(gpio_num_t p, int v){ if(p>=0&&p<64) g_reg[p] = v; }
+inline void digitalWrite(int p,int v){ if(p>=0&&p<64&&g_esSalida[p]){ g_reg[p]=v; if(g_pin[p]!=v) g_cambios[p]++; g_pin[p]=v; } } inline int digitalRead(int){return 0;} inline void pinMode(int p,int m){ if(p>=0&&p<64&&m==OUTPUT&&!g_esSalida[p]){ g_esSalida[p]=true; if(g_reg[p]==LOW) g_bajoAlConfigurar[p]++; if(g_pin[p]!=g_reg[p]) g_cambios[p]++; g_pin[p]=g_reg[p]; } }
 inline int digitalPinToInterrupt(int p){return p;}
 inline void attachInterrupt(int, void(*)(), int){}
 inline void noInterrupts(){} inline void interrupts(){}

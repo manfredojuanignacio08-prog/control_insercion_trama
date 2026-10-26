@@ -77,7 +77,9 @@ r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'pausa'}); assert.equal
 r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'pausa'},{ck:null,dev:true}); assert.equal(r.b.estado,'pausado');
 r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'marcha'},{ck:null,dev:true}); assert.equal(r.b.estado,'tejiendo');
 r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'reinicio'},{ck:null,dev:true}); assert.equal(r.b.estado,'pausado'); assert.equal(r.b.motivo_pausa,'reinicio');
-r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'retroceder'},{ck:null,dev:true}); assert.equal(r.s,200);
+{ const rc0 = Number(psql(`select retrocesos_contados from telares where id=${T}`));
+  r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'retroceder'},{ck:null,dev:true}); assert.equal(r.s,200);
+  assert.equal(r.b.retrocesos_contados, rc0 + 1, 'el nodo recibe el contador ya sumado y avisa a su sensor sin esperar la consulta'); }
 let h = psql(`select fila_actual||','||repeticion_en_fila from historial_produccion where estado='en_curso'`); assert.equal(h,'0,0', 'sin sensor el retroceso manual mueve la posición');
 // Nivel 2: patrón actual y reportes del sensor
 r = await api('GET',`/telares/${T}/patron-actual`,null,{ck:null,dev:true}); assert.equal(r.b.asignado,true); assert.deepEqual(r.b.repeticiones_por_fila,[2,1,3]);
@@ -186,7 +188,18 @@ for (let i = 0; i < 15; i++) {
 r = await api('POST',`/telares/${T2}/detener`,{});
 r = await api('POST',`/telares/${T2}/asignar-patron`,{patron_id:P}); assert.equal(r.s,201);
 { const nueva = r.b.id; const pa = await api('GET',`/telares/${T2}/patron-actual`,null,{ck:null,dev:true});
-  assert.equal(pa.b.historial_id, nueva); assert.equal(pa.b.fila_actual, 0); assert.equal(pa.b.pasadas_sensor, 0, 'la producción nueva no hereda pasadas'); }
+  assert.equal(pa.b.historial_id, nueva); assert.equal(pa.b.fila_actual, 0); assert.equal(pa.b.pasadas_sensor, 0, 'la producción nueva no hereda pasadas');
+  // Un reporte de la producción anterior (el nodo todavía no consultó) no se le carga a la nueva
+  for (const vieja of [nueva - 1, 0]) {
+    r = await api('POST',`/telares/${T2}/pasadas`,{pasadas_sensor:11,fila_actual:0,repeticion_en_fila:0,historial_id:vieja},{ck:null,dev:true});
+    assert.equal(r.s,200); assert.equal(r.b.aplicado,false, JSON.stringify(r)); assert.equal(r.b.pasadas_sensor,0);
+  }
+  assert.equal(psql(`select pasadas_sensor from historial_produccion where id=${nueva}`), '0');
+  for (const malo of [-1, '5', 1.5]) {
+    r = await api('POST',`/telares/${T2}/pasadas`,{pasadas_sensor:1,historial_id:malo},{ck:null,dev:true}); assert.equal(r.s,400, JSON.stringify(r));
+  }
+  r = await api('POST',`/telares/${T2}/pasadas`,{pasadas_sensor:1,historial_id:nueva},{ck:null,dev:true}); assert.equal(r.b.aplicado,true, JSON.stringify(r));
+  assert.equal(psql(`select pasadas_sensor from historial_produccion where id=${nueva}`), '1'); }
 r = await api('POST',`/telares/${T2}/detener`,{});
 r = await api('POST',`/telares/${T2}/reanudar`); assert.equal(r.s,409);
 psql(`update telares set ultimo_reporte_sensor = null where id=${T2}`);

@@ -5,6 +5,7 @@
 #include "../../pruebas/prueba_rele_lca110/prueba_rele_lca110.ino"
 int main() {
   setup();
+  assert(g_esSalida[18] && g_pin[18] == 0 && g_cambios[18] == 0);   // la salida nace abierta: sin un pulso al arrancar
   int destellos[4] = {0, 0, 0, 0};
   int encendidoMs = 0, anterior = 0;
   for (unsigned long t = 0; t < 20000; t++) {

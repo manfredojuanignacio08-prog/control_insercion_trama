@@ -8,6 +8,11 @@
 #  2) Comprueba que el firmware compila (sintaxis) en sus dos modos, con NIVEL2_INSTALADO en false
 #     y en true, contra "stubs" mínimos de la API de Arduino.
 #     Es una comprobación de sintaxis y tipos: NO reemplaza compilar con el core ESP32 real.
+#  3) Corre el firmware completo (Nivel 2) contra la librería ArduinoJson REAL y las respuestas que
+#     arma el backend real (red/payloads.h, generadas con red/gen_payload.mjs): descarga del dibujo
+#     con intercalado, posición retomada, selección pasada por pasada (con DESPLAZAMIENTO_FILAS en
+#     0, 1 y -1), consultas de estado y reportes. Necesita la ArduinoJson 7: la busca en
+#     ARDUINOJSON_SRC o en la carpeta de librerías del Arduino IDE; si no está, se omite.
 set -e
 cd "$(dirname "$0")"
 ESP=../..
@@ -35,3 +40,16 @@ echo "== 2) sintaxis del firmware en sus dos modos"
 python3 generar_prototipos.py $FW/control_trama_esp32.ino /tmp/fw.cpp
 g++ -std=c++17 -fsyntax-only -I. -I$FW -include Arduino.h -Wall /tmp/fw.cpp && echo "Solo Bloque A (NIVEL2_INSTALADO false): OK"
 g++ -std=c++17 -fsyntax-only -I. -I$FW -include Arduino.h -Wall -DNIVEL2_INSTALADO=true /tmp/fw.cpp && echo "Bloques A, C y D (NIVEL2_INSTALADO true): OK"
+echo "== 3) red y JSON con la ArduinoJson real"
+AJ=${ARDUINOJSON_SRC:-$HOME/Arduino/libraries/ArduinoJson/src}
+if [ -f "$AJ/ArduinoJson.h" ]; then
+  python3 generar_prototipos.py $FW/control_trama_esp32.ino /tmp/fw_red.cpp
+  for d in 0 1 -1; do
+    g++ -std=c++17 -Wall -Wextra -Ired -I"$AJ" -I$FW -include red/Arduino.h -DNIVEL2_INSTALADO=true \
+      -DDESPLAZAMIENTO_FILAS_PRUEBA=$d -DARDUINOJSON_ENABLE_ARDUINO_STRING=1 -DARDUINOJSON_ENABLE_ARDUINO_STREAM=0 \
+      -DARDUINOJSON_ENABLE_ARDUINO_PRINT=0 -DARDUINOJSON_ENABLE_PROGMEM=0 red/test_red_json.cpp -o /tmp/test_red_json
+    echo "  DESPLAZAMIENTO_FILAS = $d"; /tmp/test_red_json
+  done
+else
+  echo "  (omitido: no se encontró la ArduinoJson; instalarla desde el Arduino IDE o indicar ARDUINOJSON_SRC)"
+fi

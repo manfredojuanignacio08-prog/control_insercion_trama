@@ -288,6 +288,18 @@ assert.equal(x.r.body.aplicado, true);
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:120, fila_actual:99} });  // fila fuera de rango => se ignora la fila
 assert.equal(x.log.find(l=>/SET pasadas_sensor/.test(l.sql)).params[1], null);
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:-5} }); assert.equal(x.err.status, 400);
+// historial_id: un reporte de otra producción no se aplica; uno sin el dato (firmware anterior) sí
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:120, historial_id:4} });
+assert.equal(x.r.body.aplicado, false); assert.equal(x.r.body.pasadas_sensor, 100); assert(!x.log.some(l=>/SET pasadas_sensor/.test(l.sql)));
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:120, historial_id:'5'} }); assert.equal(x.err.status, 400);
+x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:120, historial_id:5} }); assert.equal(x.r.body.aplicado, true);
+// patron-actual: la matriz le llega al nodo en 0 y 1 (con decimales largos pasaba de lo que acepta)
+globalThis.__q = (sql) => {
+  if (/FROM telares t JOIN patrones p/.test(sql)) return { rows:[{id:3, nombre:'D', filas:2, columnas:4,
+    matriz_pasadas:[[0.123456789012345,0,0,0],[0,0,2.5,0]], repeticiones_por_fila:[1,1], grupos_intercalados:null, historial_id:5}] }; };
+x = await call(N.obtenerPatronActual, { params:{id:'8'} });
+assert.deepEqual(x.r.body.matriz_pasadas, [[1,0,0,0],[0,0,1,0]]);
+rp({id:5, pasadas_sensor:100, filas:4});
 // el telar se bloquea ANTES que la producción (mismo orden que evento-fisico: sin interbloqueos)
 rp({id:5, pasadas_sensor:100, filas:4});
 x = await call(N.reportarPasadas, { params:{id:'8'}, body:{pasadas_sensor:101, fila_actual:0} });

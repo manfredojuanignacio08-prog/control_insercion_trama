@@ -129,7 +129,7 @@ pines (GPIO 25→IN1 Marcha, GPIO 26→IN2 Pausa), la cadena de voltajes
 (220V→5V→3,3V, con la fuente HLK-5M05), el jumper JD-VCC puesto (todo el módulo a 5V, sin llevar 3.3V al VCC), la conexión en paralelo, y la etapa de protección coinciden entre el
 firmware, el diagrama eléctrico y el documento de conexiones.
 
-> **Estado actual:** `verif_coherencia.py` da 21/21 (incluye que haya un solo firmware para la placa, que sus pines no se pisen, que `NIVEL2_INSTALADO` venga en `false`, que la cantidad de bobinas sea la misma en la web, el firmware y la base, que el solo sensado sea coherente en la base, el backend, el firmware y la web, y que el sensado de la botonera use la pull-up interna en GPIO 32 y 33 y la de 10 kΩ en el 34). Ya incluye el tercer relé (GPIO 27 → S del módulo de Retroceder), que
+> **Estado actual:** `verif_coherencia.py` da 22/22 (incluye que haya un solo firmware para la placa, que el watchdog dure más que el pedido más lento con la red mala, que sus pines no se pisen, que `NIVEL2_INSTALADO` venga en `false`, que la cantidad de bobinas sea la misma en la web, el firmware y la base, que el solo sensado sea coherente en la base, el backend, el firmware y la web, y que el sensado de la botonera use la pull-up interna en GPIO 32 y 33 y la de 10 kΩ en el 34). Ya incluye el tercer relé (GPIO 27 → S del módulo de Retroceder), que
 > el diagrama muestra, y además compara los límites de filas y columnas entre la web, el servidor,
 > el firmware y la base, y los pines de las bobinas del Nivel 2 con su diagrama.
 
@@ -143,10 +143,11 @@ cada pasada (una sola: una trama por pasada), las repeticiones de cada fila, los
 intercalados, la repetición idéntica del patrón en bucle, y que los canales no superan
 los físicos ni pisan otros pines.
 
-**Simulación del firmware del Nivel 2 (29/29):** conteo, vueltas, repeticiones por fila,
-retrocesos, retomar tras un reinicio y la selección de las bobinas en cada pasada. Además,
-`verificacion/host/correr.sh` prueba en la PC el código real del firmware (sensor, selección,
-posición y Bloque A) y que compile en sus dos modos.
+**Simulación del firmware del Nivel 2 (30/30):** conteo, vueltas, repeticiones por fila,
+retrocesos, retomar tras un reinicio y la selección de las bobinas en cada pasada (también con
+`DESPLAZAMIENTO_FILAS`). Además, `verificacion/host/correr.sh` prueba en la PC el código real del
+firmware (sensor, selección, posición y Bloque A), que compile en sus dos modos y, con la librería
+ArduinoJson instalada, el firmware completo contra las respuestas reales del backend.
 
 Estas verificaciones aseguran que el **diseño es coherente y la lógica es
 correcta**. Lo que confirma la checklist de arriba es que la **implementación

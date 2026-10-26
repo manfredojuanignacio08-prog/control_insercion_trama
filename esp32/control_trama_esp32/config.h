@@ -173,28 +173,38 @@ static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 //
 // Si al tejer una prueba la tela sale corrida una pasada respecto del dibujo,
 // hay dos formas de corregirlo: rotar el blanco sobre el eje (ajuste mecánico,
-// el preferible), o compensar desde acá adelantando o atrasando filas.
+// el preferible), o compensar desde acá adelantando o atrasando la selección.
 //
-//   0  → la fila que se aplica es la que corresponde a la pasada en curso
-//   1  → se adelanta una fila (usar si la tela sale una pasada atrasada)
-//  -1  → se atrasa una fila
+//   0  → se aplica la selección de la pasada en curso
+//   1  → se aplica la de la pasada siguiente (usar si la tela sale una pasada atrasada)
+//  -1  → se aplica la de la pasada anterior
+//
+// Se cuenta en PASADAS, no en filas: en una fila que se teje 100 veces, 1 adelanta una sola
+// pasada (la selección cambia una pasada antes de terminar la fila), no la fila entera. Lo mismo
+// dentro de un intercalado: se adelanta una pasada de su ciclo. La posición que se informa al
+// backend no cambia: es la de la máquina.
 //
 // A_CONFIRMAR: se define con la primera prueba de tejido, no antes.
+#ifndef DESPLAZAMIENTO_FILAS_PRUEBA
 static const int DESPLAZAMIENTO_FILAS = 0;
+#else
+static const int DESPLAZAMIENTO_FILAS = DESPLAZAMIENTO_FILAS_PRUEBA;   // solo en las pruebas en la PC
+#endif
+static_assert(DESPLAZAMIENTO_FILAS >= -3 && DESPLAZAMIENTO_FILAS <= 3, "DESPLAZAMIENTO_FILAS corrige unas pocas pasadas");
 
-// El desplazamiento de arriba corrige de a FILAS ENTERAS. Pero también puede haber un
+// El desplazamiento de arriba corrige de a PASADAS ENTERAS. Pero también puede haber un
 // desfase DENTRO de la pasada: el telar lee la selección en un instante de su ciclo
 // (cuando abre la calada), y el pulso del sensor llega en otro. Este retardo hace esperar
 // esos microsegundos entre el pulso y la aplicación de la fila. Solo se puede medir con un
 // osciloscopio (pulso del sensor → ventana de lectura del lector óptico); sin él, queda en 0 y
-// el desfase de filas enteras se corrige con DESPLAZAMIENTO_FILAS tejiendo una prueba. Debe ser
+// el desfase de pasadas enteras se corrige con DESPLAZAMIENTO_FILAS tejiendo una prueba. Debe ser
 // mucho menor que los 200 ms de una pasada (máximo permitido: 50 ms). Cero = se aplica apenas
 // llega el pulso.
 //
 // Ojo con la otra dirección: si la ventana de lectura llega ANTES de que el pulso más la
 // latencia del relé LCA110 (unos pocos ms) y del ESP32 alcancen a aplicar la fila, no se corrige
 // con un retardo: hay que adelantar la aplicación con DESPLAZAMIENTO_FILAS = 1 (aplicar en el
-// pulso N la fila N+1) o mover el blanco metálico sobre el eje.
+// pulso N la selección de la pasada N+1) o mover el blanco metálico sobre el eje.
 // A_CONFIRMAR: se define con la medición sobre la máquina.
 static const unsigned long RETARDO_APLICACION_US = 0;
 static_assert(RETARDO_APLICACION_US <= 50000UL, "RETARDO_APLICACION_US no puede pasar de 50 ms");

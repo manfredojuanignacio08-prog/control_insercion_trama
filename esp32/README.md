@@ -58,7 +58,7 @@ El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
 - **Solo sensado**: si en la página apagaron el control del telar, ningún relé se mueve.
 - **Pulso acotado e incondicional**: un relé jamás queda pegado.
 - **Anti-doble-pulso**: 2 s mínimos entre comandos.
-- **Watchdog por hardware (15 s)**: si el programa se cuelga (ruido
+- **Watchdog por hardware (45 s)**: si el programa se cuelga (ruido
   eléctrico), el ESP32 se reinicia solo con los relés en reposo.
 - **Polaridad configurable por relé** (`RELE_MARCHA_ACTIVO_BAJO`, `RELE_PAUSA_ACTIVO_BAJO`, `RELE_RETROCEDER_ACTIVO_BAJO` en `config.h`) para
   módulos activo-bajo (los más comunes) o activo-alto.
