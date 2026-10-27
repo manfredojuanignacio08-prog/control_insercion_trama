@@ -1321,7 +1321,7 @@ async function actualizarEstadoTelar() {
     if (isPlaying && gen === generacionPlay) {
       if (telar.estado === 'pausado') frenarPorEstadoDelTelar(telar);
       else if (telar.estado === 'apagado' || !telar.historial_actual_id) frenarPorEstadoDelTelar(null);
-    } else if (!isPlaying && gen === generacionPlay && telar.estado === 'tejiendo' && telar.historial_actual_id &&
+    } else if (!isPlaying && !arrancandoPlay && gen === generacionPlay && telar.estado === 'tejiendo' && telar.historial_actual_id &&
                String(editId) === String(telar.patron_actual_id) && origenSesion !== 'invitado' && nR > 0) {
       // El telar se puso a tejer sin que esta pantalla tocara ▶ (desde la botonera, o desde otra
       // pantalla que después se cerró): esta se suma al tejido. Empieza siguiendo la posición del
@@ -2218,6 +2218,10 @@ async function intentarConducir() {
 }
 
 function doTick() {
+  // Un solo reloj por pantalla: se cancela el que estuviera esperando antes de programar este. Si la
+  // consulta de estado sumaba esta pantalla al tejido mientras ▶ esperaba la respuesta del servidor,
+  // quedaban dos relojes y la pantalla mandaba el doble de pasadas (el conteo estimado corría al doble).
+  clearTimeout(playTimer);
   if (!isPlaying) return;
 
   const el = document.getElementById(`gr${curRow}`);

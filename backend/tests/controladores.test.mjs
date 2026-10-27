@@ -11,7 +11,7 @@ const aqui = path.dirname(fileURLToPath(import.meta.url));
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'trama-test-'));
 fs.cpSync(path.join(aqui, '..', 'src'), path.join(tmp, 'src'), { recursive: true });
 fs.writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}');
-fs.writeFileSync(path.join(tmp, 'src', 'db.js'), "// Stub de pool para pruebas: las consultas las resuelve globalThis.__q\nconst run = async (sql, params) => { globalThis.__log.push({ sql: sql.replace(/\\s+/g,' ').trim(), params }); return globalThis.__q(sql.replace(/\\s+/g,' ').trim(), params) || { rows: [], rowCount: 0 }; };\nexport const pool = { query: run, async connect() { return { query: run, release() {} }; } };\n");
+fs.writeFileSync(path.join(tmp, 'src', 'db.js'), "// Stub de pool para pruebas: las consultas las resuelve globalThis.__q\nconst run = async (sql, params) => { globalThis.__log.push({ sql: sql.replace(/\\s+/g,' ').trim(), params }); return globalThis.__q(sql.replace(/\\s+/g,' ').trim(), params) || { rows: [], rowCount: 0 }; };\nexport const pool = { query: run, async connect() { if (globalThis.__sinBase) throw Object.assign(new Error('connect ECONNREFUSED'), { code: 'ECONNREFUSED' }); return { query: run, release() {} }; } };\nexport async function conectar(next) { try { return await pool.connect(); } catch (err) { next(err); return null; } }\n");
 const imp = (rel) => import(pathToFileURL(path.join(tmp, rel)).href);
 import assert from 'assert';
 const T = await imp('src/controllers/telares.controller.js');
@@ -445,6 +445,25 @@ rs = resA(); A.logout({ headers:{}, secure:true }, rs); assert(/Max-Age=0/.test(
 // estado del registro
 globalThis.__q = () => ({ rows:[{n:1}] }); x = await callA(A.estadoRegistro, {}); assert.equal(x.r.body.requiere_invitacion, false);
 globalThis.__q = () => ({ rows:[{n:5}] }); x = await callA(A.estadoRegistro, {}); assert.equal(x.r.body.requiere_invitacion, true);
+
+// 13) Sin base (no se puede abrir la conexión): las rutas con transacción pasan el error al manejador
+// y no quedan sin respuesta. Antes pool.connect() estaba fuera del try y con Express 4 el error no
+// llegaba a nadie: avanzar, asignar, el reporte de pasadas y el evento de la botonera quedaban colgados.
+globalThis.__sinBase = true;
+for (const [nombre, fn, req] of [
+  ['avanzar', T.avanzarTelar, { params:{id:'8'}, body:{ pasos:1 } }],
+  ['asignar', T.asignarPatron, { params:{id:'8'}, body:{ patron_id:3 } }],
+  ['detener', T.detenerTelar, { params:{id:'8'}, body:{} }],
+  ['reanudar', T.reanudarTelar, { params:{id:'8'}, body:{} }],
+  ['evento-fisico', T.eventoFisico, { params:{id:'8'}, body:{ tipo:'marcha' } }],
+  ['retroceder', T.retrocederTelar, { params:{id:'8'}, body:{ pasos:1 } }],
+  ['guardar dibujo', P.actualizarPatron, { params:{id:'3'}, body:{ nombre:'x', filas:4, columnas:4, matriz_pasadas:MAT } }],
+  ['pasadas', N.reportarPasadas, { params:{id:'8'}, body:{ pasadas_sensor:1 } }],
+]) {
+  x = await call(fn, req);
+  assert.equal(x.err && x.err.code, 'ECONNREFUSED', nombre + ': el error llega al manejador');
+}
+globalThis.__sinBase = false;
 
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log('controladores OK');

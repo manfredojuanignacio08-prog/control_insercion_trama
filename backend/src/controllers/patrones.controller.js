@@ -1,4 +1,4 @@
-import { pool } from '../db.js';
+import { pool, conectar } from '../db.js';
 import { derivarLigamentoDesdePasadas } from '../utils/ligamento.js';
 import { validarPatron } from '../utils/validacion.js';
 import { notFound, badRequest, conflict, prohibido } from '../middleware/errorHandler.js';
@@ -100,7 +100,8 @@ export async function actualizarPatron(req, res, next) {
   // se comprobaban en consultas sueltas, y un guardado de otra persona (o un ▶ que asignaba este
   // dibujo a un telar) que llegara justo en el medio se pisaba o quedaba con la matriz cambiada.
   // asignar-patron lee el dibujo con FOR SHARE, así que espera a este guardado (o al revés).
-  const client = await pool.connect();
+  const client = await conectar(next);
+  if (!client) return;
   try {
     const { id } = req.params;
     const { nombre, filas, columnas, matriz_pasadas, matriz_ligamento, colores_filas, metadata, repeticiones_por_fila, grupos_intercalados } = req.body;
@@ -236,7 +237,9 @@ export async function actualizarMetrosPorPasada(req, res, next) {
 
     // Se admite null para volver a "sin definir".
     if (metros_por_pasada !== null) {
-      const n = Number(metros_por_pasada);
+      // Solo un número o un texto con un número (true o [0.001] pasaban este control y los frenaba
+      // recién la base, con un mensaje que no decía qué estaba mal).
+      const n = (typeof metros_por_pasada === 'number' || typeof metros_por_pasada === 'string') ? Number(metros_por_pasada) : NaN;
       if (!Number.isFinite(n) || n <= 0 || n > 1) {
         return res.status(400).json({
           error: 'metros_por_pasada debe ser un número mayor que 0 y menor o igual a 1. Una pasada avanza milímetros, no metros: un valor típico está entre 0,0002 y 0,01.',
@@ -251,7 +254,7 @@ export async function actualizarMetrosPorPasada(req, res, next) {
               creado_por_invitado = creado_por_invitado AND $3
         WHERE id = $2 AND (NOT $3 OR creado_por_invitado)
       RETURNING id, nombre, metros_por_pasada, modificado_at`,
-      [metros_por_pasada, id, esInvitado(req)]
+      [metros_por_pasada === null ? null : Number(metros_por_pasada), id, esInvitado(req)]
     );
     if (r.rows.length === 0) {
       const existe = await pool.query('SELECT 1 FROM patrones WHERE id = $1', [id]);
@@ -285,7 +288,10 @@ export async function actualizarHilado(req, res, next) {
   try {
     const { id } = req.params;
     const { peso_kg = null, metros_max = null, reiniciar = false } = req.body ?? {};
-    const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+    // Solo un número o un texto con un número: Number(true) daba 1 y Number([5]) daba 5, y se
+    // guardaba 1 kg (o 5) sin aviso.
+    const num = (v) => (v === null || v === undefined || v === '' ? null
+      : (typeof v === 'number' || typeof v === 'string') ? Number(v) : NaN);
     const peso = num(peso_kg);
     const metros = num(metros_max);
     if (peso !== null && (!Number.isFinite(peso) || peso <= 0 || peso > 100000)) {

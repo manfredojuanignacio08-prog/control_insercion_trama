@@ -5,7 +5,7 @@
 //  patron-actual también se puede leer con una sesión de la web.
 // ============================================================================
 
-import { pool } from '../db.js';
+import { pool, conectar } from '../db.js';
 import { badRequest, notFound } from '../middleware/errorHandler.js';
 import { avanzarPosicionTejido, retrocederPosicionTejido, largosDeFilas, normalizarGrupos } from '../utils/posicion.js';
 
@@ -126,7 +126,8 @@ function secuenciasParaNodo(p) {
  * reloj de la web, y durante la jornada de validación hay que poder comparar las dos.
  */
 export async function reportarPasadas(req, res, next) {
-  const cliente = await pool.connect();
+  const cliente = await conectar(next);
+  if (!cliente) return;
   try {
     const telarId = Number(req.params.id);
     const pasadasSensor = req.body.pasadas_sensor ?? req.body.pasadas_totales;

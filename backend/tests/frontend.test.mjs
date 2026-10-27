@@ -467,4 +467,24 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   assert.equal(f.els['login-panel-personal'].hidden, false, 'el aviso de sesión vencida queda a la vista');
   assert.equal(f.els['login-panel-cliente'].hidden, true); }
 
+// ── Un solo reloj de tejido por pantalla. Si la consulta de estado sumaba la pantalla al tejido
+// mientras ▶ esperaba la respuesta del servidor, quedaban dos relojes y la pantalla mandaba el doble
+// de pasadas. Con relojes de prueba que sí se cancelan: dos doTick seguidos dejan uno solo pendiente.
+{ f = boot(routes);
+  const pendientes = new Map(); let sig = 1;
+  f.ctx.setTimeout = (fn, ms) => { pendientes.set(sig, { fn, ms }); return sig++; };
+  f.ctx.clearTimeout = (id) => { pendientes.delete(id); };
+  f.run('telarPorDefectoId = null; nR = 4; curRow = 0; repRestantes = 1; isPlaying = true; seguidor = true; doTick()');
+  f.run('seguidor = false; doTick()');
+  assert.equal(pendientes.size, 1, 'un solo reloj pendiente (había ' + pendientes.size + ')');
+  assert.equal([...pendientes.values()][0].ms, 200, 'el que queda es el del tejido, no el del seguidor');
+  // y la consulta de estado no suma la pantalla al tejido mientras ▶ está arrancando
+  telar = { id:8, estado:'tejiendo', patron_actual_id:3, historial_actual_id:9, fila_actual:1, repeticion_en_fila:0, origen_conteo:'estimado', sensor_activo:false, control_web_activo:true };
+  f.run("isPlaying = false; telarPorDefectoId = 8; editId = '3'; origenSesion = 'huella'; arrancandoPlay = true");
+  await f.run('actualizarEstadoTelar()');
+  assert.equal(f.run('isPlaying'), false, 'mientras ▶ arranca, la consulta no se suma');
+  f.run('arrancandoPlay = false');
+  await f.run('actualizarEstadoTelar()');
+  assert.equal(f.run('isPlaying && seguidor'), true, 'después sí se suma (telar tejiendo desde la botonera)'); }
+
 console.log('frontend OK');

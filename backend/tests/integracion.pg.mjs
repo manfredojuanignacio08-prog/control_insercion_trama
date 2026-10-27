@@ -33,6 +33,10 @@ r = await api('GET','/telares',null,{ck:'trama_sesion=%E0%A4%A'}); assert.equal(
 // alta de telar y dibujo
 r = await api('POST','/telares',{codigo:'TELAR-01',nombre:'Principal'}); assert.equal(r.s,201); const T = r.b.id;
 r = await api('POST','/telares',{codigo:'X'},{ck:INV}); assert.equal(r.s,403);
+// código y nombre del telar: texto corto (antes se guardaba un objeto, una lista o miles de caracteres)
+for (const malo of [{a:1}, [1], 7, 'x'.repeat(41), '   ']) { r = await api('POST','/telares',{codigo:malo}); assert.equal(r.s,400, JSON.stringify(malo).slice(0,30)); }
+r = await api('POST','/telares',{codigo:'TELAR-NOM',nombre:{a:1}}); assert.equal(r.s,400);
+r = await api('POST','/telares',{codigo:'TELAR-NOM',nombre:'n'.repeat(81)}); assert.equal(r.s,400);
 const MAT = [[1,0,0,0],[0,0,1,0],[0,1,0,0]];
 // una sola bobina por fila (una trama por pasada): dos en la misma fila se rechazan
 r = await api('POST','/patrones',{nombre:'Doble',filas:2,columnas:4,matriz_pasadas:[[1,0,0,0],[1,1,0,0]]}); assert.equal(r.s,400); assert.match(r.b.error,/una sola bobina/);
@@ -101,6 +105,15 @@ r = await api('GET',`/patrones/${P}/estadisticas`); assert.equal(r.s,200); asser
   const pasadasAntes = r.b.pasadas_totales;
   assert.equal(r.b.hilado, undefined);
   let h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:-1,metros_max:100}); assert.equal(h.s,400);
+  // un booleano no es un número (antes true se guardaba como 1 kg)
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:true,metros_max:100}); assert.equal(h.s,400);
+  h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:50,metros_max:false}); assert.equal(h.s,400);
+  // ni una lista de un número ni un objeto (Number([5]) daba 5): en el hilado, los metros por pasada y los metros del cliente
+  for (const malo of [[5], true, {a:1}, [0.001]]) {
+    h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:malo,metros_max:100}); assert.equal(h.s,400, 'hilado '+JSON.stringify(malo));
+    h = await api('PUT',`/patrones/${P}/metros-por-pasada`,{metros_por_pasada:malo}); assert.equal(h.s,400, 'mpp '+JSON.stringify(malo)); assert.match(h.b.error, /metros_por_pasada/);
+  }
+  h = await api('PUT',`/patrones/${P}/metros-por-pasada`,{metros_por_pasada:'0.0005'}); assert.equal(h.s,200); assert.equal(Number(h.b.metros_por_pasada),0.0005);
   h = await api('PUT',`/patrones/${P}/hilado`,{peso_kg:50,metros_max:1000}); assert.equal(h.s,200);
   assert.equal(Number(h.b.hilado_peso_kg),50); assert.equal(h.b.hilado_pasadas_base,pasadasAntes);
   h = await api('GET',`/patrones/${P}/estadisticas`);
@@ -137,6 +150,17 @@ r = await api('POST',`/telares/${T}/pausar`); assert.equal(r.b.estado,'apagado')
 r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'marcha'},{ck:null,dev:true});
 r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'pausa'},{ck:null,dev:true}); assert.equal(r.b.estado,'apagado');
 r = await api('POST',`/telares/${T}/confirmar-posicion`,{}); assert.equal(r.b.posicion_incierta,false);
+// Confirmar como lo hace la web: con la hora del evento que mostró (le llega cortada al milisegundo;
+// la base la guarda con microsegundos). Antes respondía 409 siempre y el aviso no se podía sacar.
+r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'marcha'},{ck:null,dev:true}); assert.equal(r.b.posicion_incierta,true);
+{ const visto = (await api('GET',`/telares/${T}`)).b.ultimo_evento_manual;
+  r = await api('POST',`/telares/${T}/confirmar-posicion`,{visto_hasta:visto}); assert.equal(r.s,200, JSON.stringify(r)); assert.equal(r.b.posicion_incierta,false);
+  // un uso manual posterior al que se vio sigue bloqueando la confirmación
+  r = await api('POST',`/telares/${T}/evento-fisico`,{tipo:'pausa'},{ck:null,dev:true});
+  psql(`update telares set posicion_incierta = true, ultimo_evento_manual = '${visto}'::timestamptz + interval '2 seconds' where id=${T}`);
+  r = await api('POST',`/telares/${T}/confirmar-posicion`,{visto_hasta:visto}); assert.equal(r.s,409);
+  r = await api('POST',`/telares/${T}/confirmar-posicion`,{visto_hasta:'no es una fecha'}); assert.equal(r.s,400);
+  r = await api('POST',`/telares/${T}/confirmar-posicion`,{}); assert.equal(r.b.posicion_incierta,false); }
 r = await api('DELETE',`/patrones/${P}`); assert.equal(r.s,409);
 // Nivel 2 instalado, telar quieto más de 30 s (el nodo no reporta pasadas, pero consulta cada
 // 2,5 s): su consulta lo mantiene "activo", así que al tocar ▶ la web NO avanza por reloj y el
@@ -297,6 +321,7 @@ async function cli(m, path, body, ck = null) {
   t = await api('GET',`/patrones/${PC}/acceso-cliente`,null,{ck:INV}); assert.equal(t.s,403);
   t = await api('POST',`/patrones/${PC}/acceso-cliente`,{cliente_nombre:'x'.repeat(81)}); assert.equal(t.s,400);
   t = await api('POST',`/patrones/${PC}/acceso-cliente`,{metros_pedidos:-3}); assert.equal(t.s,400);
+  for (const malo of [[5], true, {a:1}]) { t = await api('POST',`/patrones/${PC}/acceso-cliente`,{metros_pedidos:malo}); assert.equal(t.s,400, 'metros del cliente '+JSON.stringify(malo)); }
   t = await api('POST',`/patrones/99999/acceso-cliente`,{}); assert.equal(t.s,404);
   t = await api('POST',`/patrones/${PC}/acceso-cliente`,{cliente_nombre:' Textil Sur ',metros_pedidos:10}); assert.equal(t.s,201);
   const CLAVE = t.b.acceso.clave;

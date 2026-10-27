@@ -1,4 +1,4 @@
-import { pool } from '../db.js';
+import { pool, conectar } from '../db.js';
 import { notFound, badRequest, conflict } from '../middleware/errorHandler.js';
 import { avanzarPosicionTejido, retrocederPosicionTejido } from '../utils/posicion.js';
 
@@ -133,10 +133,17 @@ export async function crearTelar(req, res, next) {
   try {
     const { codigo, nombre } = req.body;
     if (!codigo) throw badRequest('Falta el campo requerido: codigo.');
+    // Textos cortos, como en el resto de la API: antes se guardaba cualquier cosa (un objeto, una
+    // lista o miles de caracteres) como código o nombre del telar.
+    const textoCorto = (v, max) => typeof v === 'string' && v.trim().length > 0 && v.trim().length <= max && !/[\u0000-\u001f\u007f]/.test(v);
+    if (!textoCorto(codigo, 40)) throw badRequest('codigo debe ser un texto de hasta 40 caracteres (por ejemplo TELAR-01).');
+    if (nombre !== undefined && nombre !== null && nombre !== '' && !textoCorto(nombre, 80)) {
+      throw badRequest('nombre debe ser un texto de hasta 80 caracteres.');
+    }
 
     const { rows } = await pool.query(
       `INSERT INTO telares (codigo, nombre) VALUES ($1, $2) RETURNING *`,
-      [codigo, nombre || null]
+      [codigo.trim(), (typeof nombre === 'string' && nombre.trim()) || null]
     );
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -149,7 +156,8 @@ export async function crearTelar(req, res, next) {
 // Si tenía una de OTRO dibujo, la cierra como "detenido_manual" antes de abrir la nueva.
 // Una producción nueva arranca siempre en la fila 0.
 export async function asignarPatron(req, res, next) {
-  const client = await pool.connect();
+  const client = await conectar(next);
+  if (!client) return;
   try {
     const { id } = req.params;
     const { patron_id } = req.body;
@@ -240,7 +248,8 @@ export async function asignarPatron(req, res, next) {
 
 // POST /api/telares/:id/detener  { pasadas_totales, alertas_disparadas }
 export async function detenerTelar(req, res, next) {
-  const client = await pool.connect();
+  const client = await conectar(next);
+  if (!client) return;
   try {
     const { id } = req.params;
     const { pasadas_totales, alertas_disparadas = 0 } = req.body;
@@ -326,7 +335,8 @@ const VIGENCIA_CONDUCTOR_MS = 1500;
 const conductores = new Map();   // telar id -> { cliente, t }
 
 export async function avanzarTelar(req, res, next) {
-  const client = await pool.connect();
+  const client = await conectar(next);
+  if (!client) return;
   try {
     const { id } = req.params;
     const pasos = leerPasos(req.body.pasos);
@@ -472,7 +482,8 @@ export async function pausarTelar(req, res, next) {
 // sueltas, y un "Terminar trabajo" que llegara justo entre las dos dejaba el telar "tejiendo" sin
 // ningún trabajo (y el Nivel 1 pulsaba Marcha).
 export async function reanudarTelar(req, res, next) {
-  const client = await pool.connect();
+  const client = await conectar(next);
+  if (!client) return;
   try {
     const { id } = req.params;
     await client.query('BEGIN');
@@ -559,7 +570,8 @@ export async function retrocederFisico(req, res, next) {
 // al prenderse el telar) antes de llamar acá, así que un marcha, pausa o retroceder que llega es
 // siempre una acción humana sobre la máquina. reinicio y sin_senal los genera el propio equipo.
 export async function eventoFisico(req, res, next) {
-  const client = await pool.connect();
+  const client = await conectar(next);
+  if (!client) return;
   try {
     const { id } = req.params;
     const { tipo } = req.body;
@@ -743,10 +755,15 @@ export async function confirmarPosicion(req, res, next) {
     // Por eso la web manda el timestamp del evento que efectivamente vio
     // (visto_hasta) y solo se limpia si no llegó nada nuevo después. Si el
     // campo no viene (cliente viejo), se mantiene el comportamiento anterior.
+    //
+    // Se compara al milisegundo: la base guarda microsegundos y a la web le llega la hora cortada
+    // al milisegundo. Comparada entera, la hora que devolvía la web quedaba siempre "antes" que el
+    // evento que estaba viendo, y Confirmar respondía 409 cada vez (el aviso no se podía sacar).
     const { rows } = visto_hasta
       ? await pool.query(
           `UPDATE telares SET posicion_incierta = false
-           WHERE id = $1 AND (ultimo_evento_manual IS NULL OR ultimo_evento_manual <= $2)
+           WHERE id = $1 AND (ultimo_evento_manual IS NULL
+                              OR date_trunc('milliseconds', ultimo_evento_manual) <= $2::timestamptz)
            RETURNING id, posicion_incierta, ultimo_evento_manual`,
           [id, visto_hasta]
         )
@@ -803,7 +820,8 @@ export async function validarConteo(req, res, next) {
 // utils/posicion.js). Desde la fila 0 se vuelve a la última, porque el dibujo es un lazo.
 // También descuenta la pasada del conteo y, si cruzó el inicio, una vuelta completa.
 export async function retrocederTelar(req, res, next) {
-  const client = await pool.connect();
+  const client = await conectar(next);
+  if (!client) return;
   try {
     const { id } = req.params;
     const pasos = leerPasos(req.body.pasos);

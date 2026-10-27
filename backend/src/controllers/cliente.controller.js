@@ -37,8 +37,9 @@ function leerNombreCliente(v) {
 
 function leerMetrosPedidos(v) {
   if (v === undefined || v === null || v === '') return null;
-  const n = Number(v);
-  if (typeof v === 'boolean' || !Number.isFinite(n) || n <= 0 || n > 10000000) {
+  // Solo un número o un texto con un número (Number([5]) daba 5 y Number(true), 1).
+  const n = (typeof v === 'number' || typeof v === 'string') ? Number(v) : NaN;
+  if (!Number.isFinite(n) || n <= 0 || n > 10000000) {
     throw badRequest('Los metros encargados tienen que ser un número mayor que 0 (hasta 10.000.000).');
   }
   return Math.round(n * 100) / 100;

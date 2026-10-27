@@ -56,6 +56,19 @@ connectionConfig.query_timeout = 15_000;
 
 export const pool = new Pool(connectionConfig);
 
+// Conexión del pool para una transacción. Si la base no responde, el error va a `next` (el manejador
+// de errores contesta) y devuelve null. Con Express 4, un error de pool.connect() fuera del try no
+// llegaba a nadie: con la base caída, avanzar, asignar, el reporte de pasadas o el evento de la
+// botonera quedaban sin respuesta, y la web acumulaba un pedido colgado por pasada.
+export async function conectar(next) {
+  try {
+    return await pool.connect();
+  } catch (err) {
+    next(err);
+    return null;
+  }
+}
+
 pool.on('error', (err) => {
   // Errores de conexiones ociosas del pool (no rompe el server)
   console.error('Error inesperado en el pool de PostgreSQL:', err.message);
