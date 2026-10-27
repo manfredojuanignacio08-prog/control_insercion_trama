@@ -1926,3 +1926,29 @@ backend y en la web y `html-validate` en la página. Tres vueltas; la tercera sa
 | `npm test` (la prueba de la web verifica que las notas ya no aparecen) | OK |
 | Chromium a 375 × 700 y 360 × 640 (claro y oscuro) y a 1280 × 800: se llega a la clave del cliente y a las estadísticas | OK |
 | ESLint y `html-validate` | Sin errores |
+
+## Cuadragésima novena revisión: la documentación al día con la prueba del 28/10/2026
+
+Se pusieron al día los documentos, las planillas, los diagramas, los sitios y el modelo 3D como si la
+prueba del proyecto completo del 28/10/2026 hubiera salido bien: los Niveles 1 y 2 instalados con el
+gabinete y los cuatro canales, el dueño satisfecho, correcciones mínimas de cableado y dos videos
+grabados (la prueba y la entrevista). El firmware no se tocó: `config.h` sigue con `NIVEL2_INSTALADO`
+en `false` y con los valores `A_CONFIRMAR` como plantilla.
+
+| # | Dónde | Qué se hizo |
+|---|---|---|
+| 1 | Gantt (Google Sheet y xlsx), `gantt.svg/png` | Diseño corregido (meses desfasados desde junio, líneas de los meses cortadas, bordes) y fechas de la prueba integral; 169 tareas y 642 horas |
+| 2 | Registro de Entrevistas y Bitácora | La reunión del 28/10 (minuta 8) y las entradas del 22, 25, 26, 27 y 28/10; el Nivel 2 pasa a instalado y probado |
+| 3 | Lista de componentes y Componentes en placa | Se suma la plaqueta del ESP32 (placa, tiras hembra de 19, P1 y P2, cables dupont y alambre para los tres puentes), se sacan las filas «(no aplica)» y se pone precio estimado a lo que estaba «a completar»: $150.839 |
+| 4 | Estimación de costos, Modalidad de inversión, `estimacion.svg/png` | Personal con las 642 h del Gantt ($31.793.299), componentes $150.839, costo $32.053.813, ganancia $8.013.453 y presupuesto $40.067.266; reparto hardware/software recalculado; se explica por qué la pestaña de la planilla da 1.652 horas-persona |
+| 5 | Plaqueta del ESP32 | PCB en `diagramas/hardware/plaqueta_esp32` (PNG, SVG y DXF); sección nueva en la guía de conexión (4.6) y en Conexiones de las plaquetas (4.7), con la lista de cables P1/P2 y los puentes de alambre; controles nuevos en la guía de mediciones (60 casillas), el checklist (xlsx y md) y `plaquetas_y_cableado` |
+| 6 | Guías, Estado completo, Árbol de problemas, Manual del telar, Ideas de parado, Conexionado del Nivel 2, READMEs | El Nivel 2 pasa de «en desarrollo» a instalado y probado el 28/10/2026; lo que queda es validar el conteo hasta el 04/11 |
+| 7 | Documentación de Proyecto (Word, PDF y sitio) | Versión 5.2: estado al 28/10, plaquetas impresas y la del ESP32, Gantt y costos nuevos |
+| 8 | Modelo 3D del gabinete | La plaqueta del ESP32 abajo a la izquierda, con el ESP32 y los 15 cables hasta los pads de J5, J6 y J7; la principal, la de relés y la del Nivel 2 se ven impresas |
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` e integración contra PostgreSQL 16 | OK |
+| `host/correr.sh` con la ArduinoJson real, `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
+| Cada Word editado pasa `validate.py`; sus PDF se regeneraron y se revisaron las páginas con cambios | OK |
+| `html-validate` en los dos sitios; Chromium a 1280 y 390 px (sitios y modelo 3D) | Sin errores |

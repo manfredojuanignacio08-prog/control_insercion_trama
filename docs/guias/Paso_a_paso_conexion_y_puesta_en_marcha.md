@@ -2,9 +2,9 @@
 
 *Control de Inserción de Trama · 7mo Informática B, Instituto Leonardo Murialdo*
 
-Esta guía junta en un solo lugar cómo armar las **cinco plaquetas** del gabinete, cómo conectarlas entre sí y al telar, y cómo **levantar el sistema** (el servidor, la web y el ESP32) hasta tejer un dibujo. Se sigue en orden: cada parte se prueba antes de pasar a la siguiente. El detalle de cada bloque está en su propia guía (la lista está al final).
+Esta guía junta en un solo lugar cómo armar las **plaquetas** del gabinete, cómo conectarlas entre sí y al telar, y cómo **levantar el sistema** (el servidor, la web y el ESP32) hasta tejer un dibujo. Se sigue en orden: cada parte se prueba antes de pasar a la siguiente. El detalle de cada bloque está en su propia guía (la lista está al final).
 
-Hoy se usa el **Nivel 1**: Marcha, Pausa y Retroceder por relé, y el sensado de la botonera. El **Nivel 2** (el sensor de pasada y los relés de selección del dibujo) se suma después. Las partes que son solo del Nivel 2 están marcadas.
+Los dos niveles están instalados y se probaron completos en el telar el 28/10/2026: el **Nivel 1** (Marcha, Pausa y Retroceder por relé, y el sensado de la botonera) y el **Nivel 2** (el sensor de pasada y los cuatro relés de selección del dibujo). Las partes que son solo del Nivel 2 están marcadas.
 
 ## 1. Reglas de seguridad (siempre)
 
@@ -27,7 +27,7 @@ Hoy se usa el **Nivel 1**: Marcha, Pausa y Retroceder por relé, y el sensado de
 
 ## 3. Las plaquetas y cómo se conectan
 
-El gabinete lleva cinco plaquetas con las conexiones soldadas: cuatro de placa perforada y la del sensado de la botonera, impresa (la protoboard sirve para probar, pero la vibración del telar afloja sus contactos). Cada cable entra a su plaqueta por un **conector de tira de pines** o por una **bornera de tornillo**, así todo se desconecta sin desoldar. Del lado de 220 V y del lado del telar, **siempre bornera**.
+El gabinete lleva cinco plaquetas con las conexiones soldadas, más la plaqueta del ESP32 (punto 4.6). Las diseñadas en Proteus (la principal, la de los relés, la del Nivel 2 y la del sensado de la botonera) son impresas; la protoboard sirve para probar, pero la vibración del telar afloja sus contactos. Cada cable entra a su plaqueta por un **conector de tira de pines** o por una **bornera de tornillo**, así todo se desconecta sin desoldar. Del lado de 220 V y del lado del telar, **siempre bornera**.
 
 ![Las cinco plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).](../../diagramas/hardware/plaquetas_y_cableado.png)
 
@@ -56,10 +56,10 @@ El gabinete lleva cinco plaquetas con las conexiones soldadas: cuatro de placa p
 
 ### 4.2 Plaqueta 2 · Principal (ESP32)
 
-1. Soldar las tiras de pines hembra del ESP32 (todavía sin el ESP32), el conector J1 con el capacitor de **470 µF** (pata larga al +5 V) y un capacitor de **100 nF** junto al ESP32, y el conector **J4** hacia la plaqueta de sensado (3,3 V del pin 3V3, GND y GPIO 32, 33 y 34).
+1. Soldar el conector J1 con el capacitor de **470 µF** (pata larga al +5 V) y un capacitor de **100 nF** entre 3,3 V y GND, y el conector **J4** hacia la plaqueta de sensado (3,3 V del pin 3V3, GND y GPIO 32, 33 y 34). El ESP32 no se enchufa en la principal: va en su propia plaqueta, cableada a J5, J6 y J7 (punto 4.6).
 2. Arranque seguro de los relés: **10 kΩ de GPIO 25 a 3,3 V**, **10 kΩ de GPIO 26 a 3,3 V** y **10 kΩ de GPIO 27 a GND** (el módulo de Retroceder se activa con nivel alto).
 3. Sin alimentar, con el multímetro en continuidad: entre +5 V y GND **no tiene que pitar** (un pitido corto al principio es normal: es el capacitor de 470 µF que se carga; si pita sin parar, hay un corto).
-4. Conectar J1 a la fuente, enchufar y medir **5 V** entre los pines VIN y GND de la tira. Desenchufar, poner el ESP32 (orientado según la serigrafía) y volver a medir: **3,3 V** en el pin 3V3.
+4. Conectar J1 a la fuente, enchufar y medir **5 V** entre P1-10 y P1-9 de la plaqueta del ESP32, ya cableada (punto 4.6). Desenchufar, poner el ESP32 en su plaqueta (la antena del lado del pin 1) y volver a medir: **3,3 V** en P1-1.
 
 ### 4.3 Plaqueta 5 · Sensado de la botonera
 
@@ -77,12 +77,29 @@ Es una plaqueta impresa aparte, unida a la principal por J4.
 2. J2: 5 V al VCC de los dos módulos y GND común; **IN1 ← GPIO 25** (Marcha), **IN2 ← GPIO 26** (Pausa) y **S ← GPIO 27** (Retroceder). Un capacitor de 100 nF junto a cada módulo.
 3. Las salidas **NO y COM** de cada relé, al par de su bornera B1 en la plaqueta de sensado. La botonera todavía no se conecta.
 
-### 4.5 Plaqueta 4 · Nivel 2 (cuando se arme)
+### 4.5 Plaqueta 4 · Nivel 2
 
 1. Canal del sensor: el borne «+ del telar» de B2 → **1,2 kΩ** → pata 1 de un PC817; el borne «negro del sensor» → pata 2; la pata 3 al GND del ESP32; la pata 4 al **GPIO 35** con **10 kΩ a 3,3 V** (el GPIO 35 no tiene resistencia interna). Si el telar diera 24 V en lugar de 12 a 14 V, la resistencia es de 2,2 kΩ ½ W.
 2. Los cuatro **zócalos DIP-6**, con la muesca del lado de la pata 1. Por canal: GPIO → **330 Ω** → pata 1; pata 2 al GND; **10 kΩ del GPIO al GND**, pegada al pin; las **patas 4 y 6** a su par de B3 (rotular canal 1 a 4); las patas 3 y 5 libres. Canales: GPIO **18, 19, 21 y 22**.
 3. J3 a la principal (3,3 V, GND, 35, 18, 19, 21 y 22). Poner los LCA110 en los zócalos, con la muesca del lado de la pata 1.
 4. Con el multímetro en continuidad: los bornes de B2 y B3 **no pitan** contra el GND del ESP32.
+
+### 4.6 Plaqueta del ESP32 (sumada el 25/10/2026)
+
+En la principal impresa, la tira derecha del ESP32 quedó con los pines en otro orden (J7 antes que J5): el ESP32 no se puede enchufar ahí sin cruzar pines (por ejemplo, los 5 V llegarían al pin CMD). Por eso va en una plaqueta aparte, de una sola cara y sin puentes, con sus dos tiras en el orden correcto, y se cablea a la principal por nombre de señal. No hubo que cambiar el programa.
+
+![La plaqueta del ESP32, vista de arriba](../../diagramas/hardware/plaqueta_esp32/PCB_plaqueta_ESP32.png)
+
+*La plaqueta del ESP32, vista de arriba (diagramas/hardware/plaqueta_esp32: PNG, SVG y el DXF para importar en ARES).*
+
+1. Antes de soldar, medir el ESP32: entre las dos tiras tiene que haber 25,4 mm. Si mide otra cosa, se corre la tira derecha.
+2. Soldar las dos tiras hembra de 19 pines (el pin 1 del lado de la antena) y las tiras macho de salida: P1, de 10 pines, y P2, de 5.
+3. En la principal, J5, J6 y J7 no llevan tira: ahí se sueldan los cables que vienen de P1 y P2. J3 queda vacía.
+4. De P1 a la principal: 1 3V3 → J5-1 · 2 IO34 → J5-5 · 3 IO35 → J5-6 · 4 IO32 → J5-7 · 5 IO33 → J5-8 · 6 IO25 → J5-9 · 7 IO26 → J7-1 · 8 IO27 → J7-2 · 9 GND → J7-5 · 10 5V → J7-10.
+5. De P2 a la principal: 1 IO22 → J6-3 · 2 IO21 → J6-6 · 3 GND → J6-7 · 4 IO19 → J6-8 · 5 IO18 → J6-9. Colores fijos: rojo para 5V, naranja para 3V3 y negro para GND.
+6. Puentes de alambre aislado, del lado del cobre y lo más cortos posible, en las pistas que faltaron: en la principal, J4-3 ↔ J5-5 (GPIO 34) y J8-1 ↔ J5-6 (GPIO 35); en la del Nivel 2, U3 ↔ R7 (GPIO 19).
+7. Sin el ESP32 puesto, en continuidad: cada salida de P1 y P2 pita contra su pad, ningún cable pita contra el de al lado y cada puente pita de punta a punta.
+8. Alimentar la principal todavía sin el ESP32: 5 V entre P1-10 y P1-9, y nada en P1-1 (los 3,3 V los genera el ESP32). Recién ahí enchufar el ESP32, con la antena del lado del pin 1 de las tiras.
 
 ## 5. Levantar el servidor y la web
 
@@ -133,7 +150,7 @@ Todo el sistema se puede levantar en una PC con Docker: el archivo `backend/.env
 2. Reiniciar el ESP32: **ningún relé se dispara solo**. Si alguno se dispara, revisar las resistencias de arranque seguro.
 3. En la web, con «Control desde la página» prendido, abrir un dibujo y tocar **▶**: clic del relé de Marcha (un pulso, no queda pegado). **⏸**: clic de Pausa. **⏪** (con confirmación): clic de Retroceder.
 4. Sensado: aplicar 24 V de alterna (o de 12 a 24 V de continua) a la entrada de cada canal: el GPIO cae a 0 V y el monitor serie dice «Botonera: alguien apretó …», y la web lo muestra (sección 10). En el telar ese momento es cuando se suelta el botón: en reposo, el par NA tiene 24 V. Con la tensión aplicada a dos o tres canales a la vez, el monitor dice que bajaron juntos y no avisa nada.
-5. Nivel 2 (si está armado): con `NIVEL2_INSTALADO` y `MODO_BANCO` en true, un LED con su resistencia y una pila entre las patas 4 y 6 de cada relé. Al tejer desde la web, cada LED se enciende según su columna del dibujo. Después, `MODO_BANCO` vuelve a **false**, y `NIVEL2_INSTALADO` también, hasta conectar el sensor (sección 9).
+5. Nivel 2: con `NIVEL2_INSTALADO` y `MODO_BANCO` en true, un LED con su resistencia y una pila entre las patas 4 y 6 de cada relé. Al tejer desde la web, cada LED se enciende según su columna del dibujo. Después, `MODO_BANCO` vuelve a **false**, y `NIVEL2_INSTALADO` también, hasta conectar el sensor (sección 9).
 
 La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHECKLIST_VALIDACION.md` y en la Guía de mediciones y verificaciones.
 
@@ -173,6 +190,8 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 2. Tejer una prueba corta con un dibujo fácil de reconocer y comparar la tela. Si sale corrida una pasada, ajustar `DESPLAZAMIENTO_FILAS` (`PUESTA_EN_MARCHA.md`, sección 2).
 3. Validar el conteo durante una jornada contra el contador mecánico del telar y, en la web, tocar **Validar** (`PUESTA_EN_MARCHA.md`, sección 3).
 
+Así se hizo el 28/10/2026: con el gabinete instalado y los cuatro canales conectados, el ESP32 se cargó con `NIVEL2_INSTALADO` en true y los demás valores como vienen (`DESPLAZAMIENTO_FILAS` y `PORCENTAJE_SELECCION` en 0), y la tela salió con el dibujo, sin pasadas corridas. Solo hubo que invertir dos cables en B3 (los canales 2 y 3 estaban cruzados: se vio en la primera vuelta del dibujo) y acercar el sensor a unos 2 mm del blanco. La validación del conteo contra el contador mecánico sigue en el período de prueba, hasta el 04/11/2026.
+
 ## 10. El día a día: encender, tejer y la botonera
 
 ### Encender
@@ -196,7 +215,7 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 | Retroceder | La posición vuelve una pasada atrás. |
 | Marcha, sin un trabajo abierto | Pasa a «Tejiendo», pero el sistema no sabe qué dibujo se está tejiendo: muestra **«Posición incierta (botón Marcha usado a mano)»**. Para ver el dibujo, ponerlo a tejer una vez desde la web (▶) y confirmar la posición. |
 
-> **Nota:** Hoy, sin el sensor de pasada, el avance que muestra la web es **estimado por tiempo** (300 pasadas por minuto) y dice «Tejiendo (sin confirmar por sensor)». Con el Nivel 2 instalado, la fila y el conteo son los que mide el sensor.
+> **Nota:** Sin el sensor de pasada (con solo el Nivel 1), el avance que muestra la web es **estimado por tiempo** (300 pasadas por minuto) y dice «Tejiendo (sin confirmar por sensor)». Con el Nivel 2 instalado, como desde el 28/10/2026, la fila y el conteo son los que mide el sensor.
 
 ### Apagar
 
@@ -213,6 +232,7 @@ Tocar ⏸ (o ⏹ si se terminó el trabajo) y después desenchufar el gabinete. 
 | Avisos de la botonera sin que nadie apriete nada | Falta el capacitor de 22 µF de ese canal o está invertido. |
 | La web dice «Posición incierta» | Se usó la botonera sin un trabajo abierto, o el equipo se reinició: mirar el telar y tocar Confirmar. |
 | El ESP32 se reinicia al enganchar un relé | El capacitor de 470 µF en la entrada de 5 V y los de 100 nF junto a cada módulo. |
+| El ESP32 no arranca o se calienta en su plaqueta | Un cable de P1 o P2 en el pad equivocado: desenchufar enseguida y revisar con la lista del punto 4.6 (los 5 V van solo a P1-10). |
 | «Pausado: sin señal del sensor» (Nivel 2) | La máquina se frenó o el sensor perdió el blanco (distancia, cable). |
 | La tela sale corrida una pasada (Nivel 2) | `DESPLAZAMIENTO_FILAS` o la posición del blanco en el eje. |
 
@@ -221,6 +241,7 @@ Tocar ⏸ (o ⏹ si se terminó el trabajo) y después desenchufar el gabinete. 
 | Tema | Documento |
 |---|---|
 | Las plaquetas y el cableado | `diagramas/hardware/plaquetas_y_cableado.png` |
+| La plaqueta del ESP32 | `diagramas/hardware/plaqueta_esp32` · Conexiones de las plaquetas (sección 4.6) |
 | Nivel 1 (botonera, fuente, sensado) | Guía de armado del Bloque A · `diagrama_bloque_A.png` · `diagrama_conexion_electrica.png` |
 | Sensor de pasada | Conexionado del Nivel 2 · Guía de los Bloques C y D · `canal_sensor.png` |
 | Relés de selección | Guía de conexión de los relés LCA110 · `PASO_A_PASO_RELES_LCA110.md` · `conexion_final_rele.png` |

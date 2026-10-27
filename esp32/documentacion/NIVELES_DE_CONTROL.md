@@ -7,8 +7,8 @@ del proyecto y para explicarlo bien en la presentación.
 > **Estado actual (relevamiento confirmado).** El telar de implementación es el Vamatex C 201:
 > la secuencia la lee un **dobby con cinta de papel perforada** y **cuatro bobinas de selección**
 > (no un Jacquard por tarjetas, como se suponía al principio; las secciones de abajo conservan ese
-> análisis inicial). El Nivel 2 dejó de ser "evolución futura": está en desarrollo por la vía de
-> control por marcos del final de este documento, con un sensor inductivo y cuatro relés LCA110
+> análisis inicial). El Nivel 2 dejó de ser "evolución futura": quedó instalado y probado en el telar el
+> 28/10/2026 por la vía de control por marcos del final de este documento, con un sensor inductivo y cuatro relés LCA110
 > en el lugar de los lectores ópticos. Todo corre en **un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`).
 
 ## El telar tiene, en la práctica, dos "máquinas"
@@ -51,17 +51,17 @@ resto de esta documentación.
 **Este nivel ya está instalado en el telar y no tiene inconvenientes de
 fondo.**
 
-### 🟡 Nivel 2, Dictar la secuencia del patrón (en desarrollo: ver el final)
+### 🟢 Nivel 2, Dictar la secuencia del patrón (instalado y probado: ver el final)
 
 Reemplazar **por completo** a la máquina lectora significa que el sistema no
 solo dé Marcha, sino que le entregue al telar la **secuencia completa del
 dibujo** (qué bobina se activa en cada pasada), ocupando el lugar de las
 tarjetas perforadas (en este telar, la cinta de papel).
 
-- **Estado:** en desarrollo. El sensor de pasada y el relé de selección se
-  probaron en protoboard el 10/10/2026, y el 17/10/2026 en la máquina, todavía en
-  protoboard: el sensor cuenta las pasadas y el primer canal seleccionó bien. Las
-  plaquetas para instalar los cuatro canales ya están soldadas (20/10/2026).
+- **Estado:** instalado y probado en el telar el 28/10/2026, con el gabinete y los
+  cuatro canales: el sensor cuenta las pasadas y cada relé LCA110 selecciona su bobina
+  según el dibujo. Antes se había probado en protoboard (10/10/2026) y con el primer
+  canal en la máquina (17/10/2026).
 - **El punto a resolver:** había que averiguar **cómo la máquina lectora le
   dicta la secuencia a la de accionamiento**. Al principio se suponía un
   **mecanismo Jacquard por tarjetas perforadas físicas**, un sistema mecánico

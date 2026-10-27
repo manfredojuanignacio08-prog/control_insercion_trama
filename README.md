@@ -7,7 +7,7 @@ web pensada para el celular**; un **backend** guarda y coordina todo en una
 **telar físico**.
 
 
-> **Para conectar todo y levantar el sistema, seguir [`docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`](docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md)** (también en Word: `documentacion_proyecto/Guia_Conexion_y_Puesta_en_Marcha.docx`): las cinco plaquetas, el telar, el servidor, la web y el ESP32, en orden.
+> **Para conectar todo y levantar el sistema, seguir [`docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`](docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md)** (también en Word: `documentacion_proyecto/Guia_Conexion_y_Puesta_en_Marcha.docx`): las seis plaquetas (las cinco soldadas y la del ESP32), el telar, el servidor, la web y el ESP32, en orden.
 >
 > **Para entender el código por dentro**, leer [`docs/analisis/Recorrido_del_codigo_y_herramientas.md`](docs/analisis/Recorrido_del_codigo_y_herramientas.md) (también en Word: `documentacion_proyecto/Recorrido_del_Codigo_y_Herramientas.docx`): la web, el servidor, la base de datos y el firmware, cómo viaja una orden y las herramientas usadas.
 >
@@ -22,7 +22,7 @@ backend/          El servidor y la aplicación web
   src/nivel2/     Endpoints del Nivel 2 (montados; los usa el firmware con el sensor)
 esp32/            El firmware
   control_trama_esp32/   El único programa de la placa (un solo ESP32). Con
-                         NIVEL2_INSTALADO en false (hoy) maneja la botonera;
+                         NIVEL2_INSTALADO en false maneja la botonera;
                          en true suma el sensor y la selección del dibujo
   pruebas/               Prueba de mesa de un relé LCA110, sin red
   documentacion/         Recomendaciones eléctricas, checklist y niveles
@@ -148,7 +148,7 @@ mejoras eléctricas en `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md`.
 ### `diagramas/`
 Cada diagrama en SVG (editable) y PNG. El detalle está en `diagramas/README.md`.
 - `diagramas/hardware/`, cómo se conecta: el cableado del nodo de control
-  (`diagrama_conexion_electrica`), las cinco plaquetas y su cableado, los bloques A, C y D,
+  (`diagrama_conexion_electrica`), las plaquetas y su cableado, los bloques A, C y D,
   un canal del sensor, la conexión final del relé LCA110 y la vista del Nivel 2.
 - `diagramas/sistema/`, cómo funciona: la arquitectura (`diagrama_logico_arquitectura`),
   los diagramas de la base de datos, el árbol de problemas y soluciones, el Gantt,
@@ -180,24 +180,24 @@ esquema multi-telar, historial y log de errores, firmware ESP32 gateway
 **Instalado en el telar:** el Bloque A (relés de Marcha, Pausa y Retroceder y sensado de
 la botonera), probado en la máquina el 19/09/2026.
 
-**Siguiente fase:** el Nivel 2 (sensor de pasada y relés LCA110 en el lugar de los lectores
-ópticos). El 10/10/2026 se probó todo en protoboard y funcionó, y el 17/10/2026 se probó en la
-máquina, todavía en protoboard: el lector se alimenta con 15 a 30 V (lleva la resistencia de
-protección de 470 Ω 3 W), el sensor de pasada quedó conectado y calibrado, y el primer canal
-seleccionó bien. Las cinco plaquetas soldadas ya están terminadas (20/10/2026); faltan los otros
-tres canales y el gabinete en la planta.
-Las mediciones que faltan están en `esp32/control_trama_esp32/README.md` y `PUESTA_EN_MARCHA.md`.
+**Nivel 2, instalado y probado el 28/10/2026:** el sensor de pasada y los cuatro relés LCA110 en
+el lugar de los lectores ópticos, con el gabinete en la planta. Se había probado en protoboard el
+10/10/2026 y en la máquina, con el sensor y el primer canal, el 17/10/2026 (el lector se alimenta
+con 15 a 30 V y lleva la resistencia de protección de 470 Ω 3 W). En la prueba completa del
+28/10/2026 el telar tejió un dibujo cargado desde la aplicación; solo hubo correcciones mínimas de
+cableado. El ESP32 va en su propia plaqueta desde el 25/10/2026 (`diagramas/hardware/plaqueta_esp32`).
+Falta validar el conteo contra el contador mecánico durante una jornada (`PUESTA_EN_MARCHA.md`).
 
 
-## Nivel 2, en desarrollo
+## Nivel 2
 
-El conteo real de pasadas y la selección del dibujo están en desarrollo. El gabinete tiene
-**un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`): hoy se carga con
-`NIVEL2_INSTALADO` en `false` y solo maneja la botonera; cuando se instalen los Bloques C y D
-se pone en `true` y se vuelve a cargar el mismo programa.
+El conteo real de pasadas y la selección del dibujo están instalados en el telar desde el
+28/10/2026. El gabinete tiene **un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`):
+en el repositorio `config.h` queda con `NIVEL2_INSTALADO` en `false`, como plantilla junto con la red
+y la clave; en el ESP32 del gabinete se carga en `true`.
 
 - `esp32/control_trama_esp32/`, el firmware (su README explica el Nivel 2)
 - `backend/src/nivel2/`, endpoints que usa el firmware con el sensor
 - `esp32/verificacion/sim_nivel2_firmware.py`, verificación de la lógica
 
-Cada carpeta tiene su README con el detalle de lo que falta antes de usar el Nivel 2.
+Cada carpeta tiene su README con el detalle del Nivel 2.

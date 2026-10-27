@@ -10,7 +10,14 @@ insertarlo en documentos.
 principal con el ESP32, la del sensado de la botonera, los módulos de relé y la del Nivel 2 con el sensor y
 los LCA110), los conectores entre ellas (J1 a J4, con sus hilos y GPIO) y las borneras que van al telar (B1
 la botonera, doble por botón para llevar cada par también a su relé, B2 el sensor, B3 los lectores, con la resistencia de protección y la de 10 kΩ ½ W junto a
-cada conector). Es el que acompaña al paso a paso de conexión y puesta en marcha.
+cada conector). Es el que acompaña al paso a paso de conexión y puesta en marcha. Marca también que el ESP32
+va en su propia plaqueta y los tres puentes de alambre de las pistas que faltaron en los PCB impresos.
+
+### `plaqueta_esp32/` (PNG, SVG y DXF)
+**La plaqueta del ESP32**, sumada el 25/10/2026: en la principal impresa, la tira derecha del ESP32 quedó con
+J5 y J7 invertidos, así que el ESP32 va en una plaqueta aparte, de una sola cara, con dos tiras hembra de 19
+pines a 25,4 mm y las salidas P1 (10 pines) y P2 (5), cableadas a los pads de la principal por nombre de
+señal. El DXF está en milímetros para importarlo en ARES como guía.
 
 ### `diagrama_conexion_electrica.svg`
 El nodo de control del Bloque A: los tres relés hacia la botonera, la etapa de

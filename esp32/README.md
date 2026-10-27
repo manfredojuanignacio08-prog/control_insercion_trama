@@ -135,7 +135,7 @@ perforada, que dicta el dibujo pasada por pasada).
 
 - **Nivel 1, Arranque y parada (lo que hace el ESP32 hoy):** darle Marcha, Pausa
   y Retroceder al telar con los relés. Instalado y probado en el telar el 19/09/2026.
-- **Nivel 2, Dictar el dibujo (en desarrollo):** contar las pasadas con un sensor inductivo
+- **Nivel 2, Dictar el dibujo (instalado y probado el 28/10/2026):** contar las pasadas con un sensor inductivo
   y reemplazar la cinta de papel perforada del dobby con cuatro relés LCA110 en el lugar de los
   lectores ópticos. Lo hace el mismo firmware, con `NIVEL2_INSTALADO` en `true`.
   La medición de los lectores y la conexión de los relés, paso a paso, están en
