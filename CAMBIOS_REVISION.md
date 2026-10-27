@@ -1912,3 +1912,41 @@ backend y en la web y `html-validate` en la página. Tres vueltas; la tercera sa
 | `host/correr.sh`, y las mismas pruebas con ASan, UBSan y `-Wconversion` | OK, sin advertencias |
 | `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
 | ESLint (backend y web) y `html-validate` (la página) | Sin errores |
+
+## Cuadragésima octava revisión: la ficha del engranaje en el celular (27/10/2026)
+
+| # | Dónde | Qué pasaba | Corrección |
+|---|---|---|---|
+| 1 | Ficha del dibujo (`index.html`, `styles.css`) | En el celular la ficha era más alta que la pantalla y no se podía bajar: la vista para el cliente (con la clave) y las estadísticas quedaban cortadas abajo | La ficha se desplaza adentro, con el título y la ✕ fijos arriba. Mientras está abierta se esconden la grilla, sus herramientas y Nuevo/Guardar para darle lugar; el estado del telar y la barra de tejido siguen a la vista |
+| 2 | Ficha del dibujo | Mostraba dos notas largas: la de las pasadas estimadas por el reloj de la aplicación y la de los metros por pasada sin cargar | Se sacaron de la ficha. Los números estimados siguen marcados con «≈» y «(estimadas)» |
+| 3 | Manual de la página web (Word, PDF y sitio) | — | Una línea que dice que la ficha se baja con el dedo en el celular |
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` (la prueba de la web verifica que las notas ya no aparecen) | OK |
+| Chromium a 375 × 700 y 360 × 640 (claro y oscuro) y a 1280 × 800: se llega a la clave del cliente y a las estadísticas | OK |
+| ESLint y `html-validate` | Sin errores |
+
+## Cuadragésima novena revisión: el código revisado en vueltas hasta dos limpias seguidas (27/10/2026)
+
+Revisión de todo el código (backend, web, base, firmware y pruebas), repetida hasta que dos vueltas
+seguidas no encontraron errores: fueron ocho, y la 7 y la 8 salieron limpias. Además de leerlo, en cada
+vuelta se corrieron las pruebas de siempre y controles nuevos: dos pantallas con el mismo telar, la web con
+el sensor del Nivel 2, 400 pedidos simultáneos sobre el mismo telar, tipos equivocados en cada campo de
+cada ruta y la base caída. El firmware no cambió.
+
+| # | Dónde | Qué pasaba | Corrección |
+|---|---|---|---|
+| 1 | «Confirmar» la posición incierta (`telares.controller.js`) | La base guarda la hora del uso manual con microsegundos y a la web le llega cortada al milisegundo: la hora que devolvía al tocar «Confirmar» quedaba siempre antes que la del evento y el backend respondía 409. El aviso «Posición incierta» no se podía sacar desde la página | Se compara al milisegundo. Casos nuevos en la integración contra PostgreSQL |
+| 2 | Reloj del tejido en la web (`index.html`) | Si la consulta de estado (cada 4 s) llegaba mientras ▶ esperaba la respuesta del servidor, la pantalla se sumaba al tejido como seguidora y después ▶ arrancaba otro reloj: con dos relojes, las pasadas estimadas corrían al doble (30 en 3 s en vez de 15) | `doTick` cancela el reloj que estuviera esperando y la consulta no suma la pantalla mientras ▶ arranca. Prueba nueva en `frontend.test.mjs` |
+| 3 | Rutas con transacción (`db.js` y los controladores de telares, dibujos y Nivel 2) | Pedían la conexión a la base fuera del `try`. Con la base caída, avanzar, asignar, terminar, reanudar, retroceder, guardar un dibujo, el reporte de pasadas y el evento de la botonera no respondían nunca (con Express 4 ese error no llega al manejador), y la web acumulaba un pedido colgado por pasada | `conectar(next)` pasa el error al manejador y responden enseguida. Prueba nueva en `controladores.test.mjs` |
+| 4 | Alta de un telar (y el README del backend) | Aceptaba como código o nombre un objeto, una lista, un número o miles de caracteres | Código de texto de hasta 40 caracteres y nombre de hasta 80 |
+| 5 | Hilado, metros por pasada y metros encargados del cliente | `true` se guardaba como 1 y `[5]` como 5 | Solo se acepta un número o un texto con un número |
+| 6 | Sitio de la documentación, «Probalo: armá un dibujo y ejecutalo» | En modo oscuro la celda marcada quedaba con el fondo de las vacías y el «1» casi no se veía | La regla del modo oscuro ya no pisa la celda marcada |
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test`, integración contra PostgreSQL 16 (con los casos nuevos), ESLint y `html-validate` | OK |
+| `host/correr.sh` con la ArduinoJson real, `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
+| Chromium: recorrido completo, botonera, intercalados, «Confirmar», dos pantallas (una lleva el reloj: 15 pasadas en 3 s, y al cerrarla la otra toma la posta) y con el sensor (la web no avanza por reloj) | OK |
+| 400 pedidos simultáneos y mezclados, en dos tandas; tipos equivocados en cada campo; base caída (25 rutas) | Sin errores 500, sin pedidos colgados ni bloqueos |
