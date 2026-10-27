@@ -1,0 +1,4 @@
+// Generado con el controlador real del backend (gen_payload.mjs)
+static const char* P_INTERCALADO = "{\"asignado\":true,\"patron_id\":7,\"nombre\":\"P\",\"filas\":5,\"columnas\":4,\"matriz_pasadas\":[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1],[0,1,0,0]],\"repeticiones_por_fila\":[3,8,0,0,2],\"secuencias_por_fila\":[null,[2,3,3,4],null,null,null],\"fila_actual\":1,\"repeticion_en_fila\":5,\"pasadas_sensor\":8,\"historial_id\":41}";
+static const char* P_SINPOSICION = "{\"asignado\":true,\"patron_id\":9,\"nombre\":\"Q\",\"filas\":2,\"columnas\":4,\"matriz_pasadas\":[[0,0,1,0],[0,0,0,1]],\"repeticiones_por_fila\":[100,50],\"secuencias_por_fila\":[null,null],\"fila_actual\":null,\"repeticion_en_fila\":0,\"pasadas_sensor\":null,\"historial_id\":null}";
+static const char* P_VACIO = "{\"asignado\":false,\"matriz_pasadas\":[]}";
