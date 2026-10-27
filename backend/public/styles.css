@@ -814,9 +814,17 @@ font-family:var(--font-mono);}
 .ficha-btn{background:none;border:none;color:var(--tx2);cursor:pointer;padding:6px;
   border-radius:8px;display:flex;align-items:center;transition:.15s}
 .ficha-btn:hover{background:var(--srf2);color:var(--acc)}
+/* En el celular la ficha es más alta que la pantalla: se desplaza adentro (sin esto las
+   estadísticas y la clave del cliente quedaban cortadas abajo) y el título con la ✕ queda fijo. */
 .ficha{background:var(--srf);border:1px solid var(--bd);border-radius:14px;
-  padding:16px;margin:12px 0}
-.ficha-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  padding:16px;margin:12px 0;flex:0 1 auto;min-height:0;overflow-y:auto;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.ficha-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+  position:sticky;top:-16px;z-index:1;background:var(--srf);margin-top:-16px;padding:16px 0 8px}
+#sc-editor.ficha-abierta .editor-grid-area,
+#sc-editor.ficha-abierta .editor-tools,
+#sc-editor.ficha-abierta .editor-savebar{display:none}
+#sc-editor.ficha-abierta .ficha{flex:1 1 auto}
 .ficha-h b{font-family:var(--font-display);font-size:15px;color:var(--tx)}
 .ficha-x{background:none;border:none;font-size:22px;line-height:1;color:var(--tx2);cursor:pointer;padding:0 4px}
 .ficha-mpp label{display:block;font-family:var(--font-mono);font-size:10px;

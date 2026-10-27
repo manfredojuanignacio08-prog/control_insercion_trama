@@ -1912,3 +1912,17 @@ backend y en la web y `html-validate` en la página. Tres vueltas; la tercera sa
 | `host/correr.sh`, y las mismas pruebas con ASan, UBSan y `-Wconversion` | OK, sin advertencias |
 | `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
 | ESLint (backend y web) y `html-validate` (la página) | Sin errores |
+
+## Cuadragésima octava revisión: la ficha del engranaje en el celular (27/10/2026)
+
+| # | Dónde | Qué pasaba | Corrección |
+|---|---|---|---|
+| 1 | Ficha del dibujo (`index.html`, `styles.css`) | En el celular la ficha era más alta que la pantalla y no se podía bajar: la vista para el cliente (con la clave) y las estadísticas quedaban cortadas abajo | La ficha se desplaza adentro, con el título y la ✕ fijos arriba. Mientras está abierta se esconden la grilla, sus herramientas y Nuevo/Guardar para darle lugar; el estado del telar y la barra de tejido siguen a la vista |
+| 2 | Ficha del dibujo | Mostraba dos notas largas: la de las pasadas estimadas por el reloj de la aplicación y la de los metros por pasada sin cargar | Se sacaron de la ficha. Los números estimados siguen marcados con «≈» y «(estimadas)» |
+| 3 | Manual de la página web (Word, PDF y sitio) | — | Una línea que dice que la ficha se baja con el dedo en el celular |
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` (la prueba de la web verifica que las notas ya no aparecen) | OK |
+| Chromium a 375 × 700 y 360 × 640 (claro y oscuro) y a 1280 × 800: se llega a la clave del cliente y a las estadísticas | OK |
+| ESLint y `html-validate` | Sin errores |

@@ -3791,8 +3791,6 @@ async function fichaCargar() {
     let html = '<div class="ficha-grid">';
     for (const [k, v] of filas) html += `<div class="ficha-dato"><span>${k}</span><b>${v}</b></div>`;
     html += '</div>';
-    if (d.aviso_precision) html += `<div class="ficha-aviso">${esc(d.aviso_precision)}</div>`;
-    if (d.aviso) html += `<div class="ficha-aviso">${esc(d.aviso)}</div>`;
     cont.innerHTML = html;
   } catch (e) {
     if (String(idActual) !== String(editId)) return;
@@ -3811,11 +3809,17 @@ function fichaInicializar() {
   const btn = document.getElementById('ficha-btn');
   const panel = document.getElementById('ficha');
   if (!btn || !panel) return;
+  // Con la ficha abierta, la grilla y sus herramientas se esconden (styles.css, .ficha-abierta):
+  // en el celular la ficha usa ese lugar. El estado del telar y la barra de tejido siguen a mano.
+  const mostrar = (abierta) => {
+    panel.hidden = !abierta;
+    document.getElementById('sc-editor').classList.toggle('ficha-abierta', abierta);
+  };
   btn.addEventListener('click', () => {
-    panel.hidden = !panel.hidden;
-    if (!panel.hidden) fichaCargar();
+    mostrar(panel.hidden);
+    if (!panel.hidden) { panel.scrollTop = 0; fichaCargar(); }
   });
-  document.getElementById('ficha-x').addEventListener('click', () => { panel.hidden = true; });
+  document.getElementById('ficha-x').addEventListener('click', () => mostrar(false));
   document.getElementById('mpp-in').addEventListener('input', fichaMostrarEquivalencia);
   document.getElementById('hil-guardar').addEventListener('click', () => fichaGuardarHilado(false));
   document.getElementById('hil-nuevo').addEventListener('click', () => {

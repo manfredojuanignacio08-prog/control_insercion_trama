@@ -112,13 +112,15 @@ f.run("showConfirm = function(t,m,yes){ yes(); };"); f.run('cerrarSesion()');
 await new Promise(r=>setImmediate(r)); await new Promise(r=>setImmediate(r));
 assert(f.calls.includes('POST /api/auth/logout'), f.calls.join('|'));
 
-// ── T11: la ficha marca como ESTIMADOS los números que salen del reloj de la página, y no los marca cuando el conteo está validado
+// ── T11: la ficha marca como ESTIMADOS los números que salen del reloj de la página, y no los marca cuando el conteo está validado.
+//         Las notas largas (precisión y metros por pasada) ya no se muestran en la ficha.
 const conEst = (est) => (m,u,b) => u.endsWith('/estadisticas') ? est : routes(m,u,b);
 const estBase = { patron:{id:3}, metros_por_pasada:0.0005, producciones:2, pasadas_totales:1000, repeticiones_del_dibujo:250, horas_de_maquina:2, primera_vez:'2026-09-01', ultima_vez:'2026-09-02', metros_tejidos:0.5, metros_mayor_produccion:0.3 };
 telar = { id:8, estado:'pausado', patron_actual_id:3, historial_actual_id:9, fila_actual:0 };
-f = boot(conEst({ ...estBase, precision_conteo:'estimado', metros_son_estimados:true, aviso_precision:'Estas pasadas se estiman' })); await f.run('iniciarApp()'); await f.run('fichaCargar()');
+f = boot(conEst({ ...estBase, precision_conteo:'estimado', metros_son_estimados:true, aviso_precision:'Estas pasadas se estiman', aviso:'Este dibujo todavía no tiene cargados' })); await f.run('iniciarApp()'); await f.run('fichaCargar()');
 let h = f.els['ficha-est'].innerHTML;
-assert(h.includes('(estimadas)') && h.includes('≈') && h.includes('(estimados)') && h.includes('Estas pasadas se estiman'), h);
+assert(h.includes('(estimadas)') && h.includes('≈') && h.includes('(estimados)'), h);
+assert(!h.includes('Estas pasadas se estiman') && !h.includes('todavía no tiene cargados') && !h.includes('ficha-aviso'), h);
 f = boot(conEst({ ...estBase, precision_conteo:'sensor_validado', metros_son_estimados:false })); await f.run('iniciarApp()'); await f.run('fichaCargar()');
 h = f.els['ficha-est'].innerHTML; assert(!h.includes('estimad') && !h.includes('≈'), h);
 
