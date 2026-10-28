@@ -226,6 +226,56 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
 .cta a.p{background:var(--hilo-400);color:var(--navy-950);border-color:var(--hilo-400)}
 .cta a small{display:block;font-family:var(--mono);font-size:17px;font-weight:400;opacity:.75;margin-top:4px}
 
+
+/* Cómo lo encontramos */
+.disc{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;margin-top:64px}
+.dc{background:#fff;border:1.5px solid var(--line);border-radius:24px;padding:32px 28px;min-height:400px}
+.dc .f{font-family:var(--mono);font-size:21px;color:var(--navy-600);letter-spacing:.08em}
+.dc b{display:block;font-size:32px;color:var(--navy-800);margin:16px 0 14px;line-height:1.15;letter-spacing:-.01em}
+.dc span{font-size:25px;color:var(--ink-2);line-height:1.4}
+.dc.h{background:var(--navy-800);border-color:var(--navy-800)}.dc.h .f{color:var(--hilo-300)}.dc.h b{color:#fff}.dc.h span{color:#C9D8E6}
+/* Cómo planteamos */
+.tree{margin-top:50px;border-radius:26px;overflow:hidden;border:1.5px solid rgba(127,168,201,.25)}
+.tree .th,.tree .tr{display:grid;grid-template-columns:1fr 60px 1fr 60px 1fr;align-items:center}
+.tree .th span{font-family:var(--mono);font-size:20px;letter-spacing:.1em;text-transform:uppercase;color:var(--hilo-300);padding:20px 30px;background:rgba(14,28,46,.6)}
+.tree .tr{border-top:1.5px solid rgba(127,168,201,.18);background:rgba(21,40,64,.7)}
+.tree .tr span,.tree .tr b{padding:22px 30px;font-size:28px;line-height:1.3}
+.tree .tr span{color:#BFD0E0}.tree .tr b{color:#fff}
+.tree .tr i{font-style:normal;color:var(--hilo-400);font-size:34px;text-align:center}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:34px}
+.rule{border-radius:20px;padding:24px 28px;background:rgba(242,166,90,.12);border:1.5px solid rgba(242,166,90,.4)}
+.rule b{font-family:var(--mono);font-size:19px;color:var(--hilo-300);letter-spacing:.08em;text-transform:uppercase;display:block}
+.rule span{font-size:28px;color:#fff;font-weight:600;line-height:1.3;display:block;margin-top:8px}
+/* Inversión */
+.cost{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:60px}
+.cbox{background:#fff;border:1.5px solid var(--line);border-radius:28px;padding:44px 46px}
+.cbox .t{font-family:var(--mono);font-size:21px;color:var(--navy-600);letter-spacing:.08em;text-transform:uppercase}
+.cbox .big{font-size:96px;font-weight:800;letter-spacing:-.04em;color:var(--navy-800);margin-top:14px;line-height:1}
+.cbox .stack{display:flex;height:16px;border-radius:8px;overflow:hidden;margin-top:28px;gap:3px}
+.cbox .lines{margin-top:30px;display:grid;gap:4px}
+.cbox .lines div{display:flex;justify-content:space-between;gap:24px;font-size:27px;padding:14px 0;border-top:1.5px solid var(--line)}
+.cbox .lines span{color:var(--ink-2)}.cbox .lines b{color:var(--navy-800);white-space:nowrap}
+.cbox.h{background:var(--navy-800);border-color:var(--navy-800)}
+.cbox.h .t{color:var(--hilo-300)}.cbox.h .big{color:var(--hilo-300)}
+.cbox.h .lines div{border-color:rgba(185,207,225,.2)}.cbox.h .lines span{color:#C9D8E6}.cbox.h .lines b{color:#fff}
+.cbox .sm{margin-top:22px;font-size:25px;color:#fff;font-weight:600}
+/* Precio */
+.pay{display:grid;grid-template-columns:600px 1fr;gap:46px;margin-top:40px;align-items:start}
+.pp{display:grid;gap:20px}
+.pc{background:rgba(21,40,64,.85);border:1.5px solid rgba(127,168,201,.22);border-radius:22px;padding:24px 30px}
+.pc .t{font-family:var(--mono);font-size:19px;color:var(--navy-400);letter-spacing:.08em;text-transform:uppercase}
+.pc .v{font-size:58px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1.05;margin-top:6px}
+.pc .v small{font-size:26px;color:#9FB7CC;font-weight:600;letter-spacing:0}
+.pc .s{font-size:23px;color:#BFD0E0;margin-top:4px}
+.pc:first-child{background:var(--hilo-400);border-color:var(--hilo-400)}
+.pc:first-child .t,.pc:first-child .s{color:var(--navy-900)}.pc:first-child .v{color:var(--navy-950)}
+.chart{background:rgba(14,28,46,.55);border:1.5px solid rgba(127,168,201,.22);border-radius:24px;padding:26px 30px}
+.chart .ct{font-family:var(--mono);font-size:19px;color:var(--navy-400);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.alt{display:flex;gap:14px;align-items:center;margin-top:26px;flex-wrap:wrap}
+.alt span{font-size:22px;color:#BFD0E0;padding:10px 16px;border-radius:12px;border:1.5px solid rgba(127,168,201,.25);font-family:var(--mono)}
+.alt span.on{border-color:var(--hilo-400);color:var(--hilo-300)}
+.alt span.k{border:0;padding:0;font-family:var(--font);color:#9FB7CC}.alt span.k b{color:#fff}
+
 /* Controles */
 #hud{position:fixed;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.06);z-index:20}
 #bar{height:100%;width:0;background:var(--hilo-400);transition:width .45s ease}
@@ -269,8 +319,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
 </svg>
 
 <div id="viewport"><div id="stage">
-
-<!-- 1. PORTADA -->
+<!-- PORTADA -->
 <section class="slide dark cover" data-notes="Presentarse. Una frase: venimos a mostrar un producto que ya funciona en un telar real de una fábrica textil.">
   <canvas class="tela"></canvas><div class="veil"></div>
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
@@ -285,7 +334,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   <div class="foot"><span>Instituto Leonardo Murialdo · 7mo Informática B</span><span>Presentación final · Noviembre 2026</span></div>
 </section>
 
-<!-- 2. EL PROBLEMA -->
+<!-- EL PROBLEMA -->
 <section class="slide mid" data-notes="Contar cómo trabaja hoy la fábrica: el dibujo sale de una cinta perforada que lee la máquina. Mostrar la pelusa en la foto.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad">
@@ -309,7 +358,45 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- 3. LA SOLUCIÓN -->
+<!-- CÓMO LO ENCONTRAMOS -->
+<section class="slide" data-notes="Contar que el proyecto no salió de una idea de escritorio: salió de ir a la fábrica, escuchar al dueño y medir la máquina.">
+  <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
+  <div class="pad" style="padding-top:150px">
+    <div class="eyebrow" data-a="1">Cómo lo encontramos</div>
+    <h2 data-a="2">No lo imaginamos: <span class="navy">lo fuimos a buscar a la planta.</span></h2>
+    <div class="disc">
+      <div class="dc" data-a="3"><div class="f">MAR – ABR</div><b>Dos posibles clientes</b><span>Entrevistamos a un taller y a una fábrica textil. Elegimos la fábrica: ahí estaba el problema más grande.</span></div>
+      <div class="dc" data-a="4"><div class="f">12/05</div><b>El foco lo puso el dueño</b><span>Descartamos medir temperatura y vibración. Lo que hacía falta era ver y controlar qué fila teje la máquina.</span></div>
+      <div class="dc" data-a="5"><div class="f">24/06</div><b>Mockup validado</b><span>Agrandamos los botones: el operario usa el celular de pie y con guantes.</span></div>
+      <div class="dc" data-a="6"><div class="f">19/08</div><b>Medimos el telar</b><span>Vamatex C 201 de 1989, botonera a 24 V de alterna, cinco pulsadores.</span></div>
+      <div class="dc h" data-a="7"><div class="f">06/09</div><b>300 pasadas por minuto</b><span>Son 144.000 maniobras por turno: ningún relé mecánico aguanta. Elegimos relés sin contactos.</span></div>
+    </div>
+    <p class="lead" data-a="8" style="font-size:30px;margin-top:44px">Ocho reuniones con el dueño y su empleado, la mayoría en la fábrica, al lado del telar.</p>
+  </div>
+</section>
+
+<!-- CÓMO PLANTEAMOS LA SOLUCIÓN -->
+<section class="slide mid" data-notes="Del árbol de problemas a las decisiones: cada causa se convirtió en algo concreto que construimos.">
+  <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
+  <div class="pad" style="padding-top:150px">
+    <div class="eyebrow" data-a="1">Cómo planteamos la solución</div>
+    <h2 data-a="2">Cada causa, <span class="hilo">una respuesta concreta.</span></h2>
+    <div class="tree" data-a="3">
+      <div class="th"><span>La causa</span><span></span><span>Lo que hicimos</span><span></span><span>Lo que se logra</span></div>
+      <div class="tr"><span>El dibujo se arma a mano en una cinta</span><i>→</i><span>Un editor de dibujos en el celular</span><i>→</i><b>Diseñar en minutos</b></div>
+      <div class="tr"><span>No hay un lugar donde guardarlo</span><i>→</i><span>Servidor y base de datos en la nube</span><i>→</i><b>Repetir cualquier diseño exacto</b></div>
+      <div class="tr"><span>El telar no está conectado a nada</span><i>→</i><span>Un gabinete con un ESP32 junto a la máquina</span><i>→</i><b>Controlarlo desde el celular</b></div>
+      <div class="tr"><span>No queda registro de la producción</span><i>→</i><span>Historial automático y ficha técnica</span><i>→</i><b>Saber qué, cuándo y cuánto</b></div>
+    </div>
+    <div class="rules">
+      <div class="rule" data-a="4"><b>Regla 1</b><span>No tocar la mecánica: todo va en paralelo.</span></div>
+      <div class="rule" data-a="5"><b>Regla 2</b><span>Por etapas: primero la botonera, después el dibujo.</span></div>
+      <div class="rule" data-a="6"><b>Regla 3</b><span>Si algo falla, el telar sigue como siempre.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- LA SOLUCIÓN -->
 <section class="slide" data-notes="La idea en una frase. Después los tres pasos: diseñar, guardar, tejer.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:170px">
@@ -321,39 +408,14 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
       <div class="step h" data-a="5"><span class="ic"><svg width="40" height="40"><use href="#i-play"/></svg></span><div class="n">03 — TEJER</div><h3>Un toque en Play y el telar teje</h3><p>El gabinete junto al telar recibe la orden, arranca la máquina y le da el dibujo a las bobinas. Sin cinta de papel.</p></div>
     </div>
   </div>
-  <div class="foot"><span>C.I.T. · La solución</span><span>03</span></div>
+  
 </section>
 
-<!-- 4. VIDEO FUNCIONAMIENTO -->
-<section class="slide dark" data-video data-notes="Dar play. Mientras corre el video, señalar: el operario toca Play en el celular y el telar arranca solo; la vista previa avanza fila por fila.">
-  <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
-  <div class="pad" style="padding-top:120px">
-    <div class="eyebrow" data-a="1">Míralo funcionando</div>
-    <h2 data-a="2" style="font-size:64px">El sistema, en un telar real de la fábrica.</h2>
-  </div>
-  <div class="video-wrap" data-a="3">
-    <div class="screen">
-      <video data-src="videos/funcionamiento.mp4" controls playsinline preload="metadata"></video>
-      <div class="ph">
-        <span class="play"><svg width="54" height="54"><use href="#i-play"/></svg></span>
-        <p>Poné el video en la carpeta <code>videos</code> con el nombre <code>funcionamiento.mp4</code>, o elegilo ahora:</p>
-        <label class="btn">Elegir video<input type="file" accept="video/*" hidden></label>
-      </div>
-    </div>
-    <div class="side">
-      <div class="card-d"><div class="k">Telar</div><div class="v">Vamatex C 201<br>matrícula 1104</div></div>
-      <div class="card-d"><div class="k">Velocidad real</div><div class="v">300 pasadas por minuto</div></div>
-      <div class="card-d"><div class="k">Prueba completa</div><div class="v">30/10/2026 · Niveles 1 y 2, las 4 bobinas</div></div>
-      <div class="card-d"><div class="k">Controles</div><div class="v">Espacio: reproducir o pausar</div></div>
-    </div>
-  </div>
-</section>
-
-<!-- 5. CÓMO FUNCIONA -->
+<!-- CÓMO FUNCIONA -->
 <section class="slide" data-notes="Explicar el recorrido de una orden: del celular al servidor, del servidor al gabinete, del gabinete al telar. Remarcar: no se toca la mecánica.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:160px">
-    <div class="eyebrow" data-a="1">Cómo funciona</div>
+    <div class="eyebrow" data-a="1">Qué diseñamos</div>
     <h2 data-a="2">Cuatro piezas, una sola orden.</h2>
     <div class="flow">
       <div class="node" data-a="3"><div class="ic"><svg width="40" height="40"><use href="#i-phone"/></svg></div><div class="t">Celular</div><h3>La app</h3><p>El operario entra con su huella, diseña y toca Play.</p></div>
@@ -368,7 +430,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- 6. LA APP: DISEÑAR -->
+<!-- LA APP: DISEÑAR -->
 <section class="slide" data-notes="Mostrar el editor: cada fila una pasada, una sola bobina por fila. Intercalar resuelve en segundos lo que con la cinta llevaba horas.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:150px">
@@ -388,7 +450,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- 7. LA APP: CONTROLAR Y SEGUIR -->
+<!-- LA APP: CONTROLAR Y SEGUIR -->
 <section class="slide mid" data-notes="Pensado para la fábrica y para sus clientes: el cliente de la fábrica ve su pedido con una clave, sin tocar nada.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:150px">
@@ -408,7 +470,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- 8. HARDWARE -->
+<!-- HARDWARE -->
 <section class="slide" data-notes="El gabinete se instala al lado del telar. Se conecta con dos hilos por botón, en paralelo: la botonera original sigue funcionando.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:150px">
@@ -432,7 +494,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- 9. SEGURIDAD -->
+<!-- SEGURIDAD -->
 <section class="slide dark" data-notes="Responder antes de que pregunten: qué pasa si se corta el WiFi o la luz.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:160px">
@@ -447,25 +509,53 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- 10. ANTES / DESPUÉS -->
-<section class="slide" data-notes="Comparación directa. Leer solo dos o tres filas, la tabla habla sola.">
+<!-- VIDEO FUNCIONAMIENTO -->
+<section class="slide dark" data-video data-notes="Dar play. Mientras corre el video, señalar: el operario toca Play en el celular y el telar arranca solo; la vista previa avanza fila por fila.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
-  <div class="pad" style="padding-top:150px">
-    <div class="eyebrow" data-a="1">Ventajas</div>
-    <h2 data-a="2">Antes y después de C.I.T.</h2>
-    <div class="vs" data-a="3">
-      <div class="r hd"><div></div><div class="a">Hoy · cinta perforada</div><div class="b">Con C.I.T.</div></div>
-      <div class="r"><div class="k">Dibujos</div><div class="a">Una cinta física por diseño</div><div class="b">Biblioteca en la nube, siempre disponible</div></div>
-      <div class="r"><div class="k">Cambio de dibujo</div><div class="a">Armar una cinta nueva, a mano</div><div class="b">Elegir otro diseño y tocar Play</div></div>
-      <div class="r"><div class="k">Repetibilidad</div><div class="a">Sin la cinta original, no se repite</div><div class="b">El mismo diseño teje siempre lo mismo</div></div>
-      <div class="r"><div class="k">Operación</div><div class="a">Frente a la máquina</div><div class="b">Desde el celular, en tiempo real</div></div>
-      <div class="r"><div class="k">Registro</div><div class="a">No se sabe qué se tejió ni cuándo</div><div class="b">Historial automático y ficha en PDF</div></div>
-      <div class="r"><div class="k">Clientes</div><div class="a">Llaman para preguntar cómo va</div><div class="b">Siguen su pedido con una clave</div></div>
+  <div class="pad" style="padding-top:120px">
+    <div class="eyebrow" data-a="1">El resultado</div>
+    <h2 data-a="2" style="font-size:64px">El sistema, en un telar real de la fábrica.</h2>
+  </div>
+  <div class="video-wrap" data-a="3">
+    <div class="screen">
+      <video data-src="videos/funcionamiento.mp4" controls playsinline preload="metadata"></video>
+      <div class="ph">
+        <span class="play"><svg width="54" height="54"><use href="#i-play"/></svg></span>
+        <p>Poné el video en la carpeta <code>videos</code> con el nombre <code>funcionamiento.mp4</code>, o elegilo ahora:</p>
+        <label class="btn">Elegir video<input type="file" accept="video/*" hidden></label>
+      </div>
+    </div>
+    <div class="side">
+      <div class="card-d"><div class="k">Telar</div><div class="v">Vamatex C 201<br>matrícula 1104</div></div>
+      <div class="card-d"><div class="k">Velocidad real</div><div class="v">300 pasadas por minuto</div></div>
+      <div class="card-d"><div class="k">Prueba completa</div><div class="v">30/10/2026 · Niveles 1 y 2, las 4 bobinas</div></div>
+      <div class="card-d"><div class="k">Controles</div><div class="v">Espacio: reproducir o pausar</div></div>
     </div>
   </div>
 </section>
 
-<!-- 11. VIDEO ENTREVISTA -->
+<!-- RESULTADOS -->
+<section class="slide" data-notes="Esto no es una maqueta: está instalado y probado. Repasar la línea de tiempo.">
+  <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
+  <div class="pad" style="padding-top:150px">
+    <div class="eyebrow" data-a="1">Resultados</div>
+    <h2 data-a="2">No es una maqueta: <span class="navy">ya teje.</span></h2>
+    <div class="nums">
+      <div class="num h" data-a="3"><div class="v">300</div><div class="l">pasadas por minuto, la velocidad real del telar, validada</div></div>
+      <div class="num" data-a="4"><div class="v">4</div><div class="l">bobinas de selección controladas desde la app</div></div>
+      <div class="num" data-a="5"><div class="v">3</div><div class="l">botones de la botonera manejados en paralelo</div></div>
+      <div class="num" data-a="6"><div class="v">0</div><div class="l">cambios en la mecánica del telar</div></div>
+    </div>
+    <div class="timeline">
+      <div class="tl ok" data-a="7"><div class="d"></div><div class="f">MAR – JUN</div><b>Diseño, app y servidor</b><span>Entrevistas, mockup y la web funcionando</span></div>
+      <div class="tl ok" data-a="8"><div class="d"></div><div class="f">19/09/2026</div><b>Nivel 1 en el telar</b><span>Marcha, Pausa y Retroceder desde el celular</span></div>
+      <div class="tl ok" data-a="9"><div class="d"></div><div class="f">24/10/2026</div><b>Plaquetas soldadas</b><span>Del protoboard a las plaquetas finales</span></div>
+      <div class="tl ok" data-a="10"><div class="d"></div><div class="f">30/10/2026</div><b>Sistema completo probado</b><span>Niveles 1 y 2, las cuatro bobinas</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- VIDEO ENTREVISTA -->
 <section class="slide dark" data-video data-notes="Presentar al cliente antes de dar play: dueño de la fábrica, nos abrió la planta durante todo el año.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:120px">
@@ -489,67 +579,81 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- 12. RESULTADOS -->
-<section class="slide" data-notes="Esto no es una maqueta: está instalado y probado. Repasar la línea de tiempo.">
+<!-- ANTES / DESPUÉS -->
+<section class="slide" data-notes="Comparación directa. Leer solo dos o tres filas, la tabla habla sola.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:150px">
-    <div class="eyebrow" data-a="1">Resultados</div>
-    <h2 data-a="2">No es una maqueta: <span class="navy">ya teje.</span></h2>
-    <div class="nums">
-      <div class="num h" data-a="3"><div class="v">300</div><div class="l">pasadas por minuto, la velocidad real del telar, validada</div></div>
-      <div class="num" data-a="4"><div class="v">4</div><div class="l">bobinas de selección controladas desde la app</div></div>
-      <div class="num" data-a="5"><div class="v">3</div><div class="l">botones de la botonera manejados en paralelo</div></div>
-      <div class="num" data-a="6"><div class="v">0</div><div class="l">cambios en la mecánica del telar</div></div>
-    </div>
-    <div class="timeline">
-      <div class="tl ok" data-a="7"><div class="d"></div><div class="f">MAR – JUN</div><b>Diseño, app y servidor</b><span>Entrevistas, mockup y la web funcionando</span></div>
-      <div class="tl ok" data-a="8"><div class="d"></div><div class="f">19/09/2026</div><b>Nivel 1 en el telar</b><span>Marcha, Pausa y Retroceder desde el celular</span></div>
-      <div class="tl ok" data-a="9"><div class="d"></div><div class="f">24/10/2026</div><b>Plaquetas soldadas</b><span>Del protoboard a las plaquetas finales</span></div>
-      <div class="tl ok" data-a="10"><div class="d"></div><div class="f">30/10/2026</div><b>Sistema completo probado</b><span>Niveles 1 y 2, las cuatro bobinas</span></div>
+    <div class="eyebrow" data-a="1">Lo que cambia en la fábrica</div>
+    <h2 data-a="2">Antes y después de C.I.T.</h2>
+    <div class="vs" data-a="3">
+      <div class="r hd"><div></div><div class="a">Hoy · cinta perforada</div><div class="b">Con C.I.T.</div></div>
+      <div class="r"><div class="k">Dibujos</div><div class="a">Una cinta física por diseño</div><div class="b">Biblioteca en la nube, siempre disponible</div></div>
+      <div class="r"><div class="k">Cambio de dibujo</div><div class="a">Armar una cinta nueva, a mano</div><div class="b">Elegir otro diseño y tocar Play</div></div>
+      <div class="r"><div class="k">Repetibilidad</div><div class="a">Sin la cinta original, no se repite</div><div class="b">El mismo diseño teje siempre lo mismo</div></div>
+      <div class="r"><div class="k">Operación</div><div class="a">Frente a la máquina</div><div class="b">Desde el celular, en tiempo real</div></div>
+      <div class="r"><div class="k">Registro</div><div class="a">No se sabe qué se tejió ni cuándo</div><div class="b">Historial automático y ficha en PDF</div></div>
+      <div class="r"><div class="k">Clientes</div><div class="a">Llaman para preguntar cómo va</div><div class="b">Siguen su pedido con una clave</div></div>
     </div>
   </div>
 </section>
 
-<!-- 13. ESCALA -->
-<section class="slide mid" data-notes="El piloto es un telar, la fábrica tiene once. Sumar uno es instalar otro gabinete y darlo de alta: el software ya está.">
+<!-- LO QUE INVERTIMOS -->
+<section class="slide" data-notes="Transparencia: esto es lo que costó llegar hasta acá, y esto es lo que cuesta cada telar nuevo. La diferencia es la clave del negocio.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:150px">
-    <div class="eyebrow" data-a="1">Crece con la planta</div>
-    <h2 data-a="2">Un telar hoy. <span class="hilo">Los once mañana.</span></h2>
-    <div class="scale">
-      <div data-a="3">
-        <div class="looms">
-          <div class="loom on">1104</div><div class="loom">+</div><div class="loom">+</div><div class="loom">+</div><div class="loom">+</div><div class="loom">+</div>
-          <div class="loom">+</div><div class="loom">+</div><div class="loom">+</div><div class="loom">+</div><div class="loom">+</div>
+    <div class="eyebrow" data-a="1">Lo que invertimos</div>
+    <h2 data-a="2">Desarrollarlo costó una vez. <span class="navy">Instalarlo, mucho menos.</span></h2>
+    <div class="cost">
+      <div class="cbox" data-a="3">
+        <div class="t">Inversión del proyecto · a recuperar</div>
+        <div class="big">$32.021.188</div>
+        <div class="stack"><i style="flex:31793299;background:var(--navy-800)"></i><i style="flex:900000;background:var(--hilo-400)"></i></div>
+        <div class="lines">
+          <div><span>Horas de trabajo del equipo (642 h)</span><b>$31.793.299</b></div>
+          <div><span>Componentes del telar piloto</span><b>$150.839</b></div>
+          <div><span>Insumos y herramientas (incluye Claude Pro)</span><b>$77.050</b></div>
         </div>
-        <p class="lead" style="font-size:30px;margin-top:34px">Sumar un telar es instalar otro gabinete y darlo de alta en la app. <b style="color:#fff">El servidor y la base de datos no se tocan.</b></p>
       </div>
-      <ul class="feat road" style="margin-top:0">
-        <li data-a="4"><span class="ic"><svg width="34" height="34"><use href="#i-box"/></svg></span><div><b>Un gabinete por telar</b><span>El mismo diseño, ya probado, para cada máquina.</span></div></li>
-        <li data-a="5"><span class="ic"><svg width="34" height="34"><use href="#i-doc"/></svg></span><div><b>Reportes de producción</b><span>Rendimiento por telar y por operario, con los datos que ya se guardan.</span></div></li>
-        <li data-a="6"><span class="ic"><svg width="34" height="34"><use href="#i-gear"/></svg></span><div><b>Mantenimiento preventivo</b><span>Alertas antes de que la falla pare la producción.</span></div></li>
-      </ul>
+      <div class="cbox h" data-a="4">
+        <div class="t">Lo que nos cuesta cada telar nuevo</div>
+        <div class="big">$1.511.939</div>
+        <div class="lines">
+          <div><span>Componentes: gabinete, plaquetas, relés y sensor</span><b>$150.839</b></div>
+          <div><span>Insumos de armado</span><b>$16.050</b></div>
+          <div><span>28 h de armado, instalación, prueba y capacitación</span><b>$1.345.050</b></div>
+        </div>
+        <p class="sm">El software ya está hecho: no se vuelve a pagar en cada cliente.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- 14. INVERSIÓN -->
-<section class="slide" data-notes="Precios de referencia. Remarcar: cada telar nuevo cuesta poco porque el desarrollo ya está hecho; el abono da tranquilidad.">
+<!-- PRECIO Y RECUPERACIÓN -->
+<section class="slide mid" data-notes="El precio sale de una cuenta: recuperar toda la inversión en dos años con dos fábricas como la del piloto. Después, cada telar deja ganancia.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:150px">
-    <div class="eyebrow" data-a="1">Inversión</div>
-    <h2 data-a="2">Se paga una vez. <span class="navy">Se usa todos los días.</span></h2>
-    <div class="plans">
-      <div class="plan h" data-a="3"><div class="t">Cada telar nuevo</div><h3>Gabinete instalado</h3><div class="p">≈ $151 mil <small>en componentes</small></div><ul><li>El desarrollo ya está hecho</li><li>Mismo hardware probado en el piloto</li><li>Instalación y alta en la app</li><li>Garantía de 1 a 3 meses</li></ul></div>
-      <div class="plan" data-a="4"><div class="t">Plan Básico</div><h3>Solo software</h3><div class="p">$129.625 <small>/ mes</small></div><ul><li>Actualizaciones y seguridad</li><li>Respaldo mensual de la base</li><li>Corrección de errores</li></ul></div>
-      <div class="plan" data-a="5"><div class="t">Plan Completo</div><h3>Software + visitas</h3><div class="p">$129.625 <small>/ mes + $228.750 por visita</small></div><ul><li>Todo lo del Básico</li><li>2 visitas al año al gabinete</li><li>Prueba de relés, sensor y fuente</li></ul></div>
-      <div class="plan" data-a="6"><div class="t">Sin abono</div><h3>Por incidente</h3><div class="p">$228.750 <small>/ visita</small></div><ul><li>Atención puntual ante una falla</li><li>Repuestos al costo</li></ul></div>
+    <div class="eyebrow" data-a="1">Precio y recuperación</div>
+    <h2 data-a="2" style="font-size:64px">En dos años, <span class="hilo">con dos fábricas, se recupera todo.</span></h2>
+    <div class="pay">
+      <div class="pp" data-a="3">
+        <div class="pc"><div class="t">Precio por telar</div><div class="v">$3.200.000</div><div class="s">instalado y funcionando</div></div>
+        <div class="pc"><div class="t">Abono por fábrica</div><div class="v">$129.625<small>/mes</small></div><div class="s">soporte y actualizaciones</div></div>
+        <div class="pc"><div class="t">Para recuperar</div><div class="v">20 telares</div><div class="s">2 fábricas de 10 telares en 24 meses</div></div>
+      </div>
+      <div class="chart" data-a="4">
+        <div class="ct">Saldo acumulado, instalando 5 telares por semestre</div>
+        <svg viewBox="0 0 900 450" style="width:100%;height:auto;display:block" role="img" aria-label="Saldo acumulado por semestre"><line x1="40" y1="95" x2="880" y2="95" stroke="rgba(185,207,225,.45)" stroke-width="2"/><text x="40" y="35" font-size="20" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">$0</text><rect x="70" y="95" width="110" height="300" rx="10" fill="#E8954A"/><text x="125.0" y="429" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">−$32,0 M</text><text x="125.0" y="73" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Inicio</text><rect x="235" y="95" width="110" height="221" rx="10" fill="#3D6B96"/><text x="290.0" y="350" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">−$23,6 M</text><text x="290.0" y="73" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Sem. 1</text><rect x="400" y="95" width="110" height="142" rx="10" fill="#3D6B96"/><text x="455.0" y="271" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">−$15,1 M</text><text x="455.0" y="73" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Sem. 2</text><rect x="565" y="95" width="110" height="63" rx="10" fill="#3D6B96"/><text x="620.0" y="192" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">−$6,7 M</text><text x="620.0" y="73" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Sem. 3</text><rect x="730" y="79" width="110" height="16" rx="10" fill="#5FB98A"/><text x="785.0" y="67" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">+$1,7 M</text><text x="785.0" y="125" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Sem. 4</text></svg>
+      </div>
     </div>
-    <p class="note" data-a="7">Valores de referencia en pesos, a octubre de 2026. El proyecto piloto completo (desarrollo, hardware e instalación) se presupuestó en unos $40 millones.</p>
+    <div class="alt" data-a="5">
+      <span class="k">Otros precios:</span>
+      <span>$3.000.000 → 22 telares</span><span class="on">$3.200.000 → 19 telares</span><span>$3.500.000 → 17 telares</span><span>$4.000.000 → 13 telares</span>
+      <span class="k" style="flex-basis:100%">Desde el año 3, cada telar deja <b>$1.688.061</b></span>
+    </div>
   </div>
 </section>
 
-<!-- 15. EQUIPO -->
+<!-- EQUIPO -->
 <section class="slide dark" data-notes="Presentar a cada integrante con su rol en una frase.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:160px">
@@ -567,7 +671,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- 16. CIERRE -->
+<!-- CIERRE -->
 <section class="slide dark cover" data-notes="Cierre: invitar a ver la demo en vivo y a preguntar.">
   <canvas class="tela"></canvas><div class="veil"></div>
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
@@ -587,7 +691,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
 </div></div>
 
 <div id="hud"><div id="bar"></div></div>
-<div id="ctrl"><button id="prev" aria-label="Anterior">‹</button><span id="count">1 / 16</span><button id="next" aria-label="Siguiente">›</button><button id="fs" aria-label="Pantalla completa">⛶</button><button id="nt" aria-label="Notas">N</button></div>
+<div id="ctrl"><button id="prev" aria-label="Anterior">‹</button><span id="count">1 / 18</span><button id="next" aria-label="Siguiente">›</button><button id="fs" aria-label="Pantalla completa">⛶</button><button id="nt" aria-label="Notas">N</button></div>
 <div id="notes"><b>NOTAS PARA EL ORADOR</b><span id="ntxt"></span></div>
 <div id="help">→ / espacio: avanzar · ←: volver · F: pantalla completa · N: notas</div>
 
