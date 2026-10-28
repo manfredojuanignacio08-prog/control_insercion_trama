@@ -1,6 +1,6 @@
 # Precio con recuperación a dos años (borrador para la Estimación de Costos)
 
-Cálculo usado en la presentación final. Falta pasarlo al Word de Estimación de Costos, a los documentos y al sitio que mencionan el precio.
+Cálculo del que sale el precio final de la presentación ($3.200.000 por telar). Falta pasarlo al Word de Estimación de Costos, a los documentos y al sitio que mencionan el precio.
 
 ## Inversión a recuperar: $32.021.188
 

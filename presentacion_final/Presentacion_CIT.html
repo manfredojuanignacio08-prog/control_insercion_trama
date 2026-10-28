@@ -16,6 +16,7 @@
   --ok:#2E6E4A; --ok-dark:#5FB98A; --err:#8B1F1F;
   --font:'Geist','Segoe UI',system-ui,-apple-system,sans-serif;
   --mono:'IBM Plex Mono',ui-monospace,'Cascadia Mono',monospace;
+  color-scheme:dark;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#070F1A;overflow:hidden}
@@ -192,6 +193,9 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
 .tl b{display:block;font-size:29px;color:var(--navy-800);margin-top:6px;line-height:1.25}
 .tl span{font-size:24px;color:var(--ink-2)}
 
+.done{display:grid;grid-template-columns:1fr 1fr;gap:20px 36px;margin-top:50px}
+.done div{display:flex;gap:20px;align-items:center;font-size:29px;color:var(--ink);background:#fff;border:1.5px solid var(--line);border-radius:18px;padding:20px 26px}
+.done i{flex:none;font-style:normal;width:46px;height:46px;border-radius:50%;background:var(--navy-800);color:var(--hilo-300);display:grid;place-items:center;font-weight:800}
 /* Escala */
 .scale{display:grid;grid-template-columns:1fr 1fr;gap:70px;margin-top:56px;align-items:center}
 .looms{display:grid;grid-template-columns:repeat(6,1fr);gap:18px}
@@ -227,13 +231,12 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
 .cta a small{display:block;font-family:var(--mono);font-size:17px;font-weight:400;opacity:.75;margin-top:4px}
 
 
-/* Cómo lo encontramos */
-.disc{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;margin-top:64px}
-.dc{background:#fff;border:1.5px solid var(--line);border-radius:24px;padding:32px 28px;min-height:400px}
-.dc .f{font-family:var(--mono);font-size:21px;color:var(--navy-600);letter-spacing:.08em}
-.dc b{display:block;font-size:32px;color:var(--navy-800);margin:16px 0 14px;line-height:1.15;letter-spacing:-.01em}
-.dc span{font-size:25px;color:var(--ink-2);line-height:1.4}
-.dc.h{background:var(--navy-800);border-color:var(--navy-800)}.dc.h .f{color:var(--hilo-300)}.dc.h b{color:#fff}.dc.h span{color:#C9D8E6}
+/* Lo que vimos */
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:56px}
+.fc{background:#fff;border:1.5px solid var(--line);border-radius:24px;padding:32px 34px}
+.fc b{display:block;font-size:33px;color:var(--navy-800);line-height:1.18;letter-spacing:-.01em}
+.fc span{display:block;margin-top:14px;font-size:26px;color:var(--ink-2);line-height:1.4}
+.fc.h{background:var(--navy-800);border-color:var(--navy-800)}.fc.h b{color:var(--hilo-300)}.fc.h span{color:#C9D8E6}
 /* Cómo planteamos */
 .tree{margin-top:50px;border-radius:26px;overflow:hidden;border:1.5px solid rgba(127,168,201,.25)}
 .tree .th,.tree .tr{display:grid;grid-template-columns:1fr 60px 1fr 60px 1fr;align-items:center}
@@ -276,6 +279,19 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
 .alt span.on{border-color:var(--hilo-400);color:var(--hilo-300)}
 .alt span.k{border:0;padding:0;font-family:var(--font);color:#9FB7CC}.alt span.k b{color:#fff}
 
+/* Precio */
+.price{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:56px;align-items:stretch}
+.pbig{background:var(--navy-800);border-radius:28px;padding:46px 50px;color:#fff}
+.pbig .t,.cbox .t{font-family:var(--mono);font-size:21px;letter-spacing:.08em;text-transform:uppercase}
+.pbig .t{color:var(--hilo-300)}
+.pbig .v{font-size:132px;font-weight:800;letter-spacing:-.045em;line-height:1;margin-top:18px;color:#fff;font-variant-numeric:tabular-nums}
+.pbig ul{list-style:none;margin-top:34px;display:grid;gap:14px}
+.pbig li{font-size:28px;color:#C9D8E6;padding-left:36px;position:relative}
+.pbig li::before{content:"✓";position:absolute;left:0;color:var(--hilo-400);font-weight:800}
+.cbox .lines .tot{border-top:3px solid var(--navy-800);margin-top:8px}
+.cbox .lines .tot span,.cbox .lines .tot b{font-weight:800;color:var(--navy-800);font-size:30px}
+.cbox .lines b{font-variant-numeric:tabular-nums}
+.sm2{margin-top:26px;font-size:25px;color:var(--ink-2)}
 /* Controles */
 #hud{position:fixed;left:0;right:0;bottom:0;height:5px;background:rgba(255,255,255,.06);z-index:20}
 #bar{height:100%;width:0;background:var(--hilo-400);transition:width .45s ease}
@@ -358,28 +374,28 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- CÓMO LO ENCONTRAMOS -->
-<section class="slide" data-notes="Contar que el proyecto no salió de una idea de escritorio: salió de ir a la fábrica, escuchar al dueño y medir la máquina.">
+<!-- LO QUE VIMOS EN LA PLANTA -->
+<section class="slide" data-notes="Cada dato de esta diapositiva salió de hablar con el dueño y medir la máquina, y cada uno cambió el diseño.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:150px">
-    <div class="eyebrow" data-a="1">Cómo lo encontramos</div>
-    <h2 data-a="2">No lo imaginamos: <span class="navy">lo fuimos a buscar a la planta.</span></h2>
-    <div class="disc">
-      <div class="dc" data-a="3"><div class="f">MAR – ABR</div><b>Dos posibles clientes</b><span>Entrevistamos a un taller y a una fábrica textil. Elegimos la fábrica: ahí estaba el problema más grande.</span></div>
-      <div class="dc" data-a="4"><div class="f">12/05</div><b>El foco lo puso el dueño</b><span>Descartamos medir temperatura y vibración. Lo que hacía falta era ver y controlar qué fila teje la máquina.</span></div>
-      <div class="dc" data-a="5"><div class="f">24/06</div><b>Mockup validado</b><span>Agrandamos los botones: el operario usa el celular de pie y con guantes.</span></div>
-      <div class="dc" data-a="6"><div class="f">19/08</div><b>Medimos el telar</b><span>Vamatex C 201 de 1989, botonera a 24 V de alterna, cinco pulsadores.</span></div>
-      <div class="dc h" data-a="7"><div class="f">06/09</div><b>300 pasadas por minuto</b><span>Son 144.000 maniobras por turno: ningún relé mecánico aguanta. Elegimos relés sin contactos.</span></div>
+    <div class="eyebrow" data-a="1">Lo que vimos en la planta</div>
+    <h2 data-a="2">Cada dato del telar <span class="navy">cambió el diseño.</span></h2>
+    <div class="facts">
+      <div class="fc" data-a="3"><b>El operario necesita ver qué fila teje la máquina</b><span>Por eso la app se centra en el dibujo y en el control. Medir temperatura o vibración no le servía.</span></div>
+      <div class="fc" data-a="4"><b>Trabaja de pie y con guantes</b><span>Botones grandes y la lista de dibujos siempre a la vista, sin menús.</span></div>
+      <div class="fc" data-a="5"><b>Botonera de 24 V de alterna</b><span>Los relés van en paralelo a Marcha, Pausa y Retroceder: la botonera sigue andando igual.</span></div>
+      <div class="fc" data-a="6"><b>4 bobinas que comanda el lector de la cinta</b><span>Damos la señal en el lugar del lector, sin tocar las bobinas ni la mecánica.</span></div>
+      <div class="fc h" data-a="7"><b>300 pasadas por minuto</b><span>Son 144.000 maniobras por turno. Un relé mecánico no aguanta: usamos relés sin contactos.</span></div>
+      <div class="fc" data-a="8"><b>Un eje da una vuelta por pasada</b><span>Ahí va el sensor inductivo que cuenta cada pasada, alimentado por el mismo telar.</span></div>
     </div>
-    <p class="lead" data-a="8" style="font-size:30px;margin-top:44px">Ocho reuniones con el dueño y su empleado, la mayoría en la fábrica, al lado del telar.</p>
   </div>
 </section>
 
-<!-- CÓMO PLANTEAMOS LA SOLUCIÓN -->
+<!-- LA IDEA -->
 <section class="slide mid" data-notes="Del árbol de problemas a las decisiones: cada causa se convirtió en algo concreto que construimos.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:150px">
-    <div class="eyebrow" data-a="1">Cómo planteamos la solución</div>
+    <div class="eyebrow" data-a="1">La idea</div>
     <h2 data-a="2">Cada causa, <span class="hilo">una respuesta concreta.</span></h2>
     <div class="tree" data-a="3">
       <div class="th"><span>La causa</span><span></span><span>Lo que hicimos</span><span></span><span>Lo que se logra</span></div>
@@ -528,7 +544,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
     <div class="side">
       <div class="card-d"><div class="k">Telar</div><div class="v">Vamatex C 201<br>matrícula 1104</div></div>
       <div class="card-d"><div class="k">Velocidad real</div><div class="v">300 pasadas por minuto</div></div>
-      <div class="card-d"><div class="k">Prueba completa</div><div class="v">30/10/2026 · Niveles 1 y 2, las 4 bobinas</div></div>
+      <div class="card-d"><div class="k">Prueba completa</div><div class="v">Niveles 1 y 2, con las 4 bobinas</div></div>
       <div class="card-d"><div class="k">Controles</div><div class="v">Espacio: reproducir o pausar</div></div>
     </div>
   </div>
@@ -546,11 +562,11 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
       <div class="num" data-a="5"><div class="v">3</div><div class="l">botones de la botonera manejados en paralelo</div></div>
       <div class="num" data-a="6"><div class="v">0</div><div class="l">cambios en la mecánica del telar</div></div>
     </div>
-    <div class="timeline">
-      <div class="tl ok" data-a="7"><div class="d"></div><div class="f">MAR – JUN</div><b>Diseño, app y servidor</b><span>Entrevistas, mockup y la web funcionando</span></div>
-      <div class="tl ok" data-a="8"><div class="d"></div><div class="f">19/09/2026</div><b>Nivel 1 en el telar</b><span>Marcha, Pausa y Retroceder desde el celular</span></div>
-      <div class="tl ok" data-a="9"><div class="d"></div><div class="f">24/10/2026</div><b>Plaquetas soldadas</b><span>Del protoboard a las plaquetas finales</span></div>
-      <div class="tl ok" data-a="10"><div class="d"></div><div class="f">30/10/2026</div><b>Sistema completo probado</b><span>Niveles 1 y 2, las cuatro bobinas</span></div>
+    <div class="done">
+      <div data-a="7"><i>✓</i><span>Marcha, Pausa y Retroceder desde el celular, en el telar real</span></div>
+      <div data-a="8"><i>✓</i><span>La app se entera cuando alguien usa la botonera a mano</span></div>
+      <div data-a="9"><i>✓</i><span>El dibujo sale de la app y lo tejen las 4 bobinas, sin cinta</span></div>
+      <div data-a="10"><i>✓</i><span>El sensor cuenta cada pasada y la app muestra fila y metros en vivo</span></div>
     </div>
   </div>
 </section>
@@ -597,59 +613,36 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   </div>
 </section>
 
-<!-- LO QUE INVERTIMOS -->
-<section class="slide" data-notes="Transparencia: esto es lo que costó llegar hasta acá, y esto es lo que cuesta cada telar nuevo. La diferencia es la clave del negocio.">
+<!-- PRECIO -->
+<section class="slide" data-notes="Un solo número: lo que paga la fábrica por cada telar instalado. A la derecha, lo que nos cuesta a nosotros hacerlo para otro cliente; el software ya está hecho.">
   <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
   <div class="pad" style="padding-top:150px">
-    <div class="eyebrow" data-a="1">Lo que invertimos</div>
-    <h2 data-a="2">Desarrollarlo costó una vez. <span class="navy">Instalarlo, mucho menos.</span></h2>
-    <div class="cost">
-      <div class="cbox" data-a="3">
-        <div class="t">Inversión del proyecto · a recuperar</div>
-        <div class="big">$32.021.188</div>
-        <div class="stack"><i style="flex:31793299;background:var(--navy-800)"></i><i style="flex:900000;background:var(--hilo-400)"></i></div>
-        <div class="lines">
-          <div><span>Horas de trabajo del equipo (642 h)</span><b>$31.793.299</b></div>
-          <div><span>Componentes del telar piloto</span><b>$150.839</b></div>
-          <div><span>Insumos y herramientas (incluye Claude Pro)</span><b>$77.050</b></div>
-        </div>
+    <div class="eyebrow" data-a="1">Precio</div>
+    <h2 data-a="2">Un precio cerrado, <span class="navy">por cada telar.</span></h2>
+    <div class="price">
+      <div class="pbig" data-a="3">
+        <div class="t">Precio final por telar</div>
+        <div class="v">$3.200.000</div>
+        <ul>
+          <li>Gabinete con sus plaquetas, relés y sensor</li>
+          <li>Instalación en el telar, sin modificar la máquina</li>
+          <li>Puesta en marcha, prueba y capacitación</li>
+          <li>La app, el servidor y la base de datos</li>
+          <li>Garantía de 1 a 3 meses</li>
+        </ul>
       </div>
-      <div class="cbox h" data-a="4">
-        <div class="t">Lo que nos cuesta cada telar nuevo</div>
-        <div class="big">$1.511.939</div>
+      <div class="cbox" data-a="4">
+        <div class="t">Lo que cuesta hacerlo para otro cliente</div>
         <div class="lines">
           <div><span>Componentes: gabinete, plaquetas, relés y sensor</span><b>$150.839</b></div>
           <div><span>Insumos de armado</span><b>$16.050</b></div>
           <div><span>28 h de armado, instalación, prueba y capacitación</span><b>$1.345.050</b></div>
+          <div class="tot"><span>Total por telar</span><b>$1.511.939</b></div>
         </div>
-        <p class="sm">El software ya está hecho: no se vuelve a pagar en cada cliente.</p>
+        <p class="sm2">El software ya está desarrollado: no se vuelve a pagar en cada cliente.</p>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- PRECIO Y RECUPERACIÓN -->
-<section class="slide mid" data-notes="El precio sale de una cuenta: recuperar toda la inversión en dos años con dos fábricas como la del piloto. Después, cada telar deja ganancia.">
-  <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
-  <div class="pad" style="padding-top:150px">
-    <div class="eyebrow" data-a="1">Precio y recuperación</div>
-    <h2 data-a="2" style="font-size:64px">En dos años, <span class="hilo">con dos fábricas, se recupera todo.</span></h2>
-    <div class="pay">
-      <div class="pp" data-a="3">
-        <div class="pc"><div class="t">Precio por telar</div><div class="v">$3.200.000</div><div class="s">instalado y funcionando</div></div>
-        <div class="pc"><div class="t">Abono por fábrica</div><div class="v">$129.625<small>/mes</small></div><div class="s">soporte y actualizaciones</div></div>
-        <div class="pc"><div class="t">Para recuperar</div><div class="v">20 telares</div><div class="s">2 fábricas de 10 telares en 24 meses</div></div>
-      </div>
-      <div class="chart" data-a="4">
-        <div class="ct">Saldo acumulado, instalando 5 telares por semestre</div>
-        <svg viewBox="0 0 900 450" style="width:100%;height:auto;display:block" role="img" aria-label="Saldo acumulado por semestre"><line x1="40" y1="95" x2="880" y2="95" stroke="rgba(185,207,225,.45)" stroke-width="2"/><text x="40" y="35" font-size="20" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">$0</text><rect x="70" y="95" width="110" height="300" rx="10" fill="#E8954A"/><text x="125.0" y="429" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">−$32,0 M</text><text x="125.0" y="73" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Inicio</text><rect x="235" y="95" width="110" height="221" rx="10" fill="#3D6B96"/><text x="290.0" y="350" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">−$23,6 M</text><text x="290.0" y="73" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Sem. 1</text><rect x="400" y="95" width="110" height="142" rx="10" fill="#3D6B96"/><text x="455.0" y="271" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">−$15,1 M</text><text x="455.0" y="73" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Sem. 2</text><rect x="565" y="95" width="110" height="63" rx="10" fill="#3D6B96"/><text x="620.0" y="192" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">−$6,7 M</text><text x="620.0" y="73" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Sem. 3</text><rect x="730" y="79" width="110" height="16" rx="10" fill="#5FB98A"/><text x="785.0" y="67" text-anchor="middle" font-size="25" font-weight="700" fill="#fff" font-family="Geist,Segoe UI,sans-serif">+$1,7 M</text><text x="785.0" y="125" text-anchor="middle" font-size="19" fill="#9FB7CC" font-family="IBM Plex Mono,monospace">Sem. 4</text></svg>
-      </div>
-    </div>
-    <div class="alt" data-a="5">
-      <span class="k">Otros precios:</span>
-      <span>$3.000.000 → 22 telares</span><span class="on">$3.200.000 → 19 telares</span><span>$3.500.000 → 17 telares</span><span>$4.000.000 → 13 telares</span>
-      <span class="k" style="flex-basis:100%">Desde el año 3, cada telar deja <b>$1.688.061</b></span>
-    </div>
+    <p class="note" data-a="5">Valores en pesos, a octubre de 2026.</p>
   </div>
 </section>
 
@@ -691,7 +684,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
 </div></div>
 
 <div id="hud"><div id="bar"></div></div>
-<div id="ctrl"><button id="prev" aria-label="Anterior">‹</button><span id="count">1 / 18</span><button id="next" aria-label="Siguiente">›</button><button id="fs" aria-label="Pantalla completa">⛶</button><button id="nt" aria-label="Notas">N</button></div>
+<div id="ctrl"><button id="prev" aria-label="Anterior">‹</button><span id="count">1 / 17</span><button id="next" aria-label="Siguiente">›</button><button id="fs" aria-label="Pantalla completa">⛶</button><button id="nt" aria-label="Notas">N</button></div>
 <div id="notes"><b>NOTAS PARA EL ORADOR</b><span id="ntxt"></span></div>
 <div id="help">→ / espacio: avanzar · ←: volver · F: pantalla completa · N: notas</div>
 
@@ -729,7 +722,7 @@ canvas.tela{position:absolute;inset:0;width:100%;height:100%}
   document.getElementById('prev').onclick=function(){go(cur-1);};
   document.getElementById('next').onclick=function(){go(cur+1);};
   document.getElementById('nt').onclick=function(){notes.classList.toggle('show');};
-  function fs(){if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}else{document.exitFullscreen();}}
+  function fs(){if(!document.fullscreenElement){var p=document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();p&&p.catch&&p.catch(function(){});}else{document.exitFullscreen();}}
   document.getElementById('fs').onclick=fs;
   var mt;addEventListener('mousemove',function(){document.body.classList.add('mouse');clearTimeout(mt);mt=setTimeout(function(){document.body.classList.remove('mouse');},1800);});
   var tx=null;addEventListener('touchstart',function(e){tx=e.touches[0].clientX;},{passive:true});
