@@ -1,0 +1,6 @@
+Poné acá los dos videos con estos nombres exactos:
+
+  funcionamiento.mp4   (el sistema funcionando en el telar)  -> diapositiva 4
+  entrevista.mp4       (la entrevista con el cliente)        -> diapositiva 11
+
+Si no están, en esas diapositivas aparece un botón "Elegir video" para cargarlos en el momento.
