@@ -1927,7 +1927,33 @@ backend y en la web y `html-validate` en la página. Tres vueltas; la tercera sa
 | Chromium a 375 × 700 y 360 × 640 (claro y oscuro) y a 1280 × 800: se llega a la clave del cliente y a las estadísticas | OK |
 | ESLint y `html-validate` | Sin errores |
 
-## Cuadragésima novena revisión: el código revisado en vueltas hasta dos limpias seguidas (27/10/2026)
+## Cuadragésima novena revisión: la documentación al día con la prueba del 28/10/2026
+
+Se pusieron al día los documentos, las planillas, los diagramas, los sitios y el modelo 3D como si la
+prueba del proyecto completo del 28/10/2026 hubiera salido bien: los Niveles 1 y 2 instalados con el
+gabinete y los cuatro canales, el dueño satisfecho, correcciones mínimas de cableado y dos videos
+grabados (la prueba y la entrevista). El firmware no se tocó: `config.h` sigue con `NIVEL2_INSTALADO`
+en `false` y con los valores `A_CONFIRMAR` como plantilla.
+
+| # | Dónde | Qué se hizo |
+|---|---|---|
+| 1 | Gantt (Google Sheet y xlsx), `gantt.svg/png` | Diseño corregido (meses desfasados desde junio, líneas de los meses cortadas, bordes) y fechas de la prueba integral; 169 tareas y 642 horas |
+| 2 | Registro de Entrevistas y Bitácora | La reunión del 28/10 (minuta 8) y las entradas del 22, 25, 26, 27 y 28/10; el Nivel 2 pasa a instalado y probado |
+| 3 | Lista de componentes y Componentes en placa | Se suma la plaqueta del ESP32 (placa, tiras hembra de 19, P1 y P2, cables dupont y alambre para los tres puentes), se sacan las filas «(no aplica)» y se pone precio estimado a lo que estaba «a completar»: $150.839 |
+| 4 | Estimación de costos, Modalidad de inversión, `estimacion.svg/png` | Personal con las 642 h del Gantt ($31.793.299), componentes $150.839, costo $32.053.813, ganancia $8.013.453 y presupuesto $40.067.266; reparto hardware/software recalculado; se explica por qué la pestaña de la planilla da 1.652 horas-persona |
+| 5 | Plaqueta del ESP32 | PCB en `diagramas/hardware/plaqueta_esp32` (PNG, SVG y DXF); sección nueva en la guía de conexión (4.6) y en Conexiones de las plaquetas (4.7), con la lista de cables P1/P2 y los puentes de alambre; controles nuevos en la guía de mediciones (60 casillas), el checklist (xlsx y md) y `plaquetas_y_cableado` |
+| 6 | Guías, Estado completo, Árbol de problemas, Manual del telar, Ideas de parado, Conexionado del Nivel 2, READMEs | El Nivel 2 pasa de «en desarrollo» a instalado y probado el 28/10/2026; lo que queda es validar el conteo hasta el 04/11 |
+| 7 | Documentación de Proyecto (Word, PDF y sitio) | Versión 5.2: estado al 28/10, plaquetas impresas y la del ESP32, Gantt y costos nuevos |
+| 8 | Modelo 3D del gabinete | La plaqueta del ESP32 abajo a la izquierda, con el ESP32 y los 15 cables hasta los pads de J5, J6 y J7; la principal, la de relés y la del Nivel 2 se ven impresas |
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` e integración contra PostgreSQL 16 | OK |
+| `host/correr.sh` con la ArduinoJson real, `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
+| Cada Word editado pasa `validate.py`; sus PDF se regeneraron y se revisaron las páginas con cambios | OK |
+| `html-validate` en los dos sitios; Chromium a 1280 y 390 px (sitios y modelo 3D) | Sin errores |
+
+## Quincuagésima revisión: el código revisado en vueltas hasta dos limpias seguidas (27/10/2026)
 
 Revisión de todo el código (backend, web, base, firmware y pruebas), repetida hasta que dos vueltas
 seguidas no encontraron errores: fueron ocho, y la 7 y la 8 salieron limpias. Además de leerlo, en cada
@@ -1942,7 +1968,7 @@ cada ruta y la base caída. El firmware no cambió.
 | 3 | Rutas con transacción (`db.js` y los controladores de telares, dibujos y Nivel 2) | Pedían la conexión a la base fuera del `try`. Con la base caída, avanzar, asignar, terminar, reanudar, retroceder, guardar un dibujo, el reporte de pasadas y el evento de la botonera no respondían nunca (con Express 4 ese error no llega al manejador), y la web acumulaba un pedido colgado por pasada | `conectar(next)` pasa el error al manejador y responden enseguida. Prueba nueva en `controladores.test.mjs` |
 | 4 | Alta de un telar (y el README del backend) | Aceptaba como código o nombre un objeto, una lista, un número o miles de caracteres | Código de texto de hasta 40 caracteres y nombre de hasta 80 |
 | 5 | Hilado, metros por pasada y metros encargados del cliente | `true` se guardaba como 1 y `[5]` como 5 | Solo se acepta un número o un texto con un número |
-| 6 | Sitio de la documentación, «Probalo: armá un dibujo y ejecutalo» | En modo oscuro la celda marcada quedaba con el fondo de las vacías y el «1» casi no se veía | La regla del modo oscuro ya no pisa la celda marcada |
+| 6 | Sitio de la documentación, «Probalo: armá un dibujo y ejecutalo» | En modo oscuro la celda marcada quedaba con el fondo de las vacías y el «1» casi no se veía | La regla del modo oscuro ya no pisa la celda marcada (también en el CSS del sitio de los manuales) |
 
 | Comprobación | Resultado |
 |---|---|
@@ -1950,3 +1976,25 @@ cada ruta y la base caída. El firmware no cambió.
 | `host/correr.sh` con la ArduinoJson real, `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
 | Chromium: recorrido completo, botonera, intercalados, «Confirmar», dos pantallas (una lleva el reloj: 15 pasadas en 3 s, y al cerrarla la otra toma la posta) y con el sensor (la web no avanza por reloj) | OK |
 | 400 pedidos simultáneos y mezclados, en dos tandas; tipos equivocados en cada campo; base caída (25 rutas) | Sin errores 500, sin pedidos colgados ni bloqueos |
+
+## Quincuagésima primera revisión: la prueba con las plaquetas fue el 30/10 y el precio final por telar (30/10/2026)
+
+La prueba del proyecto completo, con las plaquetas soldadas, fue el 30/10/2026 y no el 28/10 como se había
+registrado en la cuadragésima novena revisión. Además, el precio final deja de ser el costo más un 25 % y
+pasa a calcularse por telar, para recuperar la inversión en dos años.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | READMEs, guías en Markdown, `LEEME.md`, 14 Word, las 2 planillas y sus 15 PDF | 28/10 → 30/10 en todo lo que habla de la prueba con las plaquetas, la reunión 8 con sus dos videos y la entrada de la Bitácora |
+| 2 | Gantt (Google Sheet y `Gantt_2026 - Automatizacion de Telar Industrial.xlsx`, bajado de Drive) | Tareas 7.7 a 7.11 y 8.17 empiezan el 30/10 |
+| 3 | Estimación de Costos v4 | Costos varios: quedan los insumos materiales ($16.050) y dos meses de Claude Pro ($61.000), $77.050; inversión de $32.021.188; sección 4.1 nueva: cada telar cuesta $1.511.939 (componentes, insumos y 28 h de instalación, a confirmar) y se vende a $3.200.000, con lo que la inversión se recupera con 19 telares en dos años; tabla de precios de $3.000.000 a $4.000.000 |
+| 4 | Modalidad de Inversión | Sección 1 con el precio por telar; recuperación por la venta por telar; hardware ($2.270.565) y software ($929.435) por telar |
+| 5 | Documentación de Proyecto (Word, PDF y sitio) y Bitácora | Sección 8 y versión 5.2 con la inversión y el precio por telar; 99,3 % de trabajo del equipo y $227.889 de desembolso real |
+| 6 | `diagramas/sistema/estimacion.svg` y `.png` (también dentro de la Documentación y del sitio) | Costo total $32.021.188, costo por telar $1.511.939 y precio final $3.200.000 |
+| 7 | `presentacion_final/Calculo_precio_2_anios.md` | Deja de ser borrador: dice dónde quedó cada valor |
+
+| Comprobación | Resultado |
+|---|---|
+| Búsqueda de «28/10» en Markdown, Word, Excel y PDF | Sin restos (salvo el historial de este archivo) |
+| Búsqueda de $40.067.266, $32.053.813, $109.675 y $8.013.453 | Solo donde se explica que el presupuesto anterior se reemplazó |
+| PDF regenerados con LibreOffice | Misma cantidad de páginas que antes |
