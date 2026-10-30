@@ -10,7 +10,7 @@ el repositorio para que el código y la documentación viajen juntos.
 | `Estado_Completo_del_Proyecto.docx` | **Empezar por acá.** Resume todo: qué es el proyecto, qué se construyó, las decisiones técnicas y su fundamento, y lo que falta. |
 | `Documentación_de_Proyecto.docx` | El documento formal completo, con 70 secciones numeradas, 15 tablas y 13 figuras. |
 | `Bitácora.docx` | Registro cronológico de avances y decisiones. |
-| `Registro de Entrevistas.docx` | Las minutas de las ocho reuniones con el cliente; la última, del 28/10/2026, es la prueba del proyecto completo, con los dos videos. |
+| `Registro de Entrevistas.docx` | Las minutas de las ocho reuniones con el cliente; la última, del 30/10/2026, es la prueba del proyecto completo, con los dos videos. |
 | `Recorrido_del_Codigo_y_Herramientas.docx` | Cómo está armado el código por dentro (la web, el servidor, la base de datos y el firmware), cómo viaja una orden de punta a punta y las herramientas usadas, incluida la inteligencia artificial. Cinco páginas; en Markdown en `docs/analisis/`. |
 
 ## Guías de trabajo

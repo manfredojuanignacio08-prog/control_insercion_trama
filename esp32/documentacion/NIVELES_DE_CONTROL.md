@@ -8,7 +8,7 @@ del proyecto y para explicarlo bien en la presentación.
 > la secuencia la lee un **dobby con cinta de papel perforada** y **cuatro bobinas de selección**
 > (no un Jacquard por tarjetas, como se suponía al principio; las secciones de abajo conservan ese
 > análisis inicial). El Nivel 2 dejó de ser "evolución futura": quedó instalado y probado en el telar el
-> 28/10/2026 por la vía de control por marcos del final de este documento, con un sensor inductivo y cuatro relés LCA110
+> 30/10/2026 por la vía de control por marcos del final de este documento, con un sensor inductivo y cuatro relés LCA110
 > en el lugar de los lectores ópticos. Todo corre en **un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`).
 
 ## El telar tiene, en la práctica, dos "máquinas"
@@ -58,7 +58,7 @@ solo dé Marcha, sino que le entregue al telar la **secuencia completa del
 dibujo** (qué bobina se activa en cada pasada), ocupando el lugar de las
 tarjetas perforadas (en este telar, la cinta de papel).
 
-- **Estado:** instalado y probado en el telar el 28/10/2026, con el gabinete y los
+- **Estado:** instalado y probado en el telar el 30/10/2026, con el gabinete y los
   cuatro canales: el sensor cuenta las pasadas y cada relé LCA110 selecciona su bobina
   según el dibujo. Antes se había probado en protoboard (10/10/2026) y con el primer
   canal en la máquina (17/10/2026).

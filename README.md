@@ -180,11 +180,11 @@ esquema multi-telar, historial y log de errores, firmware ESP32 gateway
 **Instalado en el telar:** el Bloque A (relés de Marcha, Pausa y Retroceder y sensado de
 la botonera), probado en la máquina el 19/09/2026.
 
-**Nivel 2, instalado y probado el 28/10/2026:** el sensor de pasada y los cuatro relés LCA110 en
+**Nivel 2, instalado y probado el 30/10/2026:** el sensor de pasada y los cuatro relés LCA110 en
 el lugar de los lectores ópticos, con el gabinete en la planta. Se había probado en protoboard el
 10/10/2026 y en la máquina, con el sensor y el primer canal, el 17/10/2026 (el lector se alimenta
 con 15 a 30 V y lleva la resistencia de protección de 470 Ω 3 W). En la prueba completa del
-28/10/2026 el telar tejió un dibujo cargado desde la aplicación; solo hubo correcciones mínimas de
+30/10/2026 el telar tejió un dibujo cargado desde la aplicación; solo hubo correcciones mínimas de
 cableado. El ESP32 va en su propia plaqueta desde el 25/10/2026 (`diagramas/hardware/plaqueta_esp32`).
 Falta validar el conteo contra el contador mecánico durante una jornada (`PUESTA_EN_MARCHA.md`).
 
@@ -192,7 +192,7 @@ Falta validar el conteo contra el contador mecánico durante una jornada (`PUEST
 ## Nivel 2
 
 El conteo real de pasadas y la selección del dibujo están instalados en el telar desde el
-28/10/2026. El gabinete tiene **un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`):
+30/10/2026. El gabinete tiene **un solo ESP32 con un solo programa** (`esp32/control_trama_esp32/`):
 en el repositorio `config.h` queda con `NIVEL2_INSTALADO` en `false`, como plantilla junto con la red
 y la clave; en el ESP32 del gabinete se carga en `true`.
 

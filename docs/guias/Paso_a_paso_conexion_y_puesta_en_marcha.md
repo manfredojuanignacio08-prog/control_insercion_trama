@@ -4,7 +4,7 @@
 
 Esta guía junta en un solo lugar cómo armar las **plaquetas** del gabinete, cómo conectarlas entre sí y al telar, y cómo **levantar el sistema** (el servidor, la web y el ESP32) hasta tejer un dibujo. Se sigue en orden: cada parte se prueba antes de pasar a la siguiente. El detalle de cada bloque está en su propia guía (la lista está al final).
 
-Los dos niveles están instalados y se probaron completos en el telar el 28/10/2026: el **Nivel 1** (Marcha, Pausa y Retroceder por relé, y el sensado de la botonera) y el **Nivel 2** (el sensor de pasada y los cuatro relés de selección del dibujo). Las partes que son solo del Nivel 2 están marcadas.
+Los dos niveles están instalados y se probaron completos en el telar el 30/10/2026: el **Nivel 1** (Marcha, Pausa y Retroceder por relé, y el sensado de la botonera) y el **Nivel 2** (el sensor de pasada y los cuatro relés de selección del dibujo). Las partes que son solo del Nivel 2 están marcadas.
 
 ## 1. Reglas de seguridad (siempre)
 
@@ -190,7 +190,7 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 2. Tejer una prueba corta con un dibujo fácil de reconocer y comparar la tela. Si sale corrida una pasada, ajustar `DESPLAZAMIENTO_FILAS` (`PUESTA_EN_MARCHA.md`, sección 2).
 3. Validar el conteo durante una jornada contra el contador mecánico del telar y, en la web, tocar **Validar** (`PUESTA_EN_MARCHA.md`, sección 3).
 
-Así se hizo el 28/10/2026: con el gabinete instalado y los cuatro canales conectados, el ESP32 se cargó con `NIVEL2_INSTALADO` en true y los demás valores como vienen (`DESPLAZAMIENTO_FILAS` y `PORCENTAJE_SELECCION` en 0), y la tela salió con el dibujo, sin pasadas corridas. Solo hubo que invertir dos cables en B3 (los canales 2 y 3 estaban cruzados: se vio en la primera vuelta del dibujo) y acercar el sensor a unos 2 mm del blanco. La validación del conteo contra el contador mecánico sigue en el período de prueba, hasta el 04/11/2026.
+Así se hizo el 30/10/2026: con el gabinete instalado y los cuatro canales conectados, el ESP32 se cargó con `NIVEL2_INSTALADO` en true y los demás valores como vienen (`DESPLAZAMIENTO_FILAS` y `PORCENTAJE_SELECCION` en 0), y la tela salió con el dibujo, sin pasadas corridas. Solo hubo que invertir dos cables en B3 (los canales 2 y 3 estaban cruzados: se vio en la primera vuelta del dibujo) y acercar el sensor a unos 2 mm del blanco. La validación del conteo contra el contador mecánico sigue en el período de prueba, hasta el 04/11/2026.
 
 ## 10. El día a día: encender, tejer y la botonera
 
@@ -215,7 +215,7 @@ Así se hizo el 28/10/2026: con el gabinete instalado y los cuatro canales conec
 | Retroceder | La posición vuelve una pasada atrás. |
 | Marcha, sin un trabajo abierto | Pasa a «Tejiendo», pero el sistema no sabe qué dibujo se está tejiendo: muestra **«Posición incierta (botón Marcha usado a mano)»**. Para ver el dibujo, ponerlo a tejer una vez desde la web (▶) y confirmar la posición. |
 
-> **Nota:** Sin el sensor de pasada (con solo el Nivel 1), el avance que muestra la web es **estimado por tiempo** (300 pasadas por minuto) y dice «Tejiendo (sin confirmar por sensor)». Con el Nivel 2 instalado, como desde el 28/10/2026, la fila y el conteo son los que mide el sensor.
+> **Nota:** Sin el sensor de pasada (con solo el Nivel 1), el avance que muestra la web es **estimado por tiempo** (300 pasadas por minuto) y dice «Tejiendo (sin confirmar por sensor)». Con el Nivel 2 instalado, como desde el 30/10/2026, la fila y el conteo son los que mide el sensor.
 
 ### Apagar
 

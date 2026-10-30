@@ -1976,3 +1976,25 @@ cada ruta y la base caída. El firmware no cambió.
 | `host/correr.sh` con la ArduinoJson real, `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
 | Chromium: recorrido completo, botonera, intercalados, «Confirmar», dos pantallas (una lleva el reloj: 15 pasadas en 3 s, y al cerrarla la otra toma la posta) y con el sensor (la web no avanza por reloj) | OK |
 | 400 pedidos simultáneos y mezclados, en dos tandas; tipos equivocados en cada campo; base caída (25 rutas) | Sin errores 500, sin pedidos colgados ni bloqueos |
+
+## Quincuagésima primera revisión: la prueba con las plaquetas fue el 30/10 y el precio final por telar (30/10/2026)
+
+La prueba del proyecto completo, con las plaquetas soldadas, fue el 30/10/2026 y no el 28/10 como se había
+registrado en la cuadragésima novena revisión. Además, el precio final deja de ser el costo más un 25 % y
+pasa a calcularse por telar, para recuperar la inversión en dos años.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | READMEs, guías en Markdown, `LEEME.md`, 14 Word, las 2 planillas y sus 15 PDF | 28/10 → 30/10 en todo lo que habla de la prueba con las plaquetas, la reunión 8 con sus dos videos y la entrada de la Bitácora |
+| 2 | Gantt (Google Sheet y `Gantt_2026 - Automatizacion de Telar Industrial.xlsx`, bajado de Drive) | Tareas 7.7 a 7.11 y 8.17 empiezan el 30/10 |
+| 3 | Estimación de Costos v4 | Costos varios: quedan los insumos materiales ($16.050) y dos meses de Claude Pro ($61.000), $77.050; inversión de $32.021.188; sección 4.1 nueva: cada telar cuesta $1.511.939 (componentes, insumos y 28 h de instalación, a confirmar) y se vende a $3.200.000, con lo que la inversión se recupera con 19 telares en dos años; tabla de precios de $3.000.000 a $4.000.000 |
+| 4 | Modalidad de Inversión | Sección 1 con el precio por telar; recuperación por la venta por telar; hardware ($2.270.565) y software ($929.435) por telar |
+| 5 | Documentación de Proyecto (Word, PDF y sitio) y Bitácora | Sección 8 y versión 5.2 con la inversión y el precio por telar; 99,3 % de trabajo del equipo y $227.889 de desembolso real |
+| 6 | `diagramas/sistema/estimacion.svg` y `.png` (también dentro de la Documentación y del sitio) | Costo total $32.021.188, costo por telar $1.511.939 y precio final $3.200.000 |
+| 7 | `presentacion_final/Calculo_precio_2_anios.md` | Deja de ser borrador: dice dónde quedó cada valor |
+
+| Comprobación | Resultado |
+|---|---|
+| Búsqueda de «28/10» en Markdown, Word, Excel y PDF | Sin restos (salvo el historial de este archivo) |
+| Búsqueda de $40.067.266, $32.053.813, $109.675 y $8.013.453 | Solo donde se explica que el presupuesto anterior se reemplazó |
+| PDF regenerados con LibreOffice | Misma cantidad de páginas que antes |
