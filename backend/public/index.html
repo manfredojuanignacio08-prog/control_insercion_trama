@@ -2217,6 +2217,12 @@ async function intentarConducir() {
   doTick();
 }
 
+function ritmoDePasadas() {
+  let r = NaN;
+  try { r = parseInt(new URLSearchParams(location.search).get('ritmo'), 10); } catch (e) { /* sin dato */ }
+  return Number.isInteger(r) && r >= 10 && r <= 300 ? r : 300;
+}
+
 function doTick() {
   // Un solo reloj por pantalla: se cancela el que estuviera esperando antes de programar este. Si la
   // consulta de estado sumaba esta pantalla al tejido mientras ▶ esperaba la respuesta del servidor,
@@ -2242,7 +2248,9 @@ function doTick() {
   // 06/09/2026), o sea una cada 200 ms. Antes era una cada 500 ms (120 por minuto), y las
   // pasadas y los metros estimados quedaban en el 40 % de lo real. Con el sensor del
   // Nivel 2 instalado, la cuenta la lleva el sensor y este valor deja de usarse.
-  const PASADAS_POR_MINUTO = 300;
+  // Para grabar una demostración se puede bajar el ritmo con «?ritmo=60» en la dirección
+  // (entre 10 y 300 pasadas por minuto). Sin ese dato queda el de la máquina.
+  const PASADAS_POR_MINUTO = ritmoDePasadas();
   const delayMs = 60000 / PASADAS_POR_MINUTO;
 
   playTimer = setTimeout(() => {
