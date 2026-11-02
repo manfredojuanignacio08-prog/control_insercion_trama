@@ -1998,3 +1998,31 @@ pasa a calcularse por telar, para recuperar la inversión en dos años.
 | Búsqueda de «28/10» en Markdown, Word, Excel y PDF | Sin restos (salvo el historial de este archivo) |
 | Búsqueda de $40.067.266, $32.053.813, $109.675 y $8.013.453 | Solo donde se explica que el presupuesto anterior se reemplazó |
 | PDF regenerados con LibreOffice | Misma cantidad de páginas que antes |
+
+## Quincuagésima segunda revisión: el armado final de la caja, el precio nuevo y la documentación al 02/11/2026
+
+Con las fotos y las medidas reales de las plaquetas se dibujó cómo van dentro del gabinete y el cableado
+nuevo de la botonera. Además, el precio final de $3.200.000 por telar era demasiado alto para una fábrica:
+se recalculó con $600.000 por telar y un abono mensual por telar.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | `diagramas/hardware/caja_y_plaquetas/` (nueva) | La caja con cada plaqueta en su lugar y sus medidas, las conexiones pata por pata, el cableado relés → sensado → puentes, el dibujo de las cinco plaquetas de Proteus y la de puentes, el PC817 y seis fotos |
+| 2 | Guía de Conexión y Puesta en Marcha (Markdown y Word), Conexiones de las plaquetas, `diagramas/README.md`, `README.md`, `LEEME.md` | Siete plaquetas (se suma la de los puentes rectificadores, 31/10/2026); sección 3.1 «Cómo va todo dentro de la caja»; cableado nuevo: cada botón va del tablero a COM y NO de su relé y, en paralelo, a J1, J2 o J3 del sensado, cuya tira de pines lleva las cuatro patas a los puentes (3 y 4 cruzadas) |
+| 3 | `diagramas/hardware/plaquetas_y_cableado.svg` y `.png` (también dentro de dos Word) | Sin la «bornera doble B1»: el par de cada botón entra a su relé y de ahí va en paralelo al sensado; el DB157 va en la plaqueta de puentes |
+| 4 | `Componentes_en_placa.xlsx` | Siete plaquetas; las borneras y el DB157 con el cableado nuevo |
+| 5 | Estimación de Costos v4 | Cada telar nuevo cuesta $455.114 (6 h de armado e instalación en vez de 28, que eran las del piloto); precio $600.000 por telar; abono de $20.000 por mes por telar, que paga 4 h de desarrollo por mes y el servidor (USD 7 por mes con clientes; hoy $0); recuperación en dos años con unos 100 telares (10 fábricas); el dinero puesto, con dos telares; tabla de opciones y planes de servicio recalculados |
+| 6 | Modalidad de Inversión | Mismo modelo; hardware $520.227 y software $79.773 por telar, más el abono |
+| 7 | Documentación de Proyecto (Word, PDF y sitio) | Versión 5.3; Gantt al 02/11 (634 de 642 h); sección 5.5 con el armado final y dos figuras nuevas (11 y 12; las siguientes pasan a 13, 14 y 15); tres prensacables; sección 8 con el precio nuevo |
+| 8 | `diagramas/sistema/estimacion.svg` y `gantt.svg` (y sus PNG, dentro de la Documentación y del sitio) | Precio $600.000 y costo por telar $455.114; Etapa 07 completada y 634 de 642 h |
+| 9 | Bitácora | Entradas del 31/10, 01/11 y 02/11 |
+| 10 | Registro de Entrevistas | Reunión 8: resumen de lo que dijo el dueño en la entrevista (la planta tiene 14 telares) y el video editado |
+| 11 | Estado Completo del Proyecto y Manual del Telar (Word y sitio) | Siete plaquetas, tres prensacables y el dibujo de la caja |
+| 12 | `presentacion_final/` | Diapositiva de precio y `Calculo_precio_2_anios.md` con el modelo nuevo |
+| 13 | `backend/public/index.html` | `?ritmo=` en la dirección muestra las pasadas más lento, solo para grabar demostraciones (de 10 a 300 por minuto; sin el parámetro, 300) |
+
+| Comprobación | Resultado |
+|---|---|
+| Búsqueda de $3.200.000, $1.511.939, $129.625, «19 telares», «cinco plaquetas», «seis plaquetas» y «cuatro prensacables» | Solo donde se explica que el precio anterior se reemplazó, y en el historial |
+| Simulación de la recuperación (mes a mes, con el abono y los costos fijos) | 100 telares a ritmo parejo dejan +$0,2 M al mes 24 |
+| PDF regenerados con LibreOffice y revisados a ojo en las páginas cambiadas | OK |

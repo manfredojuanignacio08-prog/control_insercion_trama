@@ -27,11 +27,11 @@ Los dos niveles están instalados y se probaron completos en el telar el 30/10/2
 
 ## 3. Las plaquetas y cómo se conectan
 
-El gabinete lleva cinco plaquetas con las conexiones soldadas, más la plaqueta del ESP32 (punto 4.6). Las diseñadas en Proteus (la principal, la de los relés, la del Nivel 2 y la del sensado de la botonera) son impresas; la protoboard sirve para probar, pero la vibración del telar afloja sus contactos. Cada cable entra a su plaqueta por un **conector de tira de pines** o por una **bornera de tornillo**, así todo se desconecta sin desoldar. Del lado de 220 V y del lado del telar, **siempre bornera**.
+El gabinete lleva seis plaquetas con las conexiones soldadas (las cinco de abajo y, desde el 31/10/2026, la de los **puentes rectificadores**, que salieron del sensado: punto 4.3), más la plaqueta del ESP32 (punto 4.6). Las diseñadas en Proteus (la principal, la de los relés, la del Nivel 2, la del sensado de la botonera y la de los puentes) son impresas; la protoboard sirve para probar, pero la vibración del telar afloja sus contactos. Cada cable entra a su plaqueta por un **conector de tira de pines** o por una **bornera de tornillo**, así todo se desconecta sin desoldar. Del lado de 220 V y del lado del telar, **siempre bornera**.
 
-![Las cinco plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).](../../diagramas/hardware/plaquetas_y_cableado.png)
+![Esquema de las plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).](../../diagramas/hardware/plaquetas_y_cableado.png)
 
-*Las cinco plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).*
+*Esquema de las plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).*
 
 | Conector | De → a | Hilos | Tipo |
 |---|---|---|---|
@@ -40,11 +40,30 @@ El gabinete lleva cinco plaquetas con las conexiones soldadas, más la plaqueta 
 | J2 | Plaqueta 2 → plaqueta 3 (relés) | 5 V, GND, IN1 (GPIO 25), IN2 (GPIO 26), S (GPIO 27) | Tira de pines |
 | J3 | Plaqueta 2 → plaqueta 4 (Nivel 2) | 3,3 V, GND, GPIO 35, 18, 19, 21 y 22 | Tira de pines |
 | J4 | Plaqueta 2 → plaqueta 5 (sensado) | 3,3 V, GND, GPIO 32, 33 y 34 | Tira de pines |
-| B1 | Botonera del telar → plaqueta 5 (sensado), y de ahí a la 3 (relés) | 3 pares: Marcha, Pausa y Retroceder | Bornera de tornillo doble por botón: un par de la botonera y otro a NO y COM de su relé |
+| B1 | Botón del tablero → NO y COM de su relé (plaqueta 3), y de ahí, en paralelo, a la bornera J1, J2 o J3 de la plaqueta 5 (sensado) | 3 pares: Marcha, Pausa y Retroceder | Bornera de tornillo. Sin polaridad: el par entra al borne del relé y del mismo borne sale el paralelo |
+| J9 / J7 / J8 | Plaqueta 5 (tira de 4 en el lugar de BR1, BR2 y BR3) ↔ plaqueta 6 (puentes) | 4 hilos por canal: +, ~, ~ y − | Tira de pines. **Las patas 3 y 4 van cruzadas** (en el sensado el orden es + ~ ~ −; en la de puentes, + ~ − ~) |
 | B2 | Sensor de pasada → plaqueta 4 | El + del telar y el negro del sensor | Bornera de tornillo |
 | B3 | Bornera de cada lector → plaqueta 4 | Pata 4 y pata 6 de cada relé (8 hilos) | Bornera de tornillo |
 
-> **Nota:** Rotular cada conector y cada bornera antes de cerrar el gabinete (J1 a J4; B1 Marcha, Pausa y Retroceder; B2; B3 canal 1 a 4). Si el Nivel 2 se arma en la misma placa principal, J3 no hace falta: los mismos 7 hilos van soldados. Lo mismo con el sensado: armado en la principal, J4 no hace falta.
+> **Nota:** Rotular cada conector y cada bornera antes de cerrar el gabinete (J1 a J4; B1 Marcha, Pausa y Retroceder; J9, J7 y J8 de los puentes; B2; B3 canal 1 a 4). Si el Nivel 2 se arma en la misma placa principal, J3 no hace falta: los mismos 7 hilos van soldados. Lo mismo con el sensado: armado en la principal, J4 no hace falta.
+
+### 3.1 Cómo va todo dentro de la caja
+
+Medidas reales de las plaquetas (31/10/2026): principal 100 × 95 mm, Nivel 2 100 × 75, sensado 105 × 100, relés 40 × 30, puentes 80 × 50, base del ESP32 82 × 74 y fuente 105 × 44. En el piso de la caja no entra todo junto, así que **la fuente va atornillada en la pared de arriba**, junto al prensacables G1: los 220 V quedan solos en esa pared. El resto va en tres columnas sobre la placa negra, con separadores de 10 mm. Los cables entran por tres prensacables: **G1** solo la red; **G2** el tablero del telar (botones y contactos de los relés); **G3** los 24 V, el sensor de pasada y los cuatro lectores.
+
+![Ubicación de cada plaqueta en la caja y los once cables numerados (diagramas/hardware/caja_y_plaquetas/caja_plaquetas_y_cables.png).](../../diagramas/hardware/caja_y_plaquetas/caja_plaquetas_y_cables.png)
+
+*Ubicación de cada plaqueta en la caja y los once cables numerados (diagramas/hardware/caja_y_plaquetas/caja_plaquetas_y_cables.png).*
+
+![Cada bornera y cada tira de pines, pata por pata, y lo que entra por cada prensacables (diagramas/hardware/caja_y_plaquetas/conexiones_pata_por_pata.png).](../../diagramas/hardware/caja_y_plaquetas/conexiones_pata_por_pata.png)
+
+*Cada bornera y cada tira de pines, pata por pata (diagramas/hardware/caja_y_plaquetas/conexiones_pata_por_pata.png).*
+
+El dibujo de cada plaqueta, pieza por pieza, está en `diagramas/hardware/caja_y_plaquetas/` (`plaqueta_principal`, `plaqueta_nivel2`, `plaqueta_sensado`, `plaqueta_reles` y `plaqueta_puentes`), con las fotos de las plaquetas terminadas y de la caja en `fotos/`.
+
+![Las plaquetas terminadas, antes de montarlas en la caja (diagramas/hardware/caja_y_plaquetas/fotos/todas_las_plaquetas.jpg).](../../diagramas/hardware/caja_y_plaquetas/fotos/todas_las_plaquetas.jpg)
+
+*Las plaquetas terminadas, antes de montarlas en la caja (diagramas/hardware/caja_y_plaquetas/fotos/todas_las_plaquetas.jpg).*
 
 ## 4. Armar y probar cada plaqueta en el banco (sin el telar)
 
@@ -65,17 +84,25 @@ El gabinete lleva cinco plaquetas con las conexiones soldadas, más la plaqueta 
 
 Es una plaqueta impresa aparte, unida a la principal por J4.
 
-1. Por canal, los tres iguales: el puente **DB157** con sus patas ~ a la bornera **B1** del botón; un capacitor de **22 µF de 50 V** entre el + y el − del puente (pata larga al +; la botonera rectificada llega a unos 34 V de pico); **2,2 kΩ 1 W** del + del puente a la pata 1 del **PC817**; el − del puente a la pata 2; la pata 3 al GND de J4; la pata 4 al GPIO de J4: GPIO **32** Marcha, **33** Pausa, **34** Retroceder. Solo el 34 lleva **10 kΩ a 3,3 V** (no tiene resistencia interna); el 32 y el 33 usan la pull-up interna del ESP32, que activa el firmware.
-2. **B1**, una bornera doble por botón: un par para el cable de la botonera y otro para el cable que va a **NO y COM de su relé** (plaqueta 3), los dos unidos en la plaqueta a las patas ~ del puente.
+1. Por canal, los tres iguales: la bornera del botón (**J1** Marcha, **J2** Retroceder, **J3** Pausa) llega por pista a las patas ~ del lugar del puente; el puente **DB157** va en la **plaqueta 6** (puentes, 80 × 50 mm) y vuelve con su + y su − por una tira de 4 soldada en el lugar de BR1, BR2 o BR3 (ver el dibujo `caja_y_plaquetas/cableado_reles_sensado_puentes.png`); un capacitor de **22 µF de 50 V** entre el + y el − del puente (pata larga al +; la botonera rectificada llega a unos 34 V de pico); **2,2 kΩ 1 W** del + del puente a la pata 1 del **PC817**; el − del puente a la pata 2; la pata 3 al GND de J4; la pata 4 al GPIO de J4: GPIO **32** Marcha, **33** Pausa, **34** Retroceder. Solo el 34 lleva **10 kΩ a 3,3 V** (no tiene resistencia interna); el 32 y el 33 usan la pull-up interna del ESP32, que activa el firmware.
+2. **J1, J2 y J3**, una bornera de 2 por botón: reciben el paralelo que sale de **NO y COM de su relé** (plaqueta 3), donde ya llega el cable del botón del tablero. La tira de 4 de cada BR va a su tira en la plaqueta de puentes (BR1 → J9, BR2 → J7, BR3 → J8) con **las patas 3 y 4 cruzadas**: 1ª (+) → 1, 2ª (~) → 2, 3ª (~) → 4, 4ª (−) → 3.
 3. **J4** a la principal, 5 hilos: 3,3 V (del pin 3V3 del ESP32), GND y GPIO 32, 33 y 34.
-4. Lo de 24 V (B1, puentes, capacitores, 2,2 kΩ y las patas 1 y 2 de cada PC817) de un lado, y lo del ESP32 (patas 3 y 4, la 10 kΩ del GPIO 34 y J4) del otro, **sin pistas por debajo de los PC817**. Marcar a mano el + de cada capacitor y la pata 1 de cada PC817 y puente: en la plaqueta impresa no sale la serigrafía. Un capacitor invertido puede quedar en corto, y un canal en corto es como dejar el botón apretado.
-5. Sin alimentar, con el multímetro en continuidad: entre cualquier borne de B1 y cualquier pin de J4 **no tiene que pitar**.
+4. Lo de 24 V (J1 a J3, la tira de los puentes, capacitores, 2,2 kΩ y las patas 1 y 2 de cada PC817) de un lado, y lo del ESP32 (patas 3 y 4, la 10 kΩ del GPIO 34 y J4) del otro, **sin pistas por debajo de los PC817**. Marcar a mano el + de cada capacitor y la pata 1 de cada PC817 y puente: en la plaqueta impresa no sale la serigrafía. Un capacitor invertido puede quedar en corto, y un canal en corto es como dejar el botón apretado.
+5. Sin alimentar, con el multímetro en continuidad: entre cualquier borne de J1, J2 o J3 y cualquier pin de J4 **no tiene que pitar**; entre el − de un canal y el de otro, tampoco. R2 y R4 no se montan.
+
+![Sensado de la botonera, pieza por pieza, con las borneras J1 a J3 y la tira de 4 en el lugar de cada BR (diagramas/hardware/caja_y_plaquetas/plaqueta_sensado.png).](../../diagramas/hardware/caja_y_plaquetas/plaqueta_sensado.png)
+
+*Sensado de la botonera, pieza por pieza (diagramas/hardware/caja_y_plaquetas/plaqueta_sensado.png).*
+
+![Del tablero a los relés, del relé al sensado y del sensado a los puentes, canal por canal (diagramas/hardware/caja_y_plaquetas/cableado_reles_sensado_puentes.png).](../../diagramas/hardware/caja_y_plaquetas/cableado_reles_sensado_puentes.png)
+
+*Del tablero a los relés, del relé al sensado y del sensado a los puentes (diagramas/hardware/caja_y_plaquetas/cableado_reles_sensado_puentes.png).*
 
 ### 4.4 Plaqueta 3 · Módulos de relé
 
 1. Fijar los dos módulos con separadores o tornillos. En el módulo de 2 canales, el **jumper JD-VCC puesto**.
 2. J2: 5 V al VCC de los dos módulos y GND común; **IN1 ← GPIO 25** (Marcha), **IN2 ← GPIO 26** (Pausa) y **S ← GPIO 27** (Retroceder). Un capacitor de 100 nF junto a cada módulo.
-3. Las salidas **NO y COM** de cada relé, al par de su bornera B1 en la plaqueta de sensado. La botonera todavía no se conecta.
+3. Las salidas **NO y COM** de cada relé llevan dos cables cada una: el del botón del tablero y el paralelo a su bornera del sensado (K1 Marcha → J1, relé solo Retroceder → J2, K2 Pausa → J3). El tornillo del medio de cada relé es el COM; el NO se confirma con el tester (el NC no se usa). El tablero todavía no se conecta.
 
 ### 4.5 Plaqueta 4 · Nivel 2
 
@@ -159,8 +186,8 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 1. Telar apagado y desenchufado; gabinete desenchufado.
 2. Ubicar los dos cables de cada botón (Marcha, Pausa y Retroceder). Si un botón tiene más terminales, con el multímetro en continuidad elegir el par **NA**: no pita en reposo y sí al apretar.
 3. Encender el telar y, sin tejer, medir en alterna cada par NA: unos **24 V sin apretar y 0 V apretando**. Si da 0 V sin apretar, ese no es el par NA: no conectarlo. Apagar y desenchufar el telar.
-4. Del botón a la bornera **B1** del gabinete, con el cable de 6 conductores (un par por botón), sin cortar ni soldar sobre los cables del telar. No correrlo pegado al cable del motor.
-5. En la plaqueta de sensado, cada bornera B1 lleva el par de su botón a **NO y COM de su relé** (en paralelo con el botón), por su otro par, y a la **entrada de su canal de sensado** (las patas ~ del puente).
+4. Del botón a **NO y COM de su relé** en el gabinete (entra por el prensacables G2), con el cable de 6 conductores (un par por botón), sin cortar ni soldar sobre los cables del telar. No correrlo pegado al cable del motor.
+5. De esos mismos dos bornes del relé sale el paralelo a la **bornera de su canal en el sensado** (J1 Marcha, J2 Retroceder, J3 Pausa), que por pista llega a las patas ~ del puente. Es el mismo circuito que antes, con el cable del botón entrando primero al relé.
 6. Antes de encender el gabinete, encender el telar y comprobar que **la botonera a mano funciona igual que siempre**.
 7. Encender el gabinete. Desde la web, con «Control desde la página» prendido: ▶ arranca la máquina, ⏸ la pausa y ⏪ la hace retroceder una pasada. Con alguien al lado del botón Stop del telar.
 8. Apretar los botones a mano, al menos medio segundo cada uno: al soltarlos, la web lo refleja (sección 10).
