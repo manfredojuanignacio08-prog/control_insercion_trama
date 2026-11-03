@@ -487,4 +487,19 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   await f.run('actualizarEstadoTelar()');
   assert.equal(f.run('isPlaying && seguidor'), true, 'después sí se suma (telar tejiendo desde la botonera)'); }
 
+// ?ritmo= en la dirección baja el ritmo de la estimación solo para grabar demostraciones:
+// sin el parámetro, o con un valor fuera de 10 a 300, queda el de la máquina (300 por minuto).
+{ f = boot(routes);
+  f.ctx.URLSearchParams = URLSearchParams;
+  const tick = (busqueda) => {
+    f.ctx.location.search = busqueda; f.timers.length = 0;
+    f.run('telarPorDefectoId = null; nR = 4; curRow = 0; repRestantes = 1; isPlaying = true; seguidor = false; doTick()');
+    return f.timers[f.timers.length - 1].ms;
+  };
+  assert.equal(tick(''), 200, 'sin ?ritmo, una pasada cada 200 ms (300 por minuto)');
+  assert.equal(tick('?ritmo=60'), 1000, 'con ?ritmo=60, una pasada por segundo');
+  for (const malo of ['?ritmo=5', '?ritmo=301', '?ritmo=abc', '?otra=60']) assert.equal(tick(malo), 200, 'valor ignorado: ' + malo);
+  f.ctx.URLSearchParams = undefined;
+  assert.equal(tick('?ritmo=60'), 200, 'un navegador sin URLSearchParams usa el ritmo de la máquina'); }
+
 console.log('frontend OK');
