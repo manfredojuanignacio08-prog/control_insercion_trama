@@ -2026,3 +2026,38 @@ se recalculó con $600.000 por telar y un abono mensual por telar.
 | Búsqueda de $3.200.000, $1.511.939, $129.625, «19 telares», «cinco plaquetas», «seis plaquetas» y «cuatro prensacables» | Solo donde se explica que el precio anterior se reemplazó, y en el historial |
 | Simulación de la recuperación (mes a mes, con el abono y los costos fijos) | 100 telares a ritmo parejo dejan +$0,2 M al mes 24 |
 | PDF regenerados con LibreOffice y revisados a ojo en las páginas cambiadas | OK |
+
+## Quincuagésima tercera revisión: lo que faltaba de la del 02/11 y tres vueltas de revisión completas (02 y 03/11/2026)
+
+Se terminó lo que había quedado pendiente de la revisión anterior (el Gantt del Drive, la lista de
+componentes con la plaqueta de los puentes, el modelo 3D y la relectura completa) y se hicieron tres
+vueltas de revisión sobre el código, las pruebas, los Word, las planillas, los Markdown, los diagramas y
+los sitios.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | `Gantt_2026 - Automatizacion de Telar Industrial.xlsx` | Bajado del Drive tal como está (634 de 642 h, 169 tareas). El Gantt del Drive no se tocó |
+| 2 | `Lista_de_componentes_Control_Trama.xlsx` | Se suman la placa de la plaqueta de los puentes (80 × 50 mm, $3.000) y seis tiras de 4 pines ($900), con precio estimado de noviembre. Bloque A $85.353 y total $154.739 |
+| 3 | Estimación, Modalidad, Documentación de Proyecto (Word y PDF), Bitácora, `estimacion.svg`/`.png` (también dentro de la Documentación), `Calculo_precio_2_anios.md` y la presentación | Con los componentes nuevos: cada telar cuesta $459.014 y deja $140.986; la inversión es $32.025.088 y el dinero puesto, $231.789; hacen falta 101 telares en dos años; hardware $522.384 y software $77.616 por telar. La tabla de opciones se recalculó mes a mes: 117 telares a $550.000 (con 116 faltan $24.512), 101 a $600.000, 89 a $650.000 y 87 con abono de $25.000; el saldo por semestre queda en −$28,5 M, −$22,0 M, −$12,4 M y +$0,2 M |
+| 4 | `Componentes_en_placa.xlsx` | Seis tiras de 4 pines (37 tiras en total); el DB157 va en la plaqueta de los puentes; los separadores, ya definitivos |
+| 5 | `Checklist_verificaciones.xlsx` | Nueva verificación 30, la tira de 4 entre el sensado y los puentes (patas 3 y 4 cruzadas); las del Nivel 2 pasan a 31 a 35. La fila de la prueba del 30/10 decía «Verificaciones 1 a 33 bien», que nadie anotó una por una: ahora dice que el sistema completo funcionó y que la 35 sigue en el período de prueba. `LEEME.md` y el Estado decían 26 verificaciones: son 35 |
+| 6 | Guía de Mediciones y Verificaciones | La fila «50 pasadas contadas a mano: 50, 30/10/2026» no tenía respaldo en la Bitácora ni en el Registro: queda en blanco para anotarla. La verificación 7 suma la tira de los puentes |
+| 7 | Bitácora, 02/11 | Decía que se armó el video en pantalla dividida; el montaje todavía no se hizo: queda que la página se preparó para grabarlo (`?ritmo=`) |
+| 8 | Modelado3D_CIT | La plaqueta 7 de los puentes, el sensado con J1 a J3, el cableado nuevo y tres prensacables. Captura nueva en el Manual del Telar y en el sitio de manuales |
+| 9 | Numeración de las plaquetas | En todos lados: 1 fuente, 2 principal, 3 relés, 4 Nivel 2, 5 sensado, 6 ESP32 y 7 puentes (la guía de conexión decía 6 para los puentes) |
+| 10 | Telares de la planta | Los documentos dicen 11 telares, como en los datos relevados; el Registro anota que en la entrevista el dueño dijo 14 máquinas |
+| 11 | Documentación de Proyecto | El ESP32 va en su propia plaqueta (5.3, paso 6); «plaquetas» en lugar de «placa universal perforada» (5.4); 5.5 nombra las figuras 9 y 10 (el primer armado) y 11 y 12 (el final); el sensor se montó el 10/09 (3.4.6); en 3.5, la aprobación del dueño y las visitas ya se cumplieron; HITO 4 completado; la condición previa de 9.7 y la tabla de componentes, al día |
+| 12 | `config.h` (solo comentarios), README del firmware, `PUESTA_EN_MARCHA.md`, `NIVELES_DE_CONTROL.md`, `NIVEL2_CONTROL_POR_MARCOS.md`, `PASO_A_PASO_RELES_LCA110.md`, `backend/README.md`, `Analisis_Frontend_y_Plan_Backend.md`, Manual de Instalación | El Nivel 2 está en `true` en el gabinete desde el 30/10 (en el repositorio queda en `false`, de plantilla); los valores «a confirmar» se confirmaron ese día; ya no dice «`false` (hoy)» ni «en desarrollo» |
+| 13 | Guía de Conexión (Markdown y Word) | `NIVEL2_INSTALADO` en `true` con el sensor y los relés conectados; la plaqueta de los puentes es la 7 |
+| 14 | Conexionado del Nivel 2 | Qué se confirmó el 30/10 (los cuatro canales y la sincronización, con `DESPLAZAMIENTO_FILAS` en 0) y qué falta anotar (la tensión del sensor y la corriente del lector) |
+| 15 | Guías de los Bloques C y D y de Armado del Bloque A, Guía de los relés, Estado, Conexiones de las plaquetas, Componentes Completos, Parado automático, los dos Árbol, los dos manuales (Word y sitio) | «Placa universal», «placa perforada» y los «hoy» viejos pasan a «plaqueta» o a pasado; los DB157 en su propia plaqueta; el ESP32 fuera de la principal; Componentes Completos suma la plaqueta de los puentes; el Estado ya no dice que la corriente del lector se midió ni que los canales se conectaron «de a uno»; las seis bobinas se estimaron en la reunión del 06/09 y no en un «relevamiento del 28/08» |
+| 16 | `canal_rele.svg` y `diagrama_bloque_D.svg` (y sus PNG) | «Hoy lo interrumpe», «lo que hoy hace el agujero» y «A MEDIR» pasan a pasado o al dato medido |
+| 17 | `backend/tests/frontend.test.mjs` | Prueba del `?ritmo=`: sin el parámetro, 300 pasadas por minuto; con 60, una por segundo; fuera de 10 a 300, o en un navegador sin URLSearchParams, el valor de siempre (falla con el código anterior) |
+| 18 | Todos los PDF | Regenerados con las fuentes de los documentos (IBM Plex Sans y Questrial); antes LibreOffice las reemplazaba por otras |
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test`, integración contra PostgreSQL, pruebas del firmware en la PC (ArduinoJson real), `sim_flujo` 6/6, `sim_nivel2` 6/6, `sim_nivel2_firmware` 30/30 y `verif_coherencia` 22/22 | OK |
+| Búsquedas en todos los Word, planillas, Markdown, diagramas y sitios de los montos viejos, «hoy», «falta», «a confirmar», «placa perforada» y la numeración de las plaquetas | Lo que quedaba está en la tabla; el resto es historial |
+| Imágenes de los Word después de editarlos | Las mismas que antes |
+| PDF: páginas casi vacías al final | Ninguna |
