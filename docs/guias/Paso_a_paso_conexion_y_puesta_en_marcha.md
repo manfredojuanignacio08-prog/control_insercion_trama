@@ -27,7 +27,7 @@ Los dos niveles están instalados y se probaron completos en el telar el 30/10/2
 
 ## 3. Las plaquetas y cómo se conectan
 
-El gabinete lleva seis plaquetas con las conexiones soldadas (las cinco de abajo y, desde el 31/10/2026, la de los **puentes rectificadores**, que salieron del sensado: punto 4.3), más la plaqueta del ESP32 (punto 4.6). Las diseñadas en Proteus (la principal, la de los relés, la del Nivel 2, la del sensado de la botonera y la de los puentes) son impresas; la protoboard sirve para probar, pero la vibración del telar afloja sus contactos. Cada cable entra a su plaqueta por un **conector de tira de pines** o por una **bornera de tornillo**, así todo se desconecta sin desoldar. Del lado de 220 V y del lado del telar, **siempre bornera**.
+El gabinete lleva siete plaquetas con las conexiones soldadas: las cinco de abajo, la de los **puentes rectificadores**, que salieron del sensado el 31/10/2026 (punto 4.3), y la del ESP32 (punto 4.6). Las diseñadas en Proteus (la principal, la de los relés, la del Nivel 2, la del sensado de la botonera y la de los puentes) son impresas; la protoboard sirve para probar, pero la vibración del telar afloja sus contactos. Cada cable entra a su plaqueta por un **conector de tira de pines** o por una **bornera de tornillo**, así todo se desconecta sin desoldar. Del lado de 220 V y del lado del telar, **siempre bornera**.
 
 ![Esquema de las plaquetas del gabinete, sus conectores y los cables que van al telar (diagramas/hardware/plaquetas_y_cableado.png).](../../diagramas/hardware/plaquetas_y_cableado.png)
 
