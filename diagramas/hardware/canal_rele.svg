@@ -57,8 +57,8 @@
 <text x="798" y="97" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#9C5C0A">LADO TELAR, circuito del lector óptico</text>
 <rect x="668" y="124" width="260" height="72" rx="6" fill="#FFFFFF" stroke="#1E3A5F" stroke-width="1.6"/>
 <text x="798" y="148" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#1E3A5F">LECTOR ÓPTICO</text>
-<text x="798" y="165" text-anchor="middle" font-size="9.5" fill="#3F4B5C">Hoy lo interrumpe la cinta de papel</text>
-<text x="798" y="181" text-anchor="middle" font-size="9.5" fill="#3F4B5C">tensión y consumo A MEDIR</text>
+<text x="798" y="165" text-anchor="middle" font-size="9.5" fill="#3F4B5C">Con la cinta, lo interrumpe el papel</text>
+<text x="798" y="181" text-anchor="middle" font-size="9.5" fill="#3F4B5C">se alimenta con 15 a 30 V (17/10/2026)</text>
 <line x1="568" y1="212" x2="668" y2="212" stroke="#9C5C0A" stroke-width="2"/>
 <line x1="568" y1="240" x2="668" y2="240" stroke="#9C5C0A" stroke-width="2"/>
 <line x1="668" y1="196" x2="668" y2="212" stroke="#9C5C0A" stroke-width="2"/>
