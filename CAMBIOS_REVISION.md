@@ -2097,6 +2097,7 @@ máquina, una pasada por vuelta del eje (300 por minuto).
 | 7 | Guía de Conexión (Word y Markdown) y Estado | «Seis plaquetas» y «cinco plaquetas más…» pasan a las siete plaquetas |
 | 8 | Parado automático | «Qué falta:» pasa a «Estado:», porque el sensor ya está instalado y validado |
 | 9 | Estimación de Costos | Se compraron cuatro prensacables PG11; en el armado final se usan tres |
+| 10 | Sitio de manuales, guía de inicio rápido | «La cinta de papel puesta» pasa a «El dibujo cargado» (lo define la aplicación; la cinta queda como alternativa), y «Observar el tejido» describe la señal que da el nodo en el lugar del lector |
 
 | Comprobación | Resultado |
 |---|---|
