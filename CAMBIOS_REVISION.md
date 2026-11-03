@@ -2080,3 +2080,21 @@ ese repositorio.
 | Párrafos del Word contra el sitio | Iguales, salvo diferencias de formato propias del sitio (portada, títulos de las épicas, epígrafes de las galerías) |
 | Las 15 tablas del Word contra las del sitio, celda por celda | Iguales |
 | Chromium a 390 px | Sin errores, sin imágenes rotas y sin desplazamiento horizontal |
+
+## Quincuagésima quinta revisión: el conteo del sensor validado y las pistas de la plaqueta de los puentes (03/11/2026)
+
+El conteo del sensor de pasada quedó validado en el período de prueba: coincide con las vueltas de la
+máquina, una pasada por vuelta del eje (300 por minuto).
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | Documentación de Proyecto (Word y sitio) | Versión 5.4; LIM02 y la condición previa de 9.7, con el conteo validado |
+| 2 | Estado, Conexionado del Nivel 2, Guías de los Bloques C y D, de Conexión y de Mediciones, Manual del Telar (Word y sitio de manuales), Parado automático, Checklist, Bitácora (entrada del 03/11) | «Falta validar el conteo» y «período de prueba hasta el 04/11» pasan a conteo validado; en la Guía de Mediciones, la fila del conteo compara con las vueltas de la máquina |
+| 3 | `README.md`, `PUESTA_EN_MARCHA.md`, `NIVELES_DE_CONTROL.md`, README del firmware y del backend, Manual de Instalación, Paso a paso de conexión | Lo mismo |
+| 4 | Lista de componentes (nota del Bloque A) y sitio de manuales (paso «Pasar a placa definitiva») | «Placa universal» y «placa perforada» pasan a las plaquetas soldadas (la de la fuente sigue siendo de placa perforada) |
+| 5 | Modelado3D_CIT | La plaqueta 7 de los puentes muestra sus pistas de cobre, como en `plaqueta_puentes.png` |
+| 6 | Tabla de precios (Estimación, Modalidad, `Calculo_precio_2_anios.md`) | Recalculada mes a mes: 117 telares a $550.000, 101 a $600.000, 89 a $650.000 y 87 con abono de $25.000. Da lo mismo vendiendo telares enteros cada mes (redondeando). Sin cambios |
+
+| Comprobación | Resultado |
+|---|---|
+| Gantt del Drive revisado completo | Tareas, horas por etapa y por rol (642 h, 634 completas, 1.739 horas-persona) iguales a los documentos. En la pestaña «Estimación de Costos» el Bloque A sigue en USD 53,41 (`=81453/1525`): con la plaqueta de los puentes es `=85353/1525` (USD 55,97). Hay que cambiarlo en el Drive |
