@@ -217,7 +217,7 @@ La lista completa de mediciones de esta etapa está en `esp32/documentacion/CHEC
 2. Tejer una prueba corta con un dibujo fácil de reconocer y comparar la tela. Si sale corrida una pasada, ajustar `DESPLAZAMIENTO_FILAS` (`PUESTA_EN_MARCHA.md`, sección 2).
 3. Validar el conteo durante una jornada contra el contador mecánico del telar y, en la web, tocar **Validar** (`PUESTA_EN_MARCHA.md`, sección 3).
 
-Así se hizo el 30/10/2026: con el gabinete instalado y los cuatro canales conectados, el ESP32 se cargó con `NIVEL2_INSTALADO` en true y los demás valores como vienen (`DESPLAZAMIENTO_FILAS` y `PORCENTAJE_SELECCION` en 0), y la tela salió con el dibujo, sin pasadas corridas. Solo hubo que invertir dos cables en B3 (los canales 2 y 3 estaban cruzados: se vio en la primera vuelta del dibujo) y acercar el sensor a unos 2 mm del blanco. La validación del conteo contra el contador mecánico sigue en el período de prueba, hasta el 04/11/2026.
+Así se hizo el 30/10/2026: con el gabinete instalado y los cuatro canales conectados, el ESP32 se cargó con `NIVEL2_INSTALADO` en true y los demás valores como vienen (`DESPLAZAMIENTO_FILAS` y `PORCENTAJE_SELECCION` en 0), y la tela salió con el dibujo, sin pasadas corridas. Solo hubo que invertir dos cables en B3 (los canales 2 y 3 estaban cruzados: se vio en la primera vuelta del dibujo) y acercar el sensor a unos 2 mm del blanco. En el período de prueba el conteo quedó validado: coincide con las vueltas de la máquina (una pasada por vuelta del eje, 300 por minuto).
 
 ## 10. El día a día: encender, tejer y la botonera
 

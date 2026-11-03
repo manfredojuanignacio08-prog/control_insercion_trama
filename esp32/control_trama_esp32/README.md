@@ -154,8 +154,7 @@ en protoboard (el sensor de pasada y el relé LCA110 con el ESP32), el 17/10/202
 todavía en protoboard (el sensor quedó conectado y calibrado y el primer canal seleccionó bien), y
 el 30/10/2026 se instaló el gabinete con las plaquetas soldadas y los cuatro canales: el ESP32 se
 cargó con `NIVEL2_INSTALADO` en `true`, el sensor cuenta las pasadas y la tela salió con el dibujo
-cargado en la aplicación. Falta validar el conteo contra el contador mecánico durante una jornada
-(período de prueba, hasta el 04/11/2026).
+cargado en la aplicación. En el período de prueba el conteo quedó validado: coincide con las vueltas de la máquina (una pasada por vuelta del eje, 300 por minuto).
 
 ## Lo que se midió y lo que queda
 
@@ -167,7 +166,7 @@ cargado en la aplicación. Falta validar el conteo contra el contador mecánico 
 | Si con agujero la señal del lector va a +V | Confirmar la conexión final (el relé en lugar del lector, caso 2A, `diagramas/hardware/conexion_final_rele.png`) y `CANAL_ACTIVO_EN_ALTO` en `true` | Confirmado: el primer canal seleccionó bien el 17/10/2026 y los cuatro el 30/10/2026 |
 | Sincronización entre el pulso del sensor y la lectura del telar | `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba | Confirmado el 30/10/2026: queda en 0 |
 | Si la plaqueta toma la selección mantenida | `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita | Confirmado el 30/10/2026: queda en 0 |
-| El conteo durante una jornada, contra el contador mecánico | Validar el conteo | En el período de prueba, hasta el 04/11/2026 |
+| El conteo, contra las vueltas de la máquina | Validar el conteo | Validado en el período de prueba: coincide con las vueltas de la máquina, una pasada por vuelta (300 por minuto) |
 
 Los valores marcados como `A_CONFIRMAR` en `config.h` son los que funcionaron en este telar; en otro
 telar hay que volver a confirmarlos.

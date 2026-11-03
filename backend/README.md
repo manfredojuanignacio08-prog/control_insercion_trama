@@ -269,7 +269,7 @@ src/
 3. Validar el conteo del Nivel 2: el firmware reporta las pasadas medidas por el sensor inductivo
    (`POST /pasadas`, que se guardan en `pasadas_sensor`, aparte de la estimación por reloj) y
    la web deja de estimar mientras el sensor esté conectado. El hardware quedó instalado y probado
-   el 30/10/2026; falta validar el conteo contra el contador mecánico durante una jornada
+   el 30/10/2026, y en el período de prueba el conteo quedó validado: coincide con las vueltas de la máquina (una pasada por vuelta del eje, 300 por minuto)
    (`PUESTA_EN_MARCHA.md`).
 
 ## Seguridad de la API

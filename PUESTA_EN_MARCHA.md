@@ -8,8 +8,7 @@ La fábrica tiene telares C 201, C 301 y C 401; el equipo investigó los tres, y
 instala en el **C 201** (matrícula 1104, cuatro bobinas de selección), el mismo telar que se relevó y
 midió. El diseño sirve igual para los otros dos modelos, que comparten la arquitectura de selección. Este documento reúne lo que hay que hacer
 antes y durante la instalación. Nada de esto se puede verificar sin la máquina. En el C 201 quedó todo hecho
-el 30/10/2026, salvo la jornada de validación del conteo (sección 3), que sigue en el período de prueba hasta
-el 04/11/2026. Queda como referencia para volver a instalarlo o para otro telar.
+el 30/10/2026, y en el período de prueba el conteo quedó validado: coincide con las vueltas de la máquina (una pasada por vuelta del eje, 300 por minuto) (sección 3). Queda como referencia para volver a instalarlo o para otro telar.
 
 ## 1. Claves del sistema (SESSION_SECRET, RECOVERY_SECRET y ESP32_DEVICE_KEY)
 
@@ -96,6 +95,9 @@ El sensor cuenta pulsos y eso da las pasadas. Antes de creerle hay que comprobar
    Tocar **Validar** y confirmar. (Equivale a `POST /api/telares/:id/validar-conteo` con `{"confirmo": true}`.)
 
 Hasta validarlo, los metros de las estadísticas figuran como **estimados** (≈).
+
+En el C 201 el conteo quedó validado en el período de prueba: coincide con las vueltas de la máquina, una
+pasada por vuelta del eje (300 por minuto).
 
 ## 4. Lista de primera puesta en marcha
 

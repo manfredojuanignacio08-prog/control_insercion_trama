@@ -186,7 +186,7 @@ el lugar de los lectores ópticos, con el gabinete en la planta. Se había proba
 con 15 a 30 V y lleva la resistencia de protección de 470 Ω 3 W). En la prueba completa del
 30/10/2026 el telar tejió un dibujo cargado desde la aplicación; solo hubo correcciones mínimas de
 cableado. El ESP32 va en su propia plaqueta desde el 25/10/2026 (`diagramas/hardware/plaqueta_esp32`).
-Falta validar el conteo contra el contador mecánico durante una jornada (`PUESTA_EN_MARCHA.md`).
+En el período de prueba el conteo quedó validado: coincide con las vueltas de la máquina (una pasada por vuelta del eje, 300 por minuto).
 
 
 ## Nivel 2

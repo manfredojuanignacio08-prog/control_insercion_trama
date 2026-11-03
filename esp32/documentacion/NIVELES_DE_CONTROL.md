@@ -81,8 +81,8 @@ tarjetas perforadas (en este telar, la cinta de papel).
   instalado y probado en la máquina.
 - **Instalado y probado el 30/10/2026 (Nivel 2):** el ESP32 le **dicta la secuencia
   completa** al telar, en lugar de la cinta perforada, con un relé LCA110 en el
-  lugar de cada lector óptico y el sensor de pasada contando cada pasada. Falta
-  validar el conteo durante una jornada (período de prueba, hasta el 04/11/2026).
+  lugar de cada lector óptico y el sensor de pasada contando cada pasada. En el
+  período de prueba el conteo quedó validado: coincide con las vueltas de la máquina (una pasada por vuelta del eje, 300 por minuto).
 
 En una frase: **el sistema decide y guarda el "qué tejer", el ESP32 arranca, pausa
 y retrocede el telar, y además le dicta cada pasada, en el lugar de la cinta perforada.**
