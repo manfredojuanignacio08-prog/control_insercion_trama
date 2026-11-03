@@ -2016,7 +2016,7 @@ se recalculó con $600.000 por telar y un abono mensual por telar.
 | 7 | Documentación de Proyecto (Word, PDF y sitio) | Versión 5.3; Gantt al 02/11 (634 de 642 h); sección 5.5 con el armado final y dos figuras nuevas (11 y 12; las siguientes pasan a 13, 14 y 15); tres prensacables; sección 8 con el precio nuevo |
 | 8 | `diagramas/sistema/estimacion.svg` y `gantt.svg` (y sus PNG, dentro de la Documentación y del sitio) | Precio $600.000 y costo por telar $455.114; Etapa 07 completada y 634 de 642 h |
 | 9 | Bitácora | Entradas del 31/10, 01/11 y 02/11 |
-| 10 | Registro de Entrevistas | Reunión 8: resumen de lo que dijo el dueño en la entrevista (la planta tiene 14 telares) y el video editado |
+| 10 | Registro de Entrevistas | Reunión 8: resumen de lo que dijo el dueño en la entrevista (según el dueño, la tejeduría tiene 14 máquinas; en los datos relevados antes figuran 11 telares) y el video editado |
 | 11 | Estado Completo del Proyecto y Manual del Telar (Word y sitio) | Siete plaquetas, tres prensacables y el dibujo de la caja |
 | 12 | `presentacion_final/` | Diapositiva de precio y `Calculo_precio_2_anios.md` con el modelo nuevo |
 | 13 | `backend/public/index.html` | `?ritmo=` en la dirección muestra las pasadas más lento, solo para grabar demostraciones (de 10 a 300 por minuto; sin el parámetro, 300) |
