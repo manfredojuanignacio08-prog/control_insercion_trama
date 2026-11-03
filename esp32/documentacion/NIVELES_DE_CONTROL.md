@@ -22,7 +22,7 @@ funciones bien separadas:
 
 2. **La máquina lectora de secuencia (el Jacquard con tarjetas perforadas).**
    Es la que "lee" el dibujo y le dicta al telar, pasada por pasada, qué hacer
-   para formar el patrón. Hoy funciona con **tarjetas perforadas físicas**:
+   para formar el patrón. En un Jacquard funciona con **tarjetas perforadas físicas**:
    aproximadamente una tarjeta por ciclo, y cambiar de diseño implica
    desmontar e intercambiar cientos de tarjetas a mano (un proceso de horas).
 
@@ -36,7 +36,7 @@ tarjetas de cartón.
 Conviene separar el control del telar en dos niveles, porque tienen muy
 distinta dificultad y conviene ser honesto sobre cada uno.
 
-### 🟢 Nivel 1, Arranque y parada (lo que hace el ESP32 HOY)
+### 🟢 Nivel 1, Arranque y parada
 
 El ESP32 acciona la **máquina de accionamiento**: darle Marcha, Pausa y Retroceder
 al telar, mediante los tres relés en paralelo con la botonera, como describe el

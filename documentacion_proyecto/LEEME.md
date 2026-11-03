@@ -22,8 +22,8 @@ el repositorio para que el código y la documentación viajen juntos.
 | `Guia_Mediciones_y_Verificaciones.docx` | Todas las mediciones y pruebas, en orden, con la planilla para anotar. |
 | `Conexionado_Nivel2.docx` | El paso a paso del sensor de pasada y los relés, con sus diagramas. |
 | `Conexiones_de_las_plaquetas.docx` | El resumen de las conexiones de las plaquetas (las cinco de Proteus, la del ESP32 desde el 25/10/2026 y la de los puentes desde el 31/10/2026), pata por pata, con el dibujo de cada una y el armado de la caja, para quien las arma, con lo que se marcó para corregir del diseño en Proteus antes de soldarlas. |
-| `Guia_Bloques_C_y_D.docx` | Qué falta hacer en esos dos bloques y en qué orden. |
-| `Checklist_verificaciones.xlsx` | Las 26 verificaciones antes y durante la instalación. |
+| `Guia_Bloques_C_y_D.docx` | Lo que hubo que hacer en esos dos bloques y en qué orden, como referencia para volver a armarlos. |
+| `Checklist_verificaciones.xlsx` | Las 35 verificaciones antes y durante la instalación. |
 | `Componentes_en_placa.xlsx` | Los componentes de la placa, con su ubicación. |
 
 ## Economía y planificación
