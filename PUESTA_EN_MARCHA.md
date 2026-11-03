@@ -7,7 +7,9 @@
 La fábrica tiene telares C 201, C 301 y C 401; el equipo investigó los tres, y el hardware se
 instala en el **C 201** (matrícula 1104, cuatro bobinas de selección), el mismo telar que se relevó y
 midió. El diseño sirve igual para los otros dos modelos, que comparten la arquitectura de selección. Este documento reúne lo que hay que hacer
-antes y durante la instalación. Nada de esto se puede verificar sin la máquina.
+antes y durante la instalación. Nada de esto se puede verificar sin la máquina. En el C 201 quedó todo hecho
+el 30/10/2026, salvo la jornada de validación del conteo (sección 3), que sigue en el período de prueba hasta
+el 04/11/2026. Queda como referencia para volver a instalarlo o para otro telar.
 
 ## 1. Claves del sistema (SESSION_SECRET, RECOVERY_SECRET y ESP32_DEVICE_KEY)
 
@@ -73,7 +75,7 @@ lector cuando pasa un agujero.
 |---|---|
 | El dibujo sale corrido una pasada (la ventana de lectura llega antes de que se aplique la fila, o después) | `DESPLAZAMIENTO_FILAS` en 1 o −1, o mover el blanco metálico en el eje |
 | Hay un desfase pequeño dentro de la pasada (solo se ve con osciloscopio) | `RETARDO_APLICACION_US` (máximo 50 000 µs) |
-| Algunas pasadas no toman la selección, o la señal del lector dura otra parte de la pasada que la mitad | `PORCENTAJE_SELECCION` (hoy 0: se mantiene mientras la bobina se repita; de 1 a 90 se suelta en cada pasada) |
+| Algunas pasadas no toman la selección, o la señal del lector dura otra parte de la pasada que la mitad | `PORCENTAJE_SELECCION` (viene en 0, y así quedó el 30/10/2026: se mantiene mientras la bobina se repita; de 1 a 90 se suelta en cada pasada) |
 | La tela sale bien | No se toca nada |
 
 **Seguridad.** Las bobinas trabajan a 24 V de alterna. Medir del lado de baja tensión (el lector); con

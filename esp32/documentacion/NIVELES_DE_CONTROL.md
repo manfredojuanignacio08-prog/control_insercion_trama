@@ -79,13 +79,13 @@ tarjetas perforadas (en este telar, la cinta de papel).
   (reemplaza la *función* de la máquina lectora a nivel de diseño y datos), y
   el **ESP32 controla el arranque, la pausa y el retroceso** del telar (Nivel 1),
   instalado y probado en la máquina.
-- **En desarrollo (Nivel 2):** que el ESP32 le **dicte la secuencia completa**
-  al telar, reemplazando a la cinta perforada, con un relé LCA110 en el lugar
-  de cada lector óptico.
+- **Instalado y probado el 30/10/2026 (Nivel 2):** el ESP32 le **dicta la secuencia
+  completa** al telar, en lugar de la cinta perforada, con un relé LCA110 en el
+  lugar de cada lector óptico y el sensor de pasada contando cada pasada. Falta
+  validar el conteo durante una jornada (período de prueba, hasta el 04/11/2026).
 
-En una frase: **hoy el sistema decide y guarda el "qué tejer", y el ESP32
-arranca, pausa y retrocede el telar; que además le dicte cada pasada, ocupando
-el lugar de la cinta perforada, es lo que se está desarrollando.**
+En una frase: **el sistema decide y guarda el "qué tejer", el ESP32 arranca, pausa
+y retrocede el telar, y además le dicta cada pasada, en el lugar de la cinta perforada.**
 
 ---
 
@@ -95,7 +95,7 @@ Dado que los tejidos de esta planta son **mayormente patrones repetitivos**
 (tipo cortina), el Nivel 2 es alcanzable como prototipo real mediante
 **control por marcos (dobby)** en lugar de control hilo por hilo. Esto reduce
 el hardware de "cientos de electroimanes" a las **cuatro bobinas de selección** que el
-telar ya tiene (confirmado por el dueño el 19/09/26; el relevamiento del 28/08/26 había estimado
+telar ya tiene (confirmado por el dueño el 19/09/26; en la reunión del 06/09/26 se había estimado
 seis), algo que el mismo ESP32 del Nivel 1 maneja sin problema.
 
 El desarrollo completo de esta solución -cómo funciona, el hardware, y cómo se

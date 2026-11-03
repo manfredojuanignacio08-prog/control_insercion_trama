@@ -7,14 +7,15 @@ IDE (los demás archivos aparecen como pestañas) y se sube tal cual.
 
 El gabinete tiene **un único ESP32**. En `config.h`, `NIVEL2_INSTALADO` dice qué está conectado:
 
-- **`false` (hoy):** solo el **Bloque A**. Los tres relés en paralelo con Marcha, Pausa y
-  Retroceder, y el sensado de esos botones para saber cuándo alguien los usa a mano. La consulta al
+- **`false` (como queda en el repositorio, de plantilla):** solo el **Bloque A**. Los tres relés en
+  paralelo con Marcha, Pausa y Retroceder, y el sensado de esos botones para saber cuándo alguien los usa a mano. La consulta al
   backend lleva `?origen=esp32`, que mantiene el "ESP32 conectado" de la web; las pasadas las estima
   la web por tiempo.
 - **`true`:** además el **Bloque C** (conteo real de pasadas con el sensor inductivo) y el
   **Bloque D** (selección del dibujo con los relés LCA110). La consulta pasa a `?origen=nivel2`, que
   además es la señal de vida del sensor: la web deja de estimar y muestra el conteo del sensor. Por
-  eso se pone en `true` recién con el sensor conectado; sin él, el conteo quedaría en cero.
+  eso se pone en `true` recién con el sensor conectado; sin él, el conteo quedaría en cero. Así está
+  cargado el ESP32 del gabinete desde el 30/10/2026.
 
 Los pines no se pisan:
 
@@ -137,7 +138,7 @@ reinicio funcionan sin nada aparte.
 
 ## Depende del Bloque C
 
-El Nivel 2 **no puede funcionar sin el sensor de pasada instalado y validado**.
+El Nivel 2 **no puede funcionar sin el sensor de pasada instalado**.
 No es una mejora opcional: el firmware aplica cada fila del dibujo cuando llega
 un pulso del sensor, porque es la única forma que tiene de saber que la máquina
 avanzó una pasada.
@@ -148,26 +149,28 @@ aunque en la documentación aparezcan como bloques separados.
 
 ## Estado del Nivel 2
 
-**El Nivel 2 no está instalado en la máquina.** El 10/10/2026 se probó todo en protoboard (el
-sensor de pasada y el relé LCA110 con el ESP32) y funcionó, y el 17/10/2026 se probó en el telar,
-todavía en protoboard: el sensor de pasada quedó conectado y calibrado, y el primer canal, con el
-relé en el lugar del lector, seleccionó bien. Las plaquetas para instalarlo de manera correcta, con
-los cuatro canales, ya están soldadas (20/10/2026). Hasta que se instalen, la placa corre este
-mismo programa con `NIVEL2_INSTALADO` en `false`: solo maneja la botonera.
+**El Nivel 2 está instalado y probado en el telar desde el 30/10/2026.** El 10/10/2026 se probó todo
+en protoboard (el sensor de pasada y el relé LCA110 con el ESP32), el 17/10/2026 en la máquina,
+todavía en protoboard (el sensor quedó conectado y calibrado y el primer canal seleccionó bien), y
+el 30/10/2026 se instaló el gabinete con las plaquetas soldadas y los cuatro canales: el ESP32 se
+cargó con `NIVEL2_INSTALADO` en `true`, el sensor cuenta las pasadas y la tela salió con el dibujo
+cargado en la aplicación. Falta validar el conteo contra el contador mecánico durante una jornada
+(período de prueba, hasta el 04/11/2026).
 
-## Qué falta antes de poder usarlo
+## Lo que se midió y lo que queda
 
-| Medición | Para qué |
-|---|---|
-| Tensión continua que entrega el telar al sensor (12 a 14 V), con la máquina en marcha | Confirmar la resistencia del canal del sensor (1,2 kΩ; con 24 V sería de 2,2 kΩ) |
-| Relación de giro del eje elegido | Confirmado el 10/09/2026: una vuelta por pasada |
-| Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado. La alimentación se midió el 17/10/2026: entre 15 y 30 V, así que la resistencia de protección es la de 470 Ω 3 W. Falta anotar la corriente |
-| Si con agujero la señal del lector va a +V (lo que dijeron en la planta: el lector da la señal) | Confirmar la conexión final (el relé en lugar del lector, caso 2A, `diagramas/hardware/conexion_final_rele.png`) y `CANAL_ACTIVO_EN_ALTO` en `true`. El 17/10/2026 el primer canal, conectado así, seleccionó bien: falta en los otros tres |
-| Sincronización entre el pulso del sensor y la lectura del telar | Ajustar `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba |
-| Si la plaqueta toma la selección mantenida | `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita y cambia cuando cambia. Si alguna pasada no la toma, probar un porcentaje (50 %): se suelta en cada pasada, como el papel |
+| Medición | Para qué | Estado |
+|---|---|---|
+| Tensión continua que entrega el telar al sensor (12 a 14 V), con la máquina en marcha | Confirmar la resistencia del canal del sensor (1,2 kΩ; con 24 V sería de 2,2 kΩ) | El sensor funciona con 1,2 kΩ desde el 17/10/2026; falta anotar el valor medido |
+| Relación de giro del eje elegido | Que el conteo sea uno a uno | Confirmado el 10/09/2026: una vuelta por pasada |
+| Tensión y corriente en la salida de un lector óptico | Confirmar el relé y su conexionado | La alimentación se midió el 17/10/2026: entre 15 y 30 V, así que la resistencia de protección es la de 470 Ω 3 W. Falta anotar la corriente |
+| Si con agujero la señal del lector va a +V | Confirmar la conexión final (el relé en lugar del lector, caso 2A, `diagramas/hardware/conexion_final_rele.png`) y `CANAL_ACTIVO_EN_ALTO` en `true` | Confirmado: el primer canal seleccionó bien el 17/10/2026 y los cuatro el 30/10/2026 |
+| Sincronización entre el pulso del sensor y la lectura del telar | `DESPLAZAMIENTO_FILAS`, que solo se conoce tejiendo una prueba | Confirmado el 30/10/2026: queda en 0 |
+| Si la plaqueta toma la selección mantenida | `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita | Confirmado el 30/10/2026: queda en 0 |
+| El conteo durante una jornada, contra el contador mecánico | Validar el conteo | En el período de prueba, hasta el 04/11/2026 |
 
-Hasta tener esos datos, los valores marcados como `A_CONFIRMAR` en `config.h`
-son estimaciones y no deben darse por buenos.
+Los valores marcados como `A_CONFIRMAR` en `config.h` son los que funcionaron en este telar; en otro
+telar hay que volver a confirmarlos.
 
 ## Archivos
 

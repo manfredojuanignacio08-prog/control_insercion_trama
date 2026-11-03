@@ -8,17 +8,20 @@
 //  UN SOLO PROGRAMA PARA LA ÚNICA PLACA DEL GABINETE. Antes de subirlo hay que completar:
 //    1. WIFI_SSID y WIFI_PASSWORD (la red de la fábrica).
 //    2. DEVICE_KEY (la misma clave que ESP32_DEVICE_KEY en Render).
-//    3. NIVEL2_INSTALADO: false mientras solo esté armado el Bloque A (hoy).
+//    3. NIVEL2_INSTALADO: true con el sensor y los relés LCA110 conectados, como en el gabinete
+//       desde el 30/10/2026. En el repositorio queda en false, como plantilla.
 //
-//  Los valores marcados A_CONFIRMAR dependen de mediciones que todavía no se hicieron
-//  sobre la máquina: no deben darse por buenos hasta confirmarlos.
+//  Los valores marcados A_CONFIRMAR dependían de mediciones sobre la máquina. En este telar se
+//  confirmaron el 30/10/2026, con el sistema completo, con los valores con que vienen; en otro
+//  telar hay que volver a confirmarlos.
 // ============================================================================
 
 // ---------------------------------------------------------------- Qué está instalado
 // false → solo el Bloque A: relés de Marcha, Pausa y Retroceder y sensado de la botonera.
-//         Es lo que hay que usar HOY. La web estima las pasadas por tiempo.
+//         La web estima las pasadas por tiempo. Es el valor de la plantilla del repositorio.
 // true  → además el sensor de pasada (Bloque C) y los relés LCA110 de la selección (Bloque D).
-//         Se pone en true recién cuando los dos estén armados y conectados.
+//         Se pone en true recién cuando los dos estén armados y conectados. Así está cargado
+//         el ESP32 del gabinete desde el 30/10/2026.
 //
 // Por qué importa: con true la placa le avisa al servidor que el sensor está funcionando, y
 // la web deja de estimar las pasadas por tiempo para esperar las del sensor. Con true y sin
@@ -154,8 +157,8 @@ static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 //     false si los separa.
 // Las conexiones en paralelo o en serie con el lector, que se evaluaron primero, quedan descartadas.
 // Probado el 17/10/2026 en la planta, en protoboard: el primer canal, conectado así y con true,
-// seleccionó bien.
-// A_CONFIRMAR en los otros tres canales, con la medición sobre cada lector
+// seleccionó bien. El 30/10/2026, con el gabinete, los cuatro canales seleccionaron bien con true.
+// En otro telar, A_CONFIRMAR con la medición sobre cada lector
 // (documentacion/PASO_A_PASO_RELES_LCA110.md).
 #define CANAL_ACTIVO_EN_ALTO   true
 
@@ -184,7 +187,8 @@ static const int  PIN_CANAL[N_CANALES] = { 18, 19, 21, 22 };
 // dentro de un intercalado: se adelanta una pasada de su ciclo. La posición que se informa al
 // backend no cambia: es la de la máquina.
 //
-// A_CONFIRMAR: se define con la primera prueba de tejido, no antes.
+// A_CONFIRMAR: se define con la primera prueba de tejido, no antes. En este telar quedó en 0
+// (30/10/2026): la tela salió con el dibujo, sin pasadas corridas.
 #ifndef DESPLAZAMIENTO_FILAS_PRUEBA
 static const int DESPLAZAMIENTO_FILAS = 0;
 #else
@@ -205,13 +209,14 @@ static_assert(DESPLAZAMIENTO_FILAS >= -3 && DESPLAZAMIENTO_FILAS <= 3, "DESPLAZA
 // latencia del relé LCA110 (unos pocos ms) y del ESP32 alcancen a aplicar la fila, no se corrige
 // con un retardo: hay que adelantar la aplicación con DESPLAZAMIENTO_FILAS = 1 (aplicar en el
 // pulso N la selección de la pasada N+1) o mover el blanco metálico sobre el eje.
-// A_CONFIRMAR: se define con la medición sobre la máquina.
+// A_CONFIRMAR: se define con la medición sobre la máquina. En este telar queda en 0: sin
+// osciloscopio, y con DESPLAZAMIENTO_FILAS en 0 la tela salió bien (30/10/2026).
 static const unsigned long RETARDO_APLICACION_US = 0;
 static_assert(RETARDO_APLICACION_US <= 50000UL, "RETARDO_APLICACION_US no puede pasar de 50 ms");
 
 // Qué parte de cada pasada queda activa la selección.
 //
-// 0 (el valor de hoy): la selección se mantiene hasta el pulso siguiente. En una racha de
+// 0 (el valor que viene): la selección se mantiene hasta el pulso siguiente. En una racha de
 //   pasadas de la misma bobina (por ejemplo 120 seguidas) el relé no se suelta nunca: queda
 //   activo toda la racha y cambia recién cuando cambia la bobina. Es lo que se ve en el telar
 //   (dato de la planta, 10/2026): tejiendo muchas pasadas de una bobina, su relé se mantiene
@@ -224,7 +229,8 @@ static_assert(RETARDO_APLICACION_US <= 50000UL, "RETARDO_APLICACION_US no puede 
 //   de una parada, se usa DURACION_SELECCION_INICIAL_MS.
 //
 // A_CONFIRMAR con la primera prueba en la máquina: si con 0 alguna pasada no toma la selección
-// (la plaqueta necesitara ver el papel entre pasadas), probar con 50.
+// (la plaqueta necesitara ver el papel entre pasadas), probar con 50. En este telar quedó en 0
+// (30/10/2026): todas las pasadas tomaron la selección.
 #ifndef PORCENTAJE_SELECCION_PRUEBA
 static const unsigned long PORCENTAJE_SELECCION = 0;
 #else

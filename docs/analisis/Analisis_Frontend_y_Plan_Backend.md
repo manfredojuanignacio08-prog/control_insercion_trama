@@ -97,7 +97,8 @@ desconectado" hoy es un sistema conectado de punta a punta: el frontend habla
 con el backend en cada acción (no solo al guardar) y todo persiste en
 PostgreSQL. Lo único que queda a nivel de interfaz es la pantalla de historial
 de producción. En hardware, el Bloque A del ESP32 (Marcha, Pausa, Retroceder y sensado)
-está instalado y probado en el telar desde el 19/09/2026; falta el Nivel 2.
+está instalado y probado en el telar desde el 19/09/2026, y el Nivel 2 (sensor de pasada y
+selección de las cuatro bobinas), desde el 30/10/2026.
 
 ---
 
