@@ -2061,3 +2061,23 @@ los sitios.
 | Búsquedas en todos los Word, planillas, Markdown, diagramas y sitios de los montos viejos, «hoy», «falta», «a confirmar», «placa perforada» y la numeración de las plaquetas | Lo que quedaba está en la tabla; el resto es historial |
 | Imágenes de los Word después de editarlos | Las mismas que antes |
 | PDF: páginas casi vacías al final | Ninguna |
+
+## Quincuagésima cuarta revisión: el sitio de la documentación al día con la versión 5.3 (03/11/2026)
+
+El sitio de la Documentación de Proyecto (repositorio aparte, `Documentacion-AutotizaciondeTelar`) seguía en
+la versión 5.1 del 20/10. Se rehizo a partir de la versión publicada y se entrega en su zip, para subirlo a
+ese repositorio.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | Control de cambios | Las versiones 5.2 y 5.3 |
+| 2 | Textos | Los 37 párrafos y celdas que cambiaron entre la 5.1 y la 5.3: el Nivel 2 instalado y probado el 30/10, LIM01, LIM02 y LIM05, el ESP32 en su propia plaqueta, «plaquetas» en lugar de «placa universal», tres prensacables, el Gantt al 02/11, la Etapa 07 y el HITO 4 completados, la sección 7.2, la sección 8 con el precio de $600.000 por telar y el abono, y la condición previa de 9.7 |
+| 3 | Tablas | Bloques de compra: $85.353, $55.436 y $154.739 (decían $73.653, $34.536 y $122.139); componentes: relés «1 + 1»; rutas: `avanzar` la usa la web |
+| 4 | Figuras | Sección 5.5 con el armado final y las figuras 11 y 12 nuevas; las siguientes pasan a 13, 14 y 15 (también en el texto alternativo); el Gantt, la estimación y las figuras 3 a 5, las mismas del Word |
+| 5 | Textos propios del sitio | La foto del tambor de la cinta («lo que hoy define el dibujo»), el armado en banco («placa universal soldada»), el nodo de control terminado («listo para instalar») y «Funes, Muriel» |
+
+| Comprobación | Resultado |
+|---|---|
+| Párrafos del Word contra el sitio | Iguales, salvo diferencias de formato propias del sitio (portada, títulos de las épicas, epígrafes de las galerías) |
+| Las 15 tablas del Word contra las del sitio, celda por celda | Iguales |
+| Chromium a 390 px | Sin errores, sin imágenes rotas y sin desplazamiento horizontal |
