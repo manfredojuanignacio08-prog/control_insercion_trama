@@ -17,11 +17,11 @@ el repositorio para que el código y la documentación viajen juntos.
 
 | Archivo | Qué contiene |
 |---|---|
-| `Guia_Conexion_y_Puesta_en_Marcha.docx` | **El paso a paso de todo:** las siete plaquetas (las seis soldadas, con la de los puentes rectificadores, y la del ESP32), cómo van en la caja, cómo se conectan entre sí y al telar, cómo levantar el servidor, la web y el ESP32, y qué muestra la web cuando se usa la botonera. |
+| `Guia_Conexion_y_Puesta_en_Marcha.docx` | **El paso a paso de todo:** las siete plaquetas (las cinco del diseño original, la de los puentes rectificadores y la del ESP32), cómo van en la caja, cómo se conectan entre sí y al telar, cómo levantar el servidor, la web y el ESP32, y qué muestra la web cuando se usa la botonera. |
 | `Guia_Conexion_Reles_LCA110.docx` | Los relés de selección: mediciones, la conexión final (la más segura), pruebas y problemas frecuentes. |
 | `Guia_Mediciones_y_Verificaciones.docx` | Todas las mediciones y pruebas, en orden, con la planilla para anotar. |
 | `Conexionado_Nivel2.docx` | El paso a paso del sensor de pasada y los relés, con sus diagramas. |
-| `Conexiones_de_las_plaquetas.docx` | El resumen de las conexiones de las plaquetas (las cinco de Proteus, la del ESP32 desde el 25/10/2026 y la de los puentes desde el 31/10/2026), pata por pata, con el dibujo de cada una y el armado de la caja, para quien las arma, con lo que se marcó para corregir del diseño en Proteus antes de soldarlas. |
+| `Conexiones_de_las_plaquetas.docx` | El resumen de las conexiones de las plaquetas (las cinco del diseño original, la del ESP32 desde el 25/10/2026 y la de los puentes desde el 31/10/2026), pata por pata, con el dibujo de cada una y el armado de la caja, para quien las arma, con lo que se marcó para corregir del diseño en Proteus antes de soldarlas. |
 | `Guia_Bloques_C_y_D.docx` | Lo que hubo que hacer en esos dos bloques y en qué orden, como referencia para volver a armarlos. |
 | `Checklist_verificaciones.xlsx` | Las 35 verificaciones antes y durante la instalación. |
 | `Componentes_en_placa.xlsx` | Los componentes de la placa, con su ubicación. |

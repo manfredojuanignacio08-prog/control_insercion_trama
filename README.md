@@ -7,7 +7,7 @@ web pensada para el celular**; un **backend** guarda y coordina todo en una
 **telar físico**.
 
 
-> **Para conectar todo y levantar el sistema, seguir [`docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`](docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md)** (también en Word: `documentacion_proyecto/Guia_Conexion_y_Puesta_en_Marcha.docx`): las siete plaquetas (las seis soldadas, con la de los puentes rectificadores, y la del ESP32), cómo van en la caja, el telar, el servidor, la web y el ESP32, en orden.
+> **Para conectar todo y levantar el sistema, seguir [`docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`](docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md)** (también en Word: `documentacion_proyecto/Guia_Conexion_y_Puesta_en_Marcha.docx`): las siete plaquetas (las cinco del diseño original, la de los puentes rectificadores y la del ESP32), cómo van en la caja, el telar, el servidor, la web y el ESP32, en orden.
 >
 > **Para entender el código por dentro**, leer [`docs/analisis/Recorrido_del_codigo_y_herramientas.md`](docs/analisis/Recorrido_del_codigo_y_herramientas.md) (también en Word: `documentacion_proyecto/Recorrido_del_Codigo_y_Herramientas.docx`): la web, el servidor, la base de datos y el firmware, cómo viaja una orden y las herramientas usadas.
 >
