@@ -2103,3 +2103,29 @@ máquina, una pasada por vuelta del eje (300 por minuto).
 | Comprobación | Resultado |
 |---|---|
 | Gantt del Drive revisado completo | Tareas, horas por etapa y por rol (642 h, 634 completas, 1.739 horas-persona) iguales a los documentos. En la pestaña «Estimación de Costos» el Bloque A sigue en USD 53,41 (`=81453/1525`): con la plaqueta de los puentes es `=85353/1525` (USD 55,97). Hay que cambiarlo en el Drive |
+
+## Horas y tarifas nuevas del Gantt (03/11/2026)
+
+En la pestaña «Estimación de Costos» del Gantt se cargaron horas y tarifas nuevas por rol: 1.666 horas-persona, sobre las 642 h de tareas. Las tarifas son USD 14 para PM, D01 y D02; USD 12 para IM01, IM02, IR y BD; y USD 10 para DUX, ELE y MUL. Se recalculó todo con el mismo criterio de antes: $1.525 por dólar, 5 % de contingencia, 6 h de instalación por telar con la tarifa de Electrónica y 4 h de mantenimiento por mes con la tarifa de Desarrollo. El precio sigue en $600.000 por telar y el abono, en $20.000 por mes.
+
+| Concepto | Antes | Ahora |
+|---|---|---|
+| Personal | $31.793.299 | $32.912.092 |
+| Inversión a recuperar | $32.025.088 | $33.143.881 |
+| Mano de obra por telar | $288.225 | $96.075 |
+| Costo por telar | $459.014 | $266.864 |
+| Ganancia por telar | $140.986 | $333.136 |
+| Costos fijos del servicio, por mes | $218.075 | $96.075 |
+| Telares para recuperar en 2 años | 117 / 101 / 89 / 87 | 70 / 63 / 58 / 58 |
+| A una fábrica por semestre | 3 años y 8 meses | 2 años y 10 meses |
+| Visita o intervención | $114.375 | $38.125 |
+| Hardware / Software por telar | $522.384 / $77.616 | $427.319 / $172.681 |
+
+| # | Dónde | Qué |
+|---|---|---|
+| 1 | Estimación de Costos v4 | Tabla 3.1 con las horas y tarifas del Gantt (se saca la nota de las 1.739 horas-persona que no coincidían), y además 3.4, 3.5, 3.6 (+20 %: $39,49 M y $39,73 M), 4.1, 4.2, 6.3, el respaldo ($80.063) y la conclusión |
+| 2 | Modalidad de Inversión | Secciones 1, 2.2, 5.1 (47,9 % / 52,1 %), 5.2 y 6 |
+| 3 | Documentación de Proyecto (Word y sitio) | Sección 8, el abono de las visitas y la entrada 5.4 del historial |
+| 4 | Bitácora | La entrada del 03/11 |
+| 5 | `Calculo_precio_2_anios.md`, `estimacion.svg` y su PNG, y la diapositiva del precio (`Presentacion_CIT.html` y el `index.html` de la presentación) | Las cifras nuevas |
+| 6 | Gantt (xlsx) y PDF | El xlsx se bajó otra vez del Drive y los PDF se regeneraron |
