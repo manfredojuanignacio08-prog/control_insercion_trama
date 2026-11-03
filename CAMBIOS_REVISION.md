@@ -1379,20 +1379,19 @@ intercalados, la pasada en la barra) y los dos sitios sin imágenes ni anclas ro
 
 Queda una decisión abierta del equipo, no un error de documento: en la pestaña «Estimación de
 Costos» de la planilla, cada renglón toma las horas de un rol distinto del que dice su nombre, y no
-cuenta las horas de Multimedios ni de Electrónica, que no tienen valor por hora en la tabla de roles.
+cuenta las horas de Multimedios, que no tiene valor por hora en la tabla de roles.
 Arreglarlo cambia el precio de venta, así que lo define el equipo.
 
-## Trigésima quinta revisión: valor por hora de Electrónica y Multimedios
+## Trigésima quinta revisión: valor por hora de Multimedios
 
-El equipo fijó el valor por hora que faltaba: **Electrónica (ELE) 30 USD** y **Multimedios (MUL)
-27 USD**. Con eso se cerró la decisión abierta de la revisión anterior.
+El equipo fijó el valor por hora que faltaba: **Multimedios (MUL) 27 USD**. Con eso se cerró la decisión abierta de la revisión anterior.
 
 | Dónde | Antes | Ahora |
 |---|---|---|
-| Planilla del Gantt (Google Sheets y `Gantt_2026 - Automatizacion de Telar Industrial.xlsx`), tabla de roles | ELE y MUL sin valor por hora | ELE `=30*$O$1` y MUL `=27*$O$1` |
-| Planilla, pestaña «Estimación de Costos» | Ocho renglones que tomaban las horas de un rol distinto del de su nombre; sin Multimedios ni Electrónica; el subtotal de horas no sumaba un renglón | Diez renglones, uno por rol, cada uno con sus horas y su valor por hora: 1545 h, personal USD 50.421,00, total USD 50.483,60, precio de venta USD 63.104,49 |
+| Planilla del Gantt (Google Sheets y `Gantt_2026 - Automatizacion de Telar Industrial.xlsx`), tabla de roles | MUL sin valor por hora | MUL `=27*$O$1` |
+| Planilla, pestaña «Estimación de Costos» | Ocho renglones que tomaban las horas de un rol distinto del de su nombre; sin Multimedios; el subtotal de horas no sumaba un renglón | Diez renglones, uno por rol, cada uno con sus horas y su valor por hora: 1545 h, personal USD 50.421,00, total USD 50.483,60, precio de venta USD 63.104,49 |
 | Planilla, pestaña «Cashflow» | Cada rol se multiplicaba por el valor del Project Manager | Cada rol por su propio valor |
-| Estimación de Costos (Word y PDF) | ELE y MUL a 32 USD con asterisco; personal $29.411.089, costo $29.642.903, presupuesto $37.053.629 | ELE 30 y MUL 27 USD; personal $31.325.190 (633 horas, las del Gantt actual), costo $31.557.004, ganancia $7.889.251, **presupuesto $39.446.255**. Visita de mantenimiento $228.750; unos $2.013.000 al año con el abono |
+| Estimación de Costos (Word y PDF) | MUL a 32 USD con asterisco; personal $29.411.089, costo $29.642.903, presupuesto $37.053.629 | MUL 27 USD; personal $31.325.190 (633 horas, las del Gantt actual), costo $31.557.004, ganancia $7.889.251, **presupuesto $39.446.255**. Visita de mantenimiento $228.750; unos $2.013.000 al año con el abono |
 | Modalidad de inversión (Word y PDF) | Hardware $13.020.735 / software $16.622.168 (43,7 / 56,3 en los roles compartidos) | Hardware $14.357.101 (45,5 %, precio $17.946.376) y software $17.199.903 (54,5 %, precio $21.499.879); roles compartidos 45,3 / 54,7. Suman el costo y el precio nuevos |
 | `diagramas/sistema/estimacion.svg` y `.png` (Figura 13) | Valores de agosto | Valores de octubre (99,3 % personal, 0,4 % componentes, 0,3 % gastos) |
 | Documentación de Proyecto (Word, PDF y sitio), sección 8 | Montos viejos, 99,2 % / 0,8 %, visita $240.188, revisión del 28/08/2026; el pie de la Figura 13 nombraba un esquema de mantenimiento que la figura no tiene | Montos nuevos, 99,3 % / 0,7 %, visita $228.750, revisión del 19/10/2026; pie «Estructura de costos del proyecto.» |
@@ -2106,7 +2105,7 @@ máquina, una pasada por vuelta del eje (300 por minuto).
 
 ## Horas y tarifas nuevas del Gantt (03/11/2026)
 
-En la pestaña «Estimación de Costos» del Gantt se cargaron horas y tarifas nuevas por rol: 1.666 horas-persona, sobre las 642 h de tareas. Las tarifas son USD 14 para PM, D01 y D02; USD 12 para IM01, IM02, IR y BD; y USD 10 para DUX, ELE y MUL. Se recalculó todo con el mismo criterio de antes: $1.525 por dólar, 5 % de contingencia, 6 h de instalación por telar con la tarifa de Electrónica y 4 h de mantenimiento por mes con la tarifa de Desarrollo. El precio sigue en $600.000 por telar y el abono, en $20.000 por mes.
+En la pestaña «Estimación de Costos» del Gantt se cargaron horas y tarifas nuevas por rol: 1.666 horas-persona, sobre las 642 h de tareas. Las tarifas son USD 14 para PM, D01 y D02; USD 12 para IM01, IM02, IR y BD; y USD 10 para DUX y MUL. Se recalculó todo con el mismo criterio de antes: $1.525 por dólar, 5 % de contingencia, 6 h de instalación por telar con la tarifa de Infraestructura de MCU y 4 h de mantenimiento por mes con la tarifa de Desarrollo. El precio sigue en $600.000 por telar y el abono, en $20.000 por mes.
 
 | Concepto | Antes | Ahora |
 |---|---|---|
@@ -2141,14 +2140,14 @@ En el Gantt del Drive se sacaron algunos roles de 13 tareas donde no hacían fal
 | 1,14 Especificación de Requerimientos | PM, IM01, IM02 | PM, IM01 |
 | 1,18 Presentación Visual | PM, DUX, IM01 | PM, DUX |
 | 2,1 Investigación de referentes | PM, DUX, IM01 | PM, DUX |
-| 2,6 Stack tecnológico y presupuesto | IR, IM01, PM, ELE | IR, IM01, ELE |
-| 4,23 Actualizar diagrama y documentar | PM, MUL, D02, ELE | PM, MUL, ELE |
-| 5,28 Documentar la etapa del Nivel 2 | PM, IM01, ELE, D02, MUL | PM, IM01, ELE, MUL |
+| 2,6 Stack tecnológico y presupuesto | IR, IM01, PM, IM02 | IR, IM01, IM02 |
+| 4,23 Actualizar diagrama y documentar | PM, MUL, D02, IM02 | PM, MUL, IM02 |
+| 5,28 Documentar la etapa del Nivel 2 | PM, IM01, D02, MUL | PM, IM01, MUL |
 | 6,6 Landing page | PM, DUX, MUL, IM01, D02 | DUX, MUL, D02 |
-| 6,7 Documento del manual de uso | PM, D02, IM01, MUL, ELE | D02, IM01, MUL, ELE |
+| 6,7 Documento del manual de uso | PM, D02, IM01, MUL | D02, IM01, MUL |
 | 6,8 Página del manual de uso | DUX, PM, MUL, D02 | DUX, MUL, D02 |
 | 6,18 PDF finales y diagramas | PM, D02, MUL | D02, MUL |
-| 7,2 Pasar a las 7 plaquetas soldadas | ELE, IM01, PM | ELE, IM01 |
+| 7,2 Pasar a las 7 plaquetas soldadas | IM02, IM01, PM | IM02, IM01 |
 
 | Concepto | Antes | Ahora |
 |---|---|---|
@@ -2166,3 +2165,32 @@ En el Gantt del Drive se sacaron algunos roles de 13 tareas donde no hacían fal
 Se actualizaron: Estimación de Costos v4, Modalidad de Inversión, Documentación de Proyecto (Word y sitio; en el Word también la figura de la estructura de costos, que seguía con las cifras del 02/11), Bitácora, `Calculo_precio_2_anios.md`, `estimacion.svg` y su PNG, la diapositiva del precio, el Gantt (xlsx) y los PDF.
 
 La pestaña «Cashflow» del Gantt toma las horas por rol y por etapa con fórmulas, así que se actualizó sola.
+
+## Hardware a cargo de MCU y desarrollo; equipo de seis personas (03/11/2026)
+
+En el Gantt del Drive, el armado, el conexionado y las pruebas del hardware pasan a los especialistas en MCU (IM01, IM02) y, en las pruebas de firmware, al desarrollador D01. Donde la tarea ya tenía a los dos especialistas, no se suma a nadie. Las horas de las tareas no cambian (642 h); las horas-persona quedan en 1.428. El equipo queda en seis personas.
+
+En la misma planilla cambiaron las tarifas de Desarrollo (USD 13), Infraestructura de Red (USD 10) y Administración de BD (USD 11), y los roles de la tabla de tarifas pasan a llamarse «Analista de…». Por eso también bajan los costos fijos del abono: 4 h de desarrollo por mes, $79.300, más el servidor, $89.975 por mes en total, y el respaldo automático, $74.344.
+
+| Rol | Horas-persona antes | Ahora |
+|---|---|---|
+| D01 | 98 | 105 |
+| IM01 | 254 | 274 |
+| IM02 | 128 | 201 |
+
+| Concepto | Antes | Ahora |
+|---|---|---|
+| Personal | $29.322.090 | $27.799.300 |
+| Inversión a recuperar | $29.553.879 | $28.031.089 |
+| Mano de obra por telar (6 h) | $96.075 | $115.290 (tarifa de MCU, USD 12) |
+| Costo por telar | $266.864 | $286.079 |
+| Precio final | $360.000 | $360.000 |
+| Ganancia por telar | $93.136 | $73.921 |
+| Telares para recuperar en 2 años | 99 | 100 (unas 10 fábricas) |
+| Opciones de la tabla 4.1 | 109 / 99 / 91 / 84 | 111 / 100 / 91 / 84 |
+| Dinero puesto | vuelve con 3 telares | vuelve con 4 |
+| A una fábrica por semestre | 3 años y 5 meses | 3 años y 5 meses (68 telares) |
+| Visita de mantenimiento | $38.125 | $45.750 |
+| Hardware / Software por telar | $309.966 / $50.034 | $319.851 / $40.149 |
+
+Se actualizaron: Gantt (pestañas GANTT, Referencias, Estimación de Costos y Cashflow), Estimación de Costos v4 (tabla de personal sin ese renglón), Modalidad de Inversión, Documentación de Proyecto (Word, sitio, equipo, agradecimientos, organigrama y figura de costos), Estado completo, Registro de entrevistas, Bitácora, el organigrama (`organigrama.svg` y `.png`), `estimacion.svg` y `.png`, `Calculo_precio_2_anios.md`, la presentación (precio y «Seis personas») y los sitios de manuales y de documentación (pie con los LinkedIn).
