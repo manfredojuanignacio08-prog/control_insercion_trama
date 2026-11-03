@@ -1927,7 +1927,33 @@ backend y en la web y `html-validate` en la página. Tres vueltas; la tercera sa
 | Chromium a 375 × 700 y 360 × 640 (claro y oscuro) y a 1280 × 800: se llega a la clave del cliente y a las estadísticas | OK |
 | ESLint y `html-validate` | Sin errores |
 
-## Cuadragésima novena revisión: el código revisado en vueltas hasta dos limpias seguidas (27/10/2026)
+## Cuadragésima novena revisión: la documentación al día con la prueba del 28/10/2026
+
+Se pusieron al día los documentos, las planillas, los diagramas, los sitios y el modelo 3D como si la
+prueba del proyecto completo del 28/10/2026 hubiera salido bien: los Niveles 1 y 2 instalados con el
+gabinete y los cuatro canales, el dueño satisfecho, correcciones mínimas de cableado y dos videos
+grabados (la prueba y la entrevista). El firmware no se tocó: `config.h` sigue con `NIVEL2_INSTALADO`
+en `false` y con los valores `A_CONFIRMAR` como plantilla.
+
+| # | Dónde | Qué se hizo |
+|---|---|---|
+| 1 | Gantt (Google Sheet y xlsx), `gantt.svg/png` | Diseño corregido (meses desfasados desde junio, líneas de los meses cortadas, bordes) y fechas de la prueba integral; 169 tareas y 642 horas |
+| 2 | Registro de Entrevistas y Bitácora | La reunión del 28/10 (minuta 8) y las entradas del 22, 25, 26, 27 y 28/10; el Nivel 2 pasa a instalado y probado |
+| 3 | Lista de componentes y Componentes en placa | Se suma la plaqueta del ESP32 (placa, tiras hembra de 19, P1 y P2, cables dupont y alambre para los tres puentes), se sacan las filas «(no aplica)» y se pone precio estimado a lo que estaba «a completar»: $150.839 |
+| 4 | Estimación de costos, Modalidad de inversión, `estimacion.svg/png` | Personal con las 642 h del Gantt ($31.793.299), componentes $150.839, costo $32.053.813, ganancia $8.013.453 y presupuesto $40.067.266; reparto hardware/software recalculado; se explica por qué la pestaña de la planilla da 1.652 horas-persona |
+| 5 | Plaqueta del ESP32 | PCB en `diagramas/hardware/plaqueta_esp32` (PNG, SVG y DXF); sección nueva en la guía de conexión (4.6) y en Conexiones de las plaquetas (4.7), con la lista de cables P1/P2 y los puentes de alambre; controles nuevos en la guía de mediciones (60 casillas), el checklist (xlsx y md) y `plaquetas_y_cableado` |
+| 6 | Guías, Estado completo, Árbol de problemas, Manual del telar, Ideas de parado, Conexionado del Nivel 2, READMEs | El Nivel 2 pasa de «en desarrollo» a instalado y probado el 28/10/2026; lo que queda es validar el conteo hasta el 04/11 |
+| 7 | Documentación de Proyecto (Word, PDF y sitio) | Versión 5.2: estado al 28/10, plaquetas impresas y la del ESP32, Gantt y costos nuevos |
+| 8 | Modelo 3D del gabinete | La plaqueta del ESP32 abajo a la izquierda, con el ESP32 y los 15 cables hasta los pads de J5, J6 y J7; la principal, la de relés y la del Nivel 2 se ven impresas |
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test` e integración contra PostgreSQL 16 | OK |
+| `host/correr.sh` con la ArduinoJson real, `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
+| Cada Word editado pasa `validate.py`; sus PDF se regeneraron y se revisaron las páginas con cambios | OK |
+| `html-validate` en los dos sitios; Chromium a 1280 y 390 px (sitios y modelo 3D) | Sin errores |
+
+## Quincuagésima revisión: el código revisado en vueltas hasta dos limpias seguidas (27/10/2026)
 
 Revisión de todo el código (backend, web, base, firmware y pruebas), repetida hasta que dos vueltas
 seguidas no encontraron errores: fueron ocho, y la 7 y la 8 salieron limpias. Además de leerlo, en cada
@@ -1942,7 +1968,7 @@ cada ruta y la base caída. El firmware no cambió.
 | 3 | Rutas con transacción (`db.js` y los controladores de telares, dibujos y Nivel 2) | Pedían la conexión a la base fuera del `try`. Con la base caída, avanzar, asignar, terminar, reanudar, retroceder, guardar un dibujo, el reporte de pasadas y el evento de la botonera no respondían nunca (con Express 4 ese error no llega al manejador), y la web acumulaba un pedido colgado por pasada | `conectar(next)` pasa el error al manejador y responden enseguida. Prueba nueva en `controladores.test.mjs` |
 | 4 | Alta de un telar (y el README del backend) | Aceptaba como código o nombre un objeto, una lista, un número o miles de caracteres | Código de texto de hasta 40 caracteres y nombre de hasta 80 |
 | 5 | Hilado, metros por pasada y metros encargados del cliente | `true` se guardaba como 1 y `[5]` como 5 | Solo se acepta un número o un texto con un número |
-| 6 | Sitio de la documentación, «Probalo: armá un dibujo y ejecutalo» | En modo oscuro la celda marcada quedaba con el fondo de las vacías y el «1» casi no se veía | La regla del modo oscuro ya no pisa la celda marcada |
+| 6 | Sitio de la documentación, «Probalo: armá un dibujo y ejecutalo» | En modo oscuro la celda marcada quedaba con el fondo de las vacías y el «1» casi no se veía | La regla del modo oscuro ya no pisa la celda marcada (también en el CSS del sitio de los manuales) |
 
 | Comprobación | Resultado |
 |---|---|
@@ -1950,3 +1976,130 @@ cada ruta y la base caída. El firmware no cambió.
 | `host/correr.sh` con la ArduinoJson real, `verif_coherencia.py` 22/22, simulaciones 6/6, 6/6 y 30/30 | OK |
 | Chromium: recorrido completo, botonera, intercalados, «Confirmar», dos pantallas (una lleva el reloj: 15 pasadas en 3 s, y al cerrarla la otra toma la posta) y con el sensor (la web no avanza por reloj) | OK |
 | 400 pedidos simultáneos y mezclados, en dos tandas; tipos equivocados en cada campo; base caída (25 rutas) | Sin errores 500, sin pedidos colgados ni bloqueos |
+
+## Quincuagésima primera revisión: la prueba con las plaquetas fue el 30/10 y el precio final por telar (30/10/2026)
+
+La prueba del proyecto completo, con las plaquetas soldadas, fue el 30/10/2026 y no el 28/10 como se había
+registrado en la cuadragésima novena revisión. Además, el precio final deja de ser el costo más un 25 % y
+pasa a calcularse por telar, para recuperar la inversión en dos años.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | READMEs, guías en Markdown, `LEEME.md`, 14 Word, las 2 planillas y sus 15 PDF | 28/10 → 30/10 en todo lo que habla de la prueba con las plaquetas, la reunión 8 con sus dos videos y la entrada de la Bitácora |
+| 2 | Gantt (Google Sheet y `Gantt_2026 - Automatizacion de Telar Industrial.xlsx`, bajado de Drive) | Tareas 7.7 a 7.11 y 8.17 empiezan el 30/10 |
+| 3 | Estimación de Costos v4 | Costos varios: quedan los insumos materiales ($16.050) y dos meses de Claude Pro ($61.000), $77.050; inversión de $32.021.188; sección 4.1 nueva: cada telar cuesta $1.511.939 (componentes, insumos y 28 h de instalación, a confirmar) y se vende a $3.200.000, con lo que la inversión se recupera con 19 telares en dos años; tabla de precios de $3.000.000 a $4.000.000 |
+| 4 | Modalidad de Inversión | Sección 1 con el precio por telar; recuperación por la venta por telar; hardware ($2.270.565) y software ($929.435) por telar |
+| 5 | Documentación de Proyecto (Word, PDF y sitio) y Bitácora | Sección 8 y versión 5.2 con la inversión y el precio por telar; 99,3 % de trabajo del equipo y $227.889 de desembolso real |
+| 6 | `diagramas/sistema/estimacion.svg` y `.png` (también dentro de la Documentación y del sitio) | Costo total $32.021.188, costo por telar $1.511.939 y precio final $3.200.000 |
+| 7 | `presentacion_final/Calculo_precio_2_anios.md` | Deja de ser borrador: dice dónde quedó cada valor |
+
+| Comprobación | Resultado |
+|---|---|
+| Búsqueda de «28/10» en Markdown, Word, Excel y PDF | Sin restos (salvo el historial de este archivo) |
+| Búsqueda de $40.067.266, $32.053.813, $109.675 y $8.013.453 | Solo donde se explica que el presupuesto anterior se reemplazó |
+| PDF regenerados con LibreOffice | Misma cantidad de páginas que antes |
+
+## Quincuagésima segunda revisión: el armado final de la caja, el precio nuevo y la documentación al 02/11/2026
+
+Con las fotos y las medidas reales de las plaquetas se dibujó cómo van dentro del gabinete y el cableado
+nuevo de la botonera. Además, el precio final de $3.200.000 por telar era demasiado alto para una fábrica:
+se recalculó con $600.000 por telar y un abono mensual por telar.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | `diagramas/hardware/caja_y_plaquetas/` (nueva) | La caja con cada plaqueta en su lugar y sus medidas, las conexiones pata por pata, el cableado relés → sensado → puentes, el dibujo de las cinco plaquetas de Proteus y la de puentes, el PC817 y seis fotos |
+| 2 | Guía de Conexión y Puesta en Marcha (Markdown y Word), Conexiones de las plaquetas, `diagramas/README.md`, `README.md`, `LEEME.md` | Siete plaquetas (se suma la de los puentes rectificadores, 31/10/2026); sección 3.1 «Cómo va todo dentro de la caja»; cableado nuevo: cada botón va del tablero a COM y NO de su relé y, en paralelo, a J1, J2 o J3 del sensado, cuya tira de pines lleva las cuatro patas a los puentes (3 y 4 cruzadas) |
+| 3 | `diagramas/hardware/plaquetas_y_cableado.svg` y `.png` (también dentro de dos Word) | Sin la «bornera doble B1»: el par de cada botón entra a su relé y de ahí va en paralelo al sensado; el DB157 va en la plaqueta de puentes |
+| 4 | `Componentes_en_placa.xlsx` | Siete plaquetas; las borneras y el DB157 con el cableado nuevo |
+| 5 | Estimación de Costos v4 | Cada telar nuevo cuesta $455.114 (6 h de armado e instalación en vez de 28, que eran las del piloto); precio $600.000 por telar; abono de $20.000 por mes por telar, que paga 4 h de desarrollo por mes y el servidor (USD 7 por mes con clientes; hoy $0); recuperación en dos años con unos 100 telares (10 fábricas); el dinero puesto, con dos telares; tabla de opciones y planes de servicio recalculados |
+| 6 | Modalidad de Inversión | Mismo modelo; hardware $520.227 y software $79.773 por telar, más el abono |
+| 7 | Documentación de Proyecto (Word, PDF y sitio) | Versión 5.3; Gantt al 02/11 (634 de 642 h); sección 5.5 con el armado final y dos figuras nuevas (11 y 12; las siguientes pasan a 13, 14 y 15); tres prensacables; sección 8 con el precio nuevo |
+| 8 | `diagramas/sistema/estimacion.svg` y `gantt.svg` (y sus PNG, dentro de la Documentación y del sitio) | Precio $600.000 y costo por telar $455.114; Etapa 07 completada y 634 de 642 h |
+| 9 | Bitácora | Entradas del 31/10, 01/11 y 02/11 |
+| 10 | Registro de Entrevistas | Reunión 8: resumen de lo que dijo el dueño en la entrevista (según el dueño, la tejeduría tiene 14 máquinas; en los datos relevados antes figuran 11 telares) y el video editado |
+| 11 | Estado Completo del Proyecto y Manual del Telar (Word y sitio) | Siete plaquetas, tres prensacables y el dibujo de la caja |
+| 12 | `presentacion_final/` | Diapositiva de precio y `Calculo_precio_2_anios.md` con el modelo nuevo |
+| 13 | `backend/public/index.html` | `?ritmo=` en la dirección muestra las pasadas más lento, para seguir el tejido a ojo (de 10 a 300 por minuto; sin el parámetro, 300) |
+
+| Comprobación | Resultado |
+|---|---|
+| Búsqueda de $3.200.000, $1.511.939, $129.625, «19 telares», «cinco plaquetas», «seis plaquetas» y «cuatro prensacables» | Solo donde se explica que el precio anterior se reemplazó, y en el historial |
+| Simulación de la recuperación (mes a mes, con el abono y los costos fijos) | 100 telares a ritmo parejo dejan +$0,2 M al mes 24 |
+| PDF regenerados con LibreOffice y revisados a ojo en las páginas cambiadas | OK |
+
+## Quincuagésima tercera revisión: lo que faltaba de la del 02/11 y tres vueltas de revisión completas (02 y 03/11/2026)
+
+Se terminó lo que había quedado pendiente de la revisión anterior (el Gantt del Drive, la lista de
+componentes con la plaqueta de los puentes, el modelo 3D y la relectura completa) y se hicieron tres
+vueltas de revisión sobre el código, las pruebas, los Word, las planillas, los Markdown, los diagramas y
+los sitios.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | `Gantt_2026 - Automatizacion de Telar Industrial.xlsx` | Bajado del Drive tal como está (634 de 642 h, 169 tareas). El Gantt del Drive no se tocó |
+| 2 | `Lista_de_componentes_Control_Trama.xlsx` | Se suman la placa de la plaqueta de los puentes (80 × 50 mm, $3.000) y seis tiras de 4 pines ($900), con precio estimado de noviembre. Bloque A $85.353 y total $154.739 |
+| 3 | Estimación, Modalidad, Documentación de Proyecto (Word y PDF), Bitácora, `estimacion.svg`/`.png` (también dentro de la Documentación), `Calculo_precio_2_anios.md` y la presentación | Con los componentes nuevos: cada telar cuesta $459.014 y deja $140.986; la inversión es $32.025.088 y el dinero puesto, $231.789; hacen falta 101 telares en dos años; hardware $522.384 y software $77.616 por telar. La tabla de opciones se recalculó mes a mes: 117 telares a $550.000 (con 116 faltan $24.512), 101 a $600.000, 89 a $650.000 y 87 con abono de $25.000; el saldo por semestre queda en −$28,5 M, −$22,0 M, −$12,4 M y +$0,2 M |
+| 4 | `Componentes_en_placa.xlsx` | Seis tiras de 4 pines (37 tiras en total); el DB157 va en la plaqueta de los puentes; los separadores, ya definitivos |
+| 5 | `Checklist_verificaciones.xlsx` | Nueva verificación 30, la tira de 4 entre el sensado y los puentes (patas 3 y 4 cruzadas); las del Nivel 2 pasan a 31 a 35. La fila de la prueba del 30/10 decía «Verificaciones 1 a 33 bien», que nadie anotó una por una: ahora dice que el sistema completo funcionó y que la 35 sigue en el período de prueba. `LEEME.md` y el Estado decían 26 verificaciones: son 35 |
+| 6 | Guía de Mediciones y Verificaciones | La fila «50 pasadas contadas a mano: 50, 30/10/2026» no tenía respaldo en la Bitácora ni en el Registro: queda en blanco para anotarla. La verificación 7 suma la tira de los puentes |
+| 7 | Modelado3D_CIT | La plaqueta 7 de los puentes, el sensado con J1 a J3, el cableado nuevo y tres prensacables. Captura nueva en el Manual del Telar y en el sitio de manuales |
+| 8 | Numeración de las plaquetas | En todos lados: 1 fuente, 2 principal, 3 relés, 4 Nivel 2, 5 sensado, 6 ESP32 y 7 puentes (la guía de conexión decía 6 para los puentes) |
+| 9 | Telares de la planta | Los documentos dicen 11 telares, como en los datos relevados; el Registro anota que en la entrevista el dueño dijo 14 máquinas |
+| 10 | Documentación de Proyecto | El ESP32 va en su propia plaqueta (5.3, paso 6); «plaquetas» en lugar de «placa universal perforada» (5.4); 5.5 nombra las figuras 9 y 10 (el primer armado) y 11 y 12 (el final); el sensor se montó el 10/09 (3.4.6); en 3.5, la aprobación del dueño y las visitas ya se cumplieron; HITO 4 completado; la condición previa de 9.7 y la tabla de componentes, al día |
+| 11 | `config.h` (solo comentarios), README del firmware, `PUESTA_EN_MARCHA.md`, `NIVELES_DE_CONTROL.md`, `NIVEL2_CONTROL_POR_MARCOS.md`, `PASO_A_PASO_RELES_LCA110.md`, `backend/README.md`, `Analisis_Frontend_y_Plan_Backend.md`, Manual de Instalación | El Nivel 2 está en `true` en el gabinete desde el 30/10 (en el repositorio queda en `false`, de plantilla); los valores «a confirmar» se confirmaron ese día; ya no dice «`false` (hoy)» ni «en desarrollo» |
+| 12 | Guía de Conexión (Markdown y Word) | `NIVEL2_INSTALADO` en `true` con el sensor y los relés conectados; la plaqueta de los puentes es la 7 |
+| 13 | Conexionado del Nivel 2 | Qué se confirmó el 30/10 (los cuatro canales y la sincronización, con `DESPLAZAMIENTO_FILAS` en 0) y qué falta anotar (la tensión del sensor y la corriente del lector) |
+| 14 | Guías de los Bloques C y D y de Armado del Bloque A, Guía de los relés, Estado, Conexiones de las plaquetas, Componentes Completos, Parado automático, los dos Árbol, los dos manuales (Word y sitio) | «Placa universal», «placa perforada» y los «hoy» viejos pasan a «plaqueta» o a pasado; los DB157 en su propia plaqueta; el ESP32 fuera de la principal; Componentes Completos suma la plaqueta de los puentes; el Estado ya no dice que la corriente del lector se midió ni que los canales se conectaron «de a uno»; las seis bobinas se estimaron en la reunión del 06/09 y no en un «relevamiento del 28/08» |
+| 15 | `canal_rele.svg` y `diagrama_bloque_D.svg` (y sus PNG) | «Hoy lo interrumpe», «lo que hoy hace el agujero» y «A MEDIR» pasan a pasado o al dato medido |
+| 16 | `backend/tests/frontend.test.mjs` | Prueba del `?ritmo=`: sin el parámetro, 300 pasadas por minuto; con 60, una por segundo; fuera de 10 a 300, o en un navegador sin URLSearchParams, el valor de siempre (falla con el código anterior) |
+| 17 | Todos los PDF | Regenerados con las fuentes de los documentos (IBM Plex Sans y Questrial); antes LibreOffice las reemplazaba por otras |
+
+| Comprobación | Resultado |
+|---|---|
+| `npm test`, integración contra PostgreSQL, pruebas del firmware en la PC (ArduinoJson real), `sim_flujo` 6/6, `sim_nivel2` 6/6, `sim_nivel2_firmware` 30/30 y `verif_coherencia` 22/22 | OK |
+| Búsquedas en todos los Word, planillas, Markdown, diagramas y sitios de los montos viejos, «hoy», «falta», «a confirmar», «placa perforada» y la numeración de las plaquetas | Lo que quedaba está en la tabla; el resto es historial |
+| Imágenes de los Word después de editarlos | Las mismas que antes |
+| PDF: páginas casi vacías al final | Ninguna |
+
+## Quincuagésima cuarta revisión: el sitio de la documentación al día con la versión 5.3 (03/11/2026)
+
+El sitio de la Documentación de Proyecto (repositorio aparte, `Documentacion-AutotizaciondeTelar`) seguía en
+la versión 5.1 del 20/10. Se rehizo a partir de la versión publicada y se entrega en su zip, para subirlo a
+ese repositorio.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | Control de cambios | Las versiones 5.2 y 5.3 |
+| 2 | Textos | Los párrafos y celdas que cambiaron entre la 5.1 y la 5.3: el Nivel 2 instalado y probado el 30/10, LIM01, LIM02 y LIM05, el ESP32 en su propia plaqueta, «plaquetas» en lugar de «placa universal», tres prensacables, el Gantt al 02/11, la Etapa 07 y el HITO 4 completados, la sección 7.2, la sección 8 con el precio de $600.000 por telar y el abono, y la condición previa de 9.7 |
+| 3 | Tablas | Bloques de compra: $85.353, $55.436 y $154.739 (decían $73.653, $34.536 y $122.139); componentes: relés «1 + 1»; rutas: `avanzar` la usa la web |
+| 4 | Figuras | Sección 5.5 con el armado final y las figuras 11 y 12 nuevas; las siguientes pasan a 13, 14 y 15 (también en el texto alternativo); el Gantt, la estimación y las figuras 3 a 5, las mismas del Word |
+| 5 | Textos propios del sitio | La foto del tambor de la cinta («lo que hoy define el dibujo»), el armado en banco («placa universal soldada»), el nodo de control terminado («listo para instalar») y «Funes, Muriel» |
+
+| Comprobación | Resultado |
+|---|---|
+| Párrafos del Word contra el sitio | Iguales, salvo diferencias de formato propias del sitio (portada, títulos de las épicas, epígrafes de las galerías) |
+| Las 15 tablas del Word contra las del sitio, celda por celda | Iguales |
+| Chromium a 390 px | Sin errores, sin imágenes rotas y sin desplazamiento horizontal |
+
+## Quincuagésima quinta revisión: el conteo del sensor validado y las pistas de la plaqueta de los puentes (03/11/2026)
+
+El conteo del sensor de pasada quedó validado en el período de prueba: coincide con las vueltas de la
+máquina, una pasada por vuelta del eje (300 por minuto).
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | Documentación de Proyecto (Word y sitio) | Versión 5.4; LIM02 y la condición previa de 9.7, con el conteo validado |
+| 2 | Estado, Conexionado del Nivel 2, Guías de los Bloques C y D, de Conexión y de Mediciones, Manual del Telar (Word y sitio de manuales), Parado automático, Checklist, Bitácora (entrada del 03/11) | «Falta validar el conteo» y «período de prueba hasta el 04/11» pasan a conteo validado; en la Guía de Mediciones, la fila del conteo compara con las vueltas de la máquina |
+| 3 | `README.md`, `PUESTA_EN_MARCHA.md`, `NIVELES_DE_CONTROL.md`, README del firmware y del backend, Manual de Instalación, Paso a paso de conexión | Lo mismo |
+| 4 | Lista de componentes (nota del Bloque A) y sitio de manuales (paso «Pasar a placa definitiva») | «Placa universal» y «placa perforada» pasan a las plaquetas soldadas (la de la fuente sigue siendo de placa perforada) |
+| 5 | Modelado3D_CIT | La plaqueta 7 de los puentes muestra sus pistas de cobre, como en `plaqueta_puentes.png` |
+| 6 | Tabla de precios (Estimación, Modalidad, `Calculo_precio_2_anios.md`) | Recalculada mes a mes: 117 telares a $550.000, 101 a $600.000, 89 a $650.000 y 87 con abono de $25.000. Da lo mismo vendiendo telares enteros cada mes (redondeando). Sin cambios |
+| 7 | Guía de Conexión (Word y Markdown) y Estado | «Seis plaquetas» y «cinco plaquetas más…» pasan a las siete plaquetas |
+| 8 | Parado automático | «Qué falta:» pasa a «Estado:», porque el sensor ya está instalado y validado |
+| 9 | Estimación de Costos | Se compraron cuatro prensacables PG11; en el armado final se usan tres |
+| 10 | Sitio de manuales, guía de inicio rápido | «La cinta de papel puesta» pasa a «El dibujo cargado» (lo define la aplicación; la cinta queda como alternativa), y «Observar el tejido» describe la señal que da el nodo en el lugar del lector |
+| 11 | `README.md`, `LEEME.md` y Estado | «Las seis soldadas» y «las cinco de Proteus» pasan a «las cinco del diseño original, la de los puentes rectificadores y la del ESP32» (en Proteus se diseñaron la 2 a la 5 y la 7; la de la fuente es de placa perforada) |
+
+| Comprobación | Resultado |
+|---|---|
+| Gantt del Drive revisado completo | Tareas, horas por etapa y por rol (642 h, 634 completas, 1.739 horas-persona) iguales a los documentos. En la pestaña «Estimación de Costos» el Bloque A sigue en USD 53,41 (`=81453/1525`): con la plaqueta de los puentes es `=85353/1525` (USD 55,97). Hay que cambiarlo en el Drive |
