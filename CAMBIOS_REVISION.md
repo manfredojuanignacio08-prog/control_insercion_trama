@@ -2129,3 +2129,38 @@ En la pestaña «Estimación de Costos» del Gantt se cargaron horas y tarifas n
 | 4 | Bitácora | La entrada del 03/11 |
 | 5 | `Calculo_precio_2_anios.md`, `estimacion.svg` y su PNG, y la diapositiva del precio (`Presentacion_CIT.html` y el `index.html` de la presentación) | Las cifras nuevas |
 | 6 | Gantt (xlsx) y PDF | El xlsx se bajó otra vez del Drive y los PDF se regeneraron |
+
+## Menos horas-persona y precio de $360.000 (03/11/2026)
+
+En el Gantt del Drive se sacaron algunos roles de 13 tareas donde no hacían falta. Las horas de cada tarea no cambian (642 h); bajan las horas-persona, de 1.666 a 1.491. Con la inversión más baja, el precio final pasa de $600.000 a $360.000 por telar: es el más bajo que recupera todo en dos años con unas 10 fábricas. El abono sigue en $20.000 por mes.
+
+| Tarea | Antes | Ahora |
+|---|---|---|
+| 1,1 Análisis del mercado | PM, D02, IM01, IM02, IR | PM, D02, IM01 |
+| 1,2 Armado de entrevista - Taller CyP | PM, D02, IR | PM, D02 |
+| 1,14 Especificación de Requerimientos | PM, IM01, IM02 | PM, IM01 |
+| 1,18 Presentación Visual | PM, DUX, IM01 | PM, DUX |
+| 2,1 Investigación de referentes | PM, DUX, IM01 | PM, DUX |
+| 2,6 Stack tecnológico y presupuesto | IR, IM01, PM, ELE | IR, IM01, ELE |
+| 4,23 Actualizar diagrama y documentar | PM, MUL, D02, ELE | PM, MUL, ELE |
+| 5,28 Documentar la etapa del Nivel 2 | PM, IM01, ELE, D02, MUL | PM, IM01, ELE, MUL |
+| 6,6 Landing page | PM, DUX, MUL, IM01, D02 | DUX, MUL, D02 |
+| 6,7 Documento del manual de uso | PM, D02, IM01, MUL, ELE | D02, IM01, MUL, ELE |
+| 6,8 Página del manual de uso | DUX, PM, MUL, D02 | DUX, MUL, D02 |
+| 6,18 PDF finales y diagramas | PM, D02, MUL | D02, MUL |
+| 7,2 Pasar a las 7 plaquetas soldadas | ELE, IM01, PM | ELE, IM01 |
+
+| Concepto | Antes | Ahora |
+|---|---|---|
+| Horas-persona (PM / D02 / IM01 / IM02 / IR) | 351 / 218 / 307 / 151 / 121 | 288 / 210 / 254 / 128 / 93 |
+| Personal | $32.912.092 | $29.322.090 |
+| Inversión a recuperar | $33.143.881 | $29.553.879 |
+| Precio final por telar | $600.000 | $360.000 |
+| Ganancia por telar | $333.136 | $93.136 |
+| Telares para recuperar en 2 años | 63 | 99 (unas 10 fábricas) |
+| Opciones de la tabla 4.1 | $550.000 / $600.000 / $650.000 / con abono de $25.000 | $330.000 (109) / $360.000 (99) / $390.000 (91) / con abono de $25.000 (84) |
+| Dinero puesto | vuelve con el 1.er telar | vuelve con los 3 primeros |
+| A una fábrica por semestre | 2 años y 10 meses | 3 años y 5 meses |
+| Hardware / Software por telar | $427.319 / $172.681 | $309.966 / $50.034 |
+
+Se actualizaron: Estimación de Costos v4, Modalidad de Inversión, Documentación de Proyecto (Word y sitio), Bitácora, `Calculo_precio_2_anios.md`, `estimacion.svg` y su PNG, la diapositiva del precio, el Gantt (xlsx) y los PDF.

@@ -5,18 +5,18 @@
 <rect x="40" y="76" width="450" height="220" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.4"/>
 <text x="60" y="102" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Composición del costo total</text>
 <text x="60" y="128" font-size="11" fill="#1F2937">Trabajo del equipo</text>
-<text x="380" y="128" font-size="11" fill="#1F2937" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$32.912.092</text>
-<text x="468" y="128" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">99,3 %</text>
+<text x="380" y="128" font-size="11" fill="#1F2937" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$29.322.090</text>
+<text x="468" y="128" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">99,2 %</text>
 <rect x="41" y="142" width="448" height="34" fill="#EDF1F5"/>
 <text x="60" y="162" font-size="11" fill="#1F2937">Componentes electrónicos</text>
 <text x="380" y="162" font-size="11" fill="#1F2937" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$154.739</text>
 <text x="468" y="162" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">0,5 %</text>
 <text x="60" y="196" font-size="11" fill="#1F2937">Gastos operativos</text>
 <text x="380" y="196" font-size="11" fill="#1F2937" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$77.050</text>
-<text x="468" y="196" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">0,2 %</text>
+<text x="468" y="196" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">0,3 %</text>
 <line x1="60" y1="232" x2="470" y2="232" stroke="#CDD8E0"/>
 <text x="60" y="254" font-size="11" font-weight="600" fill="#1E3A5F">Costo total (inversión a recuperar)</text>
-<text x="468" y="254" font-size="11" font-weight="600" fill="#1E3A5F" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$33.143.881</text>
+<text x="468" y="254" font-size="11" font-weight="600" fill="#1E3A5F" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$29.553.879</text>
 <text x="60" y="276" font-size="11" font-weight="600" fill="#1E3A5F">Costo de cada telar nuevo</text>
 <text x="468" y="276" font-size="11" font-weight="600" fill="#1E3A5F" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$266.864</text>
 <rect x="510" y="76" width="450" height="220" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.4"/>
@@ -38,7 +38,7 @@
 <text x="938" y="276" font-size="10" fill="#6B7684" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$231.789</text>
 <rect x="40" y="316" width="920" height="56" rx="8" fill="#1E3A5F"/>
 <text x="66" y="342" font-size="13" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">Precio final por telar</text>
-<text x="66" y="360" font-size="10" fill="#7FA8C9">Más $20.000 por mes por telar de abono · recupera la inversión en dos años con unos 63 telares (unas 6 fábricas)</text>
-<text x="934" y="352" font-size="20" font-weight="600" fill="#FFFFFF" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$600.000</text>
+<text x="66" y="360" font-size="10" fill="#7FA8C9">Más $20.000 por mes por telar de abono · recupera la inversión en dos años con unos 99 telares (unas 10 fábricas)</text>
+<text x="934" y="352" font-size="20" font-weight="600" fill="#FFFFFF" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$360.000</text>
 <text x="40" y="400" font-size="9.5" fill="#6B7684">Detalle por rol, componente y bloque en Estimacion_Costos_Ganancia_Contrato_v4.docx y en Lista_de_componentes_Control_Trama.xlsx</text>
 </svg>
