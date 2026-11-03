@@ -21,6 +21,8 @@ telares de la planta. El producto tiene cuatro partes:
 - **Firmware ESP32**: el puente con el telar físico. Lee del backend si el
   telar debe estar tejiendo y acciona los relés conectados a los botones de
   Marcha, Pausa y Retroceder de la máquina (y avisa cuando alguien los usa a mano).
+  Con el Nivel 2, además cuenta las pasadas con el sensor y da la señal de cada
+  bobina de selección según el dibujo, en el lugar de la cinta perforada.
 
 La web y el ESP32 hablan con el **mismo backend** por la **misma API**;
 nadie toca la base de datos directo. El mismo servidor Express sirve tanto
@@ -350,7 +352,7 @@ Tiene que devolver `{"ok":true,"timestamp":"..."}`.
   va a volver a correr `init-db` automáticamente, no rompe nada si las tablas
   ya existen (el script usa `CREATE TABLE IF NOT EXISTS`).
 - Esto es válido para la **etapa de pruebas actual** (un solo telar, con el
-  Bloque A conectado desde el 19/09/2026). Para la producción real conviene
+  sistema completo instalado desde el 30/10/2026). Para la producción real conviene
   revisar la recomendación de la sección 8 sobre alojarlo dentro de la red de
   la planta en lugar de depender de un hosting gratuito en internet.
 
@@ -471,8 +473,8 @@ estado vive en la base de datos, no en el dispositivo.
 | Modo claro / oscuro de la web | ✅ Funcionando |
 | Descargar la ficha técnica del dibujo en PDF | ✅ Funcionando |
 | Selector visual de telar (para cuando haya más de uno) | ⏳ Pendiente |
-| Firmware ESP32 (un solo programa: Bloque A hoy, Nivel 2 con `NIVEL2_INSTALADO`) | ✅ Bloque A instalado y probado en el telar (19/09/2026); Nivel 2 escrito, simulado y probado en protoboard (10/10/2026) y en el telar con el sensor y un canal (17/10/2026) |
-| Conexión física al telar real | ✅ Bloque A (Marcha, Pausa, Retroceder y sensado) · ⏳ Nivel 2: el sensor de pasada y el primer canal, probados en el telar en protoboard (17/10/2026); las plaquetas ya están soldadas (20/10/2026); faltan los otros tres canales y el gabinete en la planta |
+| Firmware ESP32 (un solo programa: Bloque A, y el Nivel 2 con `NIVEL2_INSTALADO`) | ✅ Bloque A instalado y probado en el telar (19/09/2026); Nivel 2 probado en protoboard (10/10/2026), en el telar con el sensor y un canal (17/10/2026) y completo (30/10/2026) |
+| Conexión física al telar real | ✅ Bloque A (Marcha, Pausa, Retroceder y sensado) · ✅ Nivel 2: el sensor de pasada y los cuatro relés de selección, con el gabinete instalado y probados el 30/10/2026 · ✅ Conteo validado: coincide con las vueltas de la máquina |
 | App Android nativa | ⏳ A futuro (hay una base de referencia, no funcional) |
 
 ---
@@ -505,7 +507,9 @@ del telar (la misma API que usa la app) y, cuando el telar pasa a `tejiendo`
 Pausa; y por cada pedido de ⏪, el de Retroceder. Además sensa esos mismos tres
 botones (optoacopladores PC817): si alguien los usa a mano, avisa al backend y la
 app se actualiza. La botonera física del telar sigue funcionando igual, y si se
-cae la red el ESP32 no acciona nada (fail-safe). El paso a paso del hardware,
+cae la red el ESP32 no acciona nada (fail-safe). Con el Nivel 2 (`NIVEL2_INSTALADO`
+en `true`), además cuenta las pasadas con el sensor y cierra el relé LCA110 de la
+bobina de cada fila, en el lugar de su lector óptico. El paso a paso del hardware,
 las protecciones eléctricas recomendadas y el diagrama del circuito están en
 `esp32/README.md`, `esp32/documentacion/RECOMENDACIONES_ELECTRICAS.md` y
 `diagramas/hardware/diagrama_conexion_electrica.svg`.

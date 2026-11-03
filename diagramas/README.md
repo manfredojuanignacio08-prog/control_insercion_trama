@@ -5,12 +5,30 @@ insertarlo en documentos.
 
 ## `hardware/`, cómo se conecta
 
+### `caja_y_plaquetas/` (PNG y fotos), sumada el 01/11/2026
+**El armado final de la caja.** `caja_plaquetas_y_cables` ubica cada plaqueta en la placa de montaje con las
+medidas reales (la fuente en la pared de arriba, junto al prensacables G1) y numera los once cables;
+`conexiones_pata_por_pata` lista cada bornera y tira de pines y lo que entra por cada prensacables;
+`cableado_reles_sensado_puentes` muestra, canal por canal, el botón del tablero → NO y COM de su relé → la
+bornera J1, J2 o J3 del sensado → la tira de 4 en el lugar de cada BR → la plaqueta de puentes (con las patas 3
+y 4 cruzadas). `plaqueta_principal`, `plaqueta_nivel2`, `plaqueta_sensado`, `plaqueta_reles` y
+`plaqueta_puentes` dibujan cada plaqueta pieza por pieza, con las pistas reales de Proteus (la de puentes es
+esquemática); `pc817_orientacion` y `pc817_esquematico`, cómo va el optoacoplador. En `fotos/`, las plaquetas
+terminadas y la caja.
+
 ### `plaquetas_y_cableado.svg`
-**Las cinco plaquetas del gabinete y todo el cableado.** Qué va en cada una (la fuente de 220 V, la
+**Las plaquetas del gabinete y todo el cableado, en esquema.** Qué va en cada una (la fuente de 220 V, la
 principal con el ESP32, la del sensado de la botonera, los módulos de relé y la del Nivel 2 con el sensor y
-los LCA110), los conectores entre ellas (J1 a J4, con sus hilos y GPIO) y las borneras que van al telar (B1
-la botonera, doble por botón para llevar cada par también a su relé, B2 el sensor, B3 los lectores, con la resistencia de protección y la de 10 kΩ ½ W junto a
-cada conector). Es el que acompaña al paso a paso de conexión y puesta en marcha.
+los LCA110), los conectores entre ellas (J1 a J4, con sus hilos y GPIO) y las borneras que van al telar (los
+pares de la botonera, que entran a COM y NO de cada relé y de ahí van en paralelo a J1, J2 y J3 del sensado, B2 el sensor, B3 los lectores, con la resistencia de protección y la de 10 kΩ ½ W junto a
+cada conector). Es el que acompaña al paso a paso de conexión y puesta en marcha. Marca también que el ESP32
+va en su propia plaqueta y los tres puentes de alambre de las pistas que faltaron en los PCB impresos.
+
+### `plaqueta_esp32/` (PNG, SVG y DXF)
+**La plaqueta del ESP32**, sumada el 25/10/2026: en la principal impresa, la tira derecha del ESP32 quedó con
+J5 y J7 invertidos, así que el ESP32 va en una plaqueta aparte, de una sola cara, con dos tiras hembra de 19
+pines a 25,4 mm y las salidas P1 (10 pines) y P2 (5), cableadas a los pads de la principal por nombre de
+señal. El DXF está en milímetros para importarlo en ARES como guía.
 
 ### `diagrama_conexion_electrica.svg`
 El nodo de control del Bloque A: los tres relés hacia la botonera, la etapa de
