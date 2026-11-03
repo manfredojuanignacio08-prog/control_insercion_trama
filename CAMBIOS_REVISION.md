@@ -2094,6 +2094,9 @@ máquina, una pasada por vuelta del eje (300 por minuto).
 | 4 | Lista de componentes (nota del Bloque A) y sitio de manuales (paso «Pasar a placa definitiva») | «Placa universal» y «placa perforada» pasan a las plaquetas soldadas (la de la fuente sigue siendo de placa perforada) |
 | 5 | Modelado3D_CIT | La plaqueta 7 de los puentes muestra sus pistas de cobre, como en `plaqueta_puentes.png` |
 | 6 | Tabla de precios (Estimación, Modalidad, `Calculo_precio_2_anios.md`) | Recalculada mes a mes: 117 telares a $550.000, 101 a $600.000, 89 a $650.000 y 87 con abono de $25.000. Da lo mismo vendiendo telares enteros cada mes (redondeando). Sin cambios |
+| 7 | Guía de Conexión (Word y Markdown) y Estado | «Seis plaquetas» y «cinco plaquetas más…» pasan a las siete plaquetas |
+| 8 | Parado automático | «Qué falta:» pasa a «Estado:», porque el sensor ya está instalado y validado |
+| 9 | Estimación de Costos | Se compraron cuatro prensacables PG11; en el armado final se usan tres |
 
 | Comprobación | Resultado |
 |---|---|
