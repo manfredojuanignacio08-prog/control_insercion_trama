@@ -487,7 +487,7 @@ assert.equal(posts.length, 0, 'el invitado no comanda el telar: ' + posts.join('
   await f.run('actualizarEstadoTelar()');
   assert.equal(f.run('isPlaying && seguidor'), true, 'después sí se suma (telar tejiendo desde la botonera)'); }
 
-// ?ritmo= en la dirección baja el ritmo de la estimación solo para grabar demostraciones:
+// ?ritmo= en la dirección baja el ritmo de la estimación, para seguir el tejido a ojo:
 // sin el parámetro, o con un valor fuera de 10 a 300, queda el de la máquina (300 por minuto).
 { f = boot(routes);
   f.ctx.URLSearchParams = URLSearchParams;

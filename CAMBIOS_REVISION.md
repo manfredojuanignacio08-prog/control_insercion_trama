@@ -2019,7 +2019,7 @@ se recalculó con $600.000 por telar y un abono mensual por telar.
 | 10 | Registro de Entrevistas | Reunión 8: resumen de lo que dijo el dueño en la entrevista (según el dueño, la tejeduría tiene 14 máquinas; en los datos relevados antes figuran 11 telares) y el video editado |
 | 11 | Estado Completo del Proyecto y Manual del Telar (Word y sitio) | Siete plaquetas, tres prensacables y el dibujo de la caja |
 | 12 | `presentacion_final/` | Diapositiva de precio y `Calculo_precio_2_anios.md` con el modelo nuevo |
-| 13 | `backend/public/index.html` | `?ritmo=` en la dirección muestra las pasadas más lento, solo para grabar demostraciones (de 10 a 300 por minuto; sin el parámetro, 300) |
+| 13 | `backend/public/index.html` | `?ritmo=` en la dirección muestra las pasadas más lento, para seguir el tejido a ojo (de 10 a 300 por minuto; sin el parámetro, 300) |
 
 | Comprobación | Resultado |
 |---|---|
@@ -2042,18 +2042,17 @@ los sitios.
 | 4 | `Componentes_en_placa.xlsx` | Seis tiras de 4 pines (37 tiras en total); el DB157 va en la plaqueta de los puentes; los separadores, ya definitivos |
 | 5 | `Checklist_verificaciones.xlsx` | Nueva verificación 30, la tira de 4 entre el sensado y los puentes (patas 3 y 4 cruzadas); las del Nivel 2 pasan a 31 a 35. La fila de la prueba del 30/10 decía «Verificaciones 1 a 33 bien», que nadie anotó una por una: ahora dice que el sistema completo funcionó y que la 35 sigue en el período de prueba. `LEEME.md` y el Estado decían 26 verificaciones: son 35 |
 | 6 | Guía de Mediciones y Verificaciones | La fila «50 pasadas contadas a mano: 50, 30/10/2026» no tenía respaldo en la Bitácora ni en el Registro: queda en blanco para anotarla. La verificación 7 suma la tira de los puentes |
-| 7 | Bitácora, 02/11 | Decía que se armó el video en pantalla dividida; el montaje todavía no se hizo: queda que la página se preparó para grabarlo (`?ritmo=`) |
-| 8 | Modelado3D_CIT | La plaqueta 7 de los puentes, el sensado con J1 a J3, el cableado nuevo y tres prensacables. Captura nueva en el Manual del Telar y en el sitio de manuales |
-| 9 | Numeración de las plaquetas | En todos lados: 1 fuente, 2 principal, 3 relés, 4 Nivel 2, 5 sensado, 6 ESP32 y 7 puentes (la guía de conexión decía 6 para los puentes) |
-| 10 | Telares de la planta | Los documentos dicen 11 telares, como en los datos relevados; el Registro anota que en la entrevista el dueño dijo 14 máquinas |
-| 11 | Documentación de Proyecto | El ESP32 va en su propia plaqueta (5.3, paso 6); «plaquetas» en lugar de «placa universal perforada» (5.4); 5.5 nombra las figuras 9 y 10 (el primer armado) y 11 y 12 (el final); el sensor se montó el 10/09 (3.4.6); en 3.5, la aprobación del dueño y las visitas ya se cumplieron; HITO 4 completado; la condición previa de 9.7 y la tabla de componentes, al día |
-| 12 | `config.h` (solo comentarios), README del firmware, `PUESTA_EN_MARCHA.md`, `NIVELES_DE_CONTROL.md`, `NIVEL2_CONTROL_POR_MARCOS.md`, `PASO_A_PASO_RELES_LCA110.md`, `backend/README.md`, `Analisis_Frontend_y_Plan_Backend.md`, Manual de Instalación | El Nivel 2 está en `true` en el gabinete desde el 30/10 (en el repositorio queda en `false`, de plantilla); los valores «a confirmar» se confirmaron ese día; ya no dice «`false` (hoy)» ni «en desarrollo» |
-| 13 | Guía de Conexión (Markdown y Word) | `NIVEL2_INSTALADO` en `true` con el sensor y los relés conectados; la plaqueta de los puentes es la 7 |
-| 14 | Conexionado del Nivel 2 | Qué se confirmó el 30/10 (los cuatro canales y la sincronización, con `DESPLAZAMIENTO_FILAS` en 0) y qué falta anotar (la tensión del sensor y la corriente del lector) |
-| 15 | Guías de los Bloques C y D y de Armado del Bloque A, Guía de los relés, Estado, Conexiones de las plaquetas, Componentes Completos, Parado automático, los dos Árbol, los dos manuales (Word y sitio) | «Placa universal», «placa perforada» y los «hoy» viejos pasan a «plaqueta» o a pasado; los DB157 en su propia plaqueta; el ESP32 fuera de la principal; Componentes Completos suma la plaqueta de los puentes; el Estado ya no dice que la corriente del lector se midió ni que los canales se conectaron «de a uno»; las seis bobinas se estimaron en la reunión del 06/09 y no en un «relevamiento del 28/08» |
-| 16 | `canal_rele.svg` y `diagrama_bloque_D.svg` (y sus PNG) | «Hoy lo interrumpe», «lo que hoy hace el agujero» y «A MEDIR» pasan a pasado o al dato medido |
-| 17 | `backend/tests/frontend.test.mjs` | Prueba del `?ritmo=`: sin el parámetro, 300 pasadas por minuto; con 60, una por segundo; fuera de 10 a 300, o en un navegador sin URLSearchParams, el valor de siempre (falla con el código anterior) |
-| 18 | Todos los PDF | Regenerados con las fuentes de los documentos (IBM Plex Sans y Questrial); antes LibreOffice las reemplazaba por otras |
+| 7 | Modelado3D_CIT | La plaqueta 7 de los puentes, el sensado con J1 a J3, el cableado nuevo y tres prensacables. Captura nueva en el Manual del Telar y en el sitio de manuales |
+| 8 | Numeración de las plaquetas | En todos lados: 1 fuente, 2 principal, 3 relés, 4 Nivel 2, 5 sensado, 6 ESP32 y 7 puentes (la guía de conexión decía 6 para los puentes) |
+| 9 | Telares de la planta | Los documentos dicen 11 telares, como en los datos relevados; el Registro anota que en la entrevista el dueño dijo 14 máquinas |
+| 10 | Documentación de Proyecto | El ESP32 va en su propia plaqueta (5.3, paso 6); «plaquetas» en lugar de «placa universal perforada» (5.4); 5.5 nombra las figuras 9 y 10 (el primer armado) y 11 y 12 (el final); el sensor se montó el 10/09 (3.4.6); en 3.5, la aprobación del dueño y las visitas ya se cumplieron; HITO 4 completado; la condición previa de 9.7 y la tabla de componentes, al día |
+| 11 | `config.h` (solo comentarios), README del firmware, `PUESTA_EN_MARCHA.md`, `NIVELES_DE_CONTROL.md`, `NIVEL2_CONTROL_POR_MARCOS.md`, `PASO_A_PASO_RELES_LCA110.md`, `backend/README.md`, `Analisis_Frontend_y_Plan_Backend.md`, Manual de Instalación | El Nivel 2 está en `true` en el gabinete desde el 30/10 (en el repositorio queda en `false`, de plantilla); los valores «a confirmar» se confirmaron ese día; ya no dice «`false` (hoy)» ni «en desarrollo» |
+| 12 | Guía de Conexión (Markdown y Word) | `NIVEL2_INSTALADO` en `true` con el sensor y los relés conectados; la plaqueta de los puentes es la 7 |
+| 13 | Conexionado del Nivel 2 | Qué se confirmó el 30/10 (los cuatro canales y la sincronización, con `DESPLAZAMIENTO_FILAS` en 0) y qué falta anotar (la tensión del sensor y la corriente del lector) |
+| 14 | Guías de los Bloques C y D y de Armado del Bloque A, Guía de los relés, Estado, Conexiones de las plaquetas, Componentes Completos, Parado automático, los dos Árbol, los dos manuales (Word y sitio) | «Placa universal», «placa perforada» y los «hoy» viejos pasan a «plaqueta» o a pasado; los DB157 en su propia plaqueta; el ESP32 fuera de la principal; Componentes Completos suma la plaqueta de los puentes; el Estado ya no dice que la corriente del lector se midió ni que los canales se conectaron «de a uno»; las seis bobinas se estimaron en la reunión del 06/09 y no en un «relevamiento del 28/08» |
+| 15 | `canal_rele.svg` y `diagrama_bloque_D.svg` (y sus PNG) | «Hoy lo interrumpe», «lo que hoy hace el agujero» y «A MEDIR» pasan a pasado o al dato medido |
+| 16 | `backend/tests/frontend.test.mjs` | Prueba del `?ritmo=`: sin el parámetro, 300 pasadas por minuto; con 60, una por segundo; fuera de 10 a 300, o en un navegador sin URLSearchParams, el valor de siempre (falla con el código anterior) |
+| 17 | Todos los PDF | Regenerados con las fuentes de los documentos (IBM Plex Sans y Questrial); antes LibreOffice las reemplazaba por otras |
 
 | Comprobación | Resultado |
 |---|---|

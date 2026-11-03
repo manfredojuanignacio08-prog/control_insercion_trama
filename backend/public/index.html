@@ -2248,7 +2248,7 @@ function doTick() {
   // 06/09/2026), o sea una cada 200 ms. Antes era una cada 500 ms (120 por minuto), y las
   // pasadas y los metros estimados quedaban en el 40 % de lo real. Con el sensor del
   // Nivel 2 instalado, la cuenta la lleva el sensor y este valor deja de usarse.
-  // Para grabar una demostración se puede bajar el ritmo con «?ritmo=60» en la dirección
+  // Con «?ritmo=60» en la dirección el tejido se muestra más despacio, para seguirlo a ojo
   // (entre 10 y 300 pasadas por minuto). Sin ese dato queda el de la máquina.
   const PASADAS_POR_MINUTO = ritmoDePasadas();
   const delayMs = 60000 / PASADAS_POR_MINUTO;
