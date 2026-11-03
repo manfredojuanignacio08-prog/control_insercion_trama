@@ -2194,3 +2194,34 @@ En la misma planilla cambiaron las tarifas de Desarrollo (USD 13), Infraestructu
 | Hardware / Software por telar | $309.966 / $50.034 | $319.851 / $40.149 |
 
 Se actualizaron: Gantt (pestañas GANTT, Referencias, Estimación de Costos y Cashflow), Estimación de Costos v4 (tabla de personal sin ese renglón), Modalidad de Inversión, Documentación de Proyecto (Word, sitio, equipo, agradecimientos, organigrama y figura de costos), Estado completo, Registro de entrevistas, Bitácora, el organigrama (`organigrama.svg` y `.png`), `estimacion.svg` y `.png`, `Calculo_precio_2_anios.md`, la presentación (precio y «Seis personas») y los sitios de manuales y de documentación (pie con los LinkedIn).
+
+## Un responsable por tarea y precio de $290.000 (03/11/2026)
+
+En el Gantt del Drive cada tarea queda con un solo responsable: el que la lleva adelante (PM en entrevistas, visitas, presentaciones y ensayos; DUX en diseño; D01 en firmware, servidor y web; BD en la base; IR en red, costos y contrato; MUL en documentación y videos; IM01 o IM02, alternados, en el hardware). Las horas de las tareas no cambian; las horas-persona bajan de 1.428 a 612, que son las horas completas del Gantt (612 de 642; las 30 que faltan son de la Etapa 08).
+
+| Rol | Horas-persona antes | Ahora |
+|---|---|---|
+| PM | 288 | 137 |
+| D01 | 105 | 81 |
+| D02 | 210 | 34 |
+| IM01 | 274 | 59 |
+| IM02 | 201 | 80 |
+| IR | 93 | 37 |
+| BD | 34 | 18 |
+| DUX | 146 | 123 |
+| MUL | 77 | 43 |
+
+| Concepto | Antes | Ahora |
+|---|---|---|
+| Personal | $27.799.300 | $11.703.537 (USD 7.674,45) |
+| Inversión a recuperar | $28.031.089 | $11.935.326 |
+| Personal / dinero puesto | 99,2 % / 0,8 % | 98,1 % / 1,9 % |
+| Precio final | $360.000 | $290.000, el más bajo que no pierde plata en cada telar (cada telar nuevo cuesta $286.079) |
+| Ganancia por telar | $73.921 | $3.921 |
+| Telares para recuperar en 2 años | 100 | 61 (unas 6 fábricas) |
+| Tabla 4.1 | $330.000 / $360.000 / $390.000 / con abono de $25.000 | $280.000 (pierde $6.079; 63) / $290.000 (61) / $320.000 (54) / con abono de $25.000 (49) |
+| Dinero puesto | vuelve con 4 telares | vuelve en el primer semestre, con los primeros 15 telares y sus abonos |
+| A una fábrica por semestre | 3 años y 5 meses | 2 años y 6 meses (50 telares) |
+| Hardware / Software por telar | $319.851 / $40.149 | $287.431 / $2.569 |
+
+Además, la Documentación de Proyecto decía «el Gantt registra 634 de las 642 horas»: pasa a 612 de 642, con las 30 que faltan en la Etapa 08.
