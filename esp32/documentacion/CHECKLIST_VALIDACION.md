@@ -25,6 +25,10 @@ Seguí este orden. **No saltees etapas** y no conectes al telar hasta el final.
 ## Etapa 2, El ESP32 solo (SIN el relé, SIN el telar)
 
 - [ ] Conectá el ESP32 al 5V ya verificado (pin VIN).
+- [ ] En el gabinete, el ESP32 va en su propia plaqueta (desde el 25/10/2026). Antes de enchufarlo:
+      continuidad de cada cable de P1 y P2 a su pad de la principal y de los tres puentes de alambre,
+      y con la principal alimentada, **5 V entre P1-10 y P1-9 y nada en P1-1**. La lista de cables está
+      en el punto 4.6 de `docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`.
 - [ ] Cargá el firmware. Abrí el monitor serie.
 - [ ] Confirmá que **conecta al WiFi** y que **sondea el backend** (se ve en
       el log). Todavía no hay relé, así que no pasa nada físico: solo se

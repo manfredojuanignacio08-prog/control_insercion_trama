@@ -6,8 +6,9 @@ solo lector** (el lector 1) y recién cuando ese canal funciona se repite con lo
 
 **Lo que ya se hizo en el C 201 (17/10/2026, en la planta, todavía en protoboard):** la alimentación
 del lector dio entre 15 y 30 V, así que la resistencia de protección es la de **470 Ω 3 W**, y el
-primer canal, con la conexión final, seleccionó bien. Falta anotar la corriente del paso 2.5 y repetir
-las etapas 1, 2 y 4 con los lectores 2, 3 y 4, ya con las plaquetas soldadas.
+primer canal, con la conexión final, seleccionó bien. **El 30/10/2026**, con el gabinete y las plaquetas
+soldadas, se conectaron los lectores 2, 3 y 4 y los cuatro canales seleccionaron bien. Falta anotar la corriente
+del paso 2.5. La guía queda como referencia para volver a armarlo o para otro telar.
 
 ## La conexión final (la más segura)
 
@@ -52,7 +53,7 @@ Diagramas que acompañan esta guía (en `diagramas/hardware/`):
 - 4 relés LCA110, 4 resistencias de 330 Ω y 4 de 10 kΩ (¼ W), del lado del ESP32.
 - Solo para los casos 2A y 2B, del lado del telar: 4 resistencias de 10 kΩ **½ W** y 4 resistencias de
   protección: **220 Ω 2 W** si el lector se alimenta con hasta 15 V, o **470 Ω 3 W** de 15 a 30 V.
-- Borneras, placa perforada, termocontraíble y cable fino.
+- Borneras, la plaqueta del Nivel 2, termocontraíble y cable fino.
 - Para la prueba en el banco: una pila de 9 V, un LED y una resistencia de 680 Ω (con dos pilas AA, 100 Ω).
 
 **Reglas de seguridad (todas las etapas)**
@@ -201,7 +202,7 @@ relé:
 
 Si un relé no cambia, revisar la orientación (pata 1) antes de descartarlo.
 
-**3.3 Soldar los cuatro canales** en la placa perforada, iguales entre sí:
+**3.3 Soldar los cuatro canales** en la plaqueta del Nivel 2, iguales entre sí:
 
 | Relé | GPIO |
 |---|---|

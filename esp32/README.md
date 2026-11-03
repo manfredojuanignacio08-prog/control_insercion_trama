@@ -20,10 +20,12 @@ real; cuando alguien pausa, pulsa Pausa.
 mismo firmware: `control_trama_esp32/control_trama_esp32.ino`. Qué hace depende de
 `NIVEL2_INSTALADO` en `config.h`:
 
-- **`false` (hoy):** solo el Bloque A, los relés y el sensado de la botonera.
+- **`false`:** solo el Bloque A, los relés y el sensado de la botonera. Es como queda en el
+  repositorio, de plantilla.
 - **`true`:** además el sensor de pasada (Bloque C) y los relés LCA110 de la selección
   (Bloque D). Se cambia recién cuando los dos estén armados y conectados: con `true` la web deja
-  de estimar las pasadas y espera las del sensor.
+  de estimar las pasadas y espera las del sensor. Así está cargado el ESP32 del gabinete desde el
+  30/10/2026.
 
 El detalle del Nivel 2 está en `control_trama_esp32/README.md`.
 
@@ -103,7 +105,7 @@ a mano sin un trabajo abierto, la web marca la posición como incierta hasta que
 2. *Tools → Manage Libraries* → instalá **ArduinoJson** (Benoît Blanchon,
    v7.x). `WiFi` y `HTTPClient` ya vienen con el core.
 3. Abrí `control_trama_esp32/control_trama_esp32.ino` (los demás archivos de la carpeta se abren
-   como pestañas) y **editá `config.h`**: `NIVEL2_INSTALADO` (`false` hoy), Wi-Fi (en el repositorio
+   como pestañas) y **editá `config.h`**: `NIVEL2_INSTALADO` (`true` en el gabinete, con el sensor y los relés conectados), Wi-Fi (en el repositorio
    viene `NOMBRE_DE_LA_RED` / `CLAVE_DE_LA_RED`; los datos reales no se suben), `DEVICE_KEY` (la misma que
    `ESP32_DEVICE_KEY` del backend), `TELAR_ID` (8) y URL del
    backend (la del servidor Node, **no** la de Neon) y la polaridad
@@ -133,9 +135,9 @@ El telar tiene, en la práctica, dos "máquinas": la de **accionamiento**
 (arranca/para) y la **lectora de secuencia** (el dobby con cinta de papel
 perforada, que dicta el dibujo pasada por pasada).
 
-- **Nivel 1, Arranque y parada (lo que hace el ESP32 hoy):** darle Marcha, Pausa
+- **Nivel 1, Arranque y parada:** darle Marcha, Pausa
   y Retroceder al telar con los relés. Instalado y probado en el telar el 19/09/2026.
-- **Nivel 2, Dictar el dibujo (en desarrollo):** contar las pasadas con un sensor inductivo
+- **Nivel 2, Dictar el dibujo (instalado y probado el 30/10/2026):** contar las pasadas con un sensor inductivo
   y reemplazar la cinta de papel perforada del dobby con cuatro relés LCA110 en el lugar de los
   lectores ópticos. Lo hace el mismo firmware, con `NIVEL2_INSTALADO` en `true`.
   La medición de los lectores y la conexión de los relés, paso a paso, están en

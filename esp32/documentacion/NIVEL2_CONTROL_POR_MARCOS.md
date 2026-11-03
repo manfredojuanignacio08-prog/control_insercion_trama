@@ -30,7 +30,7 @@ bucle" es exactamente lo que el sistema ya hace hoy con la matriz de pasadas.
 
 El telar lee el dibujo pasada por pasada, y en cada pasada entra **una sola trama**: lo que
 decide la selección es **qué bobina se activa** en esa pasada. En este telar son 4 bobinas de
-selección, confirmado por el dueño el 19/09/26 (el relevamiento del 28/08/26 había estimado
+selección, confirmado por el dueño el 19/09/26 (en la reunión del 06/09/26 se había estimado
 seis). El patrón repetitivo es una lista corta de bobinas, cada una tantas pasadas seguidas como
 indique su fila (o alternándose, en un intercalado), que se repite en bucle.
 
@@ -54,8 +54,8 @@ indique su fila (o alternándose, en un intercalado), que se repite en bucle.
 ## El hardware necesario
 
 El telar **ya tiene las bobinas de selección instaladas y funcionando**: no hay
-que comprarlas ni montarlas. Lo que falta es la electrónica que las comande en
-lugar del lector óptico de la cinta de papel.
+que comprarlas ni montarlas. Lo que hizo falta es la electrónica que las comanda en
+lugar del lector óptico de la cinta de papel (instalada el 30/10/2026).
 
 - **Trabajan con 24 V en corriente alterna**, confirmado por el dueño de la
   planta el 03/09/26. Este dato define toda la etapa de potencia.
@@ -103,7 +103,7 @@ dos MOSFET enfrentados y además no actúa sobre la bobina: da la señal en el l
 
 **Datos de la máquina:** la alimentación del lector se midió el 17/10/2026, entre
 15 y 30 V (muy por debajo de los 350 V del LCA110), y el primer canal, con la
-conexión final, seleccionó bien. Falta anotar la corriente con la resistencia de
+conexión final, seleccionó bien; el 30/10/2026, los cuatro. Falta anotar la corriente con la resistencia de
 protección (se esperan menos de 20 mA, contra los 120 mA del relé). La velocidad ya está
 confirmada: el telar trabaja a 300 pasadas por minuto, dato que dio el dueño de
 la planta el 06/09/26, lo que equivale a 5 conmutaciones por segundo y hasta
