@@ -2163,4 +2163,6 @@ En el Gantt del Drive se sacaron algunos roles de 13 tareas donde no hacían fal
 | A una fábrica por semestre | 2 años y 10 meses | 3 años y 5 meses |
 | Hardware / Software por telar | $427.319 / $172.681 | $309.966 / $50.034 |
 
-Se actualizaron: Estimación de Costos v4, Modalidad de Inversión, Documentación de Proyecto (Word y sitio), Bitácora, `Calculo_precio_2_anios.md`, `estimacion.svg` y su PNG, la diapositiva del precio, el Gantt (xlsx) y los PDF.
+Se actualizaron: Estimación de Costos v4, Modalidad de Inversión, Documentación de Proyecto (Word y sitio; en el Word también la figura de la estructura de costos, que seguía con las cifras del 02/11), Bitácora, `Calculo_precio_2_anios.md`, `estimacion.svg` y su PNG, la diapositiva del precio, el Gantt (xlsx) y los PDF.
+
+La pestaña «Cashflow» del Gantt toma las horas por rol y por etapa con fórmulas, así que se actualizó sola.
