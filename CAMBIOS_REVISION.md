@@ -2255,3 +2255,18 @@ Se corrige la entrada anterior: las tareas pueden tener más de un responsable. 
 | Estimación v4, 4.1 | La nota del 02/11 decía que el precio se bajó a $290.000 | La nota del 02/11 dice que se bajó; la del 03/11, que queda en $290.000 |
 | Modalidad, sección 1 | La nota del 02/11 ya daba $290.000 y la del 03/11 lo repetía | Una nota por fecha, sin repetir el precio |
 | `Calculo_precio_2_anios.md` | Dos «:» seguidos en la misma frase | Frase separada en dos |
+
+## Modelo 3D en el celular (04/11/2026)
+
+En `Modelado3D_CIT` la página no tenía la etiqueta `viewport`, así que en el celular se dibujaba como en una pantalla de escritorio y achicada. Se agrega, y se suma una vista liviana que se activa sola en el celular (o con `celular.html`, o con `?liviano`; `?completo` vuelve a la completa):
+- una sola pasada de dibujo, sin oclusión ambiental ni acumulación de cuadros;
+- sombras simples de 1024 px;
+- materiales comunes en lugar de los de vidrio y barniz;
+- la mitad de lados en las piezas redondas y los cables;
+- un aviso con enlace a la vista completa.
+
+| Medición en un navegador sin placa de video | Completa | Liviana |
+|---|---|---|
+| Cuadros por segundo al girar | 0,7 | 9,5 |
+| Llamadas de dibujo por cuadro | 1.581 | 451 |
+| Triángulos por cuadro | 1,45 millones | 0,33 millones |
