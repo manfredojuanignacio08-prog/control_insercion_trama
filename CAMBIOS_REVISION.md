@@ -2270,3 +2270,44 @@ En `Modelado3D_CIT` la página no tenía la etiqueta `viewport`, así que en el 
 | Cuadros por segundo al girar | 0,7 | 9,5 |
 | Llamadas de dibujo por cuadro | 1.581 | 451 |
 | Triángulos por cuadro | 1,45 millones | 0,33 millones |
+
+## Gantt con todas las tareas completas: 642 horas y 915 horas-persona (04/11/2026)
+
+En el Gantt del Drive quedan completas todas las tareas de la Etapa 08, también la 8,12 (stand de la Expo) y la 8,18 (presentación final). Con eso están completas las 642 horas de las ocho etapas. El total es de 915 horas-persona, o USD 11.609,85 con la contingencia.
+
+| Rol | Horas antes | Horas ahora | Subtotal ahora |
+|---|---|---|---|
+| PM | 137 | 154 | $3.452.295 |
+| D01 | 88 | 88 | $1.831.830 |
+| D02 | 146 | 155 | $3.226.519 |
+| IM01 | 139 | 145 | $2.786.175 |
+| IM02 | 121 | 127 | $2.440.305 |
+| IR | 42 | 46 | $736.575 |
+| BD | 18 | 18 | $317.048 |
+| DUX | 131 | 135 | $2.161.688 |
+| MUL | 43 | 47 | $752.588 |
+
+| Dato | Antes (865 h-persona) | Ahora (915 h-persona) |
+|---|---|---|
+| Personal | $16.713.849 | $17.705.023 |
+| Inversión a recuperar | $16.945.638 | $17.936.812 |
+| Personal / dinero puesto | 98,6 % / 1,4 % | 98,7 % / 1,3 % |
+| Precio y abono | $290.000 + $20.000 por mes | sin cambio |
+| Telares en dos años a $280.000 / $290.000 / $320.000 / $290.000 con abono de $25.000 | 86 / 82 / 73 / 66 | 90 / 86 / 77 / 69 |
+| Fábricas de 10 telares | 8 | 9 |
+| Saldo por semestre | −16,9 → −16,4 → −13,4 → −7,9 → +0,1 M | −17,9 → −17,3 → −14,1 → −8,3 → +0,02 M |
+| Telares para recuperar el dinero puesto | 17 | 18 |
+| Hardware / Software | $6.630.339 (39,1 %) / $10.315.299 (60,9 %) | $7.038.938 (39,2 %) / $10.897.874 (60,8 %) |
+| Precio por telar del Hardware / Software | $287.613 / $2.387 | $287.618 / $2.382 |
+| Suba del 20 % del dólar: personal / inversión | $20.060.000 / $20.290.000 | $21.250.000 / $21.480.000 |
+
+Archivos actualizados:
+- Estimación v4: tabla 3.1, secciones 3.4 a 3.6, tabla 4.1 y conclusión. Además, la conclusión todavía decía 99,3 % / 0,7 %.
+- Modalidad: secciones 1, 3, 5.1, 5.2 y 6.
+- Documentación de Proyecto y su sitio:
+  - versión 5.4, sección 6.1 y sección 8;
+  - la Etapa 08 deja de figurar «en curso», y el estado de avance dice 642 de 642 horas;
+  - la sección 8 todavía decía 99,3 % / 0,7 %;
+  - la figura de la estimación.
+- Bitácora: una entrada nueva del 04/11.
+- Otros: `estimacion.svg` y su `.png`, `Calculo_precio_2_anios.md`, la diapositiva de precio de la presentación, la diapositiva de costos y la planilla del Gantt.
