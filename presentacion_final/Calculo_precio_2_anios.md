@@ -84,6 +84,6 @@ Con unos 21 o 22 telares por semestre a $290.000 (86 en total), el saldo acumula
 ## Lo que conviene decir en la presentación
 
 - **El dinero puesto se recupera en el primer semestre.** Cada telar deja $3.921 al venderse y $20.000 por mes de abono; con los primeros 18 telares se cubren los $231.789 que puso el equipo.
-- **Toda la inversión, en dos años, pide unos 86 telares (9 fábricas).** Como referencia, la planta del cliente tiene 11 telares, así que son unas ocho plantas como esa. La mayor parte de la inversión es el valor de las 915 horas-persona del equipo, y es lo que más tarda en volver.
+- **Toda la inversión, en dos años, pide unos 86 telares (9 fábricas).** Como referencia, la planta del cliente tiene 14 telares, así que son unas seis plantas como esa. La mayor parte de la inversión es el valor de las 915 horas-persona del equipo, y es lo que más tarda en volver.
 - **A un ritmo más realista para empezar, la recuperación tarda más.** Con una fábrica de 10 telares por semestre, se recupera todo en unos 3 años, con 60 telares.
 - **Estos cálculos no incluyen inflación ni impuestos.** El precio es una referencia a noviembre de 2026, con el dólar a $1.525.

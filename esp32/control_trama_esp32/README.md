@@ -43,7 +43,7 @@ interruptor `NIVEL2_INSTALADO` reemplaza a cambiar de programa.
 
 ## Sobre el telar de destino
 
-La fábrica tiene once telares Vamatex de tres modelos: C 201, C 301 y C 401. El
+La fábrica tiene catorce telares Vamatex, de tres modelos: C 201, C 301 y C 401. El
 relevamiento, la documentación y la implementación son sobre el C 201 (matrícula 1104).
 
 Los tres comparten la arquitectura de selección (lectora óptica sobre cinta de

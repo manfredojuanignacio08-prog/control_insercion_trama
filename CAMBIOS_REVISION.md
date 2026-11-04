@@ -2320,3 +2320,16 @@ Archivos actualizados:
 | Documentación de Proyecto (Word, PDF y sitio), estadísticas de cada dibujo | «aproximadas hasta que se valide el conteo del sensor» | «medidas por el sensor de pasada, con el conteo validado el 03/11/2026» |
 
 Las frases que dicen «mientras el conteo no esté validado…» quedan: describen lo que hace la app con una producción sin el conteo del sensor validado.
+
+## La planta tiene 14 telares y la frase del cliente en la presentación (04/11/2026)
+
+En la entrevista grabada, el dueño dice que la tejeduría de la planta tiene 14 máquinas. Los datos relevados antes daban 11.
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Presentación, portada y «La voz del cliente» | «Escala a 11 telares», «11 telares Vamatex» | 14 |
+| Presentación, «La voz del cliente» | «Escribí acá la mejor frase de la entrevista.» | «Es un sistema que es muy práctico y mejora realmente mucho la performance del trabajo, tanto el seguimiento como también la calidad del producto.», tomada textual de la entrevista. La letra de la cita se achica para que entre en su tarjeta |
+| Estimación v4, 4.1, y `Calculo_precio_2_anios.md` | «la planta del cliente tiene 11 telares: 86 telares son unas ocho plantas» | 14 telares: unas seis plantas |
+| `esp32/control_trama_esp32/README.md` | «once telares Vamatex» | «catorce telares Vamatex» |
+
+El Registro de Entrevistas ya decía que la planta tiene 14 máquinas, y que antes figuraban 11.
