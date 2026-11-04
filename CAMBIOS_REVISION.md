@@ -2225,3 +2225,23 @@ En el Gantt del Drive cada tarea queda con un solo responsable: el que la lleva 
 | Hardware / Software por telar | $319.851 / $40.149 | $287.431 / $2.569 |
 
 Además, la Documentación de Proyecto decía «el Gantt registra 634 de las 642 horas»: pasa a 612 de 642, con las 30 que faltan en la Etapa 08.
+
+## Varios roles donde el trabajo es en conjunto (03/11/2026)
+
+Se corrige la entrada anterior: las tareas pueden tener más de un responsable. Cada tarea queda con quien la lleva adelante y, cuando el trabajo es en conjunto, con un segundo rol: entrevistas y visitas a la fábrica (PM y un especialista), armado e instalación del hardware en la planta (IM01 e IM02), integración y pruebas entre la web y el hardware (D01 con IM01 o D02), testing del equipo y la landing y el manual (DUX o MUL con D02). Las presentaciones 1,20, 3,16, 8,2 y 8,18 quedan con los cinco que presentan (PM, IM01, IM02, IR y D02). Las horas de las tareas no cambian; las horas-persona quedan en 865.
+
+| Rol | PM | D01 | D02 | IM01 | IM02 | IR | BD | DUX | MUL |
+|---|---|---|---|---|---|---|---|---|---|
+| Horas-persona | 137 | 88 | 146 | 139 | 121 | 42 | 18 | 131 | 43 |
+
+| Concepto | Con un responsable por tarea | Ahora |
+|---|---|---|
+| Personal | $11.703.537 | $16.713.849 (USD 10.959,90) |
+| Inversión a recuperar | $11.935.326 | $16.945.638 |
+| Personal / dinero puesto | 98,1 % / 1,9 % | 98,6 % / 1,4 % |
+| Precio final | $290.000 | $290.000 (sigue siendo el más bajo que no pierde plata en cada telar) |
+| Telares para recuperar en 2 años | 61 | 82 (unas 8 fábricas) |
+| Tabla 4.1 | 63 / 61 / 54 / 49 | 86 / 82 / 73 / 66 |
+| Dinero puesto | primer semestre, 15 telares | primer semestre, 17 telares |
+| A una fábrica por semestre | 2 años y 6 meses | 3 años (60 telares) |
+| Hardware / Software por telar | $287.431 / $2.569 | $287.613 / $2.387 |

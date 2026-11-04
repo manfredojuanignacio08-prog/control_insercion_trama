@@ -9,13 +9,13 @@ Este es el cálculo del precio final de la presentación: **$290.000 por telar m
 
 Reemplaza al precio anterior de $3.200.000 por telar (19 telares en dos años). Ese precio era demasiado alto para una fábrica, contaba 28 h de instalación por telar y no contaba el abono.
 
-El 03/11/2026 se recalculó con las horas y las tarifas nuevas de cada rol del Gantt (Desarrollo USD 13, Infraestructura de Red USD 10 y Administración de BD USD 11). Además se sacaron algunos roles de las tareas donde no hacían falta, y el armado y el conexionado del hardware quedaron a cargo de los especialistas en MCU y de los desarrolladores: de 1.666 a 612 horas-persona, con un solo responsable por tarea (las horas de las tareas no cambian). Con eso el precio baja de $600.000 a $290.000 por telar; el abono no cambia.
+El 03/11/2026 se recalculó con las horas y las tarifas nuevas de cada rol del Gantt (Desarrollo USD 13, Infraestructura de Red USD 10 y Administración de BD USD 11). Además se sacaron algunos roles de las tareas donde no hacían falta, y el armado y el conexionado del hardware quedaron a cargo de los especialistas en MCU y de los desarrolladores: de 1.666 a 865 horas-persona: cada tarea queda con quien la lleva adelante y, cuando el trabajo es en conjunto, con un segundo rol (las horas de las tareas no cambian). Con eso el precio baja de $600.000 a $290.000 por telar; el abono no cambia.
 
-## Inversión a recuperar: $11.935.326
+## Inversión a recuperar: $16.945.638
 
 | Concepto | Monto |
 |---|---|
-| Horas del equipo: 612 horas-persona (una persona por tarea, sobre las 612 h completas del Gantt), con las horas y la tarifa de cada rol del Gantt (tabla de personal de la Estimación v4) | $11.703.537 |
+| Horas del equipo: 865 horas-persona (sobre las 612 h completas del Gantt), con las horas y la tarifa de cada rol del Gantt (tabla de personal de la Estimación v4) | $16.713.849 |
 | Componentes del telar piloto | $154.739 |
 | Insumos materiales ($15.000 + 7 %) | $16.050 |
 | Claude Pro (USD 40 × $1.525) | $61.000 |
@@ -25,13 +25,13 @@ Las horas y tarifas por rol son estas. Cada tarifa se pasa a pesos a $1.525 por 
 | Rol | Horas | USD/h | Subtotal |
 |---|---|---|---|
 | PM | 137 | 14 | $3.071.198 |
-| D01 | 81 | 13 | $1.686.116 |
-| D02 | 34 | 13 | $707.752 |
-| IM01 | 59 | 12 | $1.133.685 |
-| IM02 | 80 | 12 | $1.537.200 |
-| IR | 37 | 10 | $592.462 |
+| D01 | 88 | 13 | $1.831.830 |
+| D02 | 146 | 13 | $3.039.172 |
+| IM01 | 139 | 12 | $2.670.885 |
+| IM02 | 121 | 12 | $2.325.015 |
+| IR | 42 | 10 | $672.525 |
 | BD | 18 | 11 | $317.048 |
-| DUX | 123 | 10 | $1.969.538 |
+| DUX | 131 | 10 | $2.097.638 |
 | MUL | 43 | 10 | $688.538 |
 
 De ese total, el dinero que el equipo puso de verdad es **$231.789**. Son los componentes, los insumos y Claude Pro. El resto es el valor de las horas de trabajo.
@@ -64,24 +64,24 @@ Los telares se venden a ritmo parejo, y cada uno paga el abono desde el mes sigu
 
 | Precio por telar | Ganancia por telar | Telares para recuperar en 2 años |
 |---|---|---|
-| $280.000 | −$6.079 (pierde) | 63 |
-| **$290.000** | **$3.921** | **61 (≈ 6 fábricas de 10 telares)** |
-| $320.000 | $33.921 | 54 |
-| $290.000, con abono de $25.000 | $3.921 | 49 |
+| $280.000 | −$6.079 (pierde) | 86 |
+| **$290.000** | **$3.921** | **82 (≈ 8 fábricas de 10 telares)** |
+| $320.000 | $33.921 | 73 |
+| $290.000, con abono de $25.000 | $3.921 | 66 |
 
-Con unos 15 telares por semestre a $290.000 (61 en total), el saldo acumulado queda así:
+Con unos 20 telares por semestre a $290.000 (82 en total), el saldo acumulado queda así:
 
 | Momento | Saldo |
 |---|---|
-| Inicio | −$11,9 M |
-| Semestre 1 | −$11,7 M |
-| Semestre 2 | −$9,5 M |
-| Semestre 3 | −$5,6 M |
-| Semestre 4 | +$0,2 M |
+| Inicio | −$16,9 M |
+| Semestre 1 | −$16,4 M |
+| Semestre 2 | −$13,4 M |
+| Semestre 3 | −$7,9 M |
+| Semestre 4 | +$0,1 M |
 
 ## Lo que conviene decir en la presentación
 
-- **El dinero puesto se recupera en el primer semestre.** Cada telar deja $3.921 al venderse y $20.000 por mes de abono; con los primeros 15 telares se cubren los $231.789 que puso el equipo.
-- **Toda la inversión, en dos años, pide unos 61 telares (6 fábricas).** Como referencia, la planta del cliente tiene 11 telares, así que son unas seis plantas como esa. La mayor parte de la inversión es el valor de las 612 horas-persona del equipo, y es lo que más tarda en volver.
-- **A un ritmo más realista para empezar, la recuperación tarda más.** Con una fábrica de 10 telares por semestre, se recupera todo en unos 2 años y 6 meses, con 50 telares.
+- **El dinero puesto se recupera en el primer semestre.** Cada telar deja $3.921 al venderse y $20.000 por mes de abono; con los primeros 17 telares se cubren los $231.789 que puso el equipo.
+- **Toda la inversión, en dos años, pide unos 82 telares (8 fábricas).** Como referencia, la planta del cliente tiene 11 telares, así que son unas siete plantas como esa. La mayor parte de la inversión es el valor de las 865 horas-persona del equipo, y es lo que más tarda en volver.
+- **A un ritmo más realista para empezar, la recuperación tarda más.** Con una fábrica de 10 telares por semestre, se recupera todo en unos 3 años, con 60 telares.
 - **Estos cálculos no incluyen inflación ni impuestos.** El precio es una referencia a noviembre de 2026, con el dólar a $1.525.
