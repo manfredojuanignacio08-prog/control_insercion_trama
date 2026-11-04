@@ -2311,3 +2311,12 @@ Archivos actualizados:
   - la figura de la estimación.
 - Bitácora: una entrada nueva del 04/11.
 - Otros: `estimacion.svg` y su `.png`, `Calculo_precio_2_anios.md`, la diapositiva de precio de la presentación, la diapositiva de costos y la planilla del Gantt.
+
+## Conteo validado en el manual de la web y en la Documentación (04/11/2026)
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Manual de la página web (Word, PDF y sitio), preguntas frecuentes | «…pero sigue con «≈» hasta que se valide contra el contador mecánico del telar» | El conteo quedó validado el 03/11/2026 en el período de prueba (coincide con las vueltas de la máquina); con el conteo del sensor validado, los números se muestran sin «≈» |
+| Documentación de Proyecto (Word, PDF y sitio), estadísticas de cada dibujo | «aproximadas hasta que se valide el conteo del sensor» | «medidas por el sensor de pasada, con el conteo validado el 03/11/2026» |
+
+Las frases que dicen «mientras el conteo no esté validado…» quedan: describen lo que hace la app con una producción sin el conteo del sensor validado.
