@@ -2245,3 +2245,13 @@ Se corrige la entrada anterior: las tareas pueden tener más de un responsable. 
 | Dinero puesto | primer semestre, 15 telares | primer semestre, 17 telares |
 | A una fábrica por semestre | 2 años y 6 meses | 3 años (60 telares) |
 | Hardware / Software por telar | $287.431 / $2.569 | $287.613 / $2.387 |
+
+## Revisión de los archivos de precios (03/11/2026)
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Estimación v4, 3.1 | Las horas «surgen de sumar el campo "Estimado"» | Del campo «Completo», que es el que suma la planilla (612 h) |
+| Estimación v4, 3.5 | «…horas-persona del proyecto de un proyecto de varios meses mide el VALOR…» | «…horas-persona de un proyecto de varios meses, y mide el VALOR…» |
+| Estimación v4, 4.1 | La nota del 02/11 decía que el precio se bajó a $290.000 | La nota del 02/11 dice que se bajó; la del 03/11, que queda en $290.000 |
+| Modalidad, sección 1 | La nota del 02/11 ya daba $290.000 y la del 03/11 lo repetía | Una nota por fecha, sin repetir el precio |
+| `Calculo_precio_2_anios.md` | Dos «:» seguidos en la misma frase | Frase separada en dos |

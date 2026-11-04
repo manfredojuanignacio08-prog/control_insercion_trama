@@ -9,7 +9,7 @@ Este es el cálculo del precio final de la presentación: **$290.000 por telar m
 
 Reemplaza al precio anterior de $3.200.000 por telar (19 telares en dos años). Ese precio era demasiado alto para una fábrica, contaba 28 h de instalación por telar y no contaba el abono.
 
-El 03/11/2026 se recalculó con las horas y las tarifas nuevas de cada rol del Gantt (Desarrollo USD 13, Infraestructura de Red USD 10 y Administración de BD USD 11). Además se sacaron algunos roles de las tareas donde no hacían falta, y el armado y el conexionado del hardware quedaron a cargo de los especialistas en MCU y de los desarrolladores: de 1.666 a 865 horas-persona: cada tarea queda con quien la lleva adelante y, cuando el trabajo es en conjunto, con un segundo rol (las horas de las tareas no cambian). Con eso el precio baja de $600.000 a $290.000 por telar; el abono no cambia.
+El 03/11/2026 se recalculó con las horas y las tarifas nuevas de cada rol del Gantt (Desarrollo USD 13, Infraestructura de Red USD 10 y Administración de BD USD 11). Además se sacaron algunos roles de las tareas donde no hacían falta, y el armado y el conexionado del hardware quedaron a cargo de los especialistas en MCU y de los desarrolladores. Cada tarea queda con quien la lleva adelante y, cuando el trabajo es en conjunto, con un segundo rol: de 1.666 a 865 horas-persona (las horas de las tareas no cambian). Con eso el precio baja de $600.000 a $290.000 por telar; el abono no cambia.
 
 ## Inversión a recuperar: $16.945.638
 
