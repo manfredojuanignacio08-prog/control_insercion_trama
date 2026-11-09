@@ -69,7 +69,9 @@ control_insercion_trama/
 │   ├── guias/                     Este manual, Como_Crear_La_Base_De_Datos.md y el paso a paso de conexión
 │   └── analisis/                  Análisis técnico y árbol de problemas
 ├── documentacion_proyecto/        Documentos de la Carpeta del Proyecto (Word y Excel)
-└── _referencia_app_android/       ⚠️ Base de app Android, NO funcional, solo referencia
+├── Manuales/                      El manual de uso, en PDF
+├── modelado_3d/                   El modelo 3D del gabinete (Three.js)
+└── pruebas_qa/                    ESLint, html-validate y Playwright
 ```
 
 ---

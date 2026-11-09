@@ -35,7 +35,9 @@ docs/             Documentación de apoyo
   guias/          Instalación, funcionamiento y base de datos
 database/         El esquema completo, para levantar la base desde cero
 documentacion_proyecto/   Los documentos de la Carpeta del Proyecto
-_referencia_app_android/  ⚠️ Base de una eventual app Android: solo referencia, NO funcional
+modelado_3d/      El modelo 3D del gabinete (Three.js), para abrir en el navegador
+pruebas_qa/       ESLint, html-validate y Playwright (no forma parte del servidor publicado)
+Manuales/         El manual de uso, en PDF
 ```
 
 ## Las piezas del producto
@@ -160,10 +162,19 @@ Material de referencia: el script SQL completo de la base, `docs/guias/`
 (análisis del frontend, árbol de problemas, componentes). Las versiones web de la
 Documentación de Proyecto y del manual de uso están en sus propios repositorios, no en este.
 
-### `_referencia_app_android/`
-⚠️ Base de una eventual app Android, guardada solo como referencia para el
-futuro. **No es funcional, no está en uso y no es parte del producto.** Ver
-el `AVISO.md` dentro de la carpeta. Se puede ignorar por completo.
+### `modelado_3d/`
+El gabinete en 3D, hecho con Three.js: la caja IP65 con las siete plaquetas, los relés y el
+cableado. Se abre `index.html` en el navegador (o `celular.html`, más liviano, en el celular);
+se puede girar, abrir la tapa y tocar cada componente para ver qué es. Necesita internet para
+cargar React y las tipografías.
+
+### `pruebas_qa/`
+Las herramientas de calidad, aparte del servidor (Render solo instala `backend/`): ESLint del
+servidor, de sus pruebas y del JavaScript de la página; html-validate de la página; y Playwright,
+que abre la página real en tamaño de celular. Ver `pruebas_qa/README.md`.
+
+### `Manuales/`
+El manual de uso del sistema en PDF (`Manual de Uso TP Info 26.pdf`).
 
 ---
 

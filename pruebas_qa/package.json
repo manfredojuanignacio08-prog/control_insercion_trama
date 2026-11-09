@@ -1,0 +1,20 @@
+{
+  "name": "pruebas-qa-control-trama",
+  "private": true,
+  "description": "Herramientas de calidad del proyecto: ESLint, html-validate y Playwright. No forma parte del servidor publicado.",
+  "type": "module",
+  "scripts": {
+    "lint": "cd .. && pruebas_qa/node_modules/.bin/eslint --config pruebas_qa/eslint.config.js backend/src backend/tests backend/public/index.html",
+    "html": "html-validate -c .htmlvalidate.json ../backend/public/index.html",
+    "celular": "playwright test",
+    "todo": "npm run lint && npm run html && npm run celular"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.4",
+    "@playwright/test": "1.63.0",
+    "eslint": "9.39.4",
+    "eslint-plugin-html": "8.2.1",
+    "globals": "17.13.0",
+    "html-validate": "11.16.4"
+  }
+}
