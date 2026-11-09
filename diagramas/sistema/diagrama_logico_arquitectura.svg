@@ -31,8 +31,8 @@
   <rect x="800" y="86" width="290" height="96" rx="10" fill="#f2f2f2" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="7 4"/>
   <text font-family="Questrial, IBM Plex Sans, sans-serif" x="945" y="114" text-anchor="middle" font-size="15" font-weight="bold" fill="#5a5a5a">APP ANDROID</text>
   <text x="945" y="134" text-anchor="middle" font-size="11.5">Kotlin + Jetpack Compose</text>
-  <text x="945" y="151" text-anchor="middle" font-size="11.5">Base de arquitectura</text>
-  <text x="945" y="170" text-anchor="middle" font-size="11" font-weight="bold" fill="#5a5a5a">⚠ Referencia futura, no funcional</text>
+  <text x="945" y="151" text-anchor="middle" font-size="11.5">Idea para más adelante</text>
+  <text x="945" y="170" text-anchor="middle" font-size="11" font-weight="bold" fill="#5a5a5a">⚠ A futuro: todavía sin código</text>
 
   <!-- flechas de clientes hacia backend -->
   <line x1="205" y1="182" x2="205" y2="220" stroke="#1E3A5F" stroke-width="2.5"/>
@@ -42,7 +42,7 @@
   <line x1="945" y1="220" x2="605" y2="220" stroke="#8a8a8a" stroke-width="2" stroke-dasharray="6 3" marker-end="url(#flechaGris)"/>
 
   <rect x="330" y="196" width="270" height="42" rx="6" fill="#EDF1F5" stroke="#1E3A5F" stroke-width="1"/>
-  <text x="465" y="221" text-anchor="middle" font-size="11.5" fill="#1E3A5F" font-weight="bold">HTTP · API REST (JSON)</text>
+  <text x="465" y="221" text-anchor="middle" font-size="11.5" fill="#1E3A5F" font-weight="bold">HTTPS · API REST (JSON)</text>
 
   <!-- ════════ NIVEL 2: BACKEND ════════ -->
   <rect x="380" y="252" width="390" height="110" rx="10" fill="#EDF1F5" stroke="#1E3A5F" stroke-width="2.5"/>
@@ -65,8 +65,8 @@
 
   <!-- ════════ NIVEL 3: ESP32 ════════ -->
   <line x1="575" y1="362" x2="575" y2="410" stroke="#b45309" stroke-width="2.5" marker-end="url(#flechaAmbar)"/>
-  <rect x="600" y="372" width="360" height="34" rx="6" fill="#f2f5f8" stroke="#b45309" stroke-width="1"/>
-  <text x="780" y="394" text-anchor="middle" font-size="11" fill="#b45309" font-weight="bold">GET /api/telares/:id, sondeo cada ~2,5 s</text>
+  <rect x="600" y="372" width="490" height="34" rx="6" fill="#f2f5f8" stroke="#b45309" stroke-width="1"/>
+  <text x="845" y="394" text-anchor="middle" font-size="11" fill="#b45309" font-weight="bold">GET /api/telares/:id cada ~2,5 s · Nivel 2: patron-actual y pasadas</text>
 
   <rect x="380" y="416" width="390" height="106" rx="10" fill="#f2f5f8" stroke="#b45309" stroke-width="2.5"/>
   <text font-family="Questrial, IBM Plex Sans, sans-serif" x="575" y="444" text-anchor="middle" font-size="16" font-weight="bold" fill="#b45309">FIRMWARE ESP32 (Gateway)</text>
@@ -76,8 +76,8 @@
 
   <!-- ════════ NIVEL 4: TELAR ════════ -->
   <line x1="575" y1="522" x2="575" y2="562" stroke="#1f7a3d" stroke-width="2.5" marker-end="url(#flechaVerde)"/>
-  <rect x="600" y="530" width="330" height="34" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1"/>
-  <text x="765" y="552" text-anchor="middle" font-size="11" fill="#1f7a3d" font-weight="bold">3 relés · Marcha / Pausa / Retroceder</text>
+  <rect x="600" y="530" width="490" height="34" rx="6" fill="#edf7ee" stroke="#1f7a3d" stroke-width="1"/>
+  <text x="845" y="552" text-anchor="middle" font-size="11" fill="#1f7a3d" font-weight="bold">3 relés: Marcha, Pausa y Retroceder · Nivel 2: sensor y 4 LCA110</text>
 
   <rect x="330" y="568" width="490" height="120" rx="10" fill="#edf7ee" stroke="#1f7a3d" stroke-width="2.5"/>
   <text font-family="Questrial, IBM Plex Sans, sans-serif" x="575" y="596" text-anchor="middle" font-size="16" font-weight="bold" fill="#1f7a3d">TELAR FÍSICO INDUSTRIAL</text>
@@ -98,9 +98,9 @@
   <rect x="830" y="568" width="260" height="120" rx="10" fill="#fff" stroke="#5a5a5a" stroke-width="1.5" stroke-dasharray="5 3"/>
   <text x="960" y="592" text-anchor="middle" font-size="12" font-weight="bold" fill="#5a5a5a">ℹ️ Sobre la app Android</text>
   <text x="960" y="614" text-anchor="middle" font-size="10.5">No es parte del producto actual.</text>
-  <text x="960" y="629" text-anchor="middle" font-size="10.5">Es una base de arquitectura</text>
-  <text x="960" y="644" text-anchor="middle" font-size="10.5">guardada como referencia, por</text>
-  <text x="960" y="659" text-anchor="middle" font-size="10.5">si se retoma a futuro. La interfaz</text>
+  <text x="960" y="629" text-anchor="middle" font-size="10.5">Es una idea para más adelante:</text>
+  <text x="960" y="644" text-anchor="middle" font-size="10.5">todavía no tiene código en el</text>
+  <text x="960" y="659" text-anchor="middle" font-size="10.5">repositorio. La interfaz</text>
   <text x="960" y="674" text-anchor="middle" font-size="10.5">de uso real es la página web.</text>
 
   <text x="1090" y="740" text-anchor="end" font-size="10.5" fill="#6b7684">Control de Inserción de Trama · Diagrama lógico</text>
