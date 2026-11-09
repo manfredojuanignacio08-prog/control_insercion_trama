@@ -37,7 +37,7 @@ database/         El esquema completo, para levantar la base desde cero
 documentacion_proyecto/   Los documentos de la Carpeta del Proyecto
 modelado_3d/      El modelo 3D del gabinete (Three.js), para abrir en el navegador
 pruebas_qa/       ESLint, html-validate y Playwright (no forma parte del servidor publicado)
-_referencia_app_android/  ⚠️ Base de una eventual app Android: solo referencia, NO funcional
+Manuales/         El manual de uso, en PDF
 ```
 
 ## Las piezas del producto
@@ -173,10 +173,8 @@ Las herramientas de calidad, aparte del servidor (Render solo instala `backend/`
 servidor, de sus pruebas y del JavaScript de la página; html-validate de la página; y Playwright,
 que abre la página real en tamaño de celular. Ver `pruebas_qa/README.md`.
 
-### `_referencia_app_android/`
-⚠️ Base de una eventual app Android, guardada solo como referencia para el
-futuro. **No es funcional, no está en uso y no es parte del producto.** Ver
-el `AVISO.md` dentro de la carpeta. Se puede ignorar por completo.
+### `Manuales/`
+El manual de uso del sistema en PDF (`Manual de Uso TP Info 26.pdf`).
 
 ---
 
