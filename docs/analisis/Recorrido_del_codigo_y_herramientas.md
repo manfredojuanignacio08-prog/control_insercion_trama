@@ -1,6 +1,6 @@
 # Recorrido del código y herramientas
 
-*Control de Inserción de Trama · 7mo Informática B, Instituto Leonardo Murialdo · 20/10/2026*
+*Control de Inserción de Trama · 7mo Informática B, Instituto Leonardo Murialdo · 09/11/2026*
 
 Este documento cuenta cómo está armado el sistema por dentro: qué hace cada parte del código, dónde está, cómo viaja una orden desde el celular hasta el telar (y un aviso desde la botonera hasta la pantalla) y con qué herramientas se hizo. Sirve para orientarse antes de leer el código; el detalle de cada parte está en los README de cada carpeta y en la Documentación de Proyecto.
 
@@ -34,14 +34,14 @@ Está hecho en **Node.js con Express**. `server.js` arma la cadena por la que pa
 |---|---|
 | `/api/auth` | Sesión, registro y entrada con huella (@simplewebauthn/server), recupero con el código, modo invitado e invitaciones para registrar a alguien nuevo. |
 | `/api/patrones` | Los dibujos: listar, crear, cambiar, borrar, metros por pasada, hilado, estadísticas y la clave del cliente. |
-| `/api/telares` | El telar: estado, cargar un dibujo, pausar, reanudar, avanzar, retroceder, terminar, el control desde la página (solo sensado), los avisos de la botonera (`evento-fisico`) y la validación del conteo. Para el Nivel 2, `patron-actual` y `pasadas`. |
+| `/api/telares` | El telar: crearlo, su estado, cargar un dibujo, pausar, reanudar, avanzar, retroceder, terminar, confirmar la posición, su historial, el control desde la página (solo sensado), los avisos de la botonera (`evento-fisico`) y la validación del conteo. Para el Nivel 2, `patron-actual` y `pasadas`. |
 | `/api/historial` | La producción: cada tanda de tejido con sus fechas y sus pasadas. |
 | `/api/errores` | Los avisos de error, también los que manda el ESP32. |
 | `/api/cliente` | Entrar con la clave del tejido, ver el tejido y salir. |
 
 - **Quién es quién** (`middleware/auth.js`). El operario tiene una cookie de sesión firmada con HMAC-SHA256; el invitado, una sesión que no puede mover el telar; el ESP32 se identifica con la cabecera `X-Device-Key`; y el cliente tiene su propia cookie, que solo abre `/api/cliente`. Cada ruta dice cuál de ellos la puede usar.
-- **Secretos.** Los códigos de recuperación y las claves de los clientes se guardan con un resumen SHA-256 (para encontrarlos cuando alguien los escribe) y cifrados con AES-256-GCM (para poder volver a mostrarlos). Las claves del servidor (`SESSION_SECRET`, `RECOVERY_SECRET`, `ESP32_DEVICE_KEY`) están en variables de entorno de Render, nunca en el repositorio.
-- **La posición del tejido** (`utils/posicion.js`). Convierte las pasadas contadas en fila y pasada, con las repeticiones de cada fila y los intercalados. El firmware tiene el mismo cálculo (`posicion_dibujo.h`) y los dos se compararon en 2,4 millones de pasos.
+- **Secretos.** Los códigos de recuperación y las claves de los clientes se guardan con un resumen SHA-256 (para encontrarlos cuando alguien los escribe) y cifrados con AES-256-GCM (para poder volver a mostrarlos). Las claves del servidor (`SESSION_SECRET`, `RECOVERY_SECRET`, `ESP32_DEVICE_KEY`) están en variables de entorno de Render y, en una instalación local, en el archivo `.env`, que `.gitignore` deja fuera de GitHub: en el repositorio solo está `backend/.env.example`, con valores de ejemplo.
+- **La posición del tejido** (`utils/posicion.js`). Convierte las pasadas contadas en fila y pasada, con las repeticiones de cada fila y los intercalados. El firmware tiene el mismo cálculo (`posicion_dibujo.h`) y los dos se compararon en 2,4 millones de pasadas al azar, adelante y atrás.
 - **Validación** (`utils/validacion.js`). De 1 a 300 filas y de 1 a 8 columnas, una sola bobina por fila, intercalados de dos filas o más y sin superponerse. Lo que no cumple se rechaza con un mensaje que dice qué corregir.
 
 ## 4. La base de datos
@@ -78,7 +78,7 @@ Está escrito en **C++ con Arduino** para el ESP32. Es un solo programa para los
 2. El servidor verifica que sea un operario y que el control desde la página esté prendido. En una transacción, pone el telar en «tejiendo» y abre el trabajo en `historial_produccion`.
 3. En la consulta siguiente (a lo sumo 2,5 segundos después), el ESP32 ve «tejiendo» y pulsa el relé de Marcha: la máquina arranca.
 4. Con el sensor de pasada (Nivel 2), cada pasada suma: el ESP32 reporta la cuenta y el servidor calcula la fila y la pasada.
-5. La página, que consulta cada 4 segundos, muestra «Tejiendo · Fila X / N» y marca la fila en la grilla.
+5. La página, que consulta cada 4 segundos, muestra «Tejiendo...» y «Fila X / N», con la pasada de la fila, y marca la fila en la grilla.
 
 ### Alguien aprieta Pausa en la botonera
 
@@ -99,10 +99,10 @@ Con el control desde la página apagado (**solo sensado**), el servidor responde
 | **PostgreSQL en Neon** | La base de datos en la nube. |
 | **Render** | Donde se publica el servidor y, con él, la página web. |
 | **Arduino IDE 2 y el core ESP32** | Escribir y cargar el firmware; ArduinoJson para el JSON. |
-| **GitHub** | El repositorio, con ramas y pull requests para revisar cada cambio antes de pasarlo a la rama principal. |
-| **Three.js** | El modelo 3D del gabinete, que se ve en el navegador (repositorio Modelado3D_CIT). |
-| **Pruebas** | Pruebas propias en Node (`npm test` y una integración contra PostgreSQL real), Playwright con Chromium (la página en un navegador de verdad, con tamaño de celular), pruebas del firmware en la PC con g++ y simulaciones en Python, ESLint y html-validate. |
+| **GitHub** | El repositorio: los cambios se hacen en una rama de trabajo y pasan a `main` por un pull request, donde se revisan; lo corregido en cada revisión quedó anotado en `CAMBIOS_REVISION.md`. |
+| **Three.js** | El modelo 3D del gabinete, que se ve en el navegador (`modelado_3d/`; también publicado aparte, en el repositorio Modelado3D_CIT). |
+| **Pruebas** | Pruebas propias en Node (`npm test` y una integración contra PostgreSQL real), pruebas del firmware en la PC con g++ y simulaciones en Python (`esp32/verificacion/`); en `pruebas_qa/`, ESLint, html-validate y Playwright con Chromium (la página en un navegador de verdad, con tamaño de celular). |
 | **Word, LibreOffice, Excel y Google Sheets** | Los documentos y sus PDF, las planillas de componentes y verificaciones, y el Gantt. |
-| **Claude (Anthropic), con Claude Code** | Inteligencia artificial usada como asistente de programación y de documentación: revisiones línea por línea del código y de los documentos, programación y pruebas de funciones (por ejemplo, solo sensado y la vista para los clientes), capturas para los manuales y redacción de documentos. Sus cambios quedaron en commits propios en GitHub, firmados como «Claude», y el equipo decide cuáles pasan a la rama principal. |
+| **Claude (Anthropic), con Claude Code (plan Claude Pro)** | Inteligencia artificial usada como asistente de programación y de documentación: revisiones línea por línea del código y de los documentos, programación y pruebas de funciones (por ejemplo, solo sensado y la vista para los clientes), capturas para los manuales y redacción de documentos. Sus cambios quedaron en commits propios en GitHub, firmados como «Claude», y el equipo decide cuáles pasan a la rama principal. |
 
 Las pruebas en la planta, las mediciones del telar y el armado del hardware los hizo el equipo; lo que se probó por software y lo que falta probar con la máquina está en la Guía de mediciones y en el Checklist de verificaciones.
