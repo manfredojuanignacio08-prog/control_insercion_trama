@@ -148,7 +148,7 @@ usar para comandarlas y qué no.
   lector, con una resistencia de protección: `diagramas/hardware/conexion_final_rele.png` y
   `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`. En el C 201 la alimentación del lector se
   midió el 17/10/2026: entre 15 y 30 V, así que va la resistencia de protección de 470 Ω 3 W, y el
-  primer canal seleccionó bien.
+  primer canal seleccionó bien; el 30/10/2026, los cuatro.
 
 ## 7. Protecciones que ya quedaron aplicadas en el firmware
 

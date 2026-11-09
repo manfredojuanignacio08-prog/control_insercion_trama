@@ -105,4 +105,4 @@ Con el control desde la página apagado (**solo sensado**), el servidor responde
 | **Word, LibreOffice, Excel y Google Sheets** | Los documentos y sus PDF, las planillas de componentes y verificaciones, y el Gantt. |
 | **Claude (Anthropic), con Claude Code (plan Claude Pro)** | Inteligencia artificial usada como asistente de programación y de documentación: revisiones línea por línea del código y de los documentos, programación y pruebas de funciones (por ejemplo, solo sensado y la vista para los clientes), capturas para los manuales y redacción de documentos. Sus cambios quedaron en commits propios en GitHub, firmados como «Claude», y el equipo decide cuáles pasan a la rama principal. |
 
-Las pruebas en la planta, las mediciones del telar y el armado del hardware los hizo el equipo; lo que se probó por software y lo que falta probar con la máquina está en la Guía de mediciones y en el Checklist de verificaciones.
+Las pruebas en la planta, las mediciones del telar y el armado del hardware los hizo el equipo; lo que se probó por software y lo que se midió y probó en la máquina están en la Guía de mediciones y en el Checklist de verificaciones.
