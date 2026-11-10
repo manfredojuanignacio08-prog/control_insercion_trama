@@ -38,6 +38,11 @@ documentacion_proyecto/   Los documentos de la Carpeta del Proyecto
 modelado_3d/      El modelo 3D del gabinete (Three.js), para abrir en el navegador
 pruebas_qa/       ESLint, html-validate y Playwright (no forma parte del servidor publicado)
 Manuales/         El manual de uso, en PDF
+presentacion_final/      La presentación del proyecto y el cálculo del precio (los videos
+                         se ponen aparte, en presentacion_final/videos/)
+PUESTA_EN_MARCHA.md      Claves, sincronización y validación del conteo en el telar
+DESPLIEGUE_RENDER.md     Cómo publicar el servidor y la web en Render
+CAMBIOS_REVISION.md      Lo corregido en cada revisión del proyecto
 ```
 
 ## Las piezas del producto
