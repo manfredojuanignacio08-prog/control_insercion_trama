@@ -2406,5 +2406,6 @@ Se comparó cada Word con su sitio párrafo por párrafo (la Documentación de P
 | Modalidad (5.4), Estimación (4.3), Documentación (9.4, Word, PDF y sitio), Bitácora y `Calculo_precio_2_anios.md` | Los planos, «los dibujos de las siete plaquetas» | «Los dibujos de las plaquetas, con el diseño en Proteus de las cinco impresas»: la fuente no tiene dibujo propio (está en el pata por pata) |
 | Estado completo (Word y PDF) | Conexiones de las plaquetas, «con el dibujo de cada una» de las siete | Con el dibujo de cada plaqueta impresa y de la del ESP32 |
 | `plaqueta_puentes.png` (y dentro de Conexiones de las plaquetas, Word y PDF) | Subtítulo «Tu plaqueta de puentes…» | «Plaqueta de los puentes…», como los otros dibujos |
+| Bitácora, entrada del 10/11/2026 (Word y PDF) | Faltaba una coma («…10.7) en el manual del telar») y no nombraba los proyectos de Proteus | Con la coma, y una frase sobre la carpeta `proteus/` |
 
 Lo que difiere a propósito entre los Word y los sitios: las guías de inicio rápido de los manuales, que en el sitio están escritas con más pasos (los datos son los mismos); los títulos cortos de las épicas del backlog, y el enlace al modelo 3D, que en el sitio es un vínculo.
