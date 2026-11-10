@@ -14,7 +14,9 @@ bornera J1, J2 o J3 del sensado → la tira de 4 en el lugar de cada BR → la p
 y 4 cruzadas). `plaqueta_principal`, `plaqueta_nivel2`, `plaqueta_sensado`, `plaqueta_reles` y
 `plaqueta_puentes` dibujan cada plaqueta pieza por pieza, con las pistas reales de Proteus (la de puentes es
 esquemática); `pc817_orientacion` y `pc817_esquematico`, cómo va el optoacoplador. En `fotos/`, las plaquetas
-terminadas y la caja.
+terminadas y la caja, y en `proteus/`, el diseño en Proteus (esquemático y PCB) de las cinco plaquetas impresas:
+la principal, la de los relés, la del sensado, la de los puentes y la del Nivel 2, con un README que dice cuál
+es cuál.
 
 ### `plaquetas_y_cableado.svg`
 **Las plaquetas del gabinete y todo el cableado, en esquema.** Qué va en cada una (la fuente de 220 V, la

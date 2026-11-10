@@ -2386,9 +2386,21 @@ Además del paquete (el equipo fabrica, instala y prueba el gabinete), el produc
 | Manual del telar en fábrica (Word, PDF y sitio de los manuales) | En «Antes de empezar», quién arma el gabinete si la fábrica compró con los planos. Sección 3.4 nueva, «Si la fábrica compró con los planos: cómo se arma el gabinete»: qué trae cada plano, cómo se leen los dibujos de las plaquetas (vista, pata 1, conectores, puentes a soldar), el orden de armado en siete pasos (de comprar y hacer las plaquetas a verificar con el Checklist) y tres figuras: el dibujo de la plaqueta principal, las conexiones pata por pata y las plaquetas terminadas |
 | Guía de conexión y puesta en marcha (Word, PDF y `docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`) | Es también la guía que sigue el técnico de la fábrica con la venta con planos |
 | Bitácora (Word y PDF) | Entrada del 10/11/2026 |
-| `diagramas/README.md` | La estructura de costos, también con la venta con planos |
+| `diagramas/README.md` | La estructura de costos, también con la venta con planos, y la carpeta `proteus/` |
 | `documentacion_proyecto/LEEME.md` | En la descripción de la Estimación, de la Modalidad y del manual del telar, la venta con los planos |
 
 El PDF del manual del telar pasa de 15 a 20 páginas, por la sección 3.4 y sus tres figuras (de 11 a 14 imágenes).
 
-Queda para el equipo: los planos incluyen el diseño en Proteus de las cinco plaquetas impresas (la principal, la del Nivel 2, la del sensado, la de los relés y la de los puentes), pero esos archivos (`.pdsprj`, los que nombra cada dibujo) no están en el repositorio; solo está el DXF de la plaqueta del ESP32. Hay que sumarlos a `diagramas/hardware/caja_y_plaquetas/` antes de vender con los planos.
+Se sumaron los proyectos de Proteus de las cinco plaquetas impresas, en `diagramas/hardware/caja_y_plaquetas/proteus/`, con un README que dice cuál es cuál: la principal (`plaqueta_2_parte_1_info_B_corregido`, 31/10/2026), la de los relés (`placa_2_parte_2_info_B`, 18/10/2026), la del sensado (`proyecto_de_INFO_B`, 31/10/2026), la de los puentes (`extra_placat_puentes`, 31/10/2026) y la del Nivel 2 (`plaqueta_3_info_B_corregido`, 22/10/2026). Son las versiones más nuevas que había, y cada una tiene los mismos componentes, valores y conectores que su dibujo. Las nombran el manual del telar (sección 3.4), la Guía de conexión y puesta en marcha (sección 3.1) y `diagramas/README.md`.
+
+## Última revisión antes de la entrega (10/11/2026)
+
+Se comparó cada Word con su sitio párrafo por párrafo (la Documentación de Proyecto, el manual del telar y el de la página web), cada PDF con su Word y cada dato de los manuales con el código.
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Sitio de la Documentación | Las figuras 6 a 10 sin número en el epígrafe (de la 5 saltaba a la 11) | «Figura 6.» a «Figura 10.», como en el Word |
+| Sitio de los manuales, presentación del manual del telar | El control del dibujo, «con la previsión de comandarlo en una etapa posterior» | «Y, desde el 30/10/2026, también el del dibujo», como en el Word |
+| Manual de la página web (Word y PDF) | El código de invitación «se lo pasa» quien ya tiene acceso | Se genera desde Inicio con «Invitar a alguien (generar código)», sirve una sola vez y vence a los siete días, como en el sitio y en el servidor (`INVITACION_TTL_DIAS = 7`) |
+
+Lo que difiere a propósito entre los Word y los sitios: las guías de inicio rápido de los manuales, que en el sitio están escritas con más pasos (los datos son los mismos); los títulos cortos de las épicas del backlog, y el enlace al modelo 3D, que en el sitio es un vínculo.

@@ -59,7 +59,7 @@ Medidas reales de las plaquetas (31/10/2026): principal 100 × 95 mm, Nivel 2 10
 
 *Cada bornera y cada tira de pines, pata por pata (diagramas/hardware/caja_y_plaquetas/conexiones_pata_por_pata.png).*
 
-El dibujo de cada plaqueta, pieza por pieza, está en `diagramas/hardware/caja_y_plaquetas/` (`plaqueta_principal`, `plaqueta_nivel2`, `plaqueta_sensado`, `plaqueta_reles` y `plaqueta_puentes`), con las fotos de las plaquetas terminadas y de la caja en `fotos/`.
+El dibujo de cada plaqueta, pieza por pieza, está en `diagramas/hardware/caja_y_plaquetas/` (`plaqueta_principal`, `plaqueta_nivel2`, `plaqueta_sensado`, `plaqueta_reles` y `plaqueta_puentes`), con las fotos de las plaquetas terminadas y de la caja en `fotos/` y el diseño de las cinco plaquetas impresas en Proteus en `proteus/`.
 
 ![Las plaquetas terminadas, antes de montarlas en la caja (diagramas/hardware/caja_y_plaquetas/fotos/todas_las_plaquetas.jpg).](../../diagramas/hardware/caja_y_plaquetas/fotos/todas_las_plaquetas.jpg)
 
