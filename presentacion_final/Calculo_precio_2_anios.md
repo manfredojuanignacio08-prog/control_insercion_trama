@@ -97,7 +97,7 @@ En vez de fabricar el gabinete, el equipo puede vender el software, el mantenimi
 
 La ganancia del equipo no cambia porque en el paquete el hardware se cobra al costo ($290.000 − $286.079 = $3.921). Repartido como en la Modalidad de Inversión (sección 5.2), son los $2.382 del software más $1.539 por los planos, que es la parte de la recuperación que ahí le toca al hardware.
 
-La garantía cubre el software, el firmware y los planos; el armado y los componentes quedan a cargo de quien arma el gabinete. A cambio de llegar a fábricas de cualquier lugar sin fabricar ni viajar a instalar, el equipo no controla la calidad del armado. El detalle está en la Estimación de Costos (sección 4.3) y en la Modalidad de Inversión (sección 5.4).
+La garantía cubre el software, el firmware y los planos; el armado y los componentes quedan a cargo de quien arma el gabinete. A cambio de llegar a fábricas de cualquier lugar sin fabricar ni viajar a instalar, el equipo no controla la calidad del armado. El detalle está en la Estimación de Costos (sección 4.3) y en la Modalidad de Inversión (sección 5.4); en la presentación es la diapositiva que sigue a la del precio, y en el diagrama `estimacion.svg`, el recuadro de abajo. Cómo arma el gabinete el técnico de la fábrica está en el Manual del telar en fábrica, sección 3.4.
 
 ## Lo que conviene decir en la presentación
 

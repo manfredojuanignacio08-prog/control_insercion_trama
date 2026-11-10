@@ -2379,10 +2379,16 @@ Además del paquete (el equipo fabrica, instala y prueba el gabinete), el produc
 |---|---|
 | Estimación de Costos v4 (Word y PDF) | Sección 4.3 «Otra forma de venta: con los planos del hardware», un punto en 5.1 y una frase en la conclusión |
 | Modalidad de Inversión (Word y PDF) | La sección 5 pasa a «Formas de venta: Hardware, Software y planos», con la 5.4 «Venta con planos» (qué compra la fábrica, qué son los planos, qué hace la fábrica, precio, garantía, ventajas y riesgos) y una frase en la conclusión |
-| Documentación de Proyecto (Word, PDF y sitio) | Una frase en la sección 8, un punto en 9.4 y uno en 10.7; versión 5.6 en el control de cambios |
-| `presentacion_final/Calculo_precio_2_anios.md` | La comparación entre el paquete y la venta con planos, y un punto en «Lo que conviene decir» |
-| Manual del telar en fábrica (Word, PDF y sitio de los manuales) | En «Antes de empezar», quién arma el gabinete si la fábrica compró con los planos: su técnico, con la Guía de conexión y puesta en marcha (la parte de 220 V, una persona habilitada) y el Checklist de verificaciones |
+| Documentación de Proyecto (Word, PDF y sitio) | Una frase en la sección 8, un punto en 9.4 y uno en 10.7, y la figura 15 nueva; versión 5.6 en el control de cambios |
+| `presentacion_final/Calculo_precio_2_anios.md` | La comparación entre el paquete y la venta con planos, un punto en «Lo que conviene decir» y dónde está en la presentación, el diagrama y el manual |
+| `presentacion_final/Presentacion_CIT.html` | Una diapositiva nueva después de la del precio: «Con los planos, la fábrica arma el gabinete», con lo que paga la fábrica ($3.921 y el abono) y lo que pone ($174.710 por telar más las horas de su técnico). La misma diapositiva va en la versión con los videos adentro, que se entrega aparte |
+| `diagramas/sistema/estimacion.svg` y `.png` | Un recuadro abajo del precio: «Otra forma de venta: con los planos del hardware», $3.921 por telar más el abono, gasto inicial $174.710 y la misma recuperación. El PNG conserva igual la parte de arriba; está también en la Documentación (figura 15) y en su sitio |
+| Manual del telar en fábrica (Word, PDF y sitio de los manuales) | En «Antes de empezar», quién arma el gabinete si la fábrica compró con los planos. Sección 3.4 nueva, «Si la fábrica compró con los planos: cómo se arma el gabinete»: qué trae cada plano, cómo se leen los dibujos de las plaquetas (vista, pata 1, conectores, puentes a soldar), el orden de armado en siete pasos (de comprar y hacer las plaquetas a verificar con el Checklist) y tres figuras: el dibujo de la plaqueta principal, las conexiones pata por pata y las plaquetas terminadas |
+| Guía de conexión y puesta en marcha (Word, PDF y `docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`) | Es también la guía que sigue el técnico de la fábrica con la venta con planos |
 | Bitácora (Word y PDF) | Entrada del 10/11/2026 |
-| `documentacion_proyecto/LEEME.md` | En la descripción de la Estimación y de la Modalidad, la venta con los planos |
+| `diagramas/README.md` | La estructura de costos, también con la venta con planos |
+| `documentacion_proyecto/LEEME.md` | En la descripción de la Estimación, de la Modalidad y del manual del telar, la venta con los planos |
 
-El PDF del manual del telar pasa de 15 a 16 páginas: la frase nueva corre una foto de la sección 2 a la página siguiente; el texto y las 11 imágenes son los mismos.
+El PDF del manual del telar pasa de 15 a 20 páginas, por la sección 3.4 y sus tres figuras (de 11 a 14 imágenes).
+
+Queda para el equipo: los planos incluyen el diseño en Proteus de las cinco plaquetas impresas (la principal, la del Nivel 2, la del sensado, la de los relés y la de los puentes), pero esos archivos (`.pdsprj`, los que nombra cada dibujo) no están en el repositorio; solo está el DXF de la plaqueta del ESP32. Hay que sumarlos a `diagramas/hardware/caja_y_plaquetas/` antes de vender con los planos.

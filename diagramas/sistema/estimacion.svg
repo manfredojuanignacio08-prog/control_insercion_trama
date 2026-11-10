@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 430" font-family="IBM Plex Sans, system-ui, sans-serif">
-<rect width="1000" height="430" fill="#F6F8FA"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 490" font-family="IBM Plex Sans, system-ui, sans-serif">
+<rect width="1000" height="490" fill="#F6F8FA"/>
 <text x="40" y="34" font-size="17" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Estructura de costos del proyecto</text>
 <text x="40" y="54" font-size="10.5" fill="#6B7684" font-family="IBM Plex Mono, ui-monospace, monospace">VALORES EN PESOS ARGENTINOS · NOVIEMBRE DE 2026</text>
 <rect x="40" y="76" width="450" height="220" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.4"/>
@@ -40,5 +40,10 @@
 <text x="66" y="342" font-size="13" font-weight="600" fill="#FFFFFF" font-family="Questrial, sans-serif">Precio final por telar</text>
 <text x="66" y="360" font-size="10" fill="#7FA8C9">Más $20.000 por mes por telar de abono · recupera la inversión en dos años con unos 86 telares (unas 9 fábricas)</text>
 <text x="934" y="352" font-size="20" font-weight="600" fill="#FFFFFF" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$290.000</text>
-<text x="40" y="400" font-size="9.5" fill="#6B7684">Detalle por rol, componente y bloque en Estimacion_Costos_Ganancia_Contrato_v4.docx y en Lista_de_componentes_Control_Trama.xlsx</text>
+<rect x="40" y="384" width="920" height="48" rx="8" fill="#FFFFFF" stroke="#CDD8E0" stroke-width="1.4"/>
+<text x="66" y="404" font-size="12.5" font-weight="600" fill="#1E3A5F" font-family="Questrial, sans-serif">Otra forma de venta: con los planos del hardware</text>
+<text x="66" y="421" font-size="10" fill="#6B7684">La fábrica compra los componentes y arma el gabinete con su técnico · gasto inicial $174.710 · misma recuperación</text>
+<text x="934" y="408" font-size="16" font-weight="600" fill="#1E3A5F" text-anchor="end" font-family="IBM Plex Mono, ui-monospace, monospace">$3.921</text>
+<text x="934" y="423" font-size="9.5" fill="#6B7684" text-anchor="end">por telar, más el abono</text>
+<text x="40" y="460" font-size="9.5" fill="#6B7684">Detalle por rol, componente y bloque en Estimacion_Costos_Ganancia_Contrato_v4.docx (venta con planos, sección 4.3) y en Lista_de_componentes_Control_Trama.xlsx</text>
 </svg>

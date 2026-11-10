@@ -115,7 +115,7 @@ huella, los desafíos y las invitaciones), con las columnas de todas las migraci
 
 ### `gantt.svg`, `estimacion.svg` y `organigrama.svg`
 Las figuras de la Documentación de Proyecto: el cronograma en ocho etapas, la estructura de costos
-con el servicio de mantenimiento, y el equipo con sus roles.
+con el servicio de mantenimiento y la venta con los planos, y el equipo con sus roles.
 
 ## Cómo regenerar los PNG
 

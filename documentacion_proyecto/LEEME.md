@@ -44,7 +44,8 @@ el repositorio para que el código y la documentación viajen juntos.
 ## Otros
 
 `Manual Telar Fabrica.docx` y `Manual_Pagina_Web_Telar.docx` son los manuales de
-uso. Sus versiones web, y la de la Documentación de Proyecto, están en sus propios
+uso; el del telar explica también cómo arma el gabinete el técnico de la fábrica
+cuando se vende con los planos (sección 3.4). Sus versiones web, y la de la Documentación de Proyecto, están en sus propios
 repositorios: cuando cambia uno de estos Word, hay que pasar el cambio al sitio.
 `Arbol de problemas y soluciones.docx` es el análisis causa-efecto.
 `Parado_Automatico_Ideas.docx` recoge las ideas surgidas de las conversaciones
