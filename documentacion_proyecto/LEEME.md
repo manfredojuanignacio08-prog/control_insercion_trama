@@ -11,7 +11,7 @@ el repositorio para que el código y la documentación viajen juntos.
 | `Documentación_de_Proyecto.docx` | El documento formal completo, con 70 secciones numeradas, 15 tablas y 15 figuras. |
 | `Bitácora.docx` | Registro cronológico de avances y decisiones. |
 | `Registro de Entrevistas.docx` | Las minutas de las ocho reuniones con el cliente; la última, del 30/10/2026, es la prueba del proyecto completo, con los dos videos. |
-| `Recorrido_del_Codigo_y_Herramientas.docx` | Cómo está armado el código por dentro (la web, el servidor, la base de datos y el firmware), cómo viaja una orden de punta a punta y las herramientas usadas, incluida la inteligencia artificial. Cinco páginas; en Markdown en `docs/analisis/`. |
+| `Recorrido_del_Codigo_y_Herramientas.docx` | Cómo está armado el código por dentro (la web, el servidor, la base de datos y el firmware), cómo viaja una orden de punta a punta y las herramientas usadas, incluida la inteligencia artificial. Cuatro páginas; en Markdown en `docs/analisis/`. |
 
 ## Guías de trabajo
 
@@ -31,20 +31,21 @@ el repositorio para que el código y la documentación viajen juntos.
 | Archivo | Qué contiene |
 |---|---|
 | `Lista_de_componentes_Control_Trama.xlsx` | Todos los componentes por bloque, con precios y notas. |
-| `Estimacion_Costos_Ganancia_Contrato_v4.docx` | Costos, márgenes y condiciones del servicio. |
+| `Estimacion_Costos_Ganancia_Contrato_v4.docx` | Costos, márgenes y condiciones del servicio, y la venta con los planos del hardware (sección 4.3). |
 | `Gantt_2026 - Automatizacion de Telar Industrial.xlsx` | El cronograma, con 169 tareas en 8 etapas. |
 
 ## Inversión y armado
 
 | Archivo | Qué contiene |
 |---|---|
-| `Modalidad_Inversion_Ganancia_Contrato_Garantia.docx` | Modalidad de inversión mixta, plan de aportes por etapa, recuperación y garantía. |
+| `Modalidad_Inversion_Ganancia_Contrato_Garantia.docx` | Modalidad de inversión mixta, plan de aportes por etapa, recuperación, formas de venta (también con los planos del hardware) y garantía. |
 | `Guia_Armado_Bloque_A.docx` | El paso a paso del armado del nodo de control, fase por fase. |
 
 ## Otros
 
 `Manual Telar Fabrica.docx` y `Manual_Pagina_Web_Telar.docx` son los manuales de
-uso. Sus versiones web, y la de la Documentación de Proyecto, están en sus propios
+uso; el del telar explica también cómo arma el gabinete el técnico de la fábrica
+cuando se vende con los planos (sección 3.4). Sus versiones web, y la de la Documentación de Proyecto, están en sus propios
 repositorios: cuando cambia uno de estos Word, hay que pasar el cambio al sitio.
 `Arbol de problemas y soluciones.docx` es el análisis causa-efecto.
 `Parado_Automatico_Ideas.docx` recoge las ideas surgidas de las conversaciones

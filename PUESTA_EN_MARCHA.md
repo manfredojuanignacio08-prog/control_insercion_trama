@@ -55,7 +55,8 @@ viene, la mantiene mientras la bobina se repite, y también puede soltarla en ca
    señal +V), con una resistencia de protección (`diagramas/hardware/conexion_final_rele.png`). El paso a
    paso de la medición y la conexión está en `esp32/documentacion/PASO_A_PASO_RELES_LCA110.md`.
    El 17/10/2026 se midió la alimentación del lector (entre 15 y 30 V: va la resistencia de
-   protección de 470 Ω 3 W) y el primer canal, conectado así, seleccionó bien; falta en los otros tres.
+   protección de 470 Ω 3 W) y el primer canal, conectado así, seleccionó bien; el 30/10/2026 quedaron
+   conectados los cuatro, y seleccionaron bien en la prueba completa.
 2. `PORCENTAJE_SELECCION` viene en 0: la bobina queda activa mientras se repita (por ejemplo, las 120
    pasadas seguidas de una bobina) y cambia cuando cambia la bobina, que es lo que se ve en el telar.
    Si en la prueba alguna pasada no toma la selección, probar con un porcentaje: se estima con una regla

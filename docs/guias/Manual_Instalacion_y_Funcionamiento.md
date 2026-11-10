@@ -477,7 +477,7 @@ estado vive en la base de datos, no en el dispositivo.
 | Selector visual de telar (para cuando haya más de uno) | ⏳ Pendiente |
 | Firmware ESP32 (un solo programa: Bloque A, y el Nivel 2 con `NIVEL2_INSTALADO`) | ✅ Bloque A instalado y probado en el telar (19/09/2026); Nivel 2 probado en protoboard (10/10/2026), en el telar con el sensor y un canal (17/10/2026) y completo (30/10/2026) |
 | Conexión física al telar real | ✅ Bloque A (Marcha, Pausa, Retroceder y sensado) · ✅ Nivel 2: el sensor de pasada y los cuatro relés de selección, con el gabinete instalado y probados el 30/10/2026 · ✅ Conteo validado: coincide con las vueltas de la máquina |
-| App Android nativa | ⏳ A futuro (hay una base de referencia, no funcional) |
+| App Android nativa | ⏳ A futuro (es una idea; todavía no tiene código) |
 
 ---
 

@@ -82,8 +82,8 @@
   <text x="70" y="492" font-size="12" font-weight="bold" fill="#9C5C0A">El LCA110 no tiene partes móviles: aguanta 5 conmutaciones por segundo (300 pasadas/min) sin desgaste.</text>
   <text x="70" y="514" font-size="10.5">El relé da la señal en el lugar del lector óptico y no maneja la corriente de la bobina: las plaquetas del telar quedan intactas.</text>
   
-  <text x="70" y="554" font-size="10.5" font-weight="bold">Pendiente de medir: la alimentación y la señal de un lector óptico (eligen la resistencia de protección de cada canal).</text>
-  <text x="70" y="571" font-size="10.5">Se miden con el multímetro, con el telar encendido y sin tejer; la sincronización se ajusta en la prueba de tejido.</text>
+  <text x="70" y="554" font-size="10.5" font-weight="bold">Medido el 17/10/2026: el lector se alimenta con 15 a 30 V, así que cada canal lleva la resistencia de protección de 470 Ω 3 W.</text>
+  <text x="70" y="571" font-size="10.5">Se midió con el multímetro, con el telar encendido y sin tejer; la prueba completa de tejido fue el 30/10/2026.</text>
 
   <text x="960" y="620" text-anchor="end" font-size="10.5" fill="#6B7684">Control de Inserción de Trama · Nivel 2 (marcos / dobby)</text>
 </svg>

@@ -2333,3 +2333,79 @@ En la entrevista grabada, el dueño dice que la tejeduría de la planta tiene 14
 | `esp32/control_trama_esp32/README.md` | «once telares Vamatex» | «catorce telares Vamatex» |
 
 El Registro de Entrevistas ya decía que la planta tiene 14 máquinas, y que antes figuraban 11.
+
+## Modelo 3D y pruebas de calidad en el repositorio (09/11/2026)
+
+- `modelado_3d/`: el gabinete en 3D (Three.js), versión completa y para celular, el mismo que se publica aparte en el repositorio Modelado3D_CIT.
+- `pruebas_qa/`: ESLint (servidor, pruebas y página), html-validate de la página y Playwright con la página real en tamaño de celular. Va aparte de `backend/`, así que no cambia lo que instala Render.
+- `main` traía subidas a mano del 03 al 06/11 (el manual de uso en PDF en `Manuales/` y la carpeta `_referencia_app_android` sacada): se juntaron con el branch, y el README y la guía de instalación ya no nombran esa carpeta.
+
+## Revisión completa de todo el proyecto (09 y 10/11/2026)
+
+Se revisó todo, hasta tener tres pasadas seguidas sin hallazgos: código, base de datos, firmware, documentos (Markdown, Word y sus PDF), planillas, diagramas, la presentación y los sitios de la documentación y de los manuales.
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Recorrido del código (Word, PDF y Markdown) | «Tejiendo · Fila X / N» (no existe en la página); «2,4 millones de pasos»; «ramas y pull requests para cada cambio»; `/api/telares` sin crear, confirmar la posición ni historial | «Tejiendo...» y «Fila X / N»; «2,4 millones de pasadas al azar»; una rama de trabajo que pasa a `main` por pull request; las rutas completas; Three.js en `modelado_3d/` y las pruebas en `pruebas_qa/` |
+| `diagrama_logico_arquitectura` | La app Android como «base de arquitectura guardada como referencia»; HTTP; sin el Nivel 2 | Idea a futuro, sin código; HTTPS; `patron-actual`, `pasadas`, el sensor y los 4 LCA110 |
+| `diagrama_nivel2_marcos` | «Pendiente de medir: la alimentación y la señal de un lector» | Medido el 17/10/2026 (15 a 30 V, 470 Ω 3 W); prueba completa el 30/10/2026 |
+| `gantt.svg` / `.png` y la figura 13 de la Documentación | «634 de 642 h hechas al 02/11», la etapa 08 en curso | 642 de 642 al 04/11, las 8 etapas completas |
+| Documentación de Proyecto (Word, PDF y sitio) | «once telares» (vista de fábrica) y «Cantidad de telares: 11» (3.5); LIM04 «se entrega la base de arquitectura»; watchdog de 15 s | Catorce telares; LIM04 idea a futuro, sin código; watchdog de 45 s, como `WATCHDOG_MS`. Versión 5.5 en el control de cambios, con las filas 5.3 a 5.5 en el mismo tamaño de letra que las demás |
+| Estado completo (Word y PDF) | «Once telares en 400 m²»; el Recorrido «en cinco páginas»; las ideas a futuro «antes de que el conteo esté validado» | Catorce telares; cuatro páginas; el conteo ya está validado en el C 201 |
+| `PUESTA_EN_MARCHA.md` y `RECOMENDACIONES_ELECTRICAS.md` | El primer canal seleccionó bien; «falta en los otros tres» | Los cuatro, conectados y probados el 30/10/2026 |
+| `backend/README.md` | Validar el conteo, entre los pendientes | Hecho: validado en el período de prueba |
+| Manual de instalación | App Android «con base de referencia» | Idea a futuro, sin código |
+| `documentacion_proyecto/LEEME.md` | El Recorrido, «cinco páginas» | Cuatro páginas |
+| Guía de armado del Bloque A (Word y PDF) | Encabezado «Marcha/Pausa» | «Marcha, Pausa y Retroceder» |
+| Lista de componentes, cable de los 4 canales | «Cantidad a definir según el recorrido real» | La presupuestada; cableado el 30/10/2026 |
+| `backend/package-lock.json` | body-parser 1.20.8, qs 6.16.0 e ip-address 10.7.2 (`npm audit`: 1 alta y 2 moderadas) | 1.20.9, 6.16.2 y 10.7.6 (`npm audit`: 0); `package.json` sin cambios |
+
+Lo que quedó como estaba, a propósito: las entradas fechadas de la Bitácora, el Registro de Entrevistas y el control de cambios (cuentan lo que pasaba en ese momento), los comentarios de las migraciones ya aplicadas y la presentación del repositorio (la v5 con los videos adentro va aparte).
+
+Queda para el equipo: `Manuales/Manual de Uso TP Info 26.pdf` todavía dice «la fábrica tiene 11 telares como este». Es un PDF armado fuera del repositorio, así que se corrige en su archivo original y se vuelve a exportar.
+
+Pruebas de cada pasada: `npm test`, `tests/integracion.pg.mjs` contra PostgreSQL 16 sobre una base nueva, `database/01_base_de_datos_completa.sql` al día y aplicado en una base vacía (10 tablas, 24 migraciones), `pruebas_qa` (ESLint, html-validate y Playwright), las simulaciones (6/6, 6/6 y 30/30), la coherencia (22/22) y `host/correr.sh` con la ArduinoJson real. Los Word tocados pasan la validación contra el esquema y sus PDF tienen las mismas páginas, imágenes y fuentes que antes.
+
+## Otra forma de venta: con los planos del hardware (10/11/2026)
+
+Además del paquete (el equipo fabrica, instala y prueba el gabinete), el producto se puede vender con los planos: el equipo vende el software, el mantenimiento y los planos del hardware, y la fábrica arma, instala y prueba el gabinete con su propio técnico. Los números salen del mismo cálculo del precio, sin datos nuevos:
+
+- Lo que paga la fábrica al equipo: $3.921 por telar (el software, $2.382, más los planos, $1.539, como en el reparto de la Modalidad de Inversión, sección 5.2) más el abono de $20.000 por mes por telar.
+- Lo que gana el equipo por telar es el mismo que en el paquete ($290.000 − $286.079 = $3.921), así que la inversión se recupera igual: unos 86 telares en dos años.
+- Gasto inicial de la fábrica: $174.710 ($3.921 + $154.739 de componentes + $16.050 de insumos), más las horas de su técnico (3 h de armado y 2 h de instalación y prueba por telar en el cálculo).
+- La garantía cubre el software, el firmware y los planos; el armado y los componentes quedan a cargo de quien arma el gabinete.
+
+| Dónde | Qué se agregó |
+|---|---|
+| Estimación de Costos v4 (Word y PDF) | Sección 4.3 «Otra forma de venta: con los planos del hardware», un punto en 5.1 y una frase en la conclusión |
+| Modalidad de Inversión (Word y PDF) | La sección 5 pasa a «Formas de venta: Hardware, Software y planos», con la 5.4 «Venta con planos» (qué compra la fábrica, qué son los planos, qué hace la fábrica, precio, garantía, ventajas y riesgos) y una frase en la conclusión |
+| Documentación de Proyecto (Word, PDF y sitio) | Una frase en la sección 8, un punto en 9.4 y uno en 10.7, y la figura 15 nueva; versión 5.6 en el control de cambios |
+| `presentacion_final/Calculo_precio_2_anios.md` | La comparación entre el paquete y la venta con planos, un punto en «Lo que conviene decir» y dónde está en la presentación, el diagrama y el manual |
+| `presentacion_final/Presentacion_CIT.html` | Una diapositiva nueva después de la del precio: «Con los planos, la fábrica arma el gabinete», con lo que paga la fábrica ($3.921 y el abono) y lo que pone ($174.710 por telar más las horas de su técnico). La misma diapositiva va en la versión con los videos adentro, que se entrega aparte |
+| `diagramas/sistema/estimacion.svg` y `.png` | Un recuadro abajo del precio: «Otra forma de venta: con los planos del hardware», $3.921 por telar más el abono, gasto inicial $174.710 y la misma recuperación. El PNG conserva igual la parte de arriba; está también en la Documentación (figura 15) y en su sitio |
+| Manual del telar en fábrica (Word, PDF y sitio de los manuales) | En «Antes de empezar», quién arma el gabinete si la fábrica compró con los planos. Sección 3.4 nueva, «Si la fábrica compró con los planos: cómo se arma el gabinete»: qué trae cada plano, cómo se leen los dibujos de las plaquetas (vista, pata 1, conectores, puentes a soldar), el orden de armado en siete pasos (de comprar y hacer las plaquetas a verificar con el Checklist) y tres figuras: el dibujo de la plaqueta principal, las conexiones pata por pata y las plaquetas terminadas |
+| Guía de conexión y puesta en marcha (Word, PDF y `docs/guias/Paso_a_paso_conexion_y_puesta_en_marcha.md`) | Es también la guía que sigue el técnico de la fábrica con la venta con planos |
+| Bitácora (Word y PDF) | Entrada del 10/11/2026 |
+| `diagramas/README.md` | La estructura de costos, también con la venta con planos, y la carpeta `proteus/` |
+| `documentacion_proyecto/LEEME.md` | En la descripción de la Estimación, de la Modalidad y del manual del telar, la venta con los planos |
+
+El PDF del manual del telar pasa de 15 a 20 páginas, por la sección 3.4 y sus tres figuras (de 11 a 14 imágenes).
+
+Se sumaron los proyectos de Proteus de las cinco plaquetas impresas, en `diagramas/hardware/caja_y_plaquetas/proteus/`, con un README que dice cuál es cuál: la principal (`plaqueta_2_parte_1_info_B_corregido`, 31/10/2026), la de los relés (`placa_2_parte_2_info_B`, 18/10/2026), la del sensado (`proyecto_de_INFO_B`, 31/10/2026), la de los puentes (`extra_placat_puentes`, 31/10/2026) y la del Nivel 2 (`plaqueta_3_info_B_corregido`, 22/10/2026). Son las versiones más nuevas que había, y cada una tiene los mismos componentes, valores y conectores que su dibujo. Las nombran el manual del telar (sección 3.4), la Guía de conexión y puesta en marcha (sección 3.1) y `diagramas/README.md`.
+
+## Última revisión antes de la entrega (10/11/2026)
+
+Se comparó cada Word con su sitio párrafo por párrafo (la Documentación de Proyecto, el manual del telar y el de la página web), cada PDF con su Word y cada dato de los manuales con el código.
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Sitio de la Documentación | Las figuras 6 a 10 sin número en el epígrafe (de la 5 saltaba a la 11) | «Figura 6.» a «Figura 10.», como en el Word |
+| Sitio de los manuales, presentación del manual del telar | El control del dibujo, «con la previsión de comandarlo en una etapa posterior» | «Y, desde el 30/10/2026, también el del dibujo», como en el Word |
+| Manual de la página web (Word y PDF) | El código de invitación «se lo pasa» quien ya tiene acceso | Se genera desde Inicio con «Invitar a alguien (generar código)», sirve una sola vez y vence a los siete días, como en el sitio y en el servidor (`INVITACION_TTL_DIAS = 7`) |
+| `presentacion_final/videos/LEEME.txt` | Los videos, en las diapositivas 4 y 11 | En la 11 (funcionamiento) y la 12 (entrevista), donde están |
+| Modalidad (5.4), Estimación (4.3), Documentación (9.4, Word, PDF y sitio), Bitácora y `Calculo_precio_2_anios.md` | Los planos, «los dibujos de las siete plaquetas» | «Los dibujos de las plaquetas, con el diseño en Proteus de las cinco impresas»: la fuente no tiene dibujo propio (está en el pata por pata) |
+| Estado completo (Word y PDF) | Conexiones de las plaquetas, «con el dibujo de cada una» de las siete | Con el dibujo de cada plaqueta impresa y de la del ESP32 |
+| `plaqueta_puentes.png` (y dentro de Conexiones de las plaquetas, Word y PDF) | Subtítulo «Tu plaqueta de puentes…» | «Plaqueta de los puentes…», como los otros dibujos |
+| Bitácora, entrada del 10/11/2026 (Word y PDF) | Faltaba una coma («…10.7) en el manual del telar») y no nombraba los proyectos de Proteus | Con la coma, y una frase sobre la carpeta `proteus/` |
+
+Lo que difiere a propósito entre los Word y los sitios: las guías de inicio rápido de los manuales, que en el sitio están escritas con más pasos (los datos son los mismos); los títulos cortos de las épicas del backlog, y el enlace al modelo 3D, que en el sitio es un vínculo.
