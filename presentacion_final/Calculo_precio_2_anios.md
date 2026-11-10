@@ -83,7 +83,7 @@ Con unos 21 o 22 telares por semestre a $290.000 (86 en total), el saldo acumula
 
 ## Otra forma de venta: con los planos del hardware
 
-En vez de fabricar el gabinete, el equipo puede vender el software, el mantenimiento y los planos, y la fábrica arma, instala y prueba el gabinete con su propio técnico. Los planos son los dibujos de las siete plaquetas y del armado de la caja, la lista de componentes, los componentes en placa, las conexiones pata por pata, las guías de armado y de conexión, el checklist de verificaciones y la guía de mediciones.
+En vez de fabricar el gabinete, el equipo puede vender el software, el mantenimiento y los planos, y la fábrica arma, instala y prueba el gabinete con su propio técnico. Los planos son los dibujos de las plaquetas, con el diseño en Proteus de las cinco impresas, y el del armado de la caja, la lista de componentes, los componentes en placa, las conexiones pata por pata, las guías de armado y de conexión, el checklist de verificaciones y la guía de mediciones.
 
 | | Paquete (el equipo fabrica e instala) | Con los planos (la fábrica arma) |
 |---|---|---|

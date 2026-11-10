@@ -2403,5 +2403,8 @@ Se comparó cada Word con su sitio párrafo por párrafo (la Documentación de P
 | Sitio de los manuales, presentación del manual del telar | El control del dibujo, «con la previsión de comandarlo en una etapa posterior» | «Y, desde el 30/10/2026, también el del dibujo», como en el Word |
 | Manual de la página web (Word y PDF) | El código de invitación «se lo pasa» quien ya tiene acceso | Se genera desde Inicio con «Invitar a alguien (generar código)», sirve una sola vez y vence a los siete días, como en el sitio y en el servidor (`INVITACION_TTL_DIAS = 7`) |
 | `presentacion_final/videos/LEEME.txt` | Los videos, en las diapositivas 4 y 11 | En la 11 (funcionamiento) y la 12 (entrevista), donde están |
+| Modalidad (5.4), Estimación (4.3), Documentación (9.4, Word, PDF y sitio), Bitácora y `Calculo_precio_2_anios.md` | Los planos, «los dibujos de las siete plaquetas» | «Los dibujos de las plaquetas, con el diseño en Proteus de las cinco impresas»: la fuente no tiene dibujo propio (está en el pata por pata) |
+| Estado completo (Word y PDF) | Conexiones de las plaquetas, «con el dibujo de cada una» de las siete | Con el dibujo de cada plaqueta impresa y de la del ESP32 |
+| `plaqueta_puentes.png` (y dentro de Conexiones de las plaquetas, Word y PDF) | Subtítulo «Tu plaqueta de puentes…» | «Plaqueta de los puentes…», como los otros dibujos |
 
 Lo que difiere a propósito entre los Word y los sitios: las guías de inicio rápido de los manuales, que en el sitio están escritas con más pasos (los datos son los mismos); los títulos cortos de las épicas del backlog, y el enlace al modelo 3D, que en el sitio es un vínculo.
