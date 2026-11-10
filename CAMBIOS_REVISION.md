@@ -2333,3 +2333,35 @@ En la entrevista grabada, el dueño dice que la tejeduría de la planta tiene 14
 | `esp32/control_trama_esp32/README.md` | «once telares Vamatex» | «catorce telares Vamatex» |
 
 El Registro de Entrevistas ya decía que la planta tiene 14 máquinas, y que antes figuraban 11.
+
+## Modelo 3D y pruebas de calidad en el repositorio (09/11/2026)
+
+- `modelado_3d/`: el gabinete en 3D (Three.js), versión completa y para celular, el mismo que se publica aparte en el repositorio Modelado3D_CIT.
+- `pruebas_qa/`: ESLint (servidor, pruebas y página), html-validate de la página y Playwright con la página real en tamaño de celular. Va aparte de `backend/`, así que no cambia lo que instala Render.
+- `main` traía subidas a mano del 03 al 06/11 (el manual de uso en PDF en `Manuales/` y la carpeta `_referencia_app_android` sacada): se juntaron con el branch, y el README y la guía de instalación ya no nombran esa carpeta.
+
+## Revisión completa de todo el proyecto (09 y 10/11/2026)
+
+Se revisó todo, hasta tener tres pasadas seguidas sin hallazgos: código, base de datos, firmware, documentos (Markdown, Word y sus PDF), planillas, diagramas, la presentación y los sitios de la documentación y de los manuales.
+
+| Dónde | Antes | Ahora |
+|---|---|---|
+| Recorrido del código (Word, PDF y Markdown) | «Tejiendo · Fila X / N» (no existe en la página); «2,4 millones de pasos»; «ramas y pull requests para cada cambio»; `/api/telares` sin crear, confirmar la posición ni historial | «Tejiendo...» y «Fila X / N»; «2,4 millones de pasadas al azar»; una rama de trabajo que pasa a `main` por pull request; las rutas completas; Three.js en `modelado_3d/` y las pruebas en `pruebas_qa/` |
+| `diagrama_logico_arquitectura` | La app Android como «base de arquitectura guardada como referencia»; HTTP; sin el Nivel 2 | Idea a futuro, sin código; HTTPS; `patron-actual`, `pasadas`, el sensor y los 4 LCA110 |
+| `diagrama_nivel2_marcos` | «Pendiente de medir: la alimentación y la señal de un lector» | Medido el 17/10/2026 (15 a 30 V, 470 Ω 3 W); prueba completa el 30/10/2026 |
+| `gantt.svg` / `.png` y la figura 13 de la Documentación | «634 de 642 h hechas al 02/11», la etapa 08 en curso | 642 de 642 al 04/11, las 8 etapas completas |
+| Documentación de Proyecto (Word, PDF y sitio) | «once telares» (vista de fábrica) y «Cantidad de telares: 11» (3.5); LIM04 «se entrega la base de arquitectura»; watchdog de 15 s | Catorce telares; LIM04 idea a futuro, sin código; watchdog de 45 s, como `WATCHDOG_MS`. Versión 5.5 en el control de cambios, con las filas 5.3 a 5.5 en el mismo tamaño de letra que las demás |
+| Estado completo (Word y PDF) | «Once telares en 400 m²»; el Recorrido «en cinco páginas»; las ideas a futuro «antes de que el conteo esté validado» | Catorce telares; cuatro páginas; el conteo ya está validado en el C 201 |
+| `PUESTA_EN_MARCHA.md` y `RECOMENDACIONES_ELECTRICAS.md` | El primer canal seleccionó bien; «falta en los otros tres» | Los cuatro, conectados y probados el 30/10/2026 |
+| `backend/README.md` | Validar el conteo, entre los pendientes | Hecho: validado en el período de prueba |
+| Manual de instalación | App Android «con base de referencia» | Idea a futuro, sin código |
+| `documentacion_proyecto/LEEME.md` | El Recorrido, «cinco páginas» | Cuatro páginas |
+| Guía de armado del Bloque A (Word y PDF) | Encabezado «Marcha/Pausa» | «Marcha, Pausa y Retroceder» |
+| Lista de componentes, cable de los 4 canales | «Cantidad a definir según el recorrido real» | La presupuestada; cableado el 30/10/2026 |
+| `backend/package-lock.json` | body-parser 1.20.8, qs 6.16.0 e ip-address 10.7.2 (`npm audit`: 1 alta y 2 moderadas) | 1.20.9, 6.16.2 y 10.7.6 (`npm audit`: 0); `package.json` sin cambios |
+
+Lo que quedó como estaba, a propósito: las entradas fechadas de la Bitácora, el Registro de Entrevistas y el control de cambios (cuentan lo que pasaba en ese momento), los comentarios de las migraciones ya aplicadas y la presentación del repositorio (la v5 con los videos adentro va aparte).
+
+Queda para el equipo: `Manuales/Manual de Uso TP Info 26.pdf` todavía dice «la fábrica tiene 11 telares como este». Es un PDF armado fuera del repositorio, así que se corrige en su archivo original y se vuelve a exportar.
+
+Pruebas de cada pasada: `npm test`, `tests/integracion.pg.mjs` contra PostgreSQL 16 sobre una base nueva, `database/01_base_de_datos_completa.sql` al día y aplicado en una base vacía (10 tablas, 24 migraciones), `pruebas_qa` (ESLint, html-validate y Playwright), las simulaciones (6/6, 6/6 y 30/30), la coherencia (22/22) y `host/correr.sh` con la ArduinoJson real. Los Word tocados pasan la validación contra el esquema y sus PDF tienen las mismas páginas, imágenes y fuentes que antes.
