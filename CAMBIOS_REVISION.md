@@ -2402,5 +2402,6 @@ Se comparó cada Word con su sitio párrafo por párrafo (la Documentación de P
 | Sitio de la Documentación | Las figuras 6 a 10 sin número en el epígrafe (de la 5 saltaba a la 11) | «Figura 6.» a «Figura 10.», como en el Word |
 | Sitio de los manuales, presentación del manual del telar | El control del dibujo, «con la previsión de comandarlo en una etapa posterior» | «Y, desde el 30/10/2026, también el del dibujo», como en el Word |
 | Manual de la página web (Word y PDF) | El código de invitación «se lo pasa» quien ya tiene acceso | Se genera desde Inicio con «Invitar a alguien (generar código)», sirve una sola vez y vence a los siete días, como en el sitio y en el servidor (`INVITACION_TTL_DIAS = 7`) |
+| `presentacion_final/videos/LEEME.txt` | Los videos, en las diapositivas 4 y 11 | En la 11 (funcionamiento) y la 12 (entrevista), donde están |
 
 Lo que difiere a propósito entre los Word y los sitios: las guías de inicio rápido de los manuales, que en el sitio están escritas con más pasos (los datos son los mismos); los títulos cortos de las épicas del backlog, y el enlace al modelo 3D, que en el sitio es un vínculo.
