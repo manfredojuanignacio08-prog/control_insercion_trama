@@ -31,14 +31,14 @@ el repositorio para que el código y la documentación viajen juntos.
 | Archivo | Qué contiene |
 |---|---|
 | `Lista_de_componentes_Control_Trama.xlsx` | Todos los componentes por bloque, con precios y notas. |
-| `Estimacion_Costos_Ganancia_Contrato_v4.docx` | Costos, márgenes y condiciones del servicio. |
+| `Estimacion_Costos_Ganancia_Contrato_v4.docx` | Costos, márgenes y condiciones del servicio, y la venta con los planos del hardware (sección 4.3). |
 | `Gantt_2026 - Automatizacion de Telar Industrial.xlsx` | El cronograma, con 169 tareas en 8 etapas. |
 
 ## Inversión y armado
 
 | Archivo | Qué contiene |
 |---|---|
-| `Modalidad_Inversion_Ganancia_Contrato_Garantia.docx` | Modalidad de inversión mixta, plan de aportes por etapa, recuperación y garantía. |
+| `Modalidad_Inversion_Ganancia_Contrato_Garantia.docx` | Modalidad de inversión mixta, plan de aportes por etapa, recuperación, formas de venta (también con los planos del hardware) y garantía. |
 | `Guia_Armado_Bloque_A.docx` | El paso a paso del armado del nodo de control, fase por fase. |
 
 ## Otros

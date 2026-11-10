@@ -2365,3 +2365,24 @@ Lo que quedó como estaba, a propósito: las entradas fechadas de la Bitácora, 
 Queda para el equipo: `Manuales/Manual de Uso TP Info 26.pdf` todavía dice «la fábrica tiene 11 telares como este». Es un PDF armado fuera del repositorio, así que se corrige en su archivo original y se vuelve a exportar.
 
 Pruebas de cada pasada: `npm test`, `tests/integracion.pg.mjs` contra PostgreSQL 16 sobre una base nueva, `database/01_base_de_datos_completa.sql` al día y aplicado en una base vacía (10 tablas, 24 migraciones), `pruebas_qa` (ESLint, html-validate y Playwright), las simulaciones (6/6, 6/6 y 30/30), la coherencia (22/22) y `host/correr.sh` con la ArduinoJson real. Los Word tocados pasan la validación contra el esquema y sus PDF tienen las mismas páginas, imágenes y fuentes que antes.
+
+## Otra forma de venta: con los planos del hardware (10/11/2026)
+
+Además del paquete (el equipo fabrica, instala y prueba el gabinete), el producto se puede vender con los planos: el equipo vende el software, el mantenimiento y los planos del hardware, y la fábrica arma, instala y prueba el gabinete con su propio técnico. Los números salen del mismo cálculo del precio, sin datos nuevos:
+
+- Lo que paga la fábrica al equipo: $3.921 por telar (el software, $2.382, más los planos, $1.539, como en el reparto de la Modalidad de Inversión, sección 5.2) más el abono de $20.000 por mes por telar.
+- Lo que gana el equipo por telar es el mismo que en el paquete ($290.000 − $286.079 = $3.921), así que la inversión se recupera igual: unos 86 telares en dos años.
+- Gasto inicial de la fábrica: $174.710 ($3.921 + $154.739 de componentes + $16.050 de insumos), más las horas de su técnico (3 h de armado y 2 h de instalación y prueba por telar en el cálculo).
+- La garantía cubre el software, el firmware y los planos; el armado y los componentes quedan a cargo de quien arma el gabinete.
+
+| Dónde | Qué se agregó |
+|---|---|
+| Estimación de Costos v4 (Word y PDF) | Sección 4.3 «Otra forma de venta: con los planos del hardware», un punto en 5.1 y una frase en la conclusión |
+| Modalidad de Inversión (Word y PDF) | La sección 5 pasa a «Formas de venta: Hardware, Software y planos», con la 5.4 «Venta con planos» (qué compra la fábrica, qué son los planos, qué hace la fábrica, precio, garantía, ventajas y riesgos) y una frase en la conclusión |
+| Documentación de Proyecto (Word, PDF y sitio) | Una frase en la sección 8, un punto en 9.4 y uno en 10.7; versión 5.6 en el control de cambios |
+| `presentacion_final/Calculo_precio_2_anios.md` | La comparación entre el paquete y la venta con planos, y un punto en «Lo que conviene decir» |
+| Manual del telar en fábrica (Word, PDF y sitio de los manuales) | En «Antes de empezar», quién arma el gabinete si la fábrica compró con los planos: su técnico, con la Guía de conexión y puesta en marcha (la parte de 220 V, una persona habilitada) y el Checklist de verificaciones |
+| Bitácora (Word y PDF) | Entrada del 10/11/2026 |
+| `documentacion_proyecto/LEEME.md` | En la descripción de la Estimación y de la Modalidad, la venta con los planos |
+
+El PDF del manual del telar pasa de 15 a 16 páginas: la frase nueva corre una foto de la sección 2 a la página siguiente; el texto y las 11 imágenes son los mismos.

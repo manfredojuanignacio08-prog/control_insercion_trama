@@ -81,9 +81,28 @@ Con unos 21 o 22 telares por semestre a $290.000 (86 en total), el saldo acumula
 | Semestre 3 | −$8,3 M |
 | Semestre 4 | +$0,02 M |
 
+## Otra forma de venta: con los planos del hardware
+
+En vez de fabricar el gabinete, el equipo puede vender el software, el mantenimiento y los planos, y la fábrica arma, instala y prueba el gabinete con su propio técnico. Los planos son los dibujos de las siete plaquetas y del armado de la caja, la lista de componentes, los componentes en placa, las conexiones pata por pata, las guías de armado y de conexión, el checklist de verificaciones y la guía de mediciones.
+
+| | Paquete (el equipo fabrica e instala) | Con los planos (la fábrica arma) |
+|---|---|---|
+| Lo que cobra el equipo por telar | $290.000 | $3.921 (el software y los planos) |
+| Abono | $20.000 por mes por telar | $20.000 por mes por telar |
+| Lo que gana el equipo por telar | $3.921 | $3.921 |
+| Componentes ($154.739) e insumos ($16.050) | Los compra el equipo (están en el precio) | Los compra la fábrica |
+| Armado, instalación y prueba (3 h y 2 h por telar en el cálculo) | El equipo | El técnico de la fábrica |
+| Gasto inicial de la fábrica | $290.000 | $174.710, más las horas de su técnico |
+| Telares para recuperar la inversión en dos años | 86 | 86 |
+
+La ganancia del equipo no cambia porque en el paquete el hardware se cobra al costo ($290.000 − $286.079 = $3.921). Repartido como en la Modalidad de Inversión (sección 5.2), son los $2.382 del software más $1.539 por los planos, que es la parte de la recuperación que ahí le toca al hardware.
+
+La garantía cubre el software, el firmware y los planos; el armado y los componentes quedan a cargo de quien arma el gabinete. A cambio de llegar a fábricas de cualquier lugar sin fabricar ni viajar a instalar, el equipo no controla la calidad del armado. El detalle está en la Estimación de Costos (sección 4.3) y en la Modalidad de Inversión (sección 5.4).
+
 ## Lo que conviene decir en la presentación
 
 - **El dinero puesto se recupera en el primer semestre.** Cada telar deja $3.921 al venderse y $20.000 por mes de abono; con los primeros 18 telares se cubren los $231.789 que puso el equipo.
 - **Toda la inversión, en dos años, pide unos 86 telares (9 fábricas).** Como referencia, la planta del cliente tiene 14 telares, así que son unas seis plantas como esa. La mayor parte de la inversión es el valor de las 915 horas-persona del equipo, y es lo que más tarda en volver.
 - **A un ritmo más realista para empezar, la recuperación tarda más.** Con una fábrica de 10 telares por semestre, se recupera todo en unos 3 años, con 60 telares.
+- **También se puede vender con los planos.** La fábrica arma el gabinete con su técnico y paga $3.921 por telar más el abono; el equipo gana lo mismo y la inversión se recupera igual.
 - **Estos cálculos no incluyen inflación ni impuestos.** El precio es una referencia a noviembre de 2026, con el dólar a $1.525.
