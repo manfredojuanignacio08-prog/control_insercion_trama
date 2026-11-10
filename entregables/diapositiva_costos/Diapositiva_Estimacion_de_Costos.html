@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Estimación de costos · C.I.T.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400..800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy-950:#0E1C2E; --navy-900:#152840; --navy-800:#1E3A5F; --navy-700:#2C5C86; --navy-600:#3D6B96;
+  --navy-400:#7FA8C9; --navy-200:#B9CFE1; --navy-100:#DCE7F0;
+  --hilo-300:#F7BE7A; --hilo-400:#F2A65A; --hilo-500:#E8954A;
+  --paper:#F6F8FA; --line:#CDD8E0; --ink:#1F2937; --ink-2:#3F4B5C; --ink-3:#5B6677;
+  --font:'Geist','Segoe UI',system-ui,-apple-system,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'Cascadia Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#070F1A;overflow:hidden}
+body{font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased}
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#stage{position:relative;width:1920px;height:1080px;transform-origin:center center;flex:none}
+.slide{position:absolute;inset:0;overflow:hidden;background:var(--paper)}
+.pad{position:absolute;inset:0;padding:150px 120px 96px}
+.eyebrow{font-family:var(--mono);font-size:22px;letter-spacing:.14em;text-transform:uppercase;color:var(--navy-600)}
+h2{font-size:72px;line-height:1.05;letter-spacing:-.03em;font-weight:750;margin-top:18px}
+.navy{color:var(--navy-800)}
+.brand{position:absolute;top:44px;left:120px;display:flex;align-items:center;gap:16px;font-weight:700;font-size:26px;letter-spacing:.02em;color:var(--navy-800)}
+.brand .mk{width:48px;height:48px;border-radius:12px;background:var(--navy-800);display:grid;place-items:center;color:var(--hilo-400)}
+.brand small{display:block;font-size:15px;font-weight:500;opacity:.7;letter-spacing:.04em}
+.price{display:grid;grid-template-columns:1fr 1fr;gap:44px;margin-top:56px;align-items:stretch}
+.pbig{background:var(--navy-800);border-radius:28px;padding:46px 50px;color:#fff}
+.pbig .t,.cbox .t{font-family:var(--mono);font-size:21px;letter-spacing:.08em;text-transform:uppercase}
+.pbig .t{color:var(--hilo-300)}
+.pbig .v{font-size:116px;font-weight:800;letter-spacing:-.045em;line-height:1;margin-top:18px;color:#fff;font-variant-numeric:tabular-nums}
+.pbig ul{list-style:none;margin-top:34px;display:grid;gap:14px}
+.pbig li{font-size:28px;color:#C9D8E6;padding-left:36px;position:relative;display:flex;justify-content:space-between;gap:20px}
+.pbig li::before{content:"✓";position:absolute;left:0;color:var(--hilo-400);font-weight:800}
+.pbig li b{color:#fff;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pbig li.real{color:#fff;font-weight:700;margin-top:10px;padding-top:18px;border-top:1.5px solid rgba(185,207,225,.25)}
+.pbig li.real::before{top:18px}
+.pbig li.real b{color:var(--hilo-300)}
+.pbig li.real small{font-size:21px;color:#C9D8E6;font-weight:600;margin-left:6px}
+.cbox{background:#fff;border:1.5px solid var(--line);border-radius:28px;padding:44px 46px}
+.cbox .t{color:var(--navy-600)}
+.cbox .lines{margin-top:30px;display:grid;gap:4px}
+.cbox .lines div{display:flex;justify-content:space-between;gap:24px;font-size:27px;padding:14px 0;border-top:1.5px solid var(--line)}
+.cbox .lines span{color:var(--ink-2)}
+.cbox .lines b{color:var(--navy-800);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cbox .lines .tot{border-top:3px solid var(--navy-800);margin-top:8px}
+.cbox .lines .tot span,.cbox .lines .tot b{font-weight:800;color:var(--navy-800);font-size:30px}
+.cbox .lines .gan span{color:var(--ink);font-weight:600}
+.cbox .lines .gan b{color:var(--hilo-500);font-weight:800;font-size:30px}
+.sm2{margin-top:26px;font-size:25px;color:var(--ink-2)}
+.note{margin-top:30px;font-size:22px;color:var(--ink-3)}
+.cbox .big{font-size:76px;font-weight:800;letter-spacing:-.04em;color:var(--navy-800);margin-top:14px;line-height:1;font-variant-numeric:tabular-nums}
+.pbig li.gan b{color:var(--hilo-300);font-size:32px}
+.pbig .v{font-size:150px}
+.cbox .lines .real span{color:var(--ink);font-weight:700}.cbox .lines .real b{color:var(--hilo-500);font-weight:800}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-loom" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/><path d="M8 4v16M16 4v16" opacity=".55"/></g></symbol>
+</svg>
+<div id="viewport"><div id="stage">
+
+<!-- ESTIMACIÓN DE COSTOS -->
+<section class="slide" data-notes="Transparencia: a la izquierda, lo que costó desarrollar el sistema hasta acá; casi todo son las horas del equipo y el dinero que pusimos de verdad es muy poco. A la derecha, lo que cuesta cada telar nuevo: ya no se repite el desarrollo, por eso cuesta mucho menos.">
+  <div class="brand"><span class="mk"><svg width="28" height="28"><use href="#i-loom"/></svg></span><span>C.I.T.<small>Control de Inserción de Trama</small></span></div>
+  <div class="pad">
+    <div class="eyebrow">Estimación de costos</div>
+    <h2>Lo vendemos a <span class="navy">$290.000 por telar.</span></h2>
+    <div class="price">
+      <div class="pbig">
+        <div class="t">Precio de venta por telar</div>
+        <div class="v">$290.000</div>
+        <ul>
+          <li><span>Lo que nos cuesta cada telar nuevo</span><b>$286.079</b></li>
+          <li class="gan"><span>Ganancia por cada telar vendido</span><b>$3.921</b></li>
+          <li><span>Más el abono de mantenimiento</span><b>$20.000/mes</b></li>
+          <li><span>Para recuperar todo en dos años</span><b>86 telares</b></li>
+        </ul>
+      </div>
+      <div class="cbox">
+        <div class="t">Inversión del proyecto · a recuperar</div>
+        <div class="big">$17.936.812</div>
+        <div class="lines">
+          <div><span>Horas del equipo (915 h-persona)</span><b>$17.705.023</b></div>
+          <div><span>Componentes del telar piloto</span><b>$154.739</b></div>
+          <div><span>Insumos y Claude Pro</span><b>$77.050</b></div>
+          <div class="real"><span>Dinero puesto de verdad (1,3 %)</span><b>$231.789</b></div>
+        </div>
+        <p class="sm2">Cada telar nuevo: componentes $154.739, insumos $16.050 y 6&nbsp;h de armado e instalación $115.290.</p>
+      </div>
+    </div>
+    <p class="note">Valores en pesos, a noviembre de 2026. El dinero puesto vuelve en el primer semestre; con unos 86 telares (9 fábricas), toda la inversión en dos años.</p>
+  </div>
+</section>
+
+</div></div>
+<script>
+(function(){
+  var st=document.getElementById('stage');
+  function fit(){var s=Math.min(innerWidth/1920,innerHeight/1080);st.style.transform='scale('+s+')';}
+  addEventListener('resize',fit);fit();
+})();
+</script>
+</body>
+</html>
