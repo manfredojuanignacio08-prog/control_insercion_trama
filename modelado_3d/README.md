@@ -13,7 +13,8 @@ acercar, abrir la tapa, ver cada plaqueta por separado y tocar un componente par
 cómo se conecta. No necesita internet: todo lo que usa va dentro del mismo archivo.
 
 La vista se acomoda sola a la pantalla: la caja queda centrada y llena el cuadro en un monitor, en un
-celular parado o acostado, y se vuelve a encuadrar al girar el celular. Lo mismo cada plaqueta en «Ver
+celular parado o acostado o en una tablet (parada, con el modelo arriba a todo el ancho), y se vuelve
+a encuadrar al girar el equipo. Lo mismo cada plaqueta en «Ver
 plaqueta por plaqueta» y cada pieza que se toca en la lista: entra entera, sin quedar debajo del
 título. En el celular, mientras se
 gira se dibuja una pasada rápida y, al soltar, la imagen se pule (bordes suaves y sombras con
