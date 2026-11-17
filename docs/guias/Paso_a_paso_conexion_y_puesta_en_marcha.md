@@ -38,8 +38,8 @@ El gabinete lleva siete plaquetas con las conexiones soldadas: las cinco de abaj
 | Red | Tomacorriente de la fábrica → plaqueta 1 | Fase (marrón) y neutro (celeste) | Bornera de tornillo. Nunca dupont |
 | J1 | Plaqueta 1 (fuente) → plaqueta 2 | +5 V y GND | Bornera o tira de pines |
 | J2 | Plaqueta 2 → plaqueta 3 (relés) | 5 V, GND, IN1 (GPIO 25), IN2 (GPIO 26), S (GPIO 27) | Tira de pines |
-| J3 | Plaqueta 2 → plaqueta 4 (Nivel 2) | 3,3 V, GND, GPIO 35, 18, 19, 21 y 22 | Tira de pines |
-| J4 | Plaqueta 2 → plaqueta 5 (sensado) | 3,3 V, GND, GPIO 32, 33 y 34 | Tira de pines |
+| J3 | Plaqueta 2 → plaqueta 4 (Nivel 2). En los PCB, J8 de la principal → J1 del Nivel 2 | GPIO 35, 18, 19, 21, 22, GND y 3,3 V (patas 1 a 7, en ese orden) | Tira de pines |
+| J4 | Plaqueta 2 → plaqueta 5 (sensado) | GPIO 32, 33 y 34, 3,3 V y GND (patas 1 a 5, en ese orden) | Tira de pines |
 | B1 | Botón del tablero → NO y COM de su relé (plaqueta 3), y de ahí, en paralelo, a la bornera J1, J2 o J3 de la plaqueta 5 (sensado) | 3 pares: Marcha, Pausa y Retroceder | Bornera de tornillo. Sin polaridad: el par entra al borne del relé y del mismo borne sale el paralelo |
 | J9 / J7 / J8 | Plaqueta 5 (tira de 4 en el lugar de BR1, BR2 y BR3) ↔ plaqueta 7 (puentes) | 4 hilos por canal: +, ~, ~ y − | Tira de pines. **Las patas 3 y 4 van cruzadas** (en el sensado el orden es + ~ ~ −; en la de puentes, + ~ − ~) |
 | B2 | Sensor de pasada → plaqueta 4 | El + del telar y el negro del sensor | Bornera de tornillo |
@@ -108,7 +108,7 @@ Es una plaqueta impresa aparte, unida a la principal por J4.
 
 1. Canal del sensor: el borne «+ del telar» de B2 → **1,2 kΩ** → pata 1 de un PC817; el borne «negro del sensor» → pata 2; la pata 3 al GND del ESP32; la pata 4 al **GPIO 35** con **10 kΩ a 3,3 V** (el GPIO 35 no tiene resistencia interna). Si el telar diera 24 V en lugar de 12 a 14 V, la resistencia es de 2,2 kΩ ½ W.
 2. Los cuatro **zócalos DIP-6**, con la muesca del lado de la pata 1. Por canal: GPIO → **330 Ω** → pata 1; pata 2 al GND; **10 kΩ del GPIO al GND**, pegada al pin; las **patas 4 y 6** a su par de B3 (rotular canal 1 a 4); las patas 3 y 5 libres. Canales: GPIO **18, 19, 21 y 22**.
-3. J3 a la principal (3,3 V, GND, 35, 18, 19, 21 y 22). Poner los LCA110 en los zócalos, con la muesca del lado de la pata 1.
+3. J3 a la principal: en el PCB, J1 del Nivel 2 a J8 de la principal, pata por pata (1 GPIO 35, 2 GPIO 18, 3 GPIO 19, 4 GPIO 21, 5 GPIO 22, 6 GND y 7 3,3 V). Poner los LCA110 en los zócalos, con la muesca del lado de la pata 1.
 4. Con el multímetro en continuidad: los bornes de B2 y B3 **no pitan** contra el GND del ESP32.
 
 ### 4.6 Plaqueta del ESP32 (sumada el 25/10/2026)
@@ -121,10 +121,10 @@ En la principal impresa, la tira derecha del ESP32 quedó con los pines en otro 
 
 1. Antes de soldar, medir el ESP32: entre las dos tiras tiene que haber 25,4 mm. Si mide otra cosa, se corre la tira derecha.
 2. Soldar las dos tiras hembra de 19 pines (el pin 1 del lado de la antena) y las tiras macho de salida: P1, de 10 pines, y P2, de 5.
-3. En la principal, J5, J6 y J7 no llevan tira: ahí se sueldan los cables que vienen de P1 y P2. J3 queda vacía.
+3. En la principal, J5, J6 y J7 no llevan tira: ahí se sueldan los cables que vienen de P1 y P2. J3 queda vacía (es la tira que iba a llevar el ESP32; el conector al Nivel 2, que esta guía llama J3, en el PCB es J8).
 4. De P1 a la principal: 1 3V3 → J5-1 · 2 IO34 → J5-5 · 3 IO35 → J5-6 · 4 IO32 → J5-7 · 5 IO33 → J5-8 · 6 IO25 → J5-9 · 7 IO26 → J7-1 · 8 IO27 → J7-2 · 9 GND → J7-5 · 10 5V → J7-10.
 5. De P2 a la principal: 1 IO22 → J6-3 · 2 IO21 → J6-6 · 3 GND → J6-7 · 4 IO19 → J6-8 · 5 IO18 → J6-9. Colores fijos: rojo para 5V, naranja para 3V3 y negro para GND.
-6. Puentes de alambre aislado, del lado del cobre y lo más cortos posible, en las pistas que faltaron: en la principal, J4-3 ↔ J5-5 (GPIO 34) y J8-1 ↔ J5-6 (GPIO 35); en la del Nivel 2, U3 ↔ R7 (GPIO 19).
+6. Puentes de alambre aislado, del lado del cobre y lo más cortos posible, en las pistas que faltaron: en la principal, J4-3 ↔ J5-5 (GPIO 34) y J8-1 ↔ J5-6 (GPIO 35); en la del Nivel 2, el puente C, U3 pata 2 ↔ R7 pata 2 (masa: une la de U2, U3 y U4 con la general).
 7. Sin el ESP32 puesto, en continuidad: cada salida de P1 y P2 pita contra su pad, ningún cable pita contra el de al lado y cada puente pita de punta a punta.
 8. Alimentar la principal todavía sin el ESP32: 5 V entre P1-10 y P1-9, y nada en P1-1 (los 3,3 V los genera el ESP32). Recién ahí enchufar el ESP32, con la antena del lado del pin 1 de las tiras.
 

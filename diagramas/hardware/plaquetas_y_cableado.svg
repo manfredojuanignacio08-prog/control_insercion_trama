@@ -75,7 +75,7 @@
 <text x="898" y="441" font-size="10" font-weight="normal" fill="#1F2937" text-anchor="start">B3 relés (pata 4 y pata 6 de cada uno, 8 bornes)</text>
 <text x="884" y="460" font-size="9.5" font-weight="normal" fill="#6B7684" text-anchor="start">Las patas 4 y 6 y el canal del sensor quedan del</text>
 <text x="884" y="479" font-size="9.5" font-weight="normal" fill="#6B7684" text-anchor="start">lado del telar: aislados del ESP32 (3.750 V).</text>
-<text x="884" y="503" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Puente de alambre: U3 ↔ R7 (GPIO 19), la pista que faltó</text>
+<text x="884" y="503" font-size="10.2" font-weight="normal" fill="#1F2937" text-anchor="start">Puente C (masa): U3 pata 2 ↔ R7 pata 2, la pista que faltó</text>
 <line x1="340" y1="330" x2="370" y2="330" stroke="#1E3A5F" stroke-width="3"/>
 <text x="355" y="322" font-size="9.5" font-weight="bold" fill="#1E3A5F" text-anchor="middle">J1</text>
 <text x="355" y="348" font-size="8.5" font-weight="normal" fill="#6B7684" text-anchor="middle">+5 V</text>
